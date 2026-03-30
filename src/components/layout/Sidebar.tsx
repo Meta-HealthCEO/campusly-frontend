@@ -73,7 +73,16 @@ export function Sidebar({ items }: SidebarProps) {
                   )}
                 >
                   <Icon className="h-5 w-5 shrink-0" />
-                  {!sidebarCollapsed && <span>{item.label}</span>}
+                  {!sidebarCollapsed && (
+                    <>
+                      <span>{item.label}</span>
+                      {item.badge && (
+                        <span className="ml-auto rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold leading-none text-primary-foreground">
+                          {item.badge}
+                        </span>
+                      )}
+                    </>
+                  )}
                 </Link>
                 {!sidebarCollapsed && isActive && item.children && (
                   <div className="ml-8 mt-1 space-y-1">

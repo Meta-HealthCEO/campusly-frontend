@@ -5,7 +5,7 @@ import {
   FileText, Bell, UserCheck, BookMarked, Shield,
   Home, CreditCard, Receipt, Megaphone, Ticket,
   Building2, HeadphonesIcon, PlusCircle, PackageSearch,
-  Heart, Upload, Shirt, Trophy,
+  Heart, Upload, Shirt, Trophy, Sparkles,
   type LucideIcon
 } from 'lucide-react';
 
@@ -75,6 +75,10 @@ export const ROUTES = {
   TEACHER_CLASSES: '/teacher/classes',
   TEACHER_COMMUNICATION: '/teacher/communication',
   TEACHER_REPORTS: '/teacher/reports',
+  TEACHER_AI_TOOLS: '/teacher/ai-tools',
+  TEACHER_AI_CREATE_PAPER: '/teacher/ai-tools/create-paper',
+  TEACHER_AI_GRADING: '/teacher/ai-tools/grading',
+  TEACHER_AI_PAPERS: '/teacher/ai-tools/papers',
 
   // Tuckshop
   TUCKSHOP_POS: '/tuckshop',
@@ -92,6 +96,7 @@ export interface NavItem {
   href: string;
   icon: LucideIcon;
   module?: string;
+  badge?: string;
   children?: NavItem[];
 }
 
@@ -165,6 +170,15 @@ export const TEACHER_NAV: NavItem[] = [
   { label: 'Attendance', href: ROUTES.TEACHER_ATTENDANCE, icon: ClipboardList },
   { label: 'Grades', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
   { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: BookOpen },
+  {
+    label: 'AI Tools', href: ROUTES.TEACHER_AI_TOOLS, icon: Sparkles, badge: 'AI',
+    children: [
+      { label: 'Overview', href: ROUTES.TEACHER_AI_TOOLS, icon: Sparkles },
+      { label: 'Create Paper', href: ROUTES.TEACHER_AI_CREATE_PAPER, icon: FileText },
+      { label: 'AI Grading', href: ROUTES.TEACHER_AI_GRADING, icon: Award },
+      { label: 'Paper Library', href: ROUTES.TEACHER_AI_PAPERS, icon: BookMarked },
+    ],
+  },
   { label: 'Discipline', href: ROUTES.TEACHER_DISCIPLINE, icon: Shield },
   { label: 'Classes', href: ROUTES.TEACHER_CLASSES, icon: Users },
   { label: 'Communication', href: ROUTES.TEACHER_COMMUNICATION, icon: Megaphone, module: 'communication' },
