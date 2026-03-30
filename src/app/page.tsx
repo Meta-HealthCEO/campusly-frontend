@@ -166,7 +166,7 @@ export default function HomePage() {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="h-12 px-8 text-base border-white/30 text-white hover:bg-white/10 hover:text-white"
+                  className="h-12 px-8 text-base border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
                 >
                   Login to Dashboard
                 </Button>
