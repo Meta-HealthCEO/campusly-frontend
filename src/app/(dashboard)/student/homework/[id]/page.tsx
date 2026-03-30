@@ -73,7 +73,7 @@ export default function HomeworkDetailPage() {
         Back to Homework
       </Link>
 
-      <PageHeader title={homework.title} description={homework.subject.name} />
+      <PageHeader title={homework.title} description={homework.subject?.name ?? homework.subjectName ?? ''} />
 
       {/* Homework Details */}
       <Card>
@@ -82,7 +82,7 @@ export default function HomeworkDetailPage() {
             <div className="space-y-1">
               <CardTitle className="text-xl">{homework.title}</CardTitle>
               <p className="text-sm text-muted-foreground">
-                {homework.subject.name}
+                {homework.subject?.name ?? homework.subjectName ?? ''}
               </p>
             </div>
             <Badge
@@ -104,8 +104,8 @@ export default function HomeworkDetailPage() {
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Teacher:</span>
               <span>
-                {homework.teacher.user.firstName}{' '}
-                {homework.teacher.user.lastName}
+                {homework.teacher?.user.firstName}{' '}
+                {homework.teacher?.user.lastName}
               </span>
             </div>
             <div className="flex items-center gap-2 text-sm">

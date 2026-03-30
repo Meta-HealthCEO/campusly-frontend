@@ -118,6 +118,8 @@ export interface Student {
   id: string;
   userId: string;
   user: User;
+  firstName?: string;
+  lastName?: string;
   admissionNumber: string;
   gradeId: string;
   grade: Grade;
@@ -184,6 +186,7 @@ export interface SchoolClass {
   name: string;
   gradeId: string;
   grade: Grade;
+  gradeName?: string;
   teacherId: string;
   teacher: Teacher;
   capacity: number;
@@ -255,10 +258,11 @@ export interface Homework {
   title: string;
   description: string;
   subjectId: string;
-  subject: Subject;
+  subject?: Subject;
+  subjectName?: string;
   classId: string;
   teacherId: string;
-  teacher: Teacher;
+  teacher?: Teacher;
   dueDate: string;
   attachments: string[];
   status: 'draft' | 'published' | 'closed';

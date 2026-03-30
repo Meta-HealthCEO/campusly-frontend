@@ -1,10 +1,12 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { mockInvoices } from '@/lib/mock-data';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import apiClient from '@/lib/api-client';
 import type { Invoice } from '@/types';
 
 const statusStyles: Record<string, string> = {
@@ -58,10 +60,27 @@ const columns: ColumnDef<Invoice>[] = [
 ];
 
 export default function InvoicesPage() {
+  const [data, setData] = useState<Invoice[]>(mockInvoices);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await apiClient.get('/fee/invoices');
+        if (response.data) setData(response.data.data ?? response.data);
+      } catch (error) {
+        console.warn('API unavailable, using mock data');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
   return (
     <div className="space-y-6">
       <PageHeader title="Invoices" description="View and manage all student invoices" />
-      <DataTable columns={columns} data={mockInvoices} searchKey="invoiceNumber" searchPlaceholder="Search invoices..." />
+      <DataTable columns={columns} data={data} searchKey="invoiceNumber" searchPlaceholder="Search invoices..." />
     </div>
   );
 }

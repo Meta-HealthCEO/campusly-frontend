@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,13 +19,13 @@ import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { StatCard } from '@/components/shared/StatCard';
 import { EmptyState } from '@/components/shared/EmptyState';
 import {
-  Wallet, Plus, CreditCard, ShieldCheck, ArrowUpRight, ArrowDownLeft,
+  Wallet, Plus, CreditCard, ShieldCheck,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { mockStudents, mockWallets, mockWalletTransactions } from '@/lib/mock-data';
+import apiClient from '@/lib/api-client';
 import type { WalletTransaction } from '@/types';
-
-const parentChildren = mockStudents.slice(0, 2);
 
 const transactionColumns: ColumnDef<WalletTransaction, unknown>[] = [
   {
@@ -76,13 +76,31 @@ const transactionColumns: ColumnDef<WalletTransaction, unknown>[] = [
 export default function WalletPage() {
   const [loadAmount, setLoadAmount] = useState('');
   const [dialogOpen, setDialogOpen] = useState<string | null>(null);
+  const [children, setChildren] = useState(mockStudents.slice(0, 2));
+  const [wallets, setWallets] = useState(mockWallets);
+  const [transactions, setTransactions] = useState(mockWalletTransactions);
 
-  const childWallets = parentChildren.map((child) => {
-    const wallet = mockWallets.find((w) => w.studentId === child.id);
-    const transactions = mockWalletTransactions.filter(
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await apiClient.get('/wallet');
+        if (response.data) {
+          const data = response.data.data ?? response.data;
+          if (Array.isArray(data) && data.length > 0) setWallets(data);
+        }
+      } catch {
+        console.warn('API unavailable, using mock data');
+      }
+    }
+    fetchData();
+  }, []);
+
+  const childWallets = children.map((child) => {
+    const wallet = wallets.find((w) => w.studentId === child.id);
+    const childTransactions = transactions.filter(
       (t) => t.walletId === wallet?.id
     );
-    return { child, wallet, transactions };
+    return { child, wallet, transactions: childTransactions };
   });
 
   const totalBalance = childWallets.reduce(
@@ -90,8 +108,21 @@ export default function WalletPage() {
     0
   );
 
-  const handleLoadMoney = (walletId: string) => {
-    // In production, this would call the API
+  const handleLoadMoney = async (walletId: string) => {
+    const amount = parseFloat(loadAmount);
+    if (!amount || amount < 10) return;
+    try {
+      await apiClient.post('/wallet/load', { walletId, amount: Math.round(amount * 100) });
+      toast.success('Wallet topped up successfully!');
+      // Refresh wallets
+      const response = await apiClient.get('/wallet');
+      if (response.data) {
+        const data = response.data.data ?? response.data;
+        if (Array.isArray(data)) setWallets(data);
+      }
+    } catch {
+      toast.error('Failed to load money. Please try again.');
+    }
     setLoadAmount('');
     setDialogOpen(null);
   };
@@ -103,7 +134,6 @@ export default function WalletPage() {
         description="Manage your children's school wallets and view transaction history."
       />
 
-      {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
           title="Total Balance"
@@ -125,19 +155,17 @@ export default function WalletPage() {
         />
       </div>
 
-      {/* Per-child wallet tabs */}
-      <Tabs defaultValue={parentChildren[0]?.id ?? ''}>
+      <Tabs defaultValue={children[0]?.id ?? ''}>
         <TabsList>
-          {parentChildren.map((child) => (
+          {children.map((child) => (
             <TabsTrigger key={child.id} value={child.id}>
-              {child.user.firstName} {child.user.lastName}
+              {child.user?.firstName ?? (child as any).firstName} {child.user?.lastName ?? (child as any).lastName}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        {childWallets.map(({ child, wallet, transactions }) => (
+        {childWallets.map(({ child, wallet, transactions: childTxns }) => (
           <TabsContent key={child.id} value={child.id} className="space-y-6">
-            {/* Balance Card */}
             <Card>
               <CardContent className="p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -151,17 +179,13 @@ export default function WalletPage() {
                         Wristband: <span className="font-medium text-foreground">{wallet?.wristbandId ?? 'N/A'}</span>
                       </span>
                       {wallet?.lastTopUp && (
-                        <span>
-                          Last top-up: {formatDate(wallet.lastTopUp)}
-                        </span>
+                        <span>Last top-up: {formatDate(wallet.lastTopUp)}</span>
                       )}
                     </div>
                   </div>
                   <Dialog
                     open={dialogOpen === child.id}
-                    onOpenChange={(open) =>
-                      setDialogOpen(open ? child.id : null)
-                    }
+                    onOpenChange={(open) => setDialogOpen(open ? child.id : null)}
                   >
                     <DialogTrigger
                       render={<Button className="gap-2" />}
@@ -172,7 +196,7 @@ export default function WalletPage() {
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>
-                          Load Money - {child.user.firstName}
+                          Load Money - {child.user?.firstName ?? (child as any).firstName}
                         </DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 pt-2">
@@ -187,9 +211,7 @@ export default function WalletPage() {
                             min="10"
                             step="10"
                           />
-                          <p className="text-xs text-muted-foreground">
-                            Minimum top-up: R10.00
-                          </p>
+                          <p className="text-xs text-muted-foreground">Minimum top-up: R10.00</p>
                         </div>
                         <div className="flex gap-2">
                           {[50, 100, 200, 500].map((preset) => (
@@ -205,12 +227,8 @@ export default function WalletPage() {
                         </div>
                         <Button
                           className="w-full"
-                          disabled={
-                            !loadAmount || parseFloat(loadAmount) < 10
-                          }
-                          onClick={() =>
-                            handleLoadMoney(wallet?.id ?? '')
-                          }
+                          disabled={!loadAmount || parseFloat(loadAmount) < 10}
+                          onClick={() => handleLoadMoney(wallet?.id ?? '')}
                         >
                           Load {loadAmount ? `R${parseFloat(loadAmount).toFixed(2)}` : 'Money'}
                         </Button>
@@ -221,12 +239,11 @@ export default function WalletPage() {
               </CardContent>
             </Card>
 
-            {/* Spending Limits */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Spending Limits</CardTitle>
                 <CardDescription>
-                  Control daily spending for {child.user.firstName}
+                  Control daily spending for {child.user?.firstName ?? (child as any).firstName}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -236,12 +253,8 @@ export default function WalletPage() {
                       <ShieldCheck className="h-4 w-4 text-primary" />
                       <p className="text-sm font-medium">Daily Limit</p>
                     </div>
-                    <p className="text-2xl font-bold">
-                      {formatCurrency(wallet?.dailyLimit ?? 0)}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Maximum spend per day
-                    </p>
+                    <p className="text-2xl font-bold">{formatCurrency(wallet?.dailyLimit ?? 0)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Maximum spend per day</p>
                   </div>
                   <div className="rounded-lg border p-4">
                     <div className="flex items-center gap-2 mb-2">
@@ -250,37 +263,30 @@ export default function WalletPage() {
                     </div>
                     <Badge
                       variant="secondary"
-                      className={
-                        wallet?.isActive
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-red-100 text-red-800'
-                      }
+                      className={wallet?.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}
                     >
                       {wallet?.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {wallet?.isActive
-                        ? 'Wallet is enabled for purchases'
-                        : 'Wallet is currently disabled'}
+                      {wallet?.isActive ? 'Wallet is enabled for purchases' : 'Wallet is currently disabled'}
                     </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Transaction History */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Transaction History</CardTitle>
                 <CardDescription>
-                  Recent wallet transactions for {child.user.firstName}
+                  Recent wallet transactions for {child.user?.firstName ?? (child as any).firstName}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {transactions.length > 0 ? (
+                {childTxns.length > 0 ? (
                   <DataTable
                     columns={transactionColumns}
-                    data={transactions}
+                    data={childTxns}
                     searchKey="description"
                     searchPlaceholder="Search transactions..."
                   />

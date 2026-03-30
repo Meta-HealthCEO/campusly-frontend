@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
 import {
@@ -10,25 +10,43 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Users, BookOpen, User } from 'lucide-react';
-import { mockClasses, mockStudents, mockTeachers } from '@/lib/mock-data';
+import { Users, BookOpen } from 'lucide-react';
+import { mockClasses, mockStudents } from '@/lib/mock-data';
 import { cn, getInitials } from '@/lib/utils';
-
-const currentTeacher = mockTeachers[0];
-
-// Get teacher's classes
-const myClasses = mockClasses.filter((cls) =>
-  currentTeacher.classIds.includes(cls.id)
-);
+import apiClient from '@/lib/api-client';
 
 export default function TeacherClassesPage() {
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [classes, setClasses] = useState(mockClasses);
+  const [students, setStudents] = useState(mockStudents);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [classesRes, studentsRes] = await Promise.allSettled([
+          apiClient.get('/classes'),
+          apiClient.get('/students'),
+        ]);
+        if (classesRes.status === 'fulfilled' && classesRes.value.data) {
+          const data = classesRes.value.data.data ?? classesRes.value.data;
+          if (Array.isArray(data) && data.length > 0) setClasses(data);
+        }
+        if (studentsRes.status === 'fulfilled' && studentsRes.value.data) {
+          const data = studentsRes.value.data.data ?? studentsRes.value.data;
+          if (Array.isArray(data) && data.length > 0) setStudents(data);
+        }
+      } catch {
+        console.warn('API unavailable, using mock data');
+      }
+    }
+    fetchData();
+  }, []);
 
   const selectedClass = selectedClassId
-    ? mockClasses.find((c) => c.id === selectedClassId)
+    ? classes.find((c) => c.id === selectedClassId)
     : null;
   const classStudents = selectedClassId
-    ? mockStudents.filter((s) => s.classId === selectedClassId)
+    ? students.filter((s) => s.classId === selectedClassId)
     : [];
 
   return (
@@ -39,13 +57,10 @@ export default function TeacherClassesPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {myClasses.map((cls) => {
-          const studentCount = mockStudents.filter(
-            (s) => s.classId === cls.id
-          ).length;
-          const capacityPercentage = Math.round(
-            (studentCount / cls.capacity) * 100
-          );
+        {classes.map((cls) => {
+          const studentCount = students.filter((s) => s.classId === cls.id).length;
+          const capacity = cls.capacity ?? 30;
+          const capacityPercentage = Math.round((studentCount / capacity) * 100);
 
           return (
             <Card
@@ -57,10 +72,10 @@ export default function TeacherClassesPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="text-lg font-bold">
-                      {cls.grade.name} {cls.name}
+                      {cls.grade?.name ?? (cls as any).gradeName ?? ''} {cls.name}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {cls.grade.name}
+                      {cls.grade?.name ?? (cls as any).gradeName ?? ''}
                     </p>
                   </div>
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
@@ -71,9 +86,7 @@ export default function TeacherClassesPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Students</span>
-                    <span className="font-medium">
-                      {studentCount} / {cls.capacity}
-                    </span>
+                    <span className="font-medium">{studentCount} / {capacity}</span>
                   </div>
                   <div className="h-2 rounded-full bg-muted">
                     <div
@@ -85,21 +98,19 @@ export default function TeacherClassesPage() {
                           ? 'bg-amber-500'
                           : 'bg-emerald-500'
                       )}
-                      style={{ width: `${capacityPercentage}%` }}
+                      style={{ width: `${Math.min(capacityPercentage, 100)}%` }}
                     />
                   </div>
                 </div>
 
-                <Badge variant="secondary">
-                  {capacityPercentage}% capacity
-                </Badge>
+                <Badge variant="secondary">{capacityPercentage}% capacity</Badge>
               </CardContent>
             </Card>
           );
         })}
       </div>
 
-      {myClasses.length === 0 && (
+      {classes.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-12">
             <BookOpen className="h-12 w-12 text-muted-foreground" />
@@ -111,49 +122,37 @@ export default function TeacherClassesPage() {
         </Card>
       )}
 
-      {/* Student List Dialog */}
       <Dialog
         open={!!selectedClassId}
-        onOpenChange={(open) => {
-          if (!open) setSelectedClassId(null);
-        }}
+        onOpenChange={(open) => { if (!open) setSelectedClassId(null); }}
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {selectedClass
-                ? `${selectedClass.grade.name} ${selectedClass.name} - Student List`
+                ? `${selectedClass.grade?.name ?? ''} ${selectedClass.name} - Student List`
                 : 'Student List'}
             </DialogTitle>
           </DialogHeader>
           <div className="max-h-[400px] overflow-y-auto space-y-2">
             {classStudents.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">
-                No students in this class.
-              </p>
+              <p className="py-4 text-center text-sm text-muted-foreground">No students in this class.</p>
             ) : (
               classStudents.map((student, index) => (
-                <div
-                  key={student.id}
-                  className="flex items-center gap-3 rounded-lg border p-3"
-                >
+                <div key={student.id} className="flex items-center gap-3 rounded-lg border p-3">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                     {getInitials(
-                      student.user.firstName,
-                      student.user.lastName
+                      student.user?.firstName ?? (student as any).firstName ?? '',
+                      student.user?.lastName ?? (student as any).lastName ?? ''
                     )}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium">
-                      {student.user.firstName} {student.user.lastName}
+                      {student.user?.firstName ?? (student as any).firstName} {student.user?.lastName ?? (student as any).lastName}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {student.admissionNumber}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{student.admissionNumber}</p>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    #{index + 1}
-                  </span>
+                  <span className="text-xs text-muted-foreground">#{index + 1}</span>
                 </div>
               ))
             )}

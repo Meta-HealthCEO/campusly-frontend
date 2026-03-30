@@ -111,7 +111,7 @@ export default function StudentDashboard() {
                   <div className="space-y-1">
                     <p className="text-sm font-medium">{hw.title}</p>
                     <p className="text-xs text-muted-foreground">
-                      {hw.subject.name}
+                      {hw.subject?.name ?? hw.subjectName ?? ''}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

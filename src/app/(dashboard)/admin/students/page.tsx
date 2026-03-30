@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -7,6 +8,7 @@ import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { mockStudents } from '@/lib/mock-data';
+import apiClient from '@/lib/api-client';
 import type { Student } from '@/types';
 
 const columns: ColumnDef<Student>[] = [
@@ -17,17 +19,17 @@ const columns: ColumnDef<Student>[] = [
   {
     id: 'name',
     header: 'Name',
-    accessorFn: (row) => `${row.user.firstName} ${row.user.lastName}`,
+    accessorFn: (row) => `${row.user?.firstName ?? (row as any).firstName ?? ''} ${row.user?.lastName ?? (row as any).lastName ?? ''}`,
   },
   {
     id: 'grade',
     header: 'Grade',
-    accessorFn: (row) => row.grade.name,
+    accessorFn: (row) => row.grade?.name ?? (row as any).gradeName ?? '-',
   },
   {
     id: 'class',
     header: 'Class',
-    accessorFn: (row) => row.class.name,
+    accessorFn: (row) => row.class?.name ?? (row as any).className ?? '-',
   },
   {
     id: 'status',
@@ -47,6 +49,26 @@ const columns: ColumnDef<Student>[] = [
 ];
 
 export default function StudentsPage() {
+  const [students, setStudents] = useState<Student[]>(mockStudents);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await apiClient.get('/students');
+        if (response.data) {
+          const data = response.data.data ?? response.data;
+          if (Array.isArray(data) && data.length > 0) setStudents(data);
+        }
+      } catch {
+        console.warn('API unavailable, using mock data');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
   return (
     <div className="space-y-6">
       <PageHeader title="Students" description="Manage student enrolments and profiles">
@@ -60,7 +82,7 @@ export default function StudentsPage() {
 
       <DataTable
         columns={columns}
-        data={mockStudents}
+        data={students}
         searchKey="name"
         searchPlaceholder="Search students..."
       />

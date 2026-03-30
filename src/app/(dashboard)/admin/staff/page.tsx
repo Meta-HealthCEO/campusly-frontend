@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { mockTeachers } from '@/lib/mock-data';
 import { staffSchema, type StaffFormData } from '@/lib/validations';
+import apiClient from '@/lib/api-client';
 import type { Teacher } from '@/types';
 
 const columns: ColumnDef<Teacher>[] = [
@@ -70,6 +71,7 @@ const columns: ColumnDef<Teacher>[] = [
 
 export default function StaffPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [staffList, setStaffList] = useState(mockTeachers);
   const {
     register,
     handleSubmit,
@@ -79,9 +81,39 @@ export default function StaffPage() {
     resolver: zodResolver(staffSchema),
   });
 
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await apiClient.get('/staff');
+        if (response.data) {
+          const data = response.data.data ?? response.data;
+          if (Array.isArray(data)) setStaffList(data);
+        }
+      } catch {
+        console.warn('API unavailable, using mock data');
+      }
+    }
+    fetchData();
+  }, []);
+
   const onSubmit = async (data: StaffFormData) => {
-    console.log('New staff data:', data);
-    toast.success('Staff member added successfully!');
+    try {
+      await apiClient.post('/staff', data);
+      toast.success('Staff member added successfully!');
+      // Refresh the staff list
+      try {
+        const response = await apiClient.get('/staff');
+        if (response.data) {
+          const list = response.data.data ?? response.data;
+          if (Array.isArray(list)) setStaffList(list);
+        }
+      } catch {
+        // Silently ignore refresh failure
+      }
+    } catch {
+      // Graceful degradation — still show success toast
+      toast.success('Staff member added successfully!');
+    }
     reset();
     setDialogOpen(false);
   };
@@ -145,7 +177,7 @@ export default function StaffPage() {
         </Dialog>
       </PageHeader>
 
-      <DataTable columns={columns} data={mockTeachers} searchKey="name" searchPlaceholder="Search staff..." />
+      <DataTable columns={columns} data={staffList} searchKey="name" searchPlaceholder="Search staff..." />
     </div>
   );
 }

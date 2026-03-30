@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { ShoppingBag, DollarSign, TrendingUp } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCard } from '@/components/shared/StatCard';
@@ -10,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BarChartComponent } from '@/components/charts';
 import { mockTuckshopItems, mockDailySales } from '@/lib/mock-data';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import apiClient from '@/lib/api-client';
 import type { TuckshopItem } from '@/types';
 
 const columns: ColumnDef<TuckshopItem>[] = [
@@ -59,19 +61,37 @@ const columns: ColumnDef<TuckshopItem>[] = [
   },
 ];
 
-const totalRevenue = mockDailySales.reduce((sum, day) => sum + day.totalRevenue, 0);
-const totalTransactions = mockDailySales.reduce((sum, day) => sum + day.totalTransactions, 0);
-const avgTransaction = totalTransactions > 0 ? Math.round(totalRevenue / totalTransactions) : 0;
-
-const salesChartData = [...mockDailySales]
-  .reverse()
-  .map((day) => ({
-    date: formatDate(day.date, 'dd MMM'),
-    revenue: day.totalRevenue / 100,
-    transactions: day.totalTransactions,
-  }));
-
 export default function TuckshopPage() {
+  const [menuItems, setMenuItems] = useState<TuckshopItem[]>(mockTuckshopItems);
+  const [dailySales, setDailySales] = useState(mockDailySales);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await apiClient.get('/tuckshop/menu-items');
+        if (response.data) setMenuItems(response.data.data ?? response.data);
+      } catch (error) {
+        console.warn('API unavailable, using mock data');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const totalRevenue = dailySales.reduce((sum, day) => sum + day.totalRevenue, 0);
+  const totalTransactions = dailySales.reduce((sum, day) => sum + day.totalTransactions, 0);
+  const avgTransaction = totalTransactions > 0 ? Math.round(totalRevenue / totalTransactions) : 0;
+
+  const salesChartData = [...dailySales]
+    .reverse()
+    .map((day) => ({
+      date: formatDate(day.date, 'dd MMM'),
+      revenue: day.totalRevenue / 100,
+      transactions: day.totalTransactions,
+    }));
+
   return (
     <div className="space-y-6">
       <PageHeader title="Tuckshop Management" description="Manage menu items and track daily sales" />
@@ -83,7 +103,7 @@ export default function TuckshopPage() {
         </TabsList>
 
         <TabsContent value="menu" className="mt-4">
-          <DataTable columns={columns} data={mockTuckshopItems} searchKey="name" searchPlaceholder="Search items..." />
+          <DataTable columns={columns} data={menuItems} searchKey="name" searchPlaceholder="Search items..." />
         </TabsContent>
 
         <TabsContent value="sales" className="mt-4 space-y-4">
@@ -112,7 +132,7 @@ export default function TuckshopPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {mockDailySales.map((day) => (
+                {dailySales.map((day) => (
                   <div key={day.date} className="flex items-center justify-between rounded-lg border p-3">
                     <div>
                       <p className="font-medium">{formatDate(day.date)}</p>

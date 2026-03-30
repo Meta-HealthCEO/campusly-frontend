@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { getRoleDashboardPath } from '@/lib/auth';
-import { mockUsers } from '@/lib/mock-data';
+import apiClient from '@/lib/api-client';
 import type { LoginCredentials } from '@/types';
 
 export function useAuth() {
@@ -11,14 +11,15 @@ export function useAuth() {
   const { login: storeLogin, logout: storeLogout, user, isAuthenticated } = useAuthStore();
 
   const login = async (credentials: LoginCredentials) => {
-    // Mock login - find user by email
-    const found = mockUsers.find((u) => u.email === credentials.email);
-    if (!found) {
-      throw new Error('Invalid email or password');
-    }
-    const tokens = { accessToken: 'mock-access-token', refreshToken: 'mock-refresh-token' };
-    storeLogin(found, tokens);
-    router.push(getRoleDashboardPath(found.role));
+    const { data } = await apiClient.post('/auth/login', credentials);
+    const responseData = data.data ?? data;
+    const userData = responseData.user ?? responseData;
+    const accessToken = responseData.accessToken ?? responseData.access_token;
+    const refreshToken = responseData.refreshToken ?? responseData.refresh_token;
+    // Normalize school_admin → admin for frontend routing
+    const role = userData.role === 'school_admin' ? 'admin' : userData.role;
+    storeLogin({ ...userData, role }, { accessToken, refreshToken });
+    router.push(getRoleDashboardPath(role));
   };
 
   const logout = () => {

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -9,40 +10,9 @@ import {
   mockStudentGrades,
   mockSubjects,
   mockStudents,
-  mockAssessments,
 } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
-
-const currentStudent = mockStudents[0];
-
-// Get grades for current student
-const myGrades = mockStudentGrades.filter(
-  (sg) => sg.studentId === currentStudent.id
-);
-
-// Group grades by subject
-const gradesBySubject = mockSubjects
-  .map((subject) => {
-    const subjectGrades = myGrades.filter(
-      (g) => g.assessment.subjectId === subject.id
-    );
-    if (subjectGrades.length === 0) return null;
-
-    const averagePercentage =
-      subjectGrades.reduce((sum, g) => sum + g.percentage, 0) /
-      subjectGrades.length;
-
-    return {
-      subject,
-      grades: subjectGrades,
-      average: Math.round(averagePercentage),
-    };
-  })
-  .filter(Boolean) as {
-  subject: (typeof mockSubjects)[0];
-  grades: typeof myGrades;
-  average: number;
-}[];
+import apiClient from '@/lib/api-client';
 
 function getGradeColor(percentage: number): string {
   if (percentage >= 80) return 'text-emerald-600';
@@ -59,6 +29,60 @@ function getGradeBadge(percentage: number): { label: string; variant: 'default' 
 }
 
 export default function StudentGradesPage() {
+  const [grades, setGrades] = useState(mockStudentGrades);
+  const [subjects, setSubjects] = useState(mockSubjects);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [gradesRes, subjectsRes] = await Promise.allSettled([
+          apiClient.get('/grades'),
+          apiClient.get('/subjects'),
+        ]);
+        if (gradesRes.status === 'fulfilled' && gradesRes.value.data) {
+          const data = gradesRes.value.data.data ?? gradesRes.value.data;
+          if (Array.isArray(data)) setGrades(data);
+        }
+        if (subjectsRes.status === 'fulfilled' && subjectsRes.value.data) {
+          const data = subjectsRes.value.data.data ?? subjectsRes.value.data;
+          if (Array.isArray(data)) setSubjects(data);
+        }
+      } catch {
+        console.warn('API unavailable, using mock data');
+      }
+    }
+    fetchData();
+  }, []);
+
+  const currentStudent = mockStudents[0];
+
+  const myGrades = grades.filter(
+    (sg) => sg.studentId === currentStudent.id
+  );
+
+  const gradesBySubject = subjects
+    .map((subject) => {
+      const subjectGrades = myGrades.filter(
+        (g) => g.assessment.subjectId === subject.id
+      );
+      if (subjectGrades.length === 0) return null;
+
+      const averagePercentage =
+        subjectGrades.reduce((sum, g) => sum + g.percentage, 0) /
+        subjectGrades.length;
+
+      return {
+        subject,
+        grades: subjectGrades,
+        average: Math.round(averagePercentage),
+      };
+    })
+    .filter(Boolean) as {
+    subject: (typeof mockSubjects)[0];
+    grades: typeof myGrades;
+    average: number;
+  }[];
+
   const overallAverage =
     gradesBySubject.length > 0
       ? Math.round(
@@ -93,7 +117,7 @@ export default function StudentGradesPage() {
 
       {/* Subject Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {gradesBySubject.map(({ subject, grades, average }) => {
+        {gradesBySubject.map(({ subject, grades: subjectGrades, average }) => {
           const gradeBadge = getGradeBadge(average);
 
           return (
@@ -118,15 +142,15 @@ export default function StudentGradesPage() {
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Assessments
                   </p>
-                  {grades.map((grade) => (
+                  {subjectGrades.map((grade) => (
                     <div
                       key={grade.id}
                       className="flex items-center justify-between rounded border p-2"
                     >
                       <div>
-                        <p className="text-sm">{grade.assessment.name}</p>
+                        <p className="text-sm">{grade.assessment?.name ?? (grade as any).assessmentName ?? ''}</p>
                         <p className="text-xs text-muted-foreground">
-                          {grade.assessment.type}
+                          {grade.assessment?.type ?? (grade as any).assessmentType ?? ''}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -136,7 +160,7 @@ export default function StudentGradesPage() {
                             getGradeColor(grade.percentage)
                           )}
                         >
-                          {grade.marks}/{grade.assessment.totalMarks}
+                          {grade.marks}/{grade.assessment?.totalMarks ?? (grade as any).totalMarks ?? ''}
                         </span>
                         {grade.percentage >= 70 ? (
                           <TrendingUp className="h-3 w-3 text-emerald-500" />

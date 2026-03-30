@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,19 +19,12 @@ import { StatCard } from '@/components/shared/StatCard';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { EmptyState } from '@/components/shared/EmptyState';
 import {
-  CreditCard, DollarSign, FileText, CheckCircle2, AlertTriangle, Clock,
+  CreditCard, DollarSign, FileText, CheckCircle2, AlertTriangle,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { mockInvoices, mockPayments, mockStudents } from '@/lib/mock-data';
+import apiClient from '@/lib/api-client';
 import type { Invoice, Payment } from '@/types';
-
-const parentChildren = mockStudents.slice(0, 2);
-const parentInvoices = mockInvoices.filter((inv) =>
-  parentChildren.some((c) => c.id === inv.studentId)
-);
-const parentPayments = mockPayments.filter((p) =>
-  parentInvoices.some((inv) => inv.id === p.invoiceId)
-);
 
 const statusStyles: Record<string, string> = {
   paid: 'bg-emerald-100 text-emerald-800',
@@ -228,14 +221,47 @@ const paymentColumns: ColumnDef<Payment, unknown>[] = [
 ];
 
 export default function FeesPage() {
-  const totalOutstanding = parentInvoices.reduce(
+  const mockParentChildren = mockStudents.slice(0, 2);
+  const mockParentInvoices = mockInvoices.filter((inv) =>
+    mockParentChildren.some((c) => c.id === inv.studentId)
+  );
+  const mockParentPayments = mockPayments.filter((p) =>
+    mockParentInvoices.some((inv) => inv.id === p.invoiceId)
+  );
+
+  const [invoices, setInvoices] = useState(mockParentInvoices);
+  const [payments, setPayments] = useState(mockParentPayments);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [invRes, payRes] = await Promise.allSettled([
+          apiClient.get('/fee/invoices'),
+          apiClient.get('/fee/payments'),
+        ]);
+        if (invRes.status === 'fulfilled' && invRes.value.data) {
+          const data = invRes.value.data.data ?? invRes.value.data;
+          if (Array.isArray(data)) setInvoices(data);
+        }
+        if (payRes.status === 'fulfilled' && payRes.value.data) {
+          const data = payRes.value.data.data ?? payRes.value.data;
+          if (Array.isArray(data)) setPayments(data);
+        }
+      } catch {
+        console.warn('API unavailable, using mock data');
+      }
+    }
+    fetchData();
+  }, []);
+
+  const totalOutstanding = invoices.reduce(
     (sum, inv) => sum + inv.balanceDue,
     0
   );
-  const totalPaid = parentPayments
+  const totalPaid = payments
     .filter((p) => p.status === 'completed')
     .reduce((sum, p) => sum + p.amount, 0);
-  const overdueCount = parentInvoices.filter(
+  const overdueCount = invoices.filter(
     (inv) => inv.status === 'overdue'
   ).length;
 
@@ -264,7 +290,7 @@ export default function FeesPage() {
         />
         <StatCard
           title="Invoices"
-          value={String(parentInvoices.length)}
+          value={String(invoices.length)}
           icon={FileText}
           description="Total invoices"
         />
@@ -289,10 +315,10 @@ export default function FeesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {parentInvoices.length > 0 ? (
+          {invoices.length > 0 ? (
             <DataTable
               columns={invoiceColumns}
-              data={parentInvoices}
+              data={invoices}
               searchKey="invoiceNumber"
               searchPlaceholder="Search invoices..."
             />
@@ -315,10 +341,10 @@ export default function FeesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {parentPayments.length > 0 ? (
+          {payments.length > 0 ? (
             <DataTable
               columns={paymentColumns}
-              data={parentPayments}
+              data={payments}
               searchKey="reference"
               searchPlaceholder="Search payments..."
             />

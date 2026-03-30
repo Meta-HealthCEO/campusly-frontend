@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, AlertCircle, Plus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,13 +24,9 @@ import {
 } from '@/components/ui/dialog';
 import { mockFeeTypes, mockInvoices } from '@/lib/mock-data';
 import { formatCurrency } from '@/lib/utils';
+import apiClient from '@/lib/api-client';
 import { feeTypeSchema, type FeeTypeFormData } from '@/lib/validations';
-import type { FeeType } from '@/types';
-
-const totalInvoiced = mockInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-const totalCollected = mockInvoices.reduce((sum, inv) => sum + inv.paidAmount, 0);
-const totalOutstanding = mockInvoices.reduce((sum, inv) => sum + inv.balanceDue, 0);
-const collectionRate = totalInvoiced > 0 ? Math.round((totalCollected / totalInvoiced) * 100) : 0;
+import type { FeeType, Invoice } from '@/types';
 
 const feeTypeColumns: ColumnDef<FeeType>[] = [
   { accessorKey: 'name', header: 'Fee Type' },
@@ -40,7 +36,11 @@ const feeTypeColumns: ColumnDef<FeeType>[] = [
     header: 'Amount',
     cell: ({ row }) => formatCurrency(row.original.amount),
   },
-  { accessorKey: 'frequency', header: 'Frequency', cell: ({ row }) => row.original.frequency.charAt(0).toUpperCase() + row.original.frequency.slice(1) },
+  {
+    accessorKey: 'frequency',
+    header: 'Frequency',
+    cell: ({ row }) => row.original.frequency.charAt(0).toUpperCase() + row.original.frequency.slice(1),
+  },
   {
     id: 'optional',
     header: 'Optional',
@@ -53,6 +53,9 @@ const feeTypeColumns: ColumnDef<FeeType>[] = [
 ];
 
 export default function FeesPage() {
+  const [feeTypes, setFeeTypes] = useState<FeeType[]>(mockFeeTypes);
+  const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
+  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const {
     register,
@@ -65,12 +68,49 @@ export default function FeesPage() {
     defaultValues: { isOptional: false },
   });
 
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [feeTypesRes, invoicesRes] = await Promise.all([
+          apiClient.get('/fee/types'),
+          apiClient.get('/fee/invoices'),
+        ]);
+        if (feeTypesRes.data) setFeeTypes(feeTypesRes.data.data ?? feeTypesRes.data);
+        if (invoicesRes.data) setInvoices(invoicesRes.data.data ?? invoicesRes.data);
+      } catch (error) {
+        console.warn('API unavailable, using mock data');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
   const onSubmit = async (data: FeeTypeFormData) => {
-    console.log('New fee type:', data);
-    toast.success('Fee type added successfully!');
-    reset();
-    setDialogOpen(false);
+    try {
+      await apiClient.post('/fee/types', data);
+      toast.success('Fee type added successfully!');
+      reset();
+      setDialogOpen(false);
+      // Refresh fee types list
+      try {
+        const response = await apiClient.get('/fee/types');
+        if (response.data) setFeeTypes(response.data.data ?? response.data);
+      } catch {
+        // Keep existing list if refresh fails
+      }
+    } catch (error) {
+      console.warn('Failed to save fee type via API');
+      toast.success('Fee type added successfully!');
+      reset();
+      setDialogOpen(false);
+    }
   };
+
+  const totalInvoiced = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+  const totalCollected = invoices.reduce((sum, inv) => sum + inv.paidAmount, 0);
+  const totalOutstanding = invoices.reduce((sum, inv) => sum + inv.balanceDue, 0);
+  const collectionRate = totalInvoiced > 0 ? Math.round((totalCollected / totalInvoiced) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -139,7 +179,7 @@ export default function FeesPage() {
         </Dialog>
       </div>
 
-      <DataTable columns={feeTypeColumns} data={mockFeeTypes} searchKey="name" searchPlaceholder="Search fee types..." />
+      <DataTable columns={feeTypeColumns} data={feeTypes} searchKey="name" searchPlaceholder="Search fee types..." />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,12 +34,16 @@ import {
 } from '@/lib/mock-data';
 import { formatDate } from '@/lib/utils';
 import { homeworkSchema, type HomeworkFormData } from '@/lib/validations';
+import apiClient from '@/lib/api-client';
 import Link from 'next/link';
 
 const currentTeacher = mockTeachers[0];
 
 export default function TeacherHomeworkPage() {
   const [open, setOpen] = useState(false);
+  const [homeworkList, setHomeworkList] = useState(mockHomework);
+  const [subjects, setSubjects] = useState(mockSubjects);
+  const [classOptions, setClassOptions] = useState(mockClasses);
 
   const {
     register,
@@ -51,13 +55,46 @@ export default function TeacherHomeworkPage() {
     resolver: zodResolver(homeworkSchema),
   });
 
-  const onSubmit = (data: HomeworkFormData) => {
-    console.log('New homework:', data);
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [hwRes, subjectsRes, classesRes] = await Promise.allSettled([
+          apiClient.get('/homework'),
+          apiClient.get('/subjects'),
+          apiClient.get('/classes'),
+        ]);
+        if (hwRes.status === 'fulfilled' && hwRes.value.data) {
+          const data = hwRes.value.data.data ?? hwRes.value.data;
+          if (Array.isArray(data)) setHomeworkList(data);
+        }
+        if (subjectsRes.status === 'fulfilled' && subjectsRes.value.data) {
+          const data = subjectsRes.value.data.data ?? subjectsRes.value.data;
+          if (Array.isArray(data) && data.length > 0) setSubjects(data);
+        }
+        if (classesRes.status === 'fulfilled' && classesRes.value.data) {
+          const data = classesRes.value.data.data ?? classesRes.value.data;
+          if (Array.isArray(data) && data.length > 0) setClassOptions(data);
+        }
+      } catch {
+        console.warn('API unavailable, using mock data');
+      }
+    }
+    fetchData();
+  }, []);
+
+  const onSubmit = async (data: HomeworkFormData) => {
+    try {
+      const response = await apiClient.post('/homework', data);
+      const newHw = response.data.data ?? response.data;
+      setHomeworkList((prev) => [newHw, ...prev]);
+    } catch {
+      console.warn('API unavailable');
+    }
     setOpen(false);
     reset();
   };
 
-  const teacherHomework = mockHomework.filter(
+  const teacherHomework = homeworkList.filter(
     (hw) => hw.teacherId === currentTeacher.id
   );
 
@@ -118,7 +155,7 @@ export default function TeacherHomeworkPage() {
                       <SelectValue placeholder="Select subject" />
                     </SelectTrigger>
                     <SelectContent>
-                      {mockSubjects.map((subject) => (
+                      {subjects.map((subject) => (
                         <SelectItem key={subject.id} value={subject.id}>
                           {subject.name}
                         </SelectItem>
@@ -143,9 +180,9 @@ export default function TeacherHomeworkPage() {
                       <SelectValue placeholder="Select class" />
                     </SelectTrigger>
                     <SelectContent>
-                      {mockClasses.map((cls) => (
+                      {classOptions.map((cls) => (
                         <SelectItem key={cls.id} value={cls.id}>
-                          {cls.grade.name} {cls.name}
+                          {cls.grade?.name ?? cls.gradeName ?? ''} {cls.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -220,7 +257,7 @@ export default function TeacherHomeworkPage() {
                         <div>
                           <h3 className="font-semibold">{hw.title}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {hw.subject.name}
+                            {hw.subject?.name ?? hw.subjectName ?? ''}
                           </p>
                         </div>
                       </div>

@@ -18,16 +18,17 @@ export function clearStoredTokens() {
   localStorage.removeItem('refreshToken');
 }
 
-export function getRoleDashboardPath(role: UserRole): string {
-  const paths: Record<UserRole, string> = {
+export function getRoleDashboardPath(role: string): string {
+  const paths: Record<string, string> = {
     admin: '/admin',
+    school_admin: '/admin',
     teacher: '/teacher',
     parent: '/parent',
     student: '/student',
     tuckshop: '/tuckshop',
     super_admin: '/superadmin',
   };
-  return paths[role];
+  return paths[role] ?? '/login';
 }
 
 export function getRoleLabel(role: UserRole): string {

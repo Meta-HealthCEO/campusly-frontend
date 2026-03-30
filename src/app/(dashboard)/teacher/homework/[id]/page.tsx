@@ -97,7 +97,7 @@ export default function TeacherHomeworkDetailPage() {
         Back to Homework
       </Link>
 
-      <PageHeader title={homework.title} description={homework.subject.name} />
+      <PageHeader title={homework.title} description={homework.subject?.name ?? homework.subjectName ?? ''} />
 
       {/* Homework Info */}
       <Card>
@@ -106,7 +106,7 @@ export default function TeacherHomeworkDetailPage() {
             <div>
               <h2 className="text-xl font-bold">{homework.title}</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {homework.subject.name}
+                {homework.subject?.name ?? homework.subjectName ?? ''}
               </p>
             </div>
             <Badge

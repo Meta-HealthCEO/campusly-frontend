@@ -1,9 +1,11 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { mockDebtors } from '@/lib/mock-data';
 import { formatCurrency } from '@/lib/utils';
+import apiClient from '@/lib/api-client';
 import type { DebtorEntry } from '@/types';
 
 const columns: ColumnDef<DebtorEntry>[] = [
@@ -56,10 +58,27 @@ const columns: ColumnDef<DebtorEntry>[] = [
 ];
 
 export default function DebtorsPage() {
+  const [data, setData] = useState<DebtorEntry[]>(mockDebtors);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await apiClient.get('/fee/debtors-report');
+        if (response.data) setData(response.data.data ?? response.data);
+      } catch (error) {
+        console.warn('API unavailable, using mock data');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
   return (
     <div className="space-y-6">
       <PageHeader title="Debtors Ageing Report" description="Outstanding fees broken down by ageing period" />
-      <DataTable columns={columns} data={mockDebtors} searchKey="parentName" searchPlaceholder="Search by parent name..." />
+      <DataTable columns={columns} data={data} searchKey="parentName" searchPlaceholder="Search by parent name..." />
     </div>
   );
 }

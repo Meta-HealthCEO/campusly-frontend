@@ -1,6 +1,7 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -20,26 +21,54 @@ import {
   mockStudents,
 } from '@/lib/mock-data';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import apiClient from '@/lib/api-client';
 
-const currentStudent = mockStudents[0];
-const wallet = mockWallets.find((w) => w.studentId === currentStudent.id);
-const transactions = mockWalletTransactions.filter(
-  (t) => t.walletId === wallet?.id
-);
-
-const transactionIcons = {
+const transactionIcons: Record<string, typeof ArrowUpCircle> = {
   topup: ArrowUpCircle,
   purchase: ArrowDownCircle,
   refund: RotateCcw,
 };
 
-const transactionColors = {
+const transactionColors: Record<string, string> = {
   topup: 'text-emerald-600',
   purchase: 'text-red-600',
   refund: 'text-blue-600',
 };
 
 export default function StudentWalletPage() {
+  const currentStudent = mockStudents[0];
+  const mockWallet = mockWallets.find((w) => w.studentId === currentStudent.id);
+  const mockTxns = mockWalletTransactions.filter((t) => t.walletId === mockWallet?.id);
+
+  const [wallet, setWallet] = useState(mockWallet);
+  const [transactions, setTransactions] = useState(mockTxns);
+  const [menuItems, setMenuItems] = useState(mockTuckshopItems);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [walletRes, menuRes] = await Promise.allSettled([
+          apiClient.get(`/wallet/${currentStudent.id}`),
+          apiClient.get('/tuckshop/menu-items'),
+        ]);
+        if (walletRes.status === 'fulfilled' && walletRes.value.data) {
+          const data = walletRes.value.data.data ?? walletRes.value.data;
+          if (data) {
+            setWallet(data.wallet ?? data);
+            if (Array.isArray(data.transactions)) setTransactions(data.transactions);
+          }
+        }
+        if (menuRes.status === 'fulfilled' && menuRes.value.data) {
+          const data = menuRes.value.data.data ?? menuRes.value.data;
+          if (Array.isArray(data) && data.length > 0) setMenuItems(data);
+        }
+      } catch {
+        console.warn('API unavailable, using mock data');
+      }
+    }
+    fetchData();
+  }, []);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -47,7 +76,6 @@ export default function StudentWalletPage() {
         description="Manage your tuck shop wallet and view transactions"
       />
 
-      {/* Balance Card */}
       <Card className="bg-gradient-to-br from-blue-600 to-blue-700 text-white">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
@@ -66,9 +94,7 @@ export default function StudentWalletPage() {
           </div>
           {wallet?.wristbandId && (
             <div className="mt-4 rounded-lg bg-white/10 px-3 py-2">
-              <p className="text-xs text-blue-200">
-                Wristband ID: {wallet.wristbandId}
-              </p>
+              <p className="text-xs text-blue-200">Wristband ID: {wallet.wristbandId}</p>
             </div>
           )}
         </CardContent>
@@ -92,37 +118,23 @@ export default function StudentWalletPage() {
               <CardContent className="p-0">
                 <div className="divide-y">
                   {transactions.map((tx) => {
-                    const TxIcon = transactionIcons[tx.type];
+                    const TxIcon = transactionIcons[tx.type] ?? ArrowDownCircle;
                     return (
-                      <div
-                        key={tx.id}
-                        className="flex items-center justify-between p-4"
-                      >
+                      <div key={tx.id} className="flex items-center justify-between p-4">
                         <div className="flex items-center gap-3">
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                            <TxIcon
-                              className={`h-5 w-5 ${transactionColors[tx.type]}`}
-                            />
+                            <TxIcon className={`h-5 w-5 ${transactionColors[tx.type] ?? ''}`} />
                           </div>
                           <div>
-                            <p className="text-sm font-medium">
-                              {tx.description}
-                            </p>
+                            <p className="text-sm font-medium">{tx.description}</p>
                             <p className="text-xs text-muted-foreground">
                               {formatDate(tx.createdAt, 'dd MMM yyyy, HH:mm')}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p
-                            className={`text-sm font-semibold ${
-                              tx.amount > 0
-                                ? 'text-emerald-600'
-                                : 'text-red-600'
-                            }`}
-                          >
-                            {tx.amount > 0 ? '+' : ''}
-                            {formatCurrency(Math.abs(tx.amount))}
+                          <p className={`text-sm font-semibold ${tx.amount > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {tx.amount > 0 ? '+' : ''}{formatCurrency(Math.abs(tx.amount))}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             Bal: {formatCurrency(tx.balance)}
@@ -139,7 +151,7 @@ export default function StudentWalletPage() {
 
         <TabsContent value="menu">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {mockTuckshopItems
+            {menuItems
               .filter((item) => item.isAvailable)
               .map((item) => (
                 <Card key={item.id}>
@@ -160,11 +172,7 @@ export default function StudentWalletPage() {
                       {item.allergens.length > 0 && (
                         <div className="flex gap-1">
                           {item.allergens.map((allergen) => (
-                            <Badge
-                              key={allergen}
-                              variant="outline"
-                              className="text-xs"
-                            >
+                            <Badge key={allergen} variant="outline" className="text-xs">
                               {allergen}
                             </Badge>
                           ))}

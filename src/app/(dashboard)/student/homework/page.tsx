@@ -1,29 +1,15 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { BookOpen, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
-import { mockHomework, mockSubmissions, mockStudents } from '@/lib/mock-data';
+import { mockHomework, mockSubmissions } from '@/lib/mock-data';
 import { formatDate } from '@/lib/utils';
+import apiClient from '@/lib/api-client';
 import Link from 'next/link';
-
-const currentStudent = mockStudents[0];
-
-function getHomeworkStatus(homeworkId: string): 'submitted' | 'graded' | 'pending' | 'overdue' {
-  const submission = mockSubmissions.find(
-    (s) => s.homeworkId === homeworkId && s.studentId === currentStudent.id
-  );
-  if (submission) {
-    return submission.status === 'graded' ? 'graded' : 'submitted';
-  }
-  const homework = mockHomework.find((h) => h.id === homeworkId);
-  if (homework && new Date(homework.dueDate) < new Date()) {
-    return 'overdue';
-  }
-  return 'pending';
-}
 
 const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: typeof CheckCircle }> = {
   submitted: { label: 'Submitted', variant: 'secondary', icon: CheckCircle },
@@ -33,7 +19,42 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
 };
 
 export default function StudentHomeworkPage() {
-  const publishedHomework = mockHomework.filter((hw) => hw.status === 'published');
+  const [homeworkList, setHomeworkList] = useState(mockHomework.filter((hw) => hw.status === 'published'));
+  const [submissions, setSubmissions] = useState(mockSubmissions);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [hwRes, subRes] = await Promise.allSettled([
+          apiClient.get('/homework'),
+          apiClient.get('/homework/submissions'),
+        ]);
+        if (hwRes.status === 'fulfilled' && hwRes.value.data) {
+          const data = hwRes.value.data.data ?? hwRes.value.data;
+          if (Array.isArray(data)) setHomeworkList(data.filter((hw: any) => hw.status === 'published'));
+        }
+        if (subRes.status === 'fulfilled' && subRes.value.data) {
+          const data = subRes.value.data.data ?? subRes.value.data;
+          if (Array.isArray(data)) setSubmissions(data);
+        }
+      } catch {
+        console.warn('API unavailable, using mock data');
+      }
+    }
+    fetchData();
+  }, []);
+
+  function getHomeworkStatus(homeworkId: string): 'submitted' | 'graded' | 'pending' | 'overdue' {
+    const submission = submissions.find((s: any) => s.homeworkId === homeworkId);
+    if (submission) {
+      return (submission as any).status === 'graded' ? 'graded' : 'submitted';
+    }
+    const homework = homeworkList.find((h) => h.id === homeworkId);
+    if (homework && new Date(homework.dueDate) < new Date()) {
+      return 'overdue';
+    }
+    return 'pending';
+  }
 
   return (
     <div className="space-y-6">
@@ -42,7 +63,7 @@ export default function StudentHomeworkPage() {
         description="View and submit your homework assignments"
       />
 
-      {publishedHomework.length === 0 ? (
+      {homeworkList.length === 0 ? (
         <EmptyState
           icon={BookOpen}
           title="No Homework"
@@ -50,7 +71,7 @@ export default function StudentHomeworkPage() {
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {publishedHomework.map((hw) => {
+          {homeworkList.map((hw) => {
             const status = getHomeworkStatus(hw.id);
             const config = statusConfig[status];
             const StatusIcon = config.icon;
@@ -65,7 +86,7 @@ export default function StudentHomeworkPage() {
                           {hw.title}
                         </h3>
                         <p className="text-xs text-muted-foreground">
-                          {hw.subject.name}
+                          {hw.subject?.name ?? (hw as any).subjectName ?? ''}
                         </p>
                       </div>
                       <Badge variant={config.variant}>
@@ -80,7 +101,7 @@ export default function StudentHomeworkPage() {
 
                     <div className="flex items-center justify-between border-t pt-3">
                       <span className="text-xs text-muted-foreground">
-                        {hw.teacher.user.firstName} {hw.teacher.user.lastName}
+                        {hw.teacher?.user?.firstName ?? (hw as any).teacherName ?? ''} {hw.teacher?.user?.lastName ?? ''}
                       </span>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Clock className="h-3 w-3" />
