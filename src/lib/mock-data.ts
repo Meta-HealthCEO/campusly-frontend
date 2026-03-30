@@ -4,7 +4,8 @@ import type {
   FeeType, Invoice, Payment, Wallet, WalletTransaction, TuckshopItem, TuckshopOrder,
   Message, Notification, SchoolEvent, TransportRoute, LibraryBook, BookBorrowing,
   DisciplineRecord, ConsentForm, House, Achievement, StudentAchievement,
-  DebtorEntry, DailySalesSummary, DashboardStats
+  DebtorEntry, DailySalesSummary, DashboardStats,
+  Tenant, PlatformInvoice, SupportTicket, SupportMessage, PlatformStats
 } from '@/types';
 
 // ============== Users ==============
@@ -17,6 +18,7 @@ export const mockUsers: User[] = [
   { id: 'u6', email: 'teacher2@greenfield.edu.za', firstName: 'James', lastName: 'Botha', role: 'teacher', phone: '0865678901', schoolId: 's1', isActive: true, avatar: '', createdAt: '2024-02-01T00:00:00Z', updatedAt: '2024-02-01T00:00:00Z' },
   { id: 'u7', email: 'parent2@greenfield.edu.za', firstName: 'Zanele', lastName: 'Mbeki', role: 'parent', phone: '0876789012', schoolId: 's1', isActive: true, avatar: '', createdAt: '2024-02-15T00:00:00Z', updatedAt: '2024-02-15T00:00:00Z' },
   { id: 'u8', email: 'student2@greenfield.edu.za', firstName: 'Themba', lastName: 'Mbeki', role: 'student', phone: '', schoolId: 's1', isActive: true, avatar: '', createdAt: '2024-03-01T00:00:00Z', updatedAt: '2024-03-01T00:00:00Z' },
+  { id: 'u9', email: 'superadmin@campusly.app', firstName: 'Refilwe', lastName: 'Sithole', role: 'super_admin', phone: '0800001234', schoolId: '', isActive: true, avatar: '', createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
 ];
 
 // ============== School ==============
@@ -373,4 +375,123 @@ export const mockFeeStatusData = [
   { name: 'Partial', value: 18, color: '#F59E0B' },
   { name: 'Overdue', value: 12, color: '#EF4444' },
   { name: 'Pending', value: 8, color: '#94A3B8' },
+];
+
+// ============== Super Admin: Tenants ==============
+export const mockTenants: Tenant[] = [
+  {
+    id: 'ten1', name: 'Greenfield Academy', slug: 'greenfield-academy',
+    status: 'active', tier: 'enterprise', studentCount: 342, mrr: 1499900,
+    adminEmail: 'admin@greenfield.edu.za', adminName: 'Thabo Molefe',
+    city: 'Pretoria', province: 'Gauteng',
+    enabledModules: ['fees', 'wallet', 'tuckshop', 'transport', 'communication', 'events', 'library', 'discipline'],
+    createdAt: '2024-01-15T00:00:00Z',
+  },
+  {
+    id: 'ten2', name: 'Sunridge Primary School', slug: 'sunridge-primary',
+    status: 'active', tier: 'growth', studentCount: 215, mrr: 799900,
+    adminEmail: 'admin@sunridge.edu.za', adminName: 'Patricia van Wyk',
+    city: 'Cape Town', province: 'Western Cape',
+    enabledModules: ['fees', 'communication', 'events', 'wallet'],
+    createdAt: '2024-03-01T00:00:00Z',
+  },
+  {
+    id: 'ten3', name: 'Horizon High School', slug: 'horizon-high',
+    status: 'trial', tier: 'starter', studentCount: 88, mrr: 0,
+    adminEmail: 'admin@horizon.edu.za', adminName: 'Mpho Khumalo',
+    city: 'Johannesburg', province: 'Gauteng',
+    enabledModules: ['fees', 'communication'],
+    createdAt: '2026-03-01T00:00:00Z',
+    trialEndsAt: '2026-04-01T00:00:00Z',
+  },
+  {
+    id: 'ten4', name: 'Riverside College', slug: 'riverside-college',
+    status: 'active', tier: 'growth', studentCount: 178, mrr: 799900,
+    adminEmail: 'admin@riverside.edu.za', adminName: 'Nomsa Dube',
+    city: 'Durban', province: 'KwaZulu-Natal',
+    enabledModules: ['fees', 'wallet', 'tuckshop', 'transport', 'events'],
+    createdAt: '2024-06-15T00:00:00Z',
+  },
+  {
+    id: 'ten5', name: 'Eastgate Academy', slug: 'eastgate-academy',
+    status: 'suspended', tier: 'starter', studentCount: 120, mrr: 0,
+    adminEmail: 'admin@eastgate.edu.za', adminName: 'George Nkosi',
+    city: 'Port Elizabeth', province: 'Eastern Cape',
+    enabledModules: ['fees'],
+    createdAt: '2024-09-01T00:00:00Z',
+  },
+];
+
+// ============== Super Admin: Platform Invoices ==============
+export const mockPlatformInvoices: PlatformInvoice[] = [
+  { id: 'pi1', invoiceNumber: 'CAMP-2026-001', tenantId: 'ten1', tenantName: 'Greenfield Academy', amount: 1499900, status: 'paid', tier: 'enterprise', issuedDate: '2026-03-01', dueDate: '2026-03-07', paidDate: '2026-03-04' },
+  { id: 'pi2', invoiceNumber: 'CAMP-2026-002', tenantId: 'ten2', tenantName: 'Sunridge Primary School', amount: 799900, status: 'paid', tier: 'growth', issuedDate: '2026-03-01', dueDate: '2026-03-07', paidDate: '2026-03-06' },
+  { id: 'pi3', invoiceNumber: 'CAMP-2026-003', tenantId: 'ten4', tenantName: 'Riverside College', amount: 799900, status: 'sent', tier: 'growth', issuedDate: '2026-03-01', dueDate: '2026-03-07' },
+  { id: 'pi4', invoiceNumber: 'CAMP-2026-004', tenantId: 'ten5', tenantName: 'Eastgate Academy', amount: 299900, status: 'overdue', tier: 'starter', issuedDate: '2026-02-01', dueDate: '2026-02-07' },
+  { id: 'pi5', invoiceNumber: 'CAMP-2026-005', tenantId: 'ten1', tenantName: 'Greenfield Academy', amount: 1499900, status: 'paid', tier: 'enterprise', issuedDate: '2026-02-01', dueDate: '2026-02-07', paidDate: '2026-02-03' },
+  { id: 'pi6', invoiceNumber: 'CAMP-2026-006', tenantId: 'ten2', tenantName: 'Sunridge Primary School', amount: 799900, status: 'paid', tier: 'growth', issuedDate: '2026-02-01', dueDate: '2026-02-07', paidDate: '2026-02-05' },
+];
+
+// ============== Super Admin: Support Tickets ==============
+const supportMessages1: SupportMessage[] = [
+  { id: 'sm1', ticketId: 'tkt1', senderId: 'u1', senderName: 'Thabo Molefe', senderRole: 'tenant', body: 'Our fee module is not generating invoices correctly. When we try to create a bulk invoice run, the system hangs and nothing is generated.', createdAt: '2026-03-27T08:30:00Z' },
+  { id: 'sm2', ticketId: 'tkt1', senderId: 'u9', senderName: 'Refilwe Sithole', senderRole: 'support', body: 'Hi Thabo, thanks for reaching out. Can you share which browser you are using and whether this started happening after the recent update?', createdAt: '2026-03-27T09:15:00Z' },
+  { id: 'sm3', ticketId: 'tkt1', senderId: 'u1', senderName: 'Thabo Molefe', senderRole: 'tenant', body: 'We are using Chrome 122. It started yesterday after we updated to version 2.4.1.', createdAt: '2026-03-27T09:45:00Z' },
+];
+
+const supportMessages2: SupportMessage[] = [
+  { id: 'sm4', ticketId: 'tkt2', senderId: 'pa1', senderName: 'Patricia van Wyk', senderRole: 'tenant', body: 'We need to add a new admin user but there is no option in settings to do so. Please advise.', createdAt: '2026-03-26T14:00:00Z' },
+  { id: 'sm5', ticketId: 'tkt2', senderId: 'u9', senderName: 'Refilwe Sithole', senderRole: 'support', body: 'Hi Patricia, admin user creation is under Settings → Staff → Invite Admin. Let me know if you need a walkthrough.', createdAt: '2026-03-26T14:30:00Z' },
+  { id: 'sm6', ticketId: 'tkt2', senderId: 'pa1', senderName: 'Patricia van Wyk', senderRole: 'tenant', body: 'Found it, thank you!', createdAt: '2026-03-26T15:00:00Z' },
+];
+
+const supportMessages3: SupportMessage[] = [
+  { id: 'sm7', ticketId: 'tkt3', senderId: 'mk1', senderName: 'Mpho Khumalo', senderRole: 'tenant', body: 'We would like to upgrade from the trial to the Starter plan. How do we proceed?', createdAt: '2026-03-28T10:00:00Z' },
+];
+
+const supportMessages4: SupportMessage[] = [
+  { id: 'sm8', ticketId: 'tkt4', senderId: 'nd1', senderName: 'Nomsa Dube', senderRole: 'tenant', body: 'Tuckshop POS is not connecting to the wallet module. Students scan their wristbands but the balance does not deduct.', createdAt: '2026-03-25T11:00:00Z' },
+  { id: 'sm9', ticketId: 'tkt4', senderId: 'u9', senderName: 'Refilwe Sithole', senderRole: 'support', body: 'This looks like a config issue with your wallet gateway. I have flagged this to our engineering team — expect a fix within 24 hours.', createdAt: '2026-03-25T13:00:00Z' },
+];
+
+export const mockSupportTickets: SupportTicket[] = [
+  { id: 'tkt1', ticketNumber: 'TKT-2026-0042', tenantId: 'ten1', tenantName: 'Greenfield Academy', subject: 'Bulk invoice generation hangs', status: 'in_progress', priority: 'high', category: 'Bug', createdAt: '2026-03-27T08:30:00Z', updatedAt: '2026-03-27T09:45:00Z', messages: supportMessages1, assignedTo: 'Refilwe Sithole' },
+  { id: 'tkt2', ticketNumber: 'TKT-2026-0041', tenantId: 'ten2', tenantName: 'Sunridge Primary School', subject: 'Cannot add new admin user', status: 'resolved', priority: 'normal', category: 'How-to', createdAt: '2026-03-26T14:00:00Z', updatedAt: '2026-03-26T15:00:00Z', messages: supportMessages2 },
+  { id: 'tkt3', ticketNumber: 'TKT-2026-0043', tenantId: 'ten3', tenantName: 'Horizon High School', subject: 'Upgrade from trial to Starter plan', status: 'open', priority: 'normal', category: 'Billing', createdAt: '2026-03-28T10:00:00Z', updatedAt: '2026-03-28T10:00:00Z', messages: supportMessages3 },
+  { id: 'tkt4', ticketNumber: 'TKT-2026-0040', tenantId: 'ten4', tenantName: 'Riverside College', subject: 'Wallet deduction not working at tuckshop POS', status: 'in_progress', priority: 'urgent', category: 'Bug', createdAt: '2026-03-25T11:00:00Z', updatedAt: '2026-03-25T13:00:00Z', messages: supportMessages4, assignedTo: 'Engineering Team' },
+];
+
+// ============== Super Admin: Platform Stats ==============
+export const mockPlatformStats: PlatformStats = {
+  totalSchools: 5,
+  totalStudents: 943,
+  mrr: 309970000, // cents = R30,997.00 (combined active schools)
+  arr: 3719640000,
+  activeTrials: 1,
+  outstanding: 1099800, // cents = Eastgate overdue
+};
+
+// ============== Super Admin: Chart Data ==============
+export const mockPlatformRevenueTrend = [
+  { month: 'Oct', mrr: 250000 },
+  { month: 'Nov', mrr: 280000 },
+  { month: 'Dec', mrr: 280000 },
+  { month: 'Jan', mrr: 309970 },
+  { month: 'Feb', mrr: 309970 },
+  { month: 'Mar', mrr: 309970 },
+];
+
+export const mockSchoolsByTier = [
+  { name: 'Enterprise', value: 1, color: '#2563EB' },
+  { name: 'Growth', value: 2, color: '#10B981' },
+  { name: 'Starter', value: 2, color: '#F59E0B' },
+];
+
+export const mockStudentGrowth = [
+  { month: 'Oct', students: 720 },
+  { month: 'Nov', students: 780 },
+  { month: 'Dec', students: 800 },
+  { month: 'Jan', students: 850 },
+  { month: 'Feb', students: 900 },
+  { month: 'Mar', students: 943 },
 ];

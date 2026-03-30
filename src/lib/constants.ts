@@ -4,6 +4,7 @@ import {
   BarChart3, Settings, ClipboardList, Award, Clock,
   FileText, Bell, UserCheck, BookMarked, Shield,
   Home, CreditCard, Receipt, Megaphone, Ticket,
+  Building2, HeadphonesIcon, PlusCircle,
   type LucideIcon
 } from 'lucide-react';
 
@@ -67,6 +68,13 @@ export const ROUTES = {
 
   // Tuckshop
   TUCKSHOP_POS: '/tuckshop',
+
+  // Super Admin
+  SUPERADMIN_DASHBOARD: '/superadmin',
+  SUPERADMIN_SCHOOLS: '/superadmin/schools',
+  SUPERADMIN_ONBOARD: '/superadmin/onboard',
+  SUPERADMIN_BILLING: '/superadmin/billing',
+  SUPERADMIN_SUPPORT: '/superadmin/support',
 } as const;
 
 export interface NavItem {
@@ -123,6 +131,14 @@ export const STUDENT_NAV: NavItem[] = [
   { label: 'Library', href: ROUTES.STUDENT_LIBRARY, icon: BookMarked, module: 'library' },
   { label: 'Achievements', href: ROUTES.STUDENT_ACHIEVEMENTS, icon: Award },
   { label: 'Wallet', href: ROUTES.STUDENT_WALLET, icon: Wallet, module: 'wallet' },
+];
+
+export const SUPERADMIN_NAV: NavItem[] = [
+  { label: 'Dashboard', href: ROUTES.SUPERADMIN_DASHBOARD, icon: LayoutDashboard },
+  { label: 'Schools', href: ROUTES.SUPERADMIN_SCHOOLS, icon: Building2 },
+  { label: 'Onboard School', href: ROUTES.SUPERADMIN_ONBOARD, icon: PlusCircle },
+  { label: 'Billing', href: ROUTES.SUPERADMIN_BILLING, icon: DollarSign },
+  { label: 'Support', href: ROUTES.SUPERADMIN_SUPPORT, icon: HeadphonesIcon },
 ];
 
 export const TEACHER_NAV: NavItem[] = [

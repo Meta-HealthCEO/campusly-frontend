@@ -10,6 +10,7 @@ import {
   PARENT_NAV,
   STUDENT_NAV,
   TEACHER_NAV,
+  SUPERADMIN_NAV,
   type NavItem,
 } from '@/lib/constants';
 import type { UserRole } from '@/types';
@@ -20,6 +21,7 @@ const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
   student: STUDENT_NAV,
   teacher: TEACHER_NAV,
   tuckshop: ADMIN_NAV,
+  super_admin: SUPERADMIN_NAV,
 };
 
 export default function DashboardLayout({

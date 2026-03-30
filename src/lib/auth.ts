@@ -25,6 +25,7 @@ export function getRoleDashboardPath(role: UserRole): string {
     parent: '/parent',
     student: '/student',
     tuckshop: '/tuckshop',
+    super_admin: '/superadmin',
   };
   return paths[role];
 }
@@ -36,6 +37,7 @@ export function getRoleLabel(role: UserRole): string {
     parent: 'Parent',
     student: 'Student',
     tuckshop: 'Tuck Shop',
+    super_admin: 'Super Admin',
   };
   return labels[role];
 }
