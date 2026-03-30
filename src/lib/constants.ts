@@ -5,6 +5,7 @@ import {
   FileText, Bell, UserCheck, BookMarked, Shield,
   Home, CreditCard, Receipt, Megaphone, Ticket,
   Building2, HeadphonesIcon, PlusCircle, PackageSearch,
+  Heart, Upload, Shirt, Trophy,
   type LucideIcon
 } from 'lucide-react';
 
@@ -34,6 +35,13 @@ export const ROUTES = {
   ADMIN_LOST_FOUND: '/admin/lost-found',
   ADMIN_REPORTS: '/admin/reports',
   ADMIN_SETTINGS: '/admin/settings',
+  ADMIN_AFTERCARE: '/admin/aftercare',
+  ADMIN_ANNOUNCEMENTS: '/admin/announcements',
+  ADMIN_FUNDRAISING: '/admin/fundraising',
+  ADMIN_LEARNING: '/admin/learning',
+  ADMIN_MIGRATION: '/admin/migration',
+  ADMIN_UNIFORM: '/admin/uniform',
+  ADMIN_SPORT: '/admin/sport',
 
   // Parent
   PARENT_DASHBOARD: '/parent',
@@ -108,6 +116,13 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Transport', href: ROUTES.ADMIN_TRANSPORT, icon: Bus, module: 'transport' },
   { label: 'Communication', href: ROUTES.ADMIN_COMMUNICATION, icon: MessageSquare, module: 'communication' },
   { label: 'Lost & Found', href: ROUTES.ADMIN_LOST_FOUND, icon: PackageSearch },
+  { label: 'After Care', href: ROUTES.ADMIN_AFTERCARE, icon: Clock },
+  { label: 'Announcements', href: ROUTES.ADMIN_ANNOUNCEMENTS, icon: Megaphone },
+  { label: 'Fundraising', href: ROUTES.ADMIN_FUNDRAISING, icon: Heart },
+  { label: 'Learning', href: ROUTES.ADMIN_LEARNING, icon: BookMarked },
+  { label: 'Data Migration', href: ROUTES.ADMIN_MIGRATION, icon: Upload },
+  { label: 'Uniform Shop', href: ROUTES.ADMIN_UNIFORM, icon: Shirt },
+  { label: 'Sport', href: ROUTES.ADMIN_SPORT, icon: Trophy },
   { label: 'Reports', href: ROUTES.ADMIN_REPORTS, icon: BarChart3 },
   { label: 'Settings', href: ROUTES.ADMIN_SETTINGS, icon: Settings },
 ];
