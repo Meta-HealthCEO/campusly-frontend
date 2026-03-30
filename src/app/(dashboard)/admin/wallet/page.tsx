@@ -1,6 +1,7 @@
 'use client';
 
 import { Wallet, CreditCard, Users } from 'lucide-react';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCard } from '@/components/shared/StatCard';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Badge } from '@/components/ui/badge';
@@ -80,10 +81,7 @@ const columns: ColumnDef<WalletRow>[] = [
 export default function WalletPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Wallet Management</h1>
-        <p className="text-muted-foreground">Manage student wallets and wristbands</p>
-      </div>
+      <PageHeader title="Wallet Management" description="Manage student wallets and wristbands" />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard title="Total Loaded" value={formatCurrency(totalLoaded)} icon={CreditCard} />

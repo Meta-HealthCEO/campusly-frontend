@@ -1,6 +1,7 @@
 'use client';
 
 import { GraduationCap, BookOpen } from 'lucide-react';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -37,10 +38,7 @@ const subjectColumns: ColumnDef<Subject>[] = [
 export default function AcademicsPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Academics</h1>
-        <p className="text-muted-foreground">Manage grades, classes, and subjects</p>
-      </div>
+      <PageHeader title="Academics" description="Manage grades, classes, and subjects" />
 
       <Tabs defaultValue="grades">
         <TabsList>

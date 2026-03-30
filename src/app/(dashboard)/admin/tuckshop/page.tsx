@@ -1,6 +1,7 @@
 'use client';
 
 import { ShoppingBag, DollarSign, TrendingUp } from 'lucide-react';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCard } from '@/components/shared/StatCard';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Badge } from '@/components/ui/badge';
@@ -73,10 +74,7 @@ const salesChartData = [...mockDailySales]
 export default function TuckshopPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Tuckshop Management</h1>
-        <p className="text-muted-foreground">Manage menu items and track daily sales</p>
-      </div>
+      <PageHeader title="Tuckshop Management" description="Manage menu items and track daily sales" />
 
       <Tabs defaultValue="menu">
         <TabsList>

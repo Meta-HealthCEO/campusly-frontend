@@ -2,6 +2,7 @@
 
 import { Building2, Users, TrendingUp, Activity } from 'lucide-react';
 import { StatCard } from '@/components/shared/StatCard';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChartComponent, PieChartComponent, AreaChartComponent } from '@/components/charts';
 import {
@@ -15,10 +16,7 @@ import { formatCurrency } from '@/lib/utils';
 export default function SuperAdminDashboardPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Platform Overview</h1>
-        <p className="text-muted-foreground">Campusly platform metrics at a glance</p>
-      </div>
+      <PageHeader title="Platform Overview" description="Campusly platform metrics at a glance" />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard

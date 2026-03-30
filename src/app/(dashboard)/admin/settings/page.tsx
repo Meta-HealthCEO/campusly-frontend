@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Settings, LayoutGrid, Users } from 'lucide-react';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -79,10 +80,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Manage school configuration and preferences</p>
-      </div>
+      <PageHeader title="Settings" description="Manage school configuration and preferences" />
 
       <Tabs defaultValue="general">
         <TabsList>

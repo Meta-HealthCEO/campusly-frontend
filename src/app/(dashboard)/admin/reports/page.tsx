@@ -1,6 +1,7 @@
 'use client';
 
 import { DollarSign, GraduationCap, UserCheck, AlertCircle, ShoppingBag, FileText } from 'lucide-react';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -53,10 +54,7 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Reports</h1>
-        <p className="text-muted-foreground">Generate and download school reports</p>
-      </div>
+      <PageHeader title="Reports" description="Generate and download school reports" />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {reports.map((report) => (

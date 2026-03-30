@@ -2,6 +2,7 @@
 
 import { Users, DollarSign, TrendingUp, UserCheck } from 'lucide-react';
 import { StatCard } from '@/components/shared/StatCard';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChartComponent, BarChartComponent, PieChartComponent } from '@/components/charts';
 import { mockAdminStats, mockRevenueData, mockAttendanceByGrade, mockFeeStatusData } from '@/lib/mock-data';
@@ -10,10 +11,7 @@ import { formatCurrency } from '@/lib/utils';
 export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Admin Dashboard</h1>
-        <p className="text-muted-foreground">Overview of your school at a glance</p>
-      </div>
+      <PageHeader title="Admin Dashboard" description="Overview of your school at a glance" />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard

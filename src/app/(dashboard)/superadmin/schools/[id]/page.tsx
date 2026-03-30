@@ -3,6 +3,7 @@
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, Circle } from 'lucide-react';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -60,10 +61,7 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{tenant.name}</h1>
-          <p className="text-muted-foreground">{tenant.city}, {tenant.province}</p>
-        </div>
+        <PageHeader title={tenant.name} description={`${tenant.city}, ${tenant.province}`} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { PageHeader } from '@/components/shared/PageHeader';
 import {
   BookOpen,
   Calendar,
@@ -71,6 +72,8 @@ export default function HomeworkDetailPage() {
         <ArrowLeft className="h-4 w-4" />
         Back to Homework
       </Link>
+
+      <PageHeader title={homework.title} description={homework.subject.name} />
 
       {/* Homework Details */}
       <Card>

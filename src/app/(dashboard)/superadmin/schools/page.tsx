@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { MoreHorizontal, Plus, Search } from 'lucide-react';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,10 +47,7 @@ export default function SuperAdminSchoolsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Schools</h1>
-          <p className="text-muted-foreground">Manage all tenant schools on the platform</p>
-        </div>
+        <PageHeader title="Schools" description="Manage all tenant schools on the platform" />
         <Link href="/superadmin/onboard"><Button>
             <Plus className="mr-2 h-4 w-4" /> Onboard School
           </Button></Link>
@@ -94,7 +92,7 @@ export default function SuperAdminSchoolsPage() {
         </CardContent>
       </Card>
 
-      <div className="rounded-lg border">
+      <div className="rounded-lg border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

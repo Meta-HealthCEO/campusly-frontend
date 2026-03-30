@@ -2,6 +2,7 @@
 
 import { DollarSign, TrendingUp, AlertCircle, FileText } from 'lucide-react';
 import { StatCard } from '@/components/shared/StatCard';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -25,10 +26,7 @@ export default function SuperAdminBillingPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Billing</h1>
-          <p className="text-muted-foreground">Platform revenue and invoice management</p>
-        </div>
+        <PageHeader title="Billing" description="Platform revenue and invoice management" />
         <Button onClick={handleGenerate}>
           <FileText className="mr-2 h-4 w-4" /> Generate Invoices
         </Button>
@@ -58,7 +56,7 @@ export default function SuperAdminBillingPage() {
         />
       </div>
 
-      <div className="rounded-lg border">
+      <div className="rounded-lg border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

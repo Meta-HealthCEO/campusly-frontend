@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Send } from 'lucide-react';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -36,12 +37,9 @@ export default function SuperAdminSupportPage() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Support</h1>
-        <p className="text-muted-foreground">Manage tenant support tickets</p>
-      </div>
+      <PageHeader title="Support" description="Manage tenant support tickets" />
 
-      <div className="grid gap-4 lg:grid-cols-3 h-[calc(100vh-220px)] min-h-[500px]">
+      <div className="grid gap-4 lg:grid-cols-3 min-h-0 flex-1" style={{ minHeight: '500px' }}>
         {/* Ticket list */}
         <div className="flex flex-col gap-2 overflow-y-auto pr-1">
           {mockSupportTickets.map((ticket) => (

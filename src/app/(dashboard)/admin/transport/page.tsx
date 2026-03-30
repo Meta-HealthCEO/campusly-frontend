@@ -1,6 +1,7 @@
 'use client';
 
 import { Bus, MapPin, Phone, Users } from 'lucide-react';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -9,10 +10,7 @@ import { mockTransportRoutes } from '@/lib/mock-data';
 export default function TransportPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Transport</h1>
-        <p className="text-muted-foreground">Manage school transport routes and drivers</p>
-      </div>
+      <PageHeader title="Transport" description="Manage school transport routes and drivers" />
 
       {mockTransportRoutes.length === 0 ? (
         <EmptyState icon={Bus} title="No routes" description="No transport routes have been configured yet." />

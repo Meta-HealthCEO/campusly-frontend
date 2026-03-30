@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { PageHeader } from '@/components/shared/PageHeader';
 import {
   BookOpen,
   ArrowLeft,
@@ -95,6 +96,8 @@ export default function TeacherHomeworkDetailPage() {
         <ArrowLeft className="h-4 w-4" />
         Back to Homework
       </Link>
+
+      <PageHeader title={homework.title} description={homework.subject.name} />
 
       {/* Homework Info */}
       <Card>

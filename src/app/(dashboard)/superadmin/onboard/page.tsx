@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircle2, ChevronRight, ChevronLeft } from 'lucide-react';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -102,10 +103,7 @@ export default function SuperAdminOnboardPage() {
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Onboard New School</h1>
-        <p className="text-muted-foreground">Set up a new tenant school in 5 steps</p>
-      </div>
+      <PageHeader title="Onboard New School" description="Set up a new tenant school in 5 steps" />
 
       {/* Step progress */}
       <div className="flex items-center gap-0">

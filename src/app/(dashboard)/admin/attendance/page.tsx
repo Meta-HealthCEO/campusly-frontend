@@ -2,6 +2,7 @@
 
 import { UserCheck, AlertTriangle } from 'lucide-react';
 import { StatCard } from '@/components/shared/StatCard';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BarChartComponent } from '@/components/charts';
@@ -14,10 +15,7 @@ const absences = mockAttendance.filter((att) => att.status === 'absent' || att.s
 export default function AttendancePage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Attendance Overview</h1>
-        <p className="text-muted-foreground">Monitor school-wide attendance rates and absences</p>
-      </div>
+      <PageHeader title="Attendance Overview" description="Monitor school-wide attendance rates and absences" />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
