@@ -4,7 +4,7 @@ import {
   BarChart3, Settings, ClipboardList, Award, Clock,
   FileText, Bell, UserCheck, BookMarked, Shield,
   Home, CreditCard, Receipt, Megaphone, Ticket,
-  Building2, HeadphonesIcon, PlusCircle,
+  Building2, HeadphonesIcon, PlusCircle, PackageSearch,
   type LucideIcon
 } from 'lucide-react';
 
@@ -31,6 +31,7 @@ export const ROUTES = {
   ADMIN_EVENTS: '/admin/events',
   ADMIN_TRANSPORT: '/admin/transport',
   ADMIN_COMMUNICATION: '/admin/communication',
+  ADMIN_LOST_FOUND: '/admin/lost-found',
   ADMIN_REPORTS: '/admin/reports',
   ADMIN_SETTINGS: '/admin/settings',
 
@@ -45,6 +46,7 @@ export const ROUTES = {
   PARENT_CONSENT: '/parent/consent',
   PARENT_TUCKSHOP: '/parent/tuckshop',
   PARENT_TRANSPORT: '/parent/transport',
+  PARENT_LOST_FOUND: '/parent/lost-found',
   PARENT_LIBRARY: '/parent/library',
 
   // Student
@@ -105,6 +107,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Events', href: ROUTES.ADMIN_EVENTS, icon: CalendarDays, module: 'events' },
   { label: 'Transport', href: ROUTES.ADMIN_TRANSPORT, icon: Bus, module: 'transport' },
   { label: 'Communication', href: ROUTES.ADMIN_COMMUNICATION, icon: MessageSquare, module: 'communication' },
+  { label: 'Lost & Found', href: ROUTES.ADMIN_LOST_FOUND, icon: PackageSearch },
   { label: 'Reports', href: ROUTES.ADMIN_REPORTS, icon: BarChart3 },
   { label: 'Settings', href: ROUTES.ADMIN_SETTINGS, icon: Settings },
 ];
@@ -120,6 +123,7 @@ export const PARENT_NAV: NavItem[] = [
   { label: 'Consent', href: ROUTES.PARENT_CONSENT, icon: Shield },
   { label: 'Tuck Shop', href: ROUTES.PARENT_TUCKSHOP, icon: ShoppingBag, module: 'tuckshop' },
   { label: 'Transport', href: ROUTES.PARENT_TRANSPORT, icon: Bus, module: 'transport' },
+  { label: 'Lost & Found', href: ROUTES.PARENT_LOST_FOUND, icon: PackageSearch },
   { label: 'Library', href: ROUTES.PARENT_LIBRARY, icon: BookMarked, module: 'library' },
 ];
 

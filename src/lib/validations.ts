@@ -62,6 +62,24 @@ export const disciplineSchema = z.object({
   description: z.string().min(5, 'Description must be at least 5 characters'),
 });
 
+export const foundItemSchema = z.object({
+  name: z.string().min(2, 'Item name must be at least 2 characters'),
+  description: z.string().min(5, 'Description must be at least 5 characters'),
+  category: z.enum(['clothing', 'stationery', 'lunch_box', 'electronics', 'sports', 'bags', 'other'], { error: 'Category is required' }),
+  location: z.string().min(2, 'Location is required'),
+  photoUrl: z.string().optional(),
+  dateFound: z.string().min(1, 'Date found is required'),
+});
+
+export const lostReportSchema = z.object({
+  studentId: z.string().min(1, 'Please select a child'),
+  itemName: z.string().min(2, 'Item name must be at least 2 characters'),
+  description: z.string().min(5, 'Description must be at least 5 characters'),
+  category: z.enum(['clothing', 'stationery', 'lunch_box', 'electronics', 'sports', 'bags', 'other'], { error: 'Category is required' }),
+  locationLost: z.string().min(2, 'Location is required'),
+  dateLost: z.string().min(1, 'Date lost is required'),
+});
+
 export type StudentFormData = z.infer<typeof studentSchema>;
 export type StaffFormData = z.infer<typeof staffSchema>;
 export type FeeTypeFormData = z.infer<typeof feeTypeSchema>;
@@ -69,3 +87,5 @@ export type EventFormData = z.infer<typeof eventSchema>;
 export type MessageFormData = z.infer<typeof messageSchema>;
 export type HomeworkFormData = z.infer<typeof homeworkSchema>;
 export type DisciplineFormData = z.infer<typeof disciplineSchema>;
+export type FoundItemFormData = z.infer<typeof foundItemSchema>;
+export type LostReportFormData = z.infer<typeof lostReportSchema>;
