@@ -91,21 +91,22 @@ export const mockStudents: Student[] = studentNames.map((n, i) => ({
   dateOfBirth: `200${8 + (i % 3)}-0${(i % 9) + 1}-${10 + i}`,
   gender: n.gender,
   address: `${10 + i} Protea Street, Pretoria`,
-  medicalInfo: { bloodType: 'O+', allergies: i === 3 ? ['peanuts', 'shellfish'] : [], conditions: [], medications: [], emergencyContact: 'Parent', emergencyPhone: `08${i}1234567` },
-  parentIds: i === 0 ? ['p1'] : i === 1 ? ['p2'] : [`p${(i % 2) + 1}`],
+  medicalProfile: { allergies: i === 3 ? ['peanuts', 'shellfish'] : [], conditions: [], bloodType: 'O+', emergencyContacts: [{ name: 'Parent', relationship: 'Mother', phone: `08${i}1234567` }] },
+  guardianIds: i === 0 ? ['p1'] : i === 1 ? ['p2'] : [`p${(i % 2) + 1}`],
   parents: [],
+  schoolId: 'school1',
+  enrollmentStatus: 'active' as const,
   walletId: `w${i + 1}`,
   wallet: undefined,
-  isActive: true,
-  enrolledDate: '2024-01-15',
+  enrollmentDate: '2024-01-15',
   houseId: mockHouses[i % 4].id,
   house: mockHouses[i % 4],
 }));
 
 // ============== Parents ==============
 export const mockParents: Parent[] = [
-  { id: 'p1', userId: 'u3', user: mockUsers[2], relationship: 'father', occupation: 'Engineer', employer: 'Sasol', studentIds: ['st1'], students: [mockStudents[0]] },
-  { id: 'p2', userId: 'u7', user: mockUsers[6], relationship: 'mother', occupation: 'Teacher', employer: 'Dept of Education', studentIds: ['st2'], students: [mockStudents[1]] },
+  { id: 'p1', userId: 'u3', user: mockUsers[2], relationship: 'father', occupation: 'Engineer', employer: 'Sasol', childrenIds: ['st1'] },
+  { id: 'p2', userId: 'u7', user: mockUsers[6], relationship: 'mother', occupation: 'Teacher', employer: 'Dept of Education', childrenIds: ['st2'] },
 ];
 
 // ============== Subjects ==============
@@ -197,10 +198,10 @@ export const mockSubmissions: HomeworkSubmission[] = mockStudents.slice(0, 3).ma
 
 // ============== Fee Types & Invoices ==============
 export const mockFeeTypes: FeeType[] = [
-  { id: 'ft1', name: 'Tuition Fee', description: 'Monthly tuition fee', amount: 450000, frequency: 'monthly', gradeIds: ['g1', 'g2', 'g3', 'g4', 'g5'], isOptional: false, schoolId: 's1' },
-  { id: 'ft2', name: 'Registration Fee', description: 'Annual registration', amount: 250000, frequency: 'annually', gradeIds: ['g1', 'g2', 'g3', 'g4', 'g5'], isOptional: false, schoolId: 's1' },
-  { id: 'ft3', name: 'Transport Fee', description: 'Monthly transport', amount: 150000, frequency: 'monthly', gradeIds: ['g1', 'g2', 'g3', 'g4', 'g5'], isOptional: true, schoolId: 's1' },
-  { id: 'ft4', name: 'Stationery Pack', description: 'Annual stationery', amount: 85000, frequency: 'annually', gradeIds: ['g1', 'g2', 'g3', 'g4', 'g5'], isOptional: true, schoolId: 's1' },
+  { id: 'ft1', name: 'Tuition Fee', description: 'Monthly tuition fee', amount: 450000, frequency: 'monthly', category: 'tuition', gradeIds: ['g1', 'g2', 'g3', 'g4', 'g5'], schoolId: 's1' },
+  { id: 'ft2', name: 'Registration Fee', description: 'Annual registration', amount: 250000, frequency: 'per_year', category: 'tuition', gradeIds: ['g1', 'g2', 'g3', 'g4', 'g5'], schoolId: 's1' },
+  { id: 'ft3', name: 'Transport Fee', description: 'Monthly transport', amount: 150000, frequency: 'monthly', category: 'transport', gradeIds: ['g1', 'g2', 'g3', 'g4', 'g5'], schoolId: 's1' },
+  { id: 'ft4', name: 'Stationery Pack', description: 'Annual stationery', amount: 85000, frequency: 'per_year', category: 'other', gradeIds: ['g1', 'g2', 'g3', 'g4', 'g5'], schoolId: 's1' },
 ];
 
 export const mockInvoices: Invoice[] = [

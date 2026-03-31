@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { loginSchema, type LoginFormData } from '@/lib/validations/index';
+import { loginSchema, type LoginFormData } from '@/lib/validations';
 import { useAuth } from '@/hooks/useAuth';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthCard } from '@/components/auth/AuthCard';
@@ -36,10 +36,11 @@ export default function LoginPage() {
     try {
       await login(data);
       toast.success('Welcome back!');
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Login failed. Please try again.'
-      );
+    } catch (error: unknown) {
+      const axiosErr = error as { response?: { data?: { error?: string } } };
+      const message = axiosErr.response?.data?.error
+        ?? (error instanceof Error ? error.message : 'Login failed. Please try again.');
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }

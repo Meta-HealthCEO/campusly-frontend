@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { RegisterForm } from '@/components/auth/RegisterForm';
-import type { RegisterFormData } from '@/lib/validations/index';
+import type { RegisterFormData } from '@/lib/validations';
 import apiClient from '@/lib/api-client';
 
 export default function RegisterPage() {
@@ -28,10 +28,11 @@ export default function RegisterPage() {
         'Account created! The Campusly team will set up your school. Please sign in.'
       );
       router.push('/login');
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Registration failed. Please try again.'
-      );
+    } catch (error: unknown) {
+      const axiosErr = error as { response?: { data?: { error?: string } } };
+      const message = axiosErr.response?.data?.error
+        ?? (error instanceof Error ? error.message : 'Registration failed. Please try again.');
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }

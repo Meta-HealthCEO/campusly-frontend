@@ -6,18 +6,17 @@ import { StatCard } from '@/components/shared/StatCard';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChartComponent, BarChartComponent, PieChartComponent } from '@/components/charts';
+import { AnnouncementBanner } from '@/components/announcements/AnnouncementBanner';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { formatCurrency } from '@/lib/utils';
 import apiClient from '@/lib/api-client';
 import type { DashboardStats } from '@/types';
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({ totalStudents: 0, totalStaff: 0, revenueCollected: 0, collectionRate: 0, attendanceRate: 0, outstandingFees: 0, walletBalance: 0 });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [revenueData, setRevenueData] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [attendanceData, setAttendanceData] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [feeStatusData, setFeeStatusData] = useState<any[]>([]);
+  const [revenueData, setRevenueData] = useState<Record<string, unknown>[]>([]);
+  const [attendanceData, setAttendanceData] = useState<Record<string, unknown>[]>([]);
+  const [feeStatusData, setFeeStatusData] = useState<{ name: string; value: number; color?: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,7 +25,16 @@ export default function AdminDashboardPage() {
         const response = await apiClient.get('/reports/dashboard');
         if (response.data) {
           const d = response.data.data ?? response.data;
-          if (d.stats) setStats((prev) => ({ ...prev, ...d.stats }));
+          // The API returns flat stats or nested under d.stats
+          const raw = d.stats ?? d;
+          setStats((prev) => ({
+            ...prev,
+            totalStudents: raw.totalStudents ?? prev.totalStudents,
+            revenueCollected: raw.totalRevenueThisMonth ?? raw.revenueCollected ?? prev.revenueCollected,
+            collectionRate: raw.feeCollectionRate ?? raw.collectionRate ?? prev.collectionRate,
+            attendanceRate: raw.attendanceRate ?? prev.attendanceRate,
+            outstandingFees: raw.outstandingFees ?? prev.outstandingFees,
+          }));
           if (d.revenueData) setRevenueData(d.revenueData);
           if (d.attendanceByGrade) setAttendanceData(d.attendanceByGrade);
           if (d.feeStatus) setFeeStatusData(d.feeStatus);
@@ -43,6 +51,8 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Admin Dashboard" description="Overview of your school at a glance" />
+
+      {loading && <LoadingSpinner />}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
@@ -82,7 +92,7 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <LineChartComponent
-              data={revenueData as Record<string, unknown>[]}
+              data={revenueData}
               xKey="month"
               lines={[
                 { key: 'collected', color: '#2563EB', name: 'Collected' },
@@ -102,18 +112,21 @@ export default function AdminDashboardPage() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Attendance by Grade</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <BarChartComponent
-            data={attendanceData as Record<string, unknown>[]}
-            xKey="grade"
-            bars={[{ key: 'rate', color: '#2563EB', name: 'Attendance Rate (%)' }]}
-          />
-        </CardContent>
-      </Card>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Attendance by Grade</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <BarChartComponent
+              data={attendanceData}
+              xKey="grade"
+              bars={[{ key: 'rate', color: '#2563EB', name: 'Attendance Rate (%)' }]}
+            />
+          </CardContent>
+        </Card>
+        <AnnouncementBanner limit={5} />
+      </div>
     </div>
   );
 }

@@ -1,110 +1,130 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ShoppingBag, DollarSign, TrendingUp } from 'lucide-react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Plus, ShoppingCart, History } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { StatCard } from '@/components/shared/StatCard';
-import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DataTable } from '@/components/shared/DataTable';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { BarChartComponent } from '@/components/charts';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+  DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import { useAuthStore } from '@/stores/useAuthStore';
 import apiClient from '@/lib/api-client';
 import type { TuckshopItem } from '@/types';
-
-const columns: ColumnDef<TuckshopItem>[] = [
-  {
-    accessorKey: 'name',
-    header: 'Name',
-  },
-  {
-    accessorKey: 'category',
-    header: 'Category',
-  },
-  {
-    id: 'price',
-    header: 'Price',
-    cell: ({ row }) => formatCurrency(row.original.price),
-  },
-  {
-    id: 'allergens',
-    header: 'Allergens',
-    cell: ({ row }) =>
-      row.original.allergens.length > 0 ? (
-        <div className="flex flex-wrap gap-1">
-          {row.original.allergens.map((allergen) => (
-            <Badge key={allergen} variant="outline" className="text-xs">
-              {allergen}
-            </Badge>
-          ))}
-        </div>
-      ) : (
-        <span className="text-muted-foreground">None</span>
-      ),
-  },
-  {
-    id: 'available',
-    header: 'Available',
-    cell: ({ row }) => (
-      <Badge
-        className={
-          row.original.isAvailable
-            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-        }
-      >
-        {row.original.isAvailable ? 'Yes' : 'No'}
-      </Badge>
-    ),
-  },
-];
+import { getMenuItemColumns } from '@/components/tuckshop/MenuItemColumns';
+import { MenuItemFormDialog } from '@/components/tuckshop/MenuItemFormDialog';
+import { StockEditorDialog } from '@/components/tuckshop/StockEditorDialog';
+import { PlaceOrderDialog } from '@/components/tuckshop/PlaceOrderDialog';
+import { OrderHistoryDialog } from '@/components/tuckshop/OrderHistoryDialog';
+import { DailySalesReport } from '@/components/tuckshop/DailySalesReport';
 
 export default function TuckshopPage() {
+  const { user } = useAuthStore();
+  const schoolId = user?.schoolId ?? '';
   const [menuItems, setMenuItems] = useState<TuckshopItem[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [dailySales, setDailySales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [menuRes, salesRes] = await Promise.all([
-          apiClient.get('/tuck-shop/menu'),
-          apiClient.get('/tuck-shop/sales/daily'),
-        ]);
-        if (menuRes.data) {
-          const d = menuRes.data.data ?? menuRes.data;
-          setMenuItems(Array.isArray(d) ? d : d.data ?? []);
-        }
-        if (salesRes.data) {
-          const d = salesRes.data.data ?? salesRes.data;
-          setDailySales(Array.isArray(d) ? d : d.data ?? []);
-        }
-      } catch {
-        console.error('Failed to load tuckshop data');
-      } finally {
-        setLoading(false);
-      }
+  // Dialog states
+  const [formOpen, setFormOpen] = useState(false);
+  const [editItem, setEditItem] = useState<TuckshopItem | null>(null);
+  const [stockDialogOpen, setStockDialogOpen] = useState(false);
+  const [stockItem, setStockItem] = useState<TuckshopItem | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteItem, setDeleteItem] = useState<TuckshopItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [orderDialogOpen, setOrderDialogOpen] = useState(false);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+
+  const fetchMenuItems = useCallback(async () => {
+    try {
+      const response = await apiClient.get('/tuck-shop/menu');
+      const raw = response.data.data ?? response.data;
+      const list = Array.isArray(raw) ? raw : raw.items ?? raw.data ?? [];
+      setMenuItems(
+        list.map((item: Record<string, unknown>) => ({
+          ...item,
+          id: (item._id as string) ?? (item.id as string),
+          stockCount: item.stock as number ?? 0,
+        })),
+      );
+    } catch {
+      console.error('Failed to load menu items');
+    } finally {
+      setLoading(false);
     }
-    fetchData();
   }, []);
 
-  const totalRevenue = dailySales.reduce((sum, day) => sum + day.totalRevenue, 0);
-  const totalTransactions = dailySales.reduce((sum, day) => sum + day.totalTransactions, 0);
-  const avgTransaction = totalTransactions > 0 ? Math.round(totalRevenue / totalTransactions) : 0;
+  useEffect(() => {
+    fetchMenuItems();
+  }, [fetchMenuItems]);
 
-  const salesChartData = [...dailySales]
-    .reverse()
-    .map((day) => ({
-      date: formatDate(day.date, 'dd MMM'),
-      revenue: day.totalRevenue / 100,
-      transactions: day.totalTransactions,
-    }));
+  const handleEdit = (item: TuckshopItem) => {
+    setEditItem(item);
+    setFormOpen(true);
+  };
+
+  const handleDelete = (item: TuckshopItem) => {
+    setDeleteItem(item);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteItem) return;
+    setDeleting(true);
+    try {
+      await apiClient.delete(`/tuck-shop/menu/${deleteItem.id}`);
+      toast.success('Menu item deleted');
+      setDeleteDialogOpen(false);
+      fetchMenuItems();
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })
+        ?.response?.data?.message ?? 'Failed to delete item';
+      toast.error(msg);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleStock = (item: TuckshopItem) => {
+    setStockItem(item);
+    setStockDialogOpen(true);
+  };
+
+  const handleCreate = () => {
+    setEditItem(null);
+    setFormOpen(true);
+  };
+
+  const columns = useMemo(
+    () => getMenuItemColumns({ onEdit: handleEdit, onDelete: handleDelete, onStock: handleStock }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Tuckshop Management" description="Manage menu items and track daily sales" />
+      <PageHeader title="Tuckshop Management" description="Manage menu items, place orders, and track daily sales">
+        <Button variant="outline" onClick={() => setHistoryDialogOpen(true)}>
+          <History className="h-4 w-4 mr-1" /> Order History
+        </Button>
+        <Button variant="outline" onClick={() => setOrderDialogOpen(true)}>
+          <ShoppingCart className="h-4 w-4 mr-1" /> Place Order
+        </Button>
+        <Button onClick={handleCreate}>
+          <Plus className="h-4 w-4 mr-1" /> Add Item
+        </Button>
+      </PageHeader>
 
       <Tabs defaultValue="menu">
         <TabsList>
@@ -113,52 +133,67 @@ export default function TuckshopPage() {
         </TabsList>
 
         <TabsContent value="menu" className="mt-4">
-          <DataTable columns={columns} data={menuItems} searchKey="name" searchPlaceholder="Search items..." />
+          <DataTable
+            columns={columns}
+            data={menuItems}
+            searchKey="name"
+            searchPlaceholder="Search items..."
+          />
         </TabsContent>
 
-        <TabsContent value="sales" className="mt-4 space-y-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <StatCard title="Total Revenue (7 days)" value={formatCurrency(totalRevenue)} icon={DollarSign} />
-            <StatCard title="Total Transactions" value={totalTransactions.toString()} icon={ShoppingBag} />
-            <StatCard title="Avg. Transaction" value={formatCurrency(avgTransaction)} icon={TrendingUp} />
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Daily Revenue</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <BarChartComponent
-                data={salesChartData as Record<string, unknown>[]}
-                xKey="date"
-                bars={[{ key: 'revenue', color: '#2563EB', name: 'Revenue (R)' }]}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Daily Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {dailySales.map((day) => (
-                  <div key={day.date} className="flex items-center justify-between rounded-lg border p-3">
-                    <div>
-                      <p className="font-medium">{formatDate(day.date)}</p>
-                      <p className="text-sm text-muted-foreground">{day.totalTransactions} transactions</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold">{formatCurrency(day.totalRevenue)}</p>
-                      <p className="text-sm text-muted-foreground">Avg: {formatCurrency(day.averageTransaction)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="sales" className="mt-4">
+          <DailySalesReport schoolId={schoolId} />
         </TabsContent>
       </Tabs>
+
+      {/* Create/Edit dialog */}
+      <MenuItemFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        editItem={editItem}
+        schoolId={schoolId}
+        onSaved={fetchMenuItems}
+      />
+
+      {/* Stock editor dialog */}
+      <StockEditorDialog
+        open={stockDialogOpen}
+        onOpenChange={setStockDialogOpen}
+        item={stockItem}
+        onSaved={fetchMenuItems}
+      />
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-xs">
+          <DialogHeader>
+            <DialogTitle>Delete Menu Item</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete <strong>{deleteItem?.name}</strong>? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDelete} disabled={deleting}>
+              {deleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Place order dialog */}
+      <PlaceOrderDialog
+        open={orderDialogOpen}
+        onOpenChange={setOrderDialogOpen}
+        schoolId={schoolId}
+        onOrderPlaced={fetchMenuItems}
+      />
+
+      {/* Order history dialog */}
+      <OrderHistoryDialog
+        open={historyDialogOpen}
+        onOpenChange={setHistoryDialogOpen}
+      />
     </div>
   );
 }

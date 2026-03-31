@@ -1,86 +1,51 @@
 'use client';
 
-import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Save, BookOpen } from 'lucide-react';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import {
-  mockStudents,
-  mockAssessments,
-  mockClasses,
-  mockStudentGrades,
-} from '@/lib/mock-data';
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from '@/components/ui/select';
+import { Save, BookOpen } from 'lucide-react';
+import { useTeacherGrades } from '@/hooks/useTeacherGrades';
+import type { Assessment } from '@/types';
+
+function getSubjectName(a: Assessment): string {
+  if (a.subject?.name) return a.subject.name;
+  if (typeof a.subjectId === 'object' && a.subjectId !== null) {
+    return ((a.subjectId as Record<string, unknown>).name as string) ?? '';
+  }
+  return '';
+}
 
 export default function TeacherGradesPage() {
-  const [selectedClass, setSelectedClass] = useState<string>('c1');
-  const [selectedAssessment, setSelectedAssessment] = useState<string>('a1');
-  const [grades, setGrades] = useState<Record<string, string>>({});
-  const [saved, setSaved] = useState(false);
+  const {
+    classes, assessments, markEntries,
+    selectedClass, selectedAssessment,
+    loading, saving, currentAssessment,
+    setSelectedClass, setSelectedAssessment,
+    handleMarkChange, saveMarks,
+  } = useTeacherGrades();
 
-  const classStudents = mockStudents.filter(
-    (s) => s.classId === selectedClass
-  );
-
-  const currentAssessment = mockAssessments.find(
-    (a) => a.id === selectedAssessment
-  );
-
-  // Filter assessments by selected class
-  const classAssessments = mockAssessments.filter(
-    (a) => a.classId === selectedClass
-  );
-
-  // Initialize grades from existing mock data
-  const getGrade = (studentId: string): string => {
-    if (grades[studentId] !== undefined) return grades[studentId];
-    const existing = mockStudentGrades.find(
-      (sg) =>
-        sg.studentId === studentId &&
-        sg.assessmentId === selectedAssessment
-    );
-    return existing ? String(existing.marks) : '';
-  };
-
-  const handleGradeChange = (studentId: string, value: string) => {
-    setGrades((prev) => ({ ...prev, [studentId]: value }));
-    setSaved(false);
-  };
-
-  const handleSave = () => {
-    setSaved(true);
-  };
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Gradebook"
-        description="Enter and manage student assessment marks"
-      />
+      <PageHeader title="Gradebook" description="Enter and manage student assessment marks" />
 
-      {/* Selectors */}
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Class:</span>
-              <Select
-                value={selectedClass}
-                onValueChange={(val) => {
-                  setSelectedClass(val as string);
-                  setGrades({});
-                  setSaved(false);
-                }}
-              >
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Select class" />
-                </SelectTrigger>
+              <Select value={selectedClass} onValueChange={(val: unknown) => setSelectedClass(val as string)}>
+                <SelectTrigger className="w-48"><SelectValue placeholder="Select class" /></SelectTrigger>
                 <SelectContent>
-                  {mockClasses.map((cls) => (
+                  {classes.map((cls) => (
                     <SelectItem key={cls.id} value={cls.id}>
-                      {cls.grade.name} {cls.name}
+                      {cls.grade?.name ?? (cls as unknown as Record<string, unknown>).gradeName ?? ''} {cls.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -88,22 +53,11 @@ export default function TeacherGradesPage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Assessment:</span>
-              <Select
-                value={selectedAssessment}
-                onValueChange={(val) => {
-                  setSelectedAssessment(val as string);
-                  setGrades({});
-                  setSaved(false);
-                }}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Select assessment" />
-                </SelectTrigger>
+              <Select value={selectedAssessment} onValueChange={(val: unknown) => setSelectedAssessment(val as string)}>
+                <SelectTrigger className="w-56"><SelectValue placeholder="Select assessment" /></SelectTrigger>
                 <SelectContent>
-                  {classAssessments.map((assessment) => (
-                    <SelectItem key={assessment.id} value={assessment.id}>
-                      {assessment.name}
-                    </SelectItem>
+                  {assessments.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -112,7 +66,6 @@ export default function TeacherGradesPage() {
         </CardContent>
       </Card>
 
-      {/* Assessment Info */}
       {currentAssessment && (
         <Card>
           <CardContent className="p-4 flex items-center gap-4">
@@ -122,101 +75,60 @@ export default function TeacherGradesPage() {
             <div>
               <p className="font-medium">{currentAssessment.name}</p>
               <p className="text-sm text-muted-foreground">
-                {currentAssessment.subject.name} &middot;{' '}
-                {currentAssessment.type} &middot; Total:{' '}
-                {currentAssessment.totalMarks} marks &middot; Weight:{' '}
-                {currentAssessment.weight}%
+                {getSubjectName(currentAssessment)} &middot; {currentAssessment.type} &middot; Total: {currentAssessment.totalMarks} marks &middot; Weight: {currentAssessment.weight}%
               </p>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Gradebook Table */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">
-            Student Marks ({classStudents.length} students)
-          </CardTitle>
+          <CardTitle className="text-lg">Student Marks ({markEntries.length} students)</CardTitle>
         </CardHeader>
         <CardContent>
-          {classStudents.length === 0 ? (
+          {markEntries.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              No students found for this class.
+              {selectedAssessment ? 'No students found for this class.' : 'Select a class and assessment to begin.'}
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="py-2 text-left text-sm font-medium text-muted-foreground">
-                      #
-                    </th>
-                    <th className="py-2 text-left text-sm font-medium text-muted-foreground">
-                      Student Name
-                    </th>
-                    <th className="py-2 text-left text-sm font-medium text-muted-foreground">
-                      Admission No.
-                    </th>
-                    <th className="py-2 text-left text-sm font-medium text-muted-foreground w-32">
-                      Marks (/{currentAssessment?.totalMarks || 100})
-                    </th>
-                    <th className="py-2 text-left text-sm font-medium text-muted-foreground w-20">
-                      %
-                    </th>
+                    <th className="py-2 text-left text-sm font-medium text-muted-foreground">#</th>
+                    <th className="py-2 text-left text-sm font-medium text-muted-foreground">Student Name</th>
+                    <th className="py-2 text-left text-sm font-medium text-muted-foreground">Admission No.</th>
+                    <th className="py-2 text-left text-sm font-medium text-muted-foreground w-32">Marks (/{currentAssessment?.totalMarks ?? 100})</th>
+                    <th className="py-2 text-left text-sm font-medium text-muted-foreground w-20">%</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {classStudents.map((student, index) => {
-                    const mark = getGrade(student.id);
-                    const numericMark = Number(mark);
-                    const percentage = mark && currentAssessment
-                      ? Math.round(
-                          (numericMark / currentAssessment.totalMarks) * 100
-                        )
+                  {markEntries.map((entry, index) => {
+                    const numericMark = Number(entry.mark);
+                    const percentage = entry.mark && currentAssessment
+                      ? Math.round((numericMark / currentAssessment.totalMarks) * 100)
                       : null;
-
                     return (
-                      <tr key={student.id} className="border-b last:border-0">
-                        <td className="py-3 text-sm text-muted-foreground">
-                          {index + 1}
-                        </td>
-                        <td className="py-3 text-sm font-medium">
-                          {student.user.lastName}, {student.user.firstName}
-                        </td>
-                        <td className="py-3 text-sm text-muted-foreground">
-                          {student.admissionNumber}
-                        </td>
+                      <tr key={entry.studentId} className="border-b last:border-0">
+                        <td className="py-3 text-sm text-muted-foreground">{index + 1}</td>
+                        <td className="py-3 text-sm font-medium">{entry.lastName}, {entry.firstName}</td>
+                        <td className="py-3 text-sm text-muted-foreground">{entry.admissionNumber}</td>
                         <td className="py-3">
                           <Input
-                            type="number"
-                            min={0}
-                            max={currentAssessment?.totalMarks || 100}
-                            value={mark}
-                            onChange={(e) =>
-                              handleGradeChange(student.id, e.target.value)
-                            }
-                            placeholder="Enter marks"
-                            className="w-28"
+                            type="number" min={0} max={currentAssessment?.totalMarks ?? 100}
+                            value={entry.mark}
+                            onChange={(e) => handleMarkChange(entry.studentId, e.target.value)}
+                            placeholder="Enter marks" className="w-28"
                           />
                         </td>
                         <td className="py-3">
                           {percentage !== null && !isNaN(percentage) ? (
-                            <span
-                              className={`text-sm font-semibold ${
-                                percentage >= 80
-                                  ? 'text-emerald-600'
-                                  : percentage >= 50
-                                  ? 'text-blue-600'
-                                  : 'text-red-600'
-                              }`}
-                            >
+                            <span className={`text-sm font-semibold ${percentage >= 80 ? 'text-emerald-600' : percentage >= 50 ? 'text-blue-600' : 'text-red-600'}`}>
                               {percentage}%
                             </span>
                           ) : (
-                            <span className="text-sm text-muted-foreground">
-                              --
-                            </span>
+                            <span className="text-sm text-muted-foreground">--</span>
                           )}
                         </td>
                       </tr>
@@ -226,17 +138,13 @@ export default function TeacherGradesPage() {
               </table>
             </div>
           )}
-
-          <div className="mt-4 flex justify-end">
-            <Button onClick={handleSave} disabled={saved}>
-              <Save className="mr-2 h-4 w-4" />
-              {saved ? 'Saved' : 'Save Marks'}
-            </Button>
-          </div>
-          {saved && (
-            <p className="mt-2 text-sm text-emerald-600 text-right">
-              Marks saved successfully!
-            </p>
+          {markEntries.length > 0 && (
+            <div className="mt-4 flex justify-end">
+              <Button onClick={saveMarks} disabled={saving}>
+                <Save className="mr-2 h-4 w-4" />
+                {saving ? 'Saving...' : 'Save Marks'}
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>

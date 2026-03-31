@@ -1,31 +1,80 @@
 import { z } from 'zod';
 
+export const loginSchema = z.object({
+  email: z.string().email('Please enter a valid email'),
+  password: z.string().min(1, 'Password is required'),
+});
+export type LoginFormData = z.infer<typeof loginSchema>;
+
+export const registerSchema = z.object({
+  schoolName: z.string().min(2, 'School name is required'),
+  adminFirstName: z.string().min(2, 'First name is required'),
+  adminLastName: z.string().min(2, 'Last name is required'),
+  adminEmail: z.string().email('Please enter a valid email'),
+  adminPassword: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/\d/, 'Password must contain at least one digit'),
+  confirmPassword: z.string(),
+  phone: z.string().min(10, 'Please enter a valid phone number'),
+  address: z.string().min(5, 'Address is required'),
+  city: z.string().min(2, 'City is required'),
+  province: z.string().min(2, 'Province is required'),
+  postalCode: z.string().min(4, 'Postal code is required'),
+  schoolType: z.enum(['primary', 'secondary', 'combined']),
+}).refine((data) => data.adminPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+});
+export type RegisterFormData = z.infer<typeof registerSchema>;
+
 export const studentSchema = z.object({
-  firstName: z.string().min(2, 'First name must be at least 2 characters'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+  firstName: z.string().min(2, 'First name is required'),
+  lastName: z.string().min(2, 'Last name is required'),
+  email: z.string().email('Please enter a valid email'),
   dateOfBirth: z.string().min(1, 'Date of birth is required'),
   gender: z.enum(['male', 'female', 'other'], { error: 'Gender is required' }),
   gradeId: z.string().min(1, 'Grade is required'),
   classId: z.string().min(1, 'Class is required'),
-  address: z.string().min(5, 'Address must be at least 5 characters'),
-  parentId: z.string().min(1, 'Parent is required'),
+  admissionNumber: z.string().min(1, 'Admission number is required'),
+  guardianId: z.string().optional(),
+  homeLanguage: z.string().optional(),
+  previousSchool: z.string().optional(),
+  transportRequired: z.boolean().optional(),
+  afterCareRequired: z.boolean().optional(),
+});
+
+export const medicalProfileSchema = z.object({
+  allergies: z.array(z.string()),
+  conditions: z.array(z.string()),
+  bloodType: z.string().optional(),
+  emergencyContacts: z.array(z.object({
+    name: z.string().min(1, 'Name is required'),
+    relationship: z.string().min(1, 'Relationship is required'),
+    phone: z.string().min(1, 'Phone is required'),
+  })),
+  medicalAidInfo: z.object({
+    provider: z.string().min(1, 'Provider is required'),
+    memberNumber: z.string().min(1, 'Member number is required'),
+    mainMember: z.string().min(1, 'Main member is required'),
+  }).optional(),
 });
 
 export const staffSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  phone: z.string().min(10, 'Phone number must be at least 10 digits'),
-  department: z.string().min(1, 'Department is required'),
-  subjects: z.string().min(1, 'At least one subject is required'),
+  phone: z.string().optional(),
+  department: z.string().optional(),
+  subjects: z.string().optional(),
 });
 
 export const feeTypeSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  description: z.string().min(5, 'Description must be at least 5 characters'),
+  name: z.string().min(1, 'Name is required'),
+  description: z.string().optional(),
   amount: z.number().min(1, 'Amount must be greater than 0'),
-  frequency: z.enum(['once', 'monthly', 'quarterly', 'annually'], { error: 'Frequency is required' }),
-  isOptional: z.boolean(),
+  frequency: z.enum(['once_off', 'per_term', 'per_year', 'monthly'], { error: 'Frequency is required' }),
+  category: z.enum(['tuition', 'extramural', 'camp', 'uniform', 'transport', 'other'], { error: 'Category is required' }),
 });
 
 export const eventSchema = z.object({
@@ -81,6 +130,7 @@ export const lostReportSchema = z.object({
 });
 
 export type StudentFormData = z.infer<typeof studentSchema>;
+export type MedicalProfileFormData = z.infer<typeof medicalProfileSchema>;
 export type StaffFormData = z.infer<typeof staffSchema>;
 export type FeeTypeFormData = z.infer<typeof feeTypeSchema>;
 export type EventFormData = z.infer<typeof eventSchema>;

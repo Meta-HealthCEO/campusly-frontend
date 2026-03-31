@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import {
   Wallet,
   ArrowUpCircle,
@@ -15,68 +15,26 @@ import {
   CreditCard,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import apiClient from '@/lib/api-client';
-import { useAuthStore } from '@/stores/useAuthStore';
-import type { Wallet as WalletType, WalletTransaction, TuckshopItem } from '@/types';
+import { useStudentWallet } from '@/hooks/useStudentWallet';
 
 const transactionIcons: Record<string, typeof ArrowUpCircle> = {
   topup: ArrowUpCircle,
+  load: ArrowUpCircle,
   purchase: ArrowDownCircle,
   refund: RotateCcw,
 };
 
 const transactionColors: Record<string, string> = {
   topup: 'text-emerald-600',
+  load: 'text-emerald-600',
   purchase: 'text-red-600',
   refund: 'text-blue-600',
 };
 
 export default function StudentWalletPage() {
-  const { user } = useAuthStore();
-  const [wallet, setWallet] = useState<WalletType | null>(null);
-  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
-  const [menuItems, setMenuItems] = useState<TuckshopItem[]>([]);
+  const { wallet, transactions, menuItems, loading } = useStudentWallet();
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        // Find current student
-        const studentsRes = await apiClient.get('/students');
-        const studentsData = studentsRes.data.data ?? studentsRes.data;
-        const studentsList = Array.isArray(studentsData) ? studentsData : studentsData.data ?? [];
-        const me = studentsList.find((s: any) => s.userId === user?.id || s.user?._id === user?.id || s.user?.id === user?.id);
-
-        if (me) {
-          const sid = me.id ?? me._id;
-          const [walletRes, menuRes] = await Promise.allSettled([
-            apiClient.get(`/wallets/student/${sid}`),
-            apiClient.get('/tuck-shop/menu'),
-          ]);
-
-          if (walletRes.status === 'fulfilled' && walletRes.value.data) {
-            const d = walletRes.value.data.data ?? walletRes.value.data;
-            setWallet(d.wallet ?? d);
-            // If wallet has an ID, fetch transactions
-            const walletId = d.wallet?.id ?? d.wallet?._id ?? d.id ?? d._id;
-            if (walletId) {
-              try {
-                const txRes = await apiClient.get(`/wallets/${walletId}/transactions`);
-                const txData = txRes.data.data ?? txRes.data;
-                setTransactions(Array.isArray(txData) ? txData : txData.data ?? []);
-              } catch { /* no transactions */ }
-            }
-          }
-          if (menuRes.status === 'fulfilled' && menuRes.value.data) {
-            const d = menuRes.value.data.data ?? menuRes.value.data;
-            setMenuItems(Array.isArray(d) ? d : d.data ?? []);
-          }
-        }
-      } catch {
-        console.error('Failed to load wallet data');
-      }
-    }
-    if (user?.id) fetchData();
-  }, [user?.id]);
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="space-y-6">
@@ -142,8 +100,8 @@ export default function StudentWalletPage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className={`text-sm font-semibold ${tx.amount > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                            {tx.amount > 0 ? '+' : ''}{formatCurrency(Math.abs(tx.amount))}
+                          <p className={`text-sm font-semibold ${tx.type === 'purchase' ? 'text-red-600' : 'text-emerald-600'}`}>
+                            {tx.type === 'purchase' ? '-' : '+'}{formatCurrency(tx.amount)}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             Bal: {formatCurrency(tx.balance)}

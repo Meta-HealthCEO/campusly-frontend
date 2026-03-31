@@ -1,29 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCard } from '@/components/shared/StatCard';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import {
   CreditCard, DollarSign, FileText, CheckCircle2, AlertTriangle,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { useAuthStore } from '@/stores/useAuthStore';
-import apiClient from '@/lib/api-client';
+import { useParentFees } from '@/hooks/useParentFees';
 import type { Invoice, Payment } from '@/types';
 
 const statusStyles: Record<string, string> = {
@@ -35,17 +35,19 @@ const statusStyles: Record<string, string> = {
   cancelled: 'bg-gray-100 text-gray-500',
 };
 
-function PayDialog({ invoice }: { invoice: Invoice }) {
+type PaymentMethod = 'cash' | 'eft' | 'card' | 'debit_order';
+
+function PayDialog({ invoice, onPaid }: { invoice: Invoice; onPaid?: () => void }) {
   const [open, setOpen] = useState(false);
   const [payAmount, setPayAmount] = useState(
     String((invoice.balanceDue / 100).toFixed(2))
   );
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('eft');
+  const { payInvoice } = useParentFees();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        render={<Button size="sm" className="gap-1" />}
-      >
+      <DialogTrigger render={<Button size="sm" className="gap-1" />}>
         <CreditCard className="h-3.5 w-3.5" />
         Pay Now
       </DialogTrigger>
@@ -81,14 +83,34 @@ function PayDialog({ invoice }: { invoice: Invoice }) {
               step="0.01"
             />
           </div>
+          <div className="space-y-2">
+            <Label>Payment Method</Label>
+            <Select value={paymentMethod} onValueChange={(val: unknown) => setPaymentMethod(val as PaymentMethod)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="eft">EFT</SelectItem>
+                <SelectItem value="card">Card</SelectItem>
+                <SelectItem value="cash">Cash</SelectItem>
+                <SelectItem value="debit_order">Debit Order</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Button
             className="w-full"
-            disabled={
-              !payAmount ||
-              parseFloat(payAmount) <= 0 ||
-              parseFloat(payAmount) > invoice.balanceDue / 100
-            }
-            onClick={() => setOpen(false)}
+            disabled={!payAmount || parseFloat(payAmount) <= 0 || parseFloat(payAmount) > invoice.balanceDue / 100}
+            onClick={async () => {
+              try {
+                const amountCents = Math.round(parseFloat(payAmount) * 100);
+                await payInvoice(invoice.id, amountCents, paymentMethod);
+                toast.success('Payment recorded successfully!');
+                setOpen(false);
+                onPaid?.();
+              } catch (err: unknown) {
+                toast.error(err instanceof Error ? err.message : 'Failed to process payment');
+              }
+            }}
           >
             Pay {payAmount ? formatCurrency(parseFloat(payAmount) * 100) : ''}
           </Button>
@@ -98,25 +120,24 @@ function PayDialog({ invoice }: { invoice: Invoice }) {
   );
 }
 
-const invoiceColumns: ColumnDef<Invoice, unknown>[] = [
+function getInvoiceColumns(onRefresh?: () => void): ColumnDef<Invoice, unknown>[] { return [
   {
     accessorKey: 'invoiceNumber',
     header: 'Invoice No.',
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.invoiceNumber}</span>
-    ),
+    cell: ({ row }) => <span className="font-medium">{row.original.invoiceNumber}</span>,
   },
   {
     accessorKey: 'student',
     header: 'Student',
-    cell: ({ row }) =>
-      `${row.original.student.user.firstName} ${row.original.student.user.lastName}`,
+    cell: ({ row }) => {
+      const s = row.original.student;
+      return s?.user ? `${s.user.firstName} ${s.user.lastName}` : '-';
+    },
   },
   {
     id: 'description',
     header: 'Description',
-    cell: ({ row }) =>
-      row.original.items.map((item) => item.description).join(', '),
+    cell: ({ row }) => row.original.items?.map((item) => item.description).join(', ') ?? '-',
   },
   {
     accessorKey: 'totalAmount',
@@ -140,14 +161,11 @@ const invoiceColumns: ColumnDef<Invoice, unknown>[] = [
   {
     accessorKey: 'status',
     header: 'Status',
-    cell: ({ row }) => {
-      const status = row.original.status;
-      return (
-        <Badge variant="secondary" className={statusStyles[status] ?? ''}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
-        </Badge>
-      );
-    },
+    cell: ({ row }) => (
+      <Badge variant="secondary" className={statusStyles[row.original.status] ?? ''}>
+        {row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1)}
+      </Badge>
+    ),
   },
   {
     accessorKey: 'dueDate',
@@ -159,52 +177,30 @@ const invoiceColumns: ColumnDef<Invoice, unknown>[] = [
     header: '',
     cell: ({ row }) => {
       if (row.original.balanceDue > 0 && row.original.status !== 'cancelled') {
-        return <PayDialog invoice={row.original} />;
+        return <PayDialog invoice={row.original} onPaid={onRefresh} />;
       }
       return null;
     },
   },
-];
+]; }
 
 const paymentColumns: ColumnDef<Payment, unknown>[] = [
+  { accessorKey: 'date', header: 'Date', cell: ({ row }) => formatDate(row.original.date) },
   {
-    accessorKey: 'date',
-    header: 'Date',
-    cell: ({ row }) => formatDate(row.original.date),
+    accessorKey: 'reference', header: 'Reference',
+    cell: ({ row }) => <span className="font-mono text-sm">{row.original.reference}</span>,
   },
   {
-    accessorKey: 'reference',
-    header: 'Reference',
-    cell: ({ row }) => (
-      <span className="font-mono text-sm">{row.original.reference}</span>
-    ),
+    accessorKey: 'method', header: 'Method',
+    cell: ({ row }) => <Badge variant="outline">{row.original.method.toUpperCase()}</Badge>,
   },
   {
-    accessorKey: 'method',
-    header: 'Method',
+    accessorKey: 'amount', header: 'Amount',
+    cell: ({ row }) => <span className="font-medium text-emerald-600">{formatCurrency(row.original.amount)}</span>,
+  },
+  {
+    accessorKey: 'status', header: 'Status',
     cell: ({ row }) => {
-      const method = row.original.method;
-      return (
-        <Badge variant="outline">
-          {method.toUpperCase()}
-        </Badge>
-      );
-    },
-  },
-  {
-    accessorKey: 'amount',
-    header: 'Amount',
-    cell: ({ row }) => (
-      <span className="font-medium text-emerald-600">
-        {formatCurrency(row.original.amount)}
-      </span>
-    ),
-  },
-  {
-    accessorKey: 'status',
-    header: 'Status',
-    cell: ({ row }) => {
-      const status = row.original.status;
       const styles: Record<string, string> = {
         completed: 'bg-emerald-100 text-emerald-800',
         pending: 'bg-amber-100 text-amber-800',
@@ -212,8 +208,8 @@ const paymentColumns: ColumnDef<Payment, unknown>[] = [
         refunded: 'bg-gray-100 text-gray-800',
       };
       return (
-        <Badge variant="secondary" className={styles[status] ?? ''}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
+        <Badge variant="secondary" className={styles[row.original.status] ?? ''}>
+          {row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1)}
         </Badge>
       );
     },
@@ -221,138 +217,49 @@ const paymentColumns: ColumnDef<Payment, unknown>[] = [
 ];
 
 export default function FeesPage() {
-  const { user } = useAuthStore();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const { invoices, payments, loading, refetch } = useParentFees();
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        // Fetch invoices for the school
-        const invRes = await apiClient.get(`/fees/invoices/school/${user?.schoolId}`);
-        const invData = invRes.data.data ?? invRes.data;
-        const invoiceList: Invoice[] = Array.isArray(invData) ? invData : invData.data ?? [];
-        setInvoices(invoiceList);
+  const totalOutstanding = invoices.reduce((sum, inv) => sum + inv.balanceDue, 0);
+  const totalPaid = payments.filter((p) => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0);
+  const overdueCount = invoices.filter((inv) => inv.status === 'overdue').length;
 
-        // Fetch payments for each invoice
-        if (invoiceList.length > 0) {
-          const paymentPromises = invoiceList.map((inv) =>
-            apiClient.get(`/fees/payments/${inv.id}`).catch(() => ({ data: { data: [] } }))
-          );
-          const paymentResults = await Promise.all(paymentPromises);
-          const allPayments = paymentResults.flatMap((r) => {
-            const d = r.data.data ?? r.data;
-            return Array.isArray(d) ? d : d.data ?? [];
-          });
-          setPayments(allPayments);
-        }
-      } catch {
-        console.error('Failed to load fee data');
-      }
-    }
-    if (user?.schoolId) fetchData();
-  }, [user?.schoolId]);
-
-  const totalOutstanding = invoices.reduce(
-    (sum, inv) => sum + inv.balanceDue,
-    0
-  );
-  const totalPaid = payments
-    .filter((p) => p.status === 'completed')
-    .reduce((sum, p) => sum + p.amount, 0);
-  const overdueCount = invoices.filter(
-    (inv) => inv.status === 'overdue'
-  ).length;
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Fee Management"
-        description="View invoices, make payments, and track your payment history."
-      />
+      <PageHeader title="Fee Management" description="View invoices, make payments, and track your payment history." />
 
-      {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Outstanding Balance"
-          value={formatCurrency(totalOutstanding)}
-          icon={DollarSign}
-          description={
-            totalOutstanding > 0 ? 'Payment required' : 'All paid up'
-          }
-        />
-        <StatCard
-          title="Total Paid"
-          value={formatCurrency(totalPaid)}
-          icon={CheckCircle2}
-          description="This year"
-        />
-        <StatCard
-          title="Invoices"
-          value={String(invoices.length)}
-          icon={FileText}
-          description="Total invoices"
-        />
-        <StatCard
-          title="Overdue"
-          value={String(overdueCount)}
-          icon={AlertTriangle}
-          description={
-            overdueCount > 0
-              ? 'Requires immediate attention'
-              : 'No overdue invoices'
-          }
-        />
+        <StatCard title="Outstanding Balance" value={formatCurrency(totalOutstanding)} icon={DollarSign} description={totalOutstanding > 0 ? 'Payment required' : 'All paid up'} />
+        <StatCard title="Total Paid" value={formatCurrency(totalPaid)} icon={CheckCircle2} description="This year" />
+        <StatCard title="Invoices" value={String(invoices.length)} icon={FileText} description="Total invoices" />
+        <StatCard title="Overdue" value={String(overdueCount)} icon={AlertTriangle} description={overdueCount > 0 ? 'Requires immediate attention' : 'No overdue invoices'} />
       </div>
 
-      {/* Invoices */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Invoices</CardTitle>
-          <CardDescription>
-            All invoices for your children. Click "Pay Now" to make a payment.
-          </CardDescription>
+          <CardDescription>All invoices for your children. Click &quot;Pay Now&quot; to make a payment.</CardDescription>
         </CardHeader>
         <CardContent>
           {invoices.length > 0 ? (
-            <DataTable
-              columns={invoiceColumns}
-              data={invoices}
-              searchKey="invoiceNumber"
-              searchPlaceholder="Search invoices..."
-            />
+            <DataTable columns={getInvoiceColumns(refetch)} data={invoices} searchKey="invoiceNumber" searchPlaceholder="Search invoices..." />
           ) : (
-            <EmptyState
-              icon={FileText}
-              title="No invoices"
-              description="No invoices have been issued yet."
-            />
+            <EmptyState icon={FileText} title="No invoices" description="No invoices have been issued yet." />
           )}
         </CardContent>
       </Card>
 
-      {/* Payment History */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Payment History</CardTitle>
-          <CardDescription>
-            Your recent payments and their status.
-          </CardDescription>
+          <CardDescription>Your recent payments and their status.</CardDescription>
         </CardHeader>
         <CardContent>
           {payments.length > 0 ? (
-            <DataTable
-              columns={paymentColumns}
-              data={payments}
-              searchKey="reference"
-              searchPlaceholder="Search payments..."
-            />
+            <DataTable columns={paymentColumns} data={payments} searchKey="reference" searchPlaceholder="Search payments..." />
           ) : (
-            <EmptyState
-              icon={CreditCard}
-              title="No payments yet"
-              description="Your payment history will appear here."
-            />
+            <EmptyState icon={CreditCard} title="No payments yet" description="Your payment history will appear here." />
           )}
         </CardContent>
       </Card>

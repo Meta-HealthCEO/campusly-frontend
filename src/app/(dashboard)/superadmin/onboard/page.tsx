@@ -41,6 +41,22 @@ export default function SuperAdminOnboardPage() {
   const update = (patch: Partial<WizardData>) =>
     setData((prev) => ({ ...prev, ...patch }));
 
+  const validateStep = (s: number): boolean => {
+    if (s === 1) {
+      if (!data.schoolName.trim()) { toast.error('School name is required'); return false; }
+      if (!data.city.trim()) { toast.error('City is required'); return false; }
+      if (!data.province) { toast.error('Province is required'); return false; }
+      if (!data.phone.trim()) { toast.error('Phone is required'); return false; }
+    }
+    if (s === 3) {
+      if (!data.adminFirstName.trim()) { toast.error('First name is required'); return false; }
+      if (!data.adminLastName.trim()) { toast.error('Last name is required'); return false; }
+      if (!data.adminEmail.trim() || !data.adminEmail.includes('@')) { toast.error('A valid email is required'); return false; }
+      if (data.adminPassword.length < 8) { toast.error('Password must be at least 8 characters'); return false; }
+    }
+    return true;
+  };
+
   const toggleModule = (id: string) => {
     setData((prev) => ({
       ...prev,
@@ -92,9 +108,10 @@ export default function SuperAdminOnboardPage() {
       });
 
       setDone(true);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Onboarding failed. Please try again.';
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error?: string } } };
+      const message = axiosErr.response?.data?.error
+        ?? (err instanceof Error ? err.message : 'Onboarding failed. Please try again.');
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -185,7 +202,7 @@ export default function SuperAdminOnboardPage() {
           <ChevronLeft className="mr-1 h-4 w-4" /> Back
         </Button>
         {step < 5 ? (
-          <Button onClick={() => setStep((s) => s + 1)}>
+          <Button onClick={() => { if (validateStep(step)) setStep((s) => s + 1); }}>
             Next <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         ) : (

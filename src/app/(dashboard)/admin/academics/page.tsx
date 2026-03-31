@@ -1,47 +1,31 @@
 'use client';
 
-import { GraduationCap, BookOpen } from 'lucide-react';
+import {
+  GraduationCap, BookOpen, Calendar, ClipboardList,
+  BookCheck, Scale, AlertTriangle, TrendingUp, FileText,
+} from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
-import { EmptyState } from '@/components/shared/EmptyState';
-import { mockGrades, mockClasses, mockSubjects } from '@/lib/mock-data';
-import type { Subject } from '@/types';
-
-const subjectColumns: ColumnDef<Subject>[] = [
-  {
-    accessorKey: 'code',
-    header: 'Code',
-  },
-  {
-    accessorKey: 'name',
-    header: 'Subject Name',
-  },
-  {
-    id: 'teacher',
-    header: 'Teacher',
-    accessorFn: (row) => `${row.teacher.user.firstName} ${row.teacher.user.lastName}`,
-  },
-  {
-    id: 'elective',
-    header: 'Type',
-    cell: ({ row }) => (
-      <Badge variant={row.original.isElective ? 'secondary' : 'default'}>
-        {row.original.isElective ? 'Elective' : 'Compulsory'}
-      </Badge>
-    ),
-  },
-];
+import { GradeClassesTab } from '@/components/academic/GradeClassesTab';
+import { SubjectsTab } from '@/components/academic/SubjectsTab';
+import { TimetableTab } from '@/components/academic/TimetableTab';
+import { AssessmentsTab } from '@/components/academic/AssessmentsTab';
+import { ExamsTab } from '@/components/academic/ExamsTab';
+import { WeightingsTab } from '@/components/academic/WeightingsTab';
+import { RemedialsTab } from '@/components/academic/RemedialsTab';
+import { PromotionTab } from '@/components/academic/PromotionTab';
+import { PastPapersTab } from '@/components/academic/PastPapersTab';
 
 export default function AcademicsPage() {
   return (
     <div className="space-y-6">
-      <PageHeader title="Academics" description="Manage grades, classes, and subjects" />
+      <PageHeader
+        title="Academics"
+        description="Manage grades, classes, subjects, timetables, assessments, exams, and more"
+      />
 
       <Tabs defaultValue="grades">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="grades">
             <GraduationCap className="mr-1 h-4 w-4" />
             Grades & Classes
@@ -50,51 +34,62 @@ export default function AcademicsPage() {
             <BookOpen className="mr-1 h-4 w-4" />
             Subjects
           </TabsTrigger>
+          <TabsTrigger value="timetable">
+            <Calendar className="mr-1 h-4 w-4" />
+            Timetable
+          </TabsTrigger>
+          <TabsTrigger value="assessments">
+            <ClipboardList className="mr-1 h-4 w-4" />
+            Assessments
+          </TabsTrigger>
+          <TabsTrigger value="exams">
+            <BookCheck className="mr-1 h-4 w-4" />
+            Exams
+          </TabsTrigger>
+          <TabsTrigger value="weightings">
+            <Scale className="mr-1 h-4 w-4" />
+            Weightings
+          </TabsTrigger>
+          <TabsTrigger value="papers">
+            <FileText className="mr-1 h-4 w-4" />
+            Past Papers
+          </TabsTrigger>
+          <TabsTrigger value="remedials">
+            <AlertTriangle className="mr-1 h-4 w-4" />
+            Remedials
+          </TabsTrigger>
+          <TabsTrigger value="promotion">
+            <TrendingUp className="mr-1 h-4 w-4" />
+            Promotion
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="grades" className="mt-4 space-y-4">
-          {mockGrades.length === 0 ? (
-            <EmptyState icon={GraduationCap} title="No grades" description="No grades have been set up yet." />
-          ) : (
-            mockGrades.map((grade) => {
-              const gradeClasses = mockClasses.filter((c) => c.gradeId === grade.id);
-              return (
-                <Card key={grade.id}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <span>{grade.name}</span>
-                      <Badge variant="secondary">Level {grade.level}</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {gradeClasses.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No classes assigned to this grade.</p>
-                    ) : (
-                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {gradeClasses.map((cls) => (
-                          <div key={cls.id} className="rounded-lg border p-3">
-                            <div className="flex items-center justify-between">
-                              <p className="font-medium">Class {cls.name}</p>
-                              <Badge variant="outline" className="text-xs">
-                                {cls.studentCount}/{cls.capacity}
-                              </Badge>
-                            </div>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                              {cls.studentCount} students enrolled
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })
-          )}
+        <TabsContent value="grades" className="mt-4">
+          <GradeClassesTab />
         </TabsContent>
-
         <TabsContent value="subjects" className="mt-4">
-          <DataTable columns={subjectColumns} data={mockSubjects} searchKey="name" searchPlaceholder="Search subjects..." />
+          <SubjectsTab />
+        </TabsContent>
+        <TabsContent value="timetable" className="mt-4">
+          <TimetableTab />
+        </TabsContent>
+        <TabsContent value="assessments" className="mt-4">
+          <AssessmentsTab />
+        </TabsContent>
+        <TabsContent value="exams" className="mt-4">
+          <ExamsTab />
+        </TabsContent>
+        <TabsContent value="weightings" className="mt-4">
+          <WeightingsTab />
+        </TabsContent>
+        <TabsContent value="papers" className="mt-4">
+          <PastPapersTab />
+        </TabsContent>
+        <TabsContent value="remedials" className="mt-4">
+          <RemedialsTab />
+        </TabsContent>
+        <TabsContent value="promotion" className="mt-4">
+          <PromotionTab />
         </TabsContent>
       </Tabs>
     </div>

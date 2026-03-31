@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -11,38 +11,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Users, BookOpen } from 'lucide-react';
-import type { Student, SchoolClass } from '@/types';
 import { cn, getInitials } from '@/lib/utils';
-import apiClient from '@/lib/api-client';
+import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 
 export default function TeacherClassesPage() {
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
-  const [classes, setClasses] = useState<SchoolClass[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [classesRes, studentsRes] = await Promise.allSettled([
-          apiClient.get('/academic/classes'),
-          apiClient.get('/students'),
-        ]);
-        if (classesRes.status === 'fulfilled' && classesRes.value.data) {
-          const d = classesRes.value.data.data ?? classesRes.value.data;
-          const arr = Array.isArray(d) ? d : d.data ?? [];
-          if (arr.length > 0) setClasses(arr);
-        }
-        if (studentsRes.status === 'fulfilled' && studentsRes.value.data) {
-          const d = studentsRes.value.data.data ?? studentsRes.value.data;
-          const arr = Array.isArray(d) ? d : d.data ?? [];
-          if (arr.length > 0) setStudents(arr);
-        }
-      } catch {
-        console.error('Failed to load classes');
-      }
-    }
-    fetchData();
-  }, []);
+  const { classes, students } = useTeacherClasses();
 
   const selectedClass = selectedClassId
     ? classes.find((c) => c.id === selectedClassId)
@@ -74,10 +48,10 @@ export default function TeacherClassesPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="text-lg font-bold">
-                      {cls.grade?.name ?? (cls as any).gradeName ?? ''} {cls.name}
+                      {cls.grade?.name ?? (cls as unknown as Record<string, unknown>).gradeName as string ?? ''} {cls.name}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {cls.grade?.name ?? (cls as any).gradeName ?? ''}
+                      {cls.grade?.name ?? (cls as unknown as Record<string, unknown>).gradeName as string ?? ''}
                     </p>
                   </div>
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
@@ -144,13 +118,13 @@ export default function TeacherClassesPage() {
                 <div key={student.id} className="flex items-center gap-3 rounded-lg border p-3">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
                     {getInitials(
-                      student.user?.firstName ?? (student as any).firstName ?? '',
-                      student.user?.lastName ?? (student as any).lastName ?? ''
+                      student.user?.firstName ?? (student.userId as unknown as Record<string, unknown>)?.firstName as string ?? (student as unknown as Record<string, unknown>).firstName as string ?? '',
+                      student.user?.lastName ?? (student.userId as unknown as Record<string, unknown>)?.lastName as string ?? (student as unknown as Record<string, unknown>).lastName as string ?? ''
                     )}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium">
-                      {student.user?.firstName ?? (student as any).firstName} {student.user?.lastName ?? (student as any).lastName}
+                      {student.user?.firstName ?? (student.userId as unknown as Record<string, unknown>)?.firstName as string ?? (student as unknown as Record<string, unknown>).firstName as string} {student.user?.lastName ?? (student.userId as unknown as Record<string, unknown>)?.lastName as string ?? (student as unknown as Record<string, unknown>).lastName as string}
                     </p>
                     <p className="text-xs text-muted-foreground">{student.admissionNumber}</p>
                   </div>

@@ -6,43 +6,25 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { EmptyState } from '@/components/shared/EmptyState';
-import {
-  BookOpen,
-  Library,
-  Clock,
-  MapPin,
-  BookCopy,
-  Target,
-} from 'lucide-react';
-import { mockBooks, mockBorrowings, mockStudents } from '@/lib/mock-data';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { BookOpen, Clock, MapPin, BookCopy, Target } from 'lucide-react';
+import { useStudentLibrary } from '@/hooks/useStudentLibrary';
 import { formatDate } from '@/lib/utils';
 
-const currentStudent = mockStudents[0];
-
-// Current borrowings for student
-const myBorrowings = mockBorrowings.filter(
-  (b) => b.studentId === currentStudent.id
-);
-const currentBorrowings = myBorrowings.filter(
-  (b) => b.status === 'borrowed' || b.status === 'overdue'
-);
-const returnedBorrowings = myBorrowings.filter(
-  (b) => b.status === 'returned'
-);
-
-// Reading challenge
-const booksReadThisTerm = returnedBorrowings.length;
-const readingGoal = 10;
-
 export default function StudentLibraryPage() {
+  const { books, borrowings, loading } = useStudentLibrary();
+
+  if (loading) return <LoadingSpinner />;
+
+  const currentBorrowings = borrowings.filter((b) => b.status === 'borrowed' || b.status === 'overdue');
+  const returnedBorrowings = borrowings.filter((b) => b.status === 'returned');
+  const booksReadThisTerm = returnedBorrowings.length;
+  const readingGoal = 10;
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Library"
-        description="Browse books and track your borrowings"
-      />
+      <PageHeader title="Library" description="Browse books and track your borrowings" />
 
-      {/* Reading Challenge */}
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center gap-4">
@@ -52,14 +34,13 @@ export default function StudentLibraryPage() {
             <div className="flex-1 space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Reading Challenge</h3>
-                <span className="text-sm text-muted-foreground">
-                  {booksReadThisTerm} / {readingGoal} books
-                </span>
+                <span className="text-sm text-muted-foreground">{booksReadThisTerm} / {readingGoal} books</span>
               </div>
               <Progress value={(booksReadThisTerm / readingGoal) * 100} />
               <p className="text-xs text-muted-foreground">
-                Read {readingGoal - booksReadThisTerm} more books to complete
-                your term reading challenge!
+                {booksReadThisTerm >= readingGoal
+                  ? 'Congratulations! You have completed your reading challenge!'
+                  : `Read ${readingGoal - booksReadThisTerm} more books to complete your term reading challenge!`}
               </p>
             </div>
           </div>
@@ -68,19 +49,13 @@ export default function StudentLibraryPage() {
 
       <Tabs defaultValue="borrowed">
         <TabsList>
-          <TabsTrigger value="borrowed">
-            Currently Borrowed ({currentBorrowings.length})
-          </TabsTrigger>
+          <TabsTrigger value="borrowed">Currently Borrowed ({currentBorrowings.length})</TabsTrigger>
           <TabsTrigger value="catalogue">Browse Catalogue</TabsTrigger>
         </TabsList>
 
         <TabsContent value="borrowed">
           {currentBorrowings.length === 0 ? (
-            <EmptyState
-              icon={BookOpen}
-              title="No Books Borrowed"
-              description="You do not have any books checked out right now."
-            />
+            <EmptyState icon={BookOpen} title="No Books Borrowed" description="You do not have any books checked out right now." />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {currentBorrowings.map((borrowing) => (
@@ -91,27 +66,13 @@ export default function StudentLibraryPage() {
                         <BookOpen className="h-6 w-6 text-primary" />
                       </div>
                       <div className="flex-1 space-y-1">
-                        <h3 className="text-sm font-semibold">
-                          {borrowing.book.title}
-                        </h3>
-                        <p className="text-xs text-muted-foreground">
-                          {borrowing.book.author}
-                        </p>
+                        <h3 className="text-sm font-semibold">{borrowing.book?.title ?? 'Book'}</h3>
+                        <p className="text-xs text-muted-foreground">{borrowing.book?.author ?? ''}</p>
                         <div className="flex items-center gap-2 pt-1">
                           <Clock className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">
-                            Due: {formatDate(borrowing.dueDate)}
-                          </span>
-                          <Badge
-                            variant={
-                              borrowing.status === 'overdue'
-                                ? 'destructive'
-                                : 'outline'
-                            }
-                          >
-                            {borrowing.status === 'overdue'
-                              ? 'Overdue'
-                              : 'Borrowed'}
+                          <span className="text-xs text-muted-foreground">Due: {formatDate(borrowing.dueDate)}</span>
+                          <Badge variant={borrowing.status === 'overdue' ? 'destructive' : 'outline'}>
+                            {borrowing.status === 'overdue' ? 'Overdue' : 'Borrowed'}
                           </Badge>
                         </div>
                       </div>
@@ -124,43 +85,36 @@ export default function StudentLibraryPage() {
         </TabsContent>
 
         <TabsContent value="catalogue">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {mockBooks.map((book) => (
-              <Card key={book.id}>
-                <CardContent className="p-5 space-y-3">
-                  <div className="flex gap-3">
-                    <div className="flex h-20 w-14 flex-shrink-0 items-center justify-center rounded bg-primary/10">
-                      <BookCopy className="h-6 w-6 text-primary" />
+          {books.length === 0 ? (
+            <EmptyState icon={BookCopy} title="No Books" description="The library catalogue is empty." />
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {books.map((book) => (
+                <Card key={book.id}>
+                  <CardContent className="p-5 space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex h-20 w-14 flex-shrink-0 items-center justify-center rounded bg-primary/10">
+                        <BookCopy className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="text-sm font-semibold leading-tight">{book.title}</h3>
+                        <p className="text-xs text-muted-foreground">{book.author}</p>
+                        <Badge variant="secondary">{book.category}</Badge>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <h3 className="text-sm font-semibold leading-tight">
-                        {book.title}
-                      </h3>
-                      <p className="text-xs text-muted-foreground">
-                        {book.author}
-                      </p>
-                      <Badge variant="secondary">{book.category}</Badge>
+                    <div className="flex items-center justify-between border-t pt-3">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3" />{book.location}
+                      </div>
+                      <Badge variant={book.availableCopies > 0 ? 'default' : 'destructive'}>
+                        {book.availableCopies > 0 ? `${book.availableCopies} available` : 'All out'}
+                      </Badge>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between border-t pt-3">
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <MapPin className="h-3 w-3" />
-                      {book.location}
-                    </div>
-                    <Badge
-                      variant={
-                        book.availableCopies > 0 ? 'default' : 'destructive'
-                      }
-                    >
-                      {book.availableCopies > 0
-                        ? `${book.availableCopies} available`
-                        : 'All out'}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

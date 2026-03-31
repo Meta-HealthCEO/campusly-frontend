@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\(page|layout\\).tsx$\")",
+      "Bash(docker run:*)",
+      "Bash(xargs wc:*)"
+    ]
+  }
+}

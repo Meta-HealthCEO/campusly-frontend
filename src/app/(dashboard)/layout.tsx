@@ -14,8 +14,8 @@ import {
   SUPERADMIN_NAV,
   type NavItem,
 } from '@/lib/constants';
-import { AuthProvider } from '@/components/auth/AuthProvider';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { useNotificationPoller } from '@/hooks/useNotificationPoller';
 import type { UserRole } from '@/types';
 
 const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
@@ -42,6 +42,9 @@ export default function DashboardLayout({
   const user = useAuthStore((state) => state.user);
   const { school, fetchSchool } = useSchoolStore();
 
+  // Poll for unread notification count
+  useNotificationPoller();
+
   // Load school data on mount when user has a schoolId
   useEffect(() => {
     if (user?.schoolId && !school) {
@@ -57,19 +60,17 @@ export default function DashboardLayout({
   }, [user, school]);
 
   return (
-    <AuthProvider>
-      <AuthGuard>
-        <div className="flex h-screen overflow-hidden bg-muted/30">
-          <Sidebar items={navItems} />
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <TopBar />
-            <main className="flex-1 overflow-y-auto p-4 pb-20 lg:p-6 lg:pb-6">
-              {children}
-            </main>
-          </div>
-          <BottomNav items={navItems} />
+    <AuthGuard>
+      <div className="flex h-screen overflow-hidden bg-muted/30">
+        <Sidebar items={navItems} />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <TopBar />
+          <main className="flex-1 overflow-y-auto p-4 pb-20 lg:p-6 lg:pb-6">
+            {children}
+          </main>
         </div>
-      </AuthGuard>
-    </AuthProvider>
+        <BottomNav items={navItems} />
+      </div>
+    </AuthGuard>
   );
 }

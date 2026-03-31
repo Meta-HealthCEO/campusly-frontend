@@ -42,6 +42,11 @@ export const ROUTES = {
   ADMIN_MIGRATION: '/admin/migration',
   ADMIN_UNIFORM: '/admin/uniform',
   ADMIN_SPORT: '/admin/sport',
+  ADMIN_ACHIEVER: '/admin/achiever',
+  ADMIN_ACHIEVER_HOUSES: '/admin/achiever/houses',
+  ADMIN_ACHIEVER_AWARDS: '/admin/achiever/awards',
+  ADMIN_CONSENT: '/admin/consent',
+  ADMIN_LIBRARY: '/admin/library',
 
   // Parent
   PARENT_DASHBOARD: '/parent',
@@ -73,6 +78,7 @@ export const ROUTES = {
   TEACHER_HOMEWORK: '/teacher/homework',
   TEACHER_DISCIPLINE: '/teacher/discipline',
   TEACHER_CLASSES: '/teacher/classes',
+  TEACHER_TIMETABLE: '/teacher/timetable',
   TEACHER_COMMUNICATION: '/teacher/communication',
   TEACHER_REPORTS: '/teacher/reports',
   TEACHER_AI_TOOLS: '/teacher/ai-tools',
@@ -121,6 +127,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Transport', href: ROUTES.ADMIN_TRANSPORT, icon: Bus, module: 'transport' },
   { label: 'Communication', href: ROUTES.ADMIN_COMMUNICATION, icon: MessageSquare, module: 'communication' },
   { label: 'Lost & Found', href: ROUTES.ADMIN_LOST_FOUND, icon: PackageSearch },
+  { label: 'Library', href: ROUTES.ADMIN_LIBRARY, icon: BookMarked, module: 'library' },
   { label: 'After Care', href: ROUTES.ADMIN_AFTERCARE, icon: Clock },
   { label: 'Announcements', href: ROUTES.ADMIN_ANNOUNCEMENTS, icon: Megaphone },
   { label: 'Fundraising', href: ROUTES.ADMIN_FUNDRAISING, icon: Heart },
@@ -128,6 +135,15 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Data Migration', href: ROUTES.ADMIN_MIGRATION, icon: Upload },
   { label: 'Uniform Shop', href: ROUTES.ADMIN_UNIFORM, icon: Shirt },
   { label: 'Sport', href: ROUTES.ADMIN_SPORT, icon: Trophy },
+  {
+    label: 'Achiever', href: ROUTES.ADMIN_ACHIEVER, icon: Award,
+    children: [
+      { label: 'Overview', href: ROUTES.ADMIN_ACHIEVER, icon: Award },
+      { label: 'Houses', href: ROUTES.ADMIN_ACHIEVER_HOUSES, icon: Trophy },
+      { label: 'Awards', href: ROUTES.ADMIN_ACHIEVER_AWARDS, icon: Award },
+    ],
+  },
+  { label: 'Consent', href: ROUTES.ADMIN_CONSENT, icon: Shield, module: 'consent' },
   { label: 'Reports', href: ROUTES.ADMIN_REPORTS, icon: BarChart3 },
   { label: 'Settings', href: ROUTES.ADMIN_SETTINGS, icon: Settings },
 ];
@@ -181,6 +197,7 @@ export const TEACHER_NAV: NavItem[] = [
   },
   { label: 'Discipline', href: ROUTES.TEACHER_DISCIPLINE, icon: Shield },
   { label: 'Classes', href: ROUTES.TEACHER_CLASSES, icon: Users },
+  { label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
   { label: 'Communication', href: ROUTES.TEACHER_COMMUNICATION, icon: Megaphone, module: 'communication' },
   { label: 'Reports', href: ROUTES.TEACHER_REPORTS, icon: BarChart3 },
 ];

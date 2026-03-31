@@ -1,72 +1,72 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import apiClient from '@/lib/api-client';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { useStudents } from '@/hooks/useStudents';
 import type { Student } from '@/types';
 
+function getStudentName(row: Student): string {
+  const u = row.user ?? (row.userId as unknown as { firstName?: string; lastName?: string });
+  const first = (typeof u === 'object' && u !== null ? u.firstName : undefined) ?? row.firstName ?? '';
+  const last = (typeof u === 'object' && u !== null ? u.lastName : undefined) ?? row.lastName ?? '';
+  return `${first} ${last}`.trim();
+}
+
+function getPopulatedName(obj: unknown, fallback?: string): string {
+  if (typeof obj === 'object' && obj !== null && 'name' in obj) return (obj as { name: string }).name;
+  return fallback ?? '-';
+}
+
+const statusStyles: Record<string, string> = {
+  active: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  transferred: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  graduated: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+  expelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  withdrawn: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400',
+};
+
 const columns: ColumnDef<Student>[] = [
-  {
-    accessorKey: 'admissionNumber',
-    header: 'Admission No',
-  },
+  { accessorKey: 'admissionNumber', header: 'Admission No' },
   {
     id: 'name',
     header: 'Name',
-    accessorFn: (row) => `${row.user?.firstName ?? (row as any).firstName ?? ''} ${row.user?.lastName ?? (row as any).lastName ?? ''}`,
+    accessorFn: (row) => getStudentName(row),
   },
   {
     id: 'grade',
     header: 'Grade',
-    accessorFn: (row) => row.grade?.name ?? (row as any).gradeName ?? '-',
+    accessorFn: (row) => getPopulatedName(row.grade ?? row.gradeId),
   },
   {
     id: 'class',
     header: 'Class',
-    accessorFn: (row) => row.class?.name ?? (row as any).className ?? '-',
+    accessorFn: (row) => getPopulatedName(row.class ?? row.classId),
   },
   {
     id: 'status',
     header: 'Status',
-    cell: ({ row }) => (
-      <Badge
-        className={
-          row.original.isActive
-            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-        }
-      >
-        {row.original.isActive ? 'Active' : 'Inactive'}
-      </Badge>
-    ),
+    cell: ({ row }) => {
+      const status = row.original.enrollmentStatus ?? 'active';
+      return (
+        <Badge className={statusStyles[status] ?? statusStyles.active}>
+          {status.charAt(0).toUpperCase() + status.slice(1)}
+        </Badge>
+      );
+    },
   },
 ];
 
 export default function StudentsPage() {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { students, loading } = useStudents();
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await apiClient.get('/students');
-        if (response.data) {
-          const data = response.data.data ?? response.data;
-          if (Array.isArray(data)) setStudents(data); else if (data?.data) setStudents(data.data);
-        }
-      } catch {
-        console.error('Failed to load students');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="space-y-6">
@@ -84,6 +84,7 @@ export default function StudentsPage() {
         data={students}
         searchKey="name"
         searchPlaceholder="Search students..."
+        onRowClick={(student) => router.push(`/admin/students/${student.id}`)}
       />
     </div>
   );

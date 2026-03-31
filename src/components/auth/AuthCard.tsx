@@ -33,8 +33,8 @@ export function AuthCard({
   return (
     <Card className={`w-full ${maxWidthMap[maxWidth]}`}>
       <CardHeader className="text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-[#2563EB]/10">
-          <GraduationCap className="h-8 w-8 text-[#2563EB]" />
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600/10">
+          <GraduationCap className="h-8 w-8 text-blue-600" />
         </div>
         <CardTitle className="text-2xl">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

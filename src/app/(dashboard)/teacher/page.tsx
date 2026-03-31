@@ -5,226 +5,112 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { StatCard } from '@/components/shared/StatCard';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import {
-  ClipboardList,
-  BookOpen,
-  AlertTriangle,
-  Users,
-  Calendar,
-  CheckSquare,
-  PenLine,
-  BarChart3,
+  ClipboardList, AlertTriangle, Users, Calendar,
+  CheckSquare, PenLine, BarChart3,
 } from 'lucide-react';
-import {
-  mockTimetable,
-  mockHomework,
-  mockSubmissions,
-  mockAttendance,
-  mockStudents,
-  mockTeachers,
-} from '@/lib/mock-data';
-import { formatDate } from '@/lib/utils';
+import { AnnouncementBanner } from '@/components/announcements/AnnouncementBanner';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { useTeacherDashboard } from '@/hooks/useTeacherDashboard';
 import Link from 'next/link';
 
-// Current teacher is t1
-const currentTeacher = mockTeachers[0];
-
-// Today's classes (monday)
-const todayClasses = mockTimetable
-  .filter((slot) => slot.day === 'monday' && slot.teacherId === currentTeacher.id)
-  .sort((a, b) => a.period - b.period);
-
-// Pending homework to grade
-const pendingToGrade = mockHomework.filter((hw) => {
-  if (hw.teacherId !== currentTeacher.id) return false;
-  const submissions = mockSubmissions.filter(
-    (s) => s.homeworkId === hw.id && s.status === 'submitted'
-  );
-  return submissions.length > 0;
-});
-
-const ungradedCount = mockSubmissions.filter(
-  (s) => s.status === 'submitted'
-).length;
-
-// Absent students today
-const todayDate = '2025-03-06';
-const absentToday = mockAttendance.filter(
-  (a) => a.date === todayDate && a.status === 'absent'
-);
-
 export default function TeacherDashboard() {
+  const { user } = useAuthStore();
+  const {
+    timetable, pendingHomework, absentToday,
+    classCount, ungradedCount, loading,
+  } = useTeacherDashboard();
+
+  if (loading) return <LoadingSpinner />;
+
+  const firstName = user?.firstName ?? 'Teacher';
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={`Good morning, ${currentTeacher.user.firstName}!`}
-        description="Here is your teaching dashboard for today"
-      />
+      <PageHeader title={`Good morning, ${firstName}!`} description="Here is your teaching dashboard for today" />
 
-      {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Today's Classes"
-          value={String(todayClasses.length)}
-          icon={Calendar}
-          description="Monday schedule"
-        />
-        <StatCard
-          title="To Grade"
-          value={String(ungradedCount)}
-          icon={ClipboardList}
-          description="Pending submissions"
-        />
-        <StatCard
-          title="Absent Today"
-          value={String(absentToday.length)}
-          icon={AlertTriangle}
-          description="Students absent"
-        />
-        <StatCard
-          title="My Classes"
-          value={String(currentTeacher.classIds.length)}
-          icon={Users}
-          description="Assigned classes"
-        />
+        <StatCard title="Today's Classes" value={String(timetable.length)} icon={Calendar} description={`${today} schedule`} />
+        <StatCard title="To Grade" value={String(ungradedCount)} icon={ClipboardList} description="Pending submissions" />
+        <StatCard title="Absent Today" value={String(absentToday.length)} icon={AlertTriangle} description="Students absent" />
+        <StatCard title="My Classes" value={String(classCount)} icon={Users} description="Assigned classes" />
       </div>
 
-      {/* Quick Actions */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Quick Actions</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle className="text-lg">Quick Actions</CardTitle></CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-3">
-            <Link href="/teacher/attendance">
-              <Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2">
-                <CheckSquare className="h-6 w-6 text-primary" />
-                <span>Take Attendance</span>
-              </Button>
-            </Link>
-            <Link href="/teacher/homework">
-              <Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2">
-                <PenLine className="h-6 w-6 text-primary" />
-                <span>Create Homework</span>
-              </Button>
-            </Link>
-            <Link href="/teacher/grades">
-              <Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2">
-                <BarChart3 className="h-6 w-6 text-primary" />
-                <span>View Gradebook</span>
-              </Button>
-            </Link>
+            <Link href="/teacher/attendance"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><CheckSquare className="h-6 w-6 text-primary" /><span>Take Attendance</span></Button></Link>
+            <Link href="/teacher/homework"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><PenLine className="h-6 w-6 text-primary" /><span>Create Homework</span></Button></Link>
+            <Link href="/teacher/grades"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><BarChart3 className="h-6 w-6 text-primary" /><span>View Gradebook</span></Button></Link>
           </div>
         </CardContent>
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Today's Classes */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Today&apos;s Classes</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-lg">Today&apos;s Classes</CardTitle></CardHeader>
           <CardContent className="space-y-2">
-            {todayClasses.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No classes scheduled for today.
-              </p>
+            {timetable.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No classes scheduled for today.</p>
             ) : (
-              todayClasses.map((slot) => (
-                <div
-                  key={slot.id}
-                  className="flex items-center justify-between rounded-lg border p-3"
-                >
+              timetable.map((slot) => (
+                <div key={slot.id} className="flex items-center justify-between rounded-lg border p-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
-                      P{slot.period}
-                    </div>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">P{slot.period}</div>
                     <div>
-                      <p className="text-sm font-medium">{slot.subject.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {slot.room}
-                      </p>
+                      <p className="text-sm font-medium">{slot.subject?.name ?? 'Subject'}</p>
+                      <p className="text-xs text-muted-foreground">{slot.room}</p>
                     </div>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {slot.startTime} - {slot.endTime}
-                  </span>
+                  <span className="text-xs text-muted-foreground">{slot.startTime} - {slot.endTime}</span>
                 </div>
               ))
             )}
           </CardContent>
         </Card>
 
-        {/* Pending Homework to Grade */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg">Pending Grading</CardTitle>
-            <Link
-              href="/teacher/homework"
-              className="text-sm text-primary hover:underline"
-            >
-              View all
-            </Link>
+            <Link href="/teacher/homework" className="text-sm text-primary hover:underline">View all</Link>
           </CardHeader>
           <CardContent className="space-y-2">
-            {pendingToGrade.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                All homework has been graded. Great work!
-              </p>
+            {pendingHomework.length === 0 ? (
+              <p className="text-sm text-muted-foreground">All homework has been graded. Great work!</p>
             ) : (
-              pendingToGrade.map((hw) => {
-                const submissionCount = mockSubmissions.filter(
-                  (s) => s.homeworkId === hw.id
-                ).length;
-                const gradedCount = mockSubmissions.filter(
-                  (s) => s.homeworkId === hw.id && s.status === 'graded'
-                ).length;
-
-                return (
-                  <Link
-                    key={hw.id}
-                    href={`/teacher/homework/${hw.id}`}
-                    className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
-                  >
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium">{hw.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {hw.subject?.name ?? hw.subjectName ?? ''}
-                      </p>
-                    </div>
-                    <Badge variant="outline">
-                      {gradedCount}/{submissionCount} graded
-                    </Badge>
-                  </Link>
-                );
-              })
+              pendingHomework.map((hw) => (
+                <Link key={hw.id} href={`/teacher/homework/${hw.id}`} className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">{hw.title}</p>
+                    <p className="text-xs text-muted-foreground">{hw.subjectName}</p>
+                  </div>
+                  <Badge variant="outline">{hw.gradedCount}/{hw.totalSubmissions} graded</Badge>
+                </Link>
+              ))
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Attendance Alerts */}
+      <AnnouncementBanner limit={3} />
+
       {absentToday.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
-              Attendance Alerts
+              <AlertTriangle className="h-5 w-5 text-amber-500" />Attendance Alerts
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {absentToday.map((record) => (
-                <div
-                  key={record.id}
-                  className="flex items-center justify-between rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3"
-                >
+                <div key={record.id} className="flex items-center justify-between rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-amber-600" />
-                    <span className="text-sm">
-                      {record.student.user.firstName}{' '}
-                      {record.student.user.lastName}
-                    </span>
+                    <span className="text-sm">{record.studentName}</span>
                   </div>
                   <Badge variant="destructive">Absent</Badge>
                 </div>

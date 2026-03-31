@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Menu, LogOut, User, Settings } from 'lucide-react';
+import { Menu, LogOut, User, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -11,10 +11,10 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useAuth } from '@/hooks/useAuth';
 import { getInitials } from '@/lib/utils';
 import { getRoleLabel } from '@/lib/auth';
-import { Badge } from '@/components/ui/badge';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 export function TopBar() {
-  const { toggleSidebar, notifications } = useUIStore();
+  const { toggleSidebar } = useUIStore();
   const { user } = useAuthStore();
   const { logout } = useAuth();
 
@@ -33,14 +33,7 @@ export function TopBar() {
 
       <div className="flex items-center gap-2">
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          {notifications > 0 && (
-            <Badge className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px] bg-orange-500">
-              {notifications}
-            </Badge>
-          )}
-        </Button>
+        <NotificationBell />
 
         {/* User menu */}
         <DropdownMenu>

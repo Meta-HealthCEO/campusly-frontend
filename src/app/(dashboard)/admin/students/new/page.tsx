@@ -11,11 +11,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { studentSchema, type StudentFormData } from '@/lib/validations';
-import { mockGrades, mockClasses, mockParents } from '@/lib/mock-data';
+import { useStudentFormOptions, createStudent } from '@/hooks/useStudentForm';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 export default function NewStudentPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
+  const { grades, classes, parents, loading: optionsLoading } = useStudentFormOptions();
+
   const {
     register,
     handleSubmit,
@@ -27,23 +32,39 @@ export default function NewStudentPage() {
     defaultValues: {
       firstName: '',
       lastName: '',
+      email: '',
       dateOfBirth: '',
       gender: undefined,
       gradeId: '',
       classId: '',
-      address: '',
-      parentId: '',
+      admissionNumber: '',
+      guardianId: '',
+      homeLanguage: '',
     },
   });
 
   const selectedGradeId = watch('gradeId');
-  const filteredClasses = mockClasses.filter((c) => c.gradeId === selectedGradeId);
+  const filteredClasses = classes.filter((c) => c.gradeId === selectedGradeId || c.grade?.id === selectedGradeId);
 
   const onSubmit = async (data: StudentFormData) => {
-    console.log('New student data:', data);
-    toast.success('Student added successfully!');
-    router.push('/admin/students');
+    const schoolId = user?.schoolId;
+    if (!schoolId) {
+      toast.error('School context not found');
+      return;
+    }
+
+    const result = await createStudent(data, schoolId);
+    if (result.success) {
+      toast.success('Student enrolled successfully!');
+      router.push('/admin/students');
+    } else {
+      toast.error(result.error ?? 'Failed to create student');
+    }
   };
+
+  if (optionsLoading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="space-y-6">
@@ -80,6 +101,18 @@ export default function NewStudentPage() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" {...register('email')} placeholder="student@school.co.za" />
+                {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="admissionNumber">Admission Number</Label>
+                <Input id="admissionNumber" {...register('admissionNumber')} placeholder="e.g. 2026-001" />
+                {errors.admissionNumber && <p className="text-xs text-destructive">{errors.admissionNumber.message}</p>}
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="dateOfBirth">Date of Birth</Label>
                 <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} />
                 {errors.dateOfBirth && <p className="text-xs text-destructive">{errors.dateOfBirth.message}</p>}
@@ -112,7 +145,7 @@ export default function NewStudentPage() {
                     <SelectValue placeholder="Select grade" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockGrades.map((grade) => (
+                    {grades.map((grade) => (
                       <SelectItem key={grade.id} value={grade.id}>
                         {grade.name}
                       </SelectItem>
@@ -124,7 +157,10 @@ export default function NewStudentPage() {
 
               <div className="space-y-2">
                 <Label>Class</Label>
-                <Select onValueChange={(val: unknown) => setValue('classId', val as string)} disabled={!selectedGradeId}>
+                <Select
+                  onValueChange={(val: unknown) => setValue('classId', val as string)}
+                  disabled={!selectedGradeId}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder={selectedGradeId ? 'Select class' : 'Select a grade first'} />
                   </SelectTrigger>
@@ -139,38 +175,37 @@ export default function NewStudentPage() {
                 {errors.classId && <p className="text-xs text-destructive">{errors.classId.message}</p>}
               </div>
 
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="address">Address</Label>
-                <Input id="address" {...register('address')} placeholder="Enter home address" />
-                {errors.address && <p className="text-xs text-destructive">{errors.address.message}</p>}
+              <div className="space-y-2">
+                <Label>Parent / Guardian</Label>
+                <Select onValueChange={(val: unknown) => setValue('guardianId', val as string)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select parent (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {parents.map((parent) => {
+                      const pu = parent.user ?? (parent.userId as unknown as { firstName: string; lastName: string });
+                      return (
+                        <SelectItem key={parent.id} value={parent.id}>
+                          {pu?.firstName} {pu?.lastName} ({parent.relationship})
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
-                <Label>Parent / Guardian</Label>
-                <Select onValueChange={(val: unknown) => setValue('parentId', val as string)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select parent" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mockParents.map((parent) => (
-                      <SelectItem key={parent.id} value={parent.id}>
-                        {parent.user.firstName} {parent.user.lastName} ({parent.relationship})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.parentId && <p className="text-xs text-destructive">{errors.parentId.message}</p>}
+                <Label htmlFor="homeLanguage">Home Language</Label>
+                <Input id="homeLanguage" {...register('homeLanguage')} placeholder="e.g. Zulu, English" />
               </div>
             </div>
 
             <div className="flex justify-end gap-2">
               <Link href="/admin/students">
-                <Button type="button" variant="outline">
-                  Cancel
-                </Button>
+                <Button type="button" variant="outline">Cancel</Button>
               </Link>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Adding...' : 'Add Student'}
+                {isSubmitting ? 'Enrolling...' : 'Add Student'}
               </Button>
             </div>
           </form>

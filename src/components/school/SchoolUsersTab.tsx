@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import apiClient from '@/lib/api-client';
+import { useStaff } from '@/hooks/useAcademics';
 import type { User } from '@/types';
 
 const roleStyles: Record<string, string> = {
@@ -52,28 +51,12 @@ const userColumns: ColumnDef<User>[] = [
 ];
 
 export function SchoolUsersTab() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchUsers() {
-      try {
-        const response = await apiClient.get('/staff');
-        const data: unknown = response.data?.data ?? response.data;
-        const arr = Array.isArray(data)
-          ? (data as User[])
-          : ((data as Record<string, unknown>)?.staff as User[] | undefined) ?? [];
-        setUsers(arr);
-      } catch {
-        setUsers([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    void fetchUsers();
-  }, []);
+  const { staff, loading } = useStaff();
 
   if (loading) return <LoadingSpinner />;
+
+  // Staff members are typed as StaffMember but have same fields as User for display
+  const users = staff as unknown as User[];
 
   return (
     <DataTable

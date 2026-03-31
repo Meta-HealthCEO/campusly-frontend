@@ -2,84 +2,133 @@
 
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Circle } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { SchoolProfileCard, SubscriptionBadge } from '@/components/school';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { CheckCircle2, Circle } from 'lucide-react';
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
+import { SuspendTenantDialog } from '@/components/superadmin/SuspendTenantDialog';
 import { MODULES } from '@/lib/constants';
-import { useSchoolStore } from '@/stores/useSchoolStore';
+import { formatCurrency, formatDate } from '@/lib/utils';
+import { useSuperAdminStore } from '@/stores/useSuperAdminStore';
+import type { Tenant, TenantStatus, PlatformInvoice } from '@/types';
 
-export default function SchoolDetailPage({
+const STATUS_STYLES: Record<TenantStatus, string> = {
+  active: 'bg-emerald-100 text-emerald-700',
+  trial: 'bg-blue-100 text-blue-700',
+  suspended: 'bg-red-100 text-red-700',
+  cancelled: 'bg-gray-100 text-gray-700',
+};
+
+const INV_STATUS_STYLES: Record<PlatformInvoice['status'], string> = {
+  paid: 'bg-emerald-100 text-emerald-700',
+  sent: 'bg-blue-100 text-blue-700',
+  overdue: 'bg-red-100 text-red-700',
+  draft: 'bg-gray-100 text-gray-700',
+};
+
+export default function TenantDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const { school, schoolLoading, schoolError, fetchSchool, updateSchool, deleteSchool } =
-    useSchoolStore();
+  const {
+    fetchTenantDetail, suspendTenant, updateTenantStatus,
+    updateTenantModules, invoices, invoicesLoading, fetchInvoicesByTenant,
+  } = useSuperAdminStore();
 
+  const [tenant, setTenant] = useState<Tenant | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [suspendOpen, setSuspendOpen] = useState(false);
   const [statusPending, setStatusPending] = useState(false);
-  const [deletePending, setDeletePending] = useState(false);
 
   useEffect(() => {
-    fetchSchool(id);
-  }, [id, fetchSchool]);
+    async function load() {
+      setLoading(true);
+      try {
+        const t = await fetchTenantDetail(id);
+        setTenant(t);
+        fetchInvoicesByTenant(id);
+      } catch (err: unknown) {
+        const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
+          ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+          ?? 'Tenant not found';
+        setError(msg);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [id, fetchTenantDetail, fetchInvoicesByTenant]);
 
-  const handleToggleStatus = async () => {
-    if (!school) return;
+  const handleSuspend = async (reason: string) => {
+    try {
+      await suspendTenant(id, reason);
+      toast.success(`${tenant?.name} has been suspended.`);
+      const t = await fetchTenantDetail(id);
+      setTenant(t);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
+        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+        ?? 'Failed to suspend tenant.';
+      toast.error(msg);
+    }
+  };
+
+  const handleActivate = async () => {
     setStatusPending(true);
     try {
-      const newActive = !school.isActive;
-      await updateSchool(id, { isActive: newActive });
-      await fetchSchool(id);
-      toast.success(`${school.name} has been ${newActive ? 'activated' : 'suspended'}.`);
-    } catch {
-      toast.error('Failed to update school status.');
+      await updateTenantStatus(id, 'active');
+      toast.success(`${tenant?.name} has been activated.`);
+      const t = await fetchTenantDetail(id);
+      setTenant(t);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
+        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+        ?? 'Failed to activate tenant.';
+      toast.error(msg);
     } finally {
       setStatusPending(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!school) return;
-    setDeletePending(true);
+  const handleToggleModule = async (moduleId: string) => {
+    if (!tenant) return;
+    const current = tenant.enabledModules;
+    const updated = current.includes(moduleId)
+      ? current.filter((m) => m !== moduleId)
+      : [...current, moduleId];
     try {
-      await deleteSchool(id);
-      toast.success(`${school.name} has been deleted.`);
-      router.push('/superadmin/schools');
-    } catch {
-      toast.error('Failed to delete school.');
-      setDeletePending(false);
+      await updateTenantModules(id, updated);
+      setTenant({ ...tenant, enabledModules: updated });
+      toast.success(`Module ${moduleId} ${updated.includes(moduleId) ? 'enabled' : 'disabled'}`);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
+        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+        ?? 'Failed to update modules.';
+      toast.error(msg);
     }
   };
 
-  if (schoolLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <p className="text-muted-foreground">Loading school...</p>
+        <p className="text-muted-foreground">Loading tenant...</p>
       </div>
     );
   }
 
-  if (schoolError || !school || school.id !== id) {
+  if (error || !tenant) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <p className="text-muted-foreground text-lg">
-          {schoolError ?? 'School not found.'}
-        </p>
+        <p className="text-muted-foreground text-lg">{error ?? 'Tenant not found.'}</p>
         <Button variant="outline" onClick={() => router.push('/superadmin/schools')}>
           Back to Schools
         </Button>
@@ -94,125 +143,74 @@ export default function SchoolDetailPage({
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <PageHeader
-          title={school.name}
-          description={`${school.address.city}, ${school.address.province}`}
+          title={tenant.name || 'Unnamed School'}
+          description={`${tenant.city}${tenant.province ? ', ' + tenant.province : ''}`}
         />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <SchoolProfileCard school={school} />
-        </div>
+        <Card className="lg:col-span-2">
+          <CardHeader><CardTitle>Tenant Information</CardTitle></CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <InfoRow label="Status">
+              <Badge className={STATUS_STYLES[tenant.status]}>{tenant.status}</Badge>
+            </InfoRow>
+            <InfoRow label="Tier">
+              <span className="capitalize font-medium">{tenant.tier}</span>
+            </InfoRow>
+            <InfoRow label="Admin Email">{tenant.adminEmail || '—'}</InfoRow>
+            <InfoRow label="Admin Name">{tenant.adminName || '—'}</InfoRow>
+            <InfoRow label="Students">{tenant.studentCount}</InfoRow>
+            <InfoRow label="Joined">{tenant.createdAt ? formatDate(tenant.createdAt) : '—'}</InfoRow>
+            {tenant.trialEndsAt && (
+              <InfoRow label="Trial Ends">{formatDate(tenant.trialEndsAt)}</InfoRow>
+            )}
+            <InfoRow label="MRR">
+              {tenant.status === 'trial' || tenant.status === 'suspended'
+                ? '—'
+                : formatCurrency(tenant.mrr)}
+            </InfoRow>
+          </CardContent>
+        </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Subscription</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {school.subscription ? (
-              <>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Plan</p>
-                  <SubscriptionBadge
-                    tier={school.subscription.tier}
-                    expiresAt={school.subscription.expiresAt}
-                  />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Expires</p>
-                  <p className="font-medium text-sm">
-                    {new Date(school.subscription.expiresAt).toLocaleDateString()}
-                  </p>
-                </div>
-              </>
+          <CardHeader><CardTitle>Actions</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {tenant.status !== 'suspended' ? (
+              <Button
+                variant="destructive"
+                size="sm"
+                className="w-full"
+                onClick={() => setSuspendOpen(true)}
+              >
+                Suspend School
+              </Button>
             ) : (
-              <p className="text-sm text-muted-foreground">No subscription data.</p>
+              <Button
+                size="sm"
+                className="w-full"
+                onClick={handleActivate}
+                disabled={statusPending}
+              >
+                {statusPending ? 'Activating...' : 'Activate School'}
+              </Button>
             )}
-
-            <div className="pt-2 space-y-2">
-              <Dialog>
-                <DialogTrigger
-                  render={
-                    <Button
-                      variant={school.isActive ? 'destructive' : 'default'}
-                      size="sm"
-                      className="w-full"
-                    />
-                  }
-                >
-                  {school.isActive ? 'Suspend School' : 'Activate School'}
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {school.isActive ? 'Suspend' : 'Activate'} School
-                    </DialogTitle>
-                    <DialogDescription>
-                      {school.isActive
-                        ? `Are you sure you want to suspend ${school.name}? Users will lose access.`
-                        : `Are you sure you want to activate ${school.name}?`}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <Button
-                      variant={school.isActive ? 'destructive' : 'default'}
-                      onClick={handleToggleStatus}
-                      disabled={statusPending}
-                    >
-                      {statusPending
-                        ? 'Saving...'
-                        : school.isActive
-                        ? 'Suspend'
-                        : 'Activate'}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-
-              <Dialog>
-                <DialogTrigger
-                  render={
-                    <Button variant="outline" size="sm" className="w-full text-destructive" />
-                  }
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete School
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Delete School</DialogTitle>
-                    <DialogDescription>
-                      This action is permanent. All data for{' '}
-                      <strong>{school.name}</strong> will be deleted. This cannot be
-                      undone.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <Button
-                      variant="destructive"
-                      onClick={handleDelete}
-                      disabled={deletePending}
-                    >
-                      {deletePending ? 'Deleting...' : 'Delete Permanently'}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
           </CardContent>
         </Card>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Enabled Modules</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle>Enabled Modules</CardTitle></CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {MODULES.map((mod) => {
-              const enabled = school.modulesEnabled.includes(mod.id);
+              const enabled = tenant.enabledModules.includes(mod.id);
               return (
-                <div key={mod.id} className="flex items-center gap-3 rounded-lg border p-3">
+                <button
+                  key={mod.id}
+                  onClick={() => handleToggleModule(mod.id)}
+                  className="flex items-center gap-3 rounded-lg border p-3 text-left hover:bg-muted/50 transition-colors"
+                >
                   {enabled ? (
                     <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                   ) : (
@@ -222,36 +220,68 @@ export default function SchoolDetailPage({
                     <p className="text-sm font-medium">{mod.name}</p>
                     <p className="text-xs text-muted-foreground">{mod.description}</p>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Academic Settings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <div className="rounded-lg bg-muted/50 p-4 text-center">
-              <p className="text-2xl font-bold">{school.settings?.academicYear ?? '—'}</p>
-              <p className="text-xs text-muted-foreground mt-1">Academic Year</p>
-            </div>
-            <div className="rounded-lg bg-muted/50 p-4 text-center">
-              <p className="text-2xl font-bold">{school.settings?.terms ?? '—'}</p>
-              <p className="text-xs text-muted-foreground mt-1">Terms</p>
-            </div>
-            <div className="rounded-lg bg-muted/50 p-4 text-center">
-              <p className="text-2xl font-bold capitalize">
-                {school.settings?.gradingSystem ?? '—'}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">Grading</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {invoices.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle>Billing History</CardTitle></CardHeader>
+          <CardContent>
+            {invoicesLoading ? (
+              <p className="text-muted-foreground text-sm">Loading invoices...</p>
+            ) : (
+              <div className="rounded-lg border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Invoice #</TableHead>
+                      <TableHead>Issued</TableHead>
+                      <TableHead>Due</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoices.map((inv) => (
+                      <TableRow key={inv.id}>
+                        <TableCell className="font-mono text-sm">{inv.invoiceNumber}</TableCell>
+                        <TableCell>{inv.issuedDate ? formatDate(inv.issuedDate) : '—'}</TableCell>
+                        <TableCell>{inv.dueDate ? formatDate(inv.dueDate) : '—'}</TableCell>
+                        <TableCell>{formatCurrency(inv.amount)}</TableCell>
+                        <TableCell>
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${INV_STATUS_STYLES[inv.status]}`}>
+                            {inv.status}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      <SuspendTenantDialog
+        tenantName={tenant.name}
+        open={suspendOpen}
+        onOpenChange={setSuspendOpen}
+        onConfirm={handleSuspend}
+      />
+    </div>
+  );
+}
+
+function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <div className="text-sm font-medium mt-0.5">{children}</div>
     </div>
   );
 }

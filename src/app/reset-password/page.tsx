@@ -32,9 +32,10 @@ function ResetPasswordContent() {
       });
       toast.success('Password reset successfully. Please sign in.');
       router.push('/login');
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Reset failed. The link may have expired.';
+    } catch (error: unknown) {
+      const axiosErr = error as { response?: { data?: { error?: string } } };
+      const message = axiosErr.response?.data?.error
+        ?? (error instanceof Error ? error.message : 'Reset failed. The link may have expired.');
       setApiError(message);
     } finally {
       setIsLoading(false);

@@ -38,8 +38,8 @@ export function ForgotPasswordForm({
   if (submitted) {
     return (
       <div className="space-y-6">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#10B981]/10">
-          <Mail className="h-8 w-8 text-[#10B981]" />
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
+          <Mail className="h-8 w-8 text-emerald-500" />
         </div>
         <p className="text-center text-sm text-gray-600">
           If an account exists with that email, you will receive a password reset
@@ -76,7 +76,7 @@ export function ForgotPasswordForm({
         <Button
           type="submit"
           disabled={isLoading}
-          className="h-10 w-full bg-[#2563EB] hover:bg-[#1d4ed8]"
+          className="h-10 w-full bg-blue-600 hover:bg-blue-700"
           size="lg"
         >
           {isLoading ? (
@@ -93,7 +93,7 @@ export function ForgotPasswordForm({
       <div className="mt-6 text-center">
         <Link
           href="/login"
-          className="inline-flex items-center text-sm font-medium text-[#2563EB] hover:text-[#1d4ed8]"
+          className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700"
         >
           <ArrowLeft className="mr-1 h-4 w-4" />
           Back to login

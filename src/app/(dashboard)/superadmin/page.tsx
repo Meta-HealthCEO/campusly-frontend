@@ -1,19 +1,63 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Building2, Users, TrendingUp, Activity } from 'lucide-react';
 import { StatCard } from '@/components/shared/StatCard';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChartComponent, PieChartComponent, AreaChartComponent } from '@/components/charts';
-import {
-  mockPlatformStats,
-  mockPlatformRevenueTrend,
-  mockSchoolsByTier,
-  mockStudentGrowth,
-} from '@/lib/mock-data';
+import { PieChartComponent } from '@/components/charts';
+import { RevenueChart } from '@/components/superadmin/RevenueChart';
+import { useSuperAdminStore } from '@/stores/useSuperAdminStore';
 import { formatCurrency } from '@/lib/utils';
 
 export default function SuperAdminDashboardPage() {
+  const { stats, statsLoading, fetchStats, revenue, revenueLoading, fetchRevenue, tenants, fetchTenants } =
+    useSuperAdminStore();
+
+  useEffect(() => {
+    fetchStats();
+    fetchRevenue();
+    fetchTenants({ limit: 100 });
+  }, [fetchStats, fetchRevenue, fetchTenants]);
+
+  const tierCounts = tenants.reduce<Record<string, number>>((acc, t) => {
+    const tier = t.tier || 'starter';
+    acc[tier] = (acc[tier] || 0) + 1;
+    return acc;
+  }, {});
+
+  const tierChartData = [
+    { name: 'Enterprise', value: tierCounts['enterprise'] || 0, color: '#7C3AED' },
+    { name: 'Growth', value: tierCounts['growth'] || 0, color: '#10B981' },
+    { name: 'Starter', value: tierCounts['starter'] || 0, color: '#F59E0B' },
+  ].filter((d) => d.value > 0);
+
+  if (statsLoading && !stats) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Platform Overview" description="Campusly platform metrics at a glance" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-16 bg-muted rounded" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const displayStats = stats ?? {
+    totalSchools: 0,
+    totalStudents: 0,
+    mrr: 0,
+    arr: 0,
+    activeTrials: 0,
+    outstanding: 0,
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader title="Platform Overview" description="Campusly platform metrics at a glance" />
@@ -21,70 +65,50 @@ export default function SuperAdminDashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Schools"
-          value={mockPlatformStats.totalSchools.toString()}
+          value={displayStats.totalSchools.toString()}
           icon={Building2}
-          description={`${mockPlatformStats.activeTrials} on active trial`}
-          trend={{ value: 25, label: 'vs last quarter' }}
+          description={`${displayStats.activeTrials} on active trial`}
         />
         <StatCard
-          title="Total Students"
-          value={mockPlatformStats.totalStudents.toLocaleString()}
+          title="Total Tenants"
+          value={tenants.length.toString()}
           icon={Users}
-          description="Across all tenants"
-          trend={{ value: 8, label: 'vs last month' }}
+          description="Across all statuses"
         />
         <StatCard
-          title="MRR"
-          value={formatCurrency(mockPlatformStats.mrr)}
+          title="Total Paid Revenue"
+          value={formatCurrency(displayStats.mrr)}
           icon={TrendingUp}
-          description={`ARR: ${formatCurrency(mockPlatformStats.arr)}`}
-          trend={{ value: 10, label: 'vs last month' }}
+          description="All time paid invoices"
         />
         <StatCard
           title="Active Trials"
-          value={mockPlatformStats.activeTrials.toString()}
+          value={displayStats.activeTrials.toString()}
           icon={Activity}
-          description={`${formatCurrency(mockPlatformStats.outstanding)} outstanding`}
-          trend={{ value: 0, label: 'this week' }}
+          description={`${displayStats.outstanding} overdue invoices`}
         />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>MRR Trend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <LineChartComponent
-              data={mockPlatformRevenueTrend as Record<string, unknown>[]}
-              xKey="month"
-              lines={[{ key: 'mrr', color: '#2563EB', name: 'MRR (R)' }]}
-            />
-          </CardContent>
-        </Card>
-
+        <RevenueChart
+          monthly={revenue?.monthly ?? []}
+          loading={revenueLoading}
+        />
         <Card>
           <CardHeader>
             <CardTitle>Schools by Tier</CardTitle>
           </CardHeader>
           <CardContent>
-            <PieChartComponent data={mockSchoolsByTier} />
+            {tierChartData.length > 0 ? (
+              <PieChartComponent data={tierChartData} />
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                No tier data available
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Student Growth</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AreaChartComponent
-            data={mockStudentGrowth as Record<string, unknown>[]}
-            xKey="month"
-            areas={[{ key: 'students', color: '#2563EB', name: 'Total Students' }]}
-          />
-        </CardContent>
-      </Card>
     </div>
   );
 }

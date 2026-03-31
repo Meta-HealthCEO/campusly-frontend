@@ -114,51 +114,83 @@ export interface SchoolSettings {
   gradingSystem: 'percentage' | 'letter' | 'gpa';
 }
 
+export type EnrollmentStatus = 'active' | 'transferred' | 'graduated' | 'expelled' | 'withdrawn';
+
+export interface EmergencyContact {
+  name: string;
+  relationship: string;
+  phone: string;
+}
+
+export interface MedicalAidInfo {
+  provider: string;
+  memberNumber: string;
+  mainMember: string;
+}
+
+export interface MedicalProfile {
+  allergies: string[];
+  conditions: string[];
+  bloodType?: string;
+  emergencyContacts: EmergencyContact[];
+  medicalAidInfo?: MedicalAidInfo;
+}
+
 export interface Student {
   id: string;
+  _id?: string;
   userId: string;
   user: User;
   firstName?: string;
   lastName?: string;
   admissionNumber: string;
+  schoolId: string;
   gradeId: string;
   grade: Grade;
   classId: string;
   class: SchoolClass;
-  dateOfBirth: string;
-  gender: 'male' | 'female' | 'other';
-  address: string;
-  medicalInfo: MedicalInfo;
-  parentIds: string[];
-  parents: Parent[];
+  dateOfBirth?: string;
+  gender?: 'male' | 'female' | 'other';
+  guardianIds: string[];
+  parents?: Parent[];
+  enrollmentDate?: string;
+  enrollmentStatus: EnrollmentStatus;
+  medicalProfile: MedicalProfile;
+  previousSchool?: string;
+  homeLanguage?: string;
+  additionalLanguages?: string[];
+  transportRequired?: boolean;
+  afterCareRequired?: boolean;
+  saIdNumber?: string;
+  luritsNumber?: string;
   walletId?: string;
   wallet?: Wallet;
-  isActive: boolean;
-  enrolledDate: string;
   houseId?: string;
   house?: House;
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface MedicalInfo {
-  bloodType?: string;
-  allergies: string[];
-  conditions: string[];
-  medications: string[];
-  emergencyContact: string;
-  emergencyPhone: string;
-  doctorName?: string;
-  doctorPhone?: string;
-}
+export type CommunicationPreference = 'email' | 'sms' | 'whatsapp' | 'push';
 
 export interface Parent {
   id: string;
+  _id?: string;
   userId: string;
   user: User;
+  schoolId?: string;
+  childrenIds: string[] | Student[];
   relationship: 'mother' | 'father' | 'guardian' | 'other';
   occupation?: string;
   employer?: string;
-  studentIds: string[];
-  students: Student[];
+  workPhone?: string;
+  alternativeEmail?: string;
+  communicationPreference?: CommunicationPreference;
+  isMainCaregiver?: boolean;
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Teacher {
@@ -285,15 +317,23 @@ export interface HomeworkSubmission {
 }
 
 // Financial types
+export type FeeFrequency = 'once_off' | 'per_term' | 'per_year' | 'monthly';
+export type FeeCategory = 'tuition' | 'extramural' | 'camp' | 'uniform' | 'transport' | 'other';
+
 export interface FeeType {
   id: string;
+  _id?: string;
   name: string;
-  description: string;
+  description?: string;
   amount: number; // in cents
-  frequency: 'once' | 'monthly' | 'quarterly' | 'annually';
-  gradeIds: string[];
-  isOptional: boolean;
+  frequency: FeeFrequency;
+  category: FeeCategory;
   schoolId: string;
+  gradeIds?: string[];
+  isOptional?: boolean;
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Invoice {
@@ -348,12 +388,21 @@ export interface PaymentArrangement {
 // Wallet & Tuckshop
 export interface Wallet {
   id: string;
+  _id?: string;
   studentId: string;
+  schoolId?: string;
   balance: number; // cents
+  currency?: string;
   wristbandId?: string;
   dailyLimit: number; // cents
   isActive: boolean;
+  autoTopUpEnabled?: boolean;
+  autoTopUpAmount?: number;
+  autoTopUpThreshold?: number;
   lastTopUp?: string;
+  isDeleted?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface WalletTransaction {

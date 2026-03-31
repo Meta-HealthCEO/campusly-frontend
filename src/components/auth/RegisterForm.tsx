@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PasswordInput } from '@/components/auth/PasswordInput';
-import { registerSchema, type RegisterFormData } from '@/lib/validations/index';
+import { registerSchema, type RegisterFormData } from '@/lib/validations';
 import { SA_PROVINCES } from '@/lib/constants';
 
 interface RegisterFormProps {
@@ -44,7 +44,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
       {/* School Info */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-          <Building2 className="h-4 w-4 text-[#2563EB]" />
+          <Building2 className="h-4 w-4 text-blue-600" />
           School Information
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -96,7 +96,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
       {/* Admin Account */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-          <UserCog className="h-4 w-4 text-[#4F46E5]" />
+          <UserCog className="h-4 w-4 text-indigo-600" />
           Admin Account
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -164,7 +164,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
       {/* Address */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-          <MapPin className="h-4 w-4 text-[#F97316]" />
+          <MapPin className="h-4 w-4 text-orange-500" />
           School Address
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -231,7 +231,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
       <Button
         type="submit"
         disabled={isLoading}
-        className="h-10 w-full bg-[#2563EB] hover:bg-[#1d4ed8]"
+        className="h-10 w-full bg-blue-600 hover:bg-blue-700"
         size="lg"
       >
         {isLoading ? (
@@ -246,7 +246,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
 
       <div className="text-center text-sm text-gray-600">
         Already have an account?{' '}
-        <Link href="/login" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
+        <Link href="/login" className="font-medium text-blue-600 hover:text-blue-700">
           Sign in
         </Link>
       </div>

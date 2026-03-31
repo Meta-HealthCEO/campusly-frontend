@@ -1,10 +1,10 @@
 'use client';
 
-import { DollarSign, GraduationCap, UserCheck, AlertCircle, ShoppingBag, FileText } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { DollarSign, GraduationCap, UserCheck, AlertCircle, ShoppingBag, ArrowRight } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import type { LucideIcon } from 'lucide-react';
 
 interface ReportCard {
@@ -12,49 +12,53 @@ interface ReportCard {
   description: string;
   icon: LucideIcon;
   color: string;
+  href: string;
 }
 
 const reports: ReportCard[] = [
   {
-    title: 'Financial Summary',
-    description: 'Overview of revenue, collections, outstanding fees, and payment trends across all fee types and terms.',
+    title: 'Revenue Report',
+    description: 'Monthly revenue trends with date range filters. Track payment collections over time.',
     icon: DollarSign,
     color: 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30',
+    href: '/admin/reports/revenue',
   },
   {
     title: 'Academic Performance',
-    description: 'Student academic results by grade, class, and subject. Includes average scores and pass rates.',
+    description: 'Subject averages and pass rates by term and academic year across the school.',
     icon: GraduationCap,
     color: 'text-emerald-600 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/30',
+    href: '/admin/reports/academic-performance',
   },
   {
     title: 'Attendance Report',
-    description: 'Detailed attendance data by grade, class, and student. Highlights chronic absenteeism.',
+    description: 'Attendance status breakdown by date range and class with visual charts.',
     icon: UserCheck,
     color: 'text-purple-600 bg-purple-100 dark:text-purple-400 dark:bg-purple-900/30',
+    href: '/admin/reports/attendance',
   },
   {
     title: 'Debtor Analysis',
-    description: 'Ageing analysis of outstanding fees with parent contact details and payment history.',
+    description: 'Outstanding invoice ageing analysis with bucket classification and student details.',
     icon: AlertCircle,
     color: 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30',
+    href: '/admin/reports/debtors',
   },
   {
-    title: 'Tuckshop Sales',
-    description: 'Daily, weekly, and monthly tuckshop sales reports with top-selling items and revenue trends.',
+    title: 'Tuck Shop Sales',
+    description: 'Daily, weekly, and monthly tuck shop sales with revenue trends and order counts.',
     icon: ShoppingBag,
     color: 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/30',
+    href: '/admin/reports/tuck-shop-sales',
   },
 ];
 
 export default function ReportsPage() {
-  const handleGenerate = (reportTitle: string) => {
-    toast.success(`Generating ${reportTitle}...`);
-  };
+  const router = useRouter();
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Reports" description="Generate and download school reports" />
+      <PageHeader title="Reports" description="Generate and view school reports" />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {reports.map((report) => (
@@ -69,9 +73,13 @@ export default function ReportsPage() {
               <CardDescription className="mt-2">{report.description}</CardDescription>
             </CardHeader>
             <CardContent className="mt-auto">
-              <Button className="w-full" variant="outline" onClick={() => handleGenerate(report.title)}>
-                <FileText className="mr-2 h-4 w-4" />
-                Generate
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={() => router.push(report.href)}
+              >
+                View Report
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardContent>
           </Card>

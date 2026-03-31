@@ -93,9 +93,10 @@ export const useSchoolStore = create<SchoolState>((set, get) => ({
       const response = await apiClient.get('/schools', { params });
       const payload = response.data.data as Record<string, unknown>;
       const rawList = (payload.schools ?? payload.data ?? []) as Record<string, unknown>[];
-      const total = (payload.total ?? payload.count ?? rawList.length) as number;
-      const page = (payload.page ?? params?.page ?? 1) as number;
-      const limit = (payload.limit ?? params?.limit ?? 20) as number;
+      const pagination = payload.pagination as Record<string, number> | undefined;
+      const total = (pagination?.total ?? payload.total ?? rawList.length) as number;
+      const page = (pagination?.page ?? payload.page ?? params?.page ?? 1) as number;
+      const limit = (pagination?.limit ?? payload.limit ?? params?.limit ?? 20) as number;
       set({
         schools: rawList.map(mapSchool),
         schoolsTotal: total,

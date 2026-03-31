@@ -2,239 +2,107 @@
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
-import {
-  MessageSquare,
-  Send,
-  Mail,
-  AlertCircle,
-  Bell,
-  Clock,
-} from 'lucide-react';
-import { mockMessages, mockParents } from '@/lib/mock-data';
+import { MessageSquare, Send, Mail, Clock } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
-import { messageSchema, type MessageFormData } from '@/lib/validations';
+import { StatusBadge, ChannelBadge } from '@/components/communication/MessageBadges';
+import { ParentRecipientPicker } from '@/components/communication/ParentRecipientPicker';
+import { useBulkMessages, useParentsList } from '@/hooks/useCommunication';
+import type { ChannelType } from '@/components/communication/types';
+import type { BulkMessageSender } from '@/components/communication/types';
 
-const priorityConfig: Record<string, { color: string; icon: typeof Bell }> = {
-  low: { color: 'text-gray-500', icon: Bell },
-  normal: { color: 'text-blue-500', icon: Bell },
-  high: { color: 'text-amber-500', icon: AlertCircle },
-  urgent: { color: 'text-red-500', icon: AlertCircle },
-};
+const teacherComposeSchema = z.object({
+  subject: z.string().min(3, 'Subject must be at least 3 characters'),
+  body: z.string().min(10, 'Message must be at least 10 characters'),
+  channel: z.enum(['email', 'sms', 'whatsapp', 'all']).optional(),
+});
 
-const typeConfig: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  message: { variant: 'outline' },
-  announcement: { variant: 'secondary' },
-  alert: { variant: 'destructive' },
-};
+type TeacherComposeValues = z.infer<typeof teacherComposeSchema>;
 
 export default function TeacherCommunicationPage() {
   const [open, setOpen] = useState(false);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  const { messages, loading, sendMessage } = useBulkMessages();
+  const { parents, loading: parentsLoading } = useParentsList();
 
   const {
-    register,
-    handleSubmit,
-    setValue,
-    reset,
-    formState: { errors },
-  } = useForm<MessageFormData>({
-    resolver: zodResolver(messageSchema),
-    defaultValues: {
-      priority: 'normal',
-      recipientIds: [],
-    },
+    register, handleSubmit, setValue, reset, formState: { errors },
+  } = useForm<TeacherComposeValues>({
+    resolver: zodResolver(teacherComposeSchema),
+    defaultValues: { channel: 'all' },
   });
 
-  const onSubmit = (data: MessageFormData) => {
-    console.log('New message:', data);
-    setOpen(false);
-    reset();
-    setSelectedRecipients([]);
-  };
-
-  const addRecipient = (parentId: string) => {
-    if (!selectedRecipients.includes(parentId)) {
-      const newRecipients = [...selectedRecipients, parentId];
-      setSelectedRecipients(newRecipients);
-      setValue('recipientIds', newRecipients);
+  const onSubmit = async (data: TeacherComposeValues) => {
+    if (selectedRecipients.length === 0) {
+      toast.error('Please select at least one recipient');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await sendMessage({
+        subject: data.subject,
+        body: data.body,
+        channel: data.channel,
+        recipients: {
+          type: 'custom',
+          targetIds: selectedRecipients,
+        },
+      });
+      toast.success('Message sent successfully!');
+      setOpen(false);
+      reset();
+      setSelectedRecipients([]);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
+        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+        ?? 'Failed to send message';
+      toast.error(msg);
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const removeRecipient = (parentId: string) => {
-    const newRecipients = selectedRecipients.filter((id) => id !== parentId);
-    setSelectedRecipients(newRecipients);
-    setValue('recipientIds', newRecipients);
-  };
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Communication"
-        description="Send messages to parents and guardians"
-      >
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger
-            render={
-              <Button>
-                <Send className="mr-2 h-4 w-4" />
-                Message Parents
-              </Button>
-            }
-          />
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Compose Message</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Recipients</Label>
-                <Select onValueChange={(val) => addRecipient(val as string)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Add parent..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mockParents.map((parent) => (
-                      <SelectItem key={parent.id} value={parent.userId}>
-                        {parent.user.firstName} {parent.user.lastName} (
-                        {parent.relationship})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedRecipients.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {selectedRecipients.map((id) => {
-                      const parent = mockParents.find(
-                        (p) => p.userId === id
-                      );
-                      if (!parent) return null;
-                      return (
-                        <Badge
-                          key={id}
-                          variant="secondary"
-                          className="cursor-pointer"
-                          onClick={() => removeRecipient(id)}
-                        >
-                          {parent.user.firstName} {parent.user.lastName} x
-                        </Badge>
-                      );
-                    })}
-                  </div>
-                )}
-                {errors.recipientIds && (
-                  <p className="text-xs text-destructive">
-                    {errors.recipientIds.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="subject">Subject</Label>
-                <Input
-                  id="subject"
-                  placeholder="Message subject"
-                  {...register('subject')}
-                />
-                {errors.subject && (
-                  <p className="text-xs text-destructive">
-                    {errors.subject.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Priority</Label>
-                <Select
-                  defaultValue="normal"
-                  onValueChange={(val) =>
-                    setValue(
-                      'priority',
-                      val as 'low' | 'normal' | 'high' | 'urgent'
-                    )
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="body">Message</Label>
-                <Textarea
-                  id="body"
-                  placeholder="Type your message..."
-                  className="min-h-[120px]"
-                  {...register('body')}
-                />
-                {errors.body && (
-                  <p className="text-xs text-destructive">
-                    {errors.body.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  <Send className="mr-2 h-4 w-4" />
-                  Send Message
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+      <PageHeader title="Communication" description="Send messages to parents and guardians">
+        <Button onClick={() => setOpen(true)}>
+          <Send className="mr-2 h-4 w-4" />
+          Message Parents
+        </Button>
       </PageHeader>
 
-      {/* Messages List */}
-      {mockMessages.length === 0 ? (
+      {messages.length === 0 ? (
         <EmptyState
           icon={MessageSquare}
           title="No Messages"
-          description="Your sent and received messages will appear here."
+          description="Your sent messages will appear here."
         />
       ) : (
         <div className="space-y-3">
-          {mockMessages.map((message) => {
-            const PriorityIcon =
-              priorityConfig[message.priority]?.icon || Bell;
-            const typeVariant =
-              typeConfig[message.type]?.variant || 'outline';
+          {messages.map((message) => {
+            const senderName = typeof message.sentBy === 'string'
+              ? message.sentBy
+              : `${(message.sentBy as BulkMessageSender).firstName} ${(message.sentBy as BulkMessageSender).lastName}`.trim();
 
             return (
               <Card key={message.id}>
@@ -247,14 +115,8 @@ export default function TeacherCommunicationPage() {
                       <div className="flex items-center justify-between">
                         <h3 className="font-medium">{message.subject}</h3>
                         <div className="flex items-center gap-2">
-                          <Badge variant={typeVariant}>
-                            {message.type}
-                          </Badge>
-                          <PriorityIcon
-                            className={`h-4 w-4 ${
-                              priorityConfig[message.priority]?.color
-                            }`}
-                          />
+                          <ChannelBadge channel={message.channel} />
+                          <StatusBadge status={message.status} />
                         </div>
                       </div>
                       <p className="text-sm text-muted-foreground line-clamp-2">
@@ -262,20 +124,18 @@ export default function TeacherCommunicationPage() {
                       </p>
                       <div className="flex items-center gap-2 pt-1">
                         <span className="text-xs text-muted-foreground">
-                          From: {message.sender.firstName}{' '}
-                          {message.sender.lastName}
+                          To: {message.totalRecipients} recipient{message.totalRecipients !== 1 ? 's' : ''}
                         </span>
-                        <span className="text-xs text-muted-foreground">
-                          &middot;
-                        </span>
+                        <span className="text-xs text-muted-foreground">&middot;</span>
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
-                          {formatDate(message.createdAt)}
+                          {message.sentAt ? formatDate(message.sentAt) : formatDate(message.createdAt)}
                         </span>
-                        {!message.isRead && (
-                          <Badge variant="default" className="ml-auto">
-                            New
-                          </Badge>
+                        {senderName && (
+                          <>
+                            <span className="text-xs text-muted-foreground">&middot;</span>
+                            <span className="text-xs text-muted-foreground">By: {senderName}</span>
+                          </>
                         )}
                       </div>
                     </div>
@@ -286,6 +146,74 @@ export default function TeacherCommunicationPage() {
           })}
         </div>
       )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Compose Message</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <ParentRecipientPicker
+              parents={parents}
+              selectedIds={selectedRecipients}
+              onChange={setSelectedRecipients}
+              loading={parentsLoading}
+            />
+            {selectedRecipients.length === 0 && (
+              <p className="text-xs text-destructive">At least one recipient is required</p>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="subject">Subject</Label>
+              <Input id="subject" placeholder="Message subject" {...register('subject')} />
+              {errors.subject && (
+                <p className="text-xs text-destructive">{errors.subject.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Channel</Label>
+              <Select
+                defaultValue="all"
+                onValueChange={(val: unknown) => setValue('channel', val as ChannelType)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Channel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Channels</SelectItem>
+                  <SelectItem value="email">Email</SelectItem>
+                  <SelectItem value="sms">SMS</SelectItem>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="body">Message</Label>
+              <Textarea
+                id="body"
+                placeholder="Type your message..."
+                className="min-h-[120px]"
+                {...register('body')}
+              />
+              {errors.body && (
+                <p className="text-xs text-destructive">{errors.body.message}</p>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={submitting}>
+                <Send className="mr-2 h-4 w-4" />
+                {submitting ? 'Sending...' : 'Send Message'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

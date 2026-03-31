@@ -66,7 +66,7 @@ export function ResetPasswordForm({ onSubmit, isLoading }: ResetPasswordFormProp
         <Button
           type="submit"
           disabled={isLoading}
-          className="h-10 w-full bg-[#2563EB] hover:bg-[#1d4ed8]"
+          className="h-10 w-full bg-blue-600 hover:bg-blue-700"
           size="lg"
         >
           {isLoading ? (
@@ -83,7 +83,7 @@ export function ResetPasswordForm({ onSubmit, isLoading }: ResetPasswordFormProp
       <div className="mt-6 text-center">
         <Link
           href="/forgot-password"
-          className="inline-flex items-center text-sm font-medium text-[#2563EB] hover:text-[#1d4ed8]"
+          className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700"
         >
           <ArrowLeft className="mr-1 h-4 w-4" />
           Request a new reset link

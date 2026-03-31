@@ -4,22 +4,30 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCard } from '@/components/shared/StatCard';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import {
   FileText, CheckCircle, Sparkles, Clock, ArrowRight,
   BookOpen, PenTool,
 } from 'lucide-react';
 import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
-
-const recentActivity = [
-  { id: '1', action: 'Generated paper', detail: 'Grade 10 Science — Chemical Reactions', time: '2 hours ago', type: 'create' as const },
-  { id: '2', action: 'AI graded submissions', detail: 'Grade 9 English — Essay Writing (8 submissions)', time: '5 hours ago', type: 'grade' as const },
-  { id: '3', action: 'Generated paper', detail: 'Grade 11 Mathematics — Quadratic Equations', time: '1 day ago', type: 'create' as const },
-  { id: '4', action: 'AI graded submissions', detail: 'Grade 10 Science — Lab Report (12 submissions)', time: '2 days ago', type: 'grade' as const },
-  { id: '5', action: 'Generated paper', detail: 'Grade 8 Geography — Climate Zones', time: '3 days ago', type: 'create' as const },
-];
+import { useAuthStore } from '@/stores/useAuthStore';
+import { UsageStatsPanel } from '@/components/ai-tools/UsageStatsPanel';
+import { useTeacherAIToolsDashboard } from '@/hooks/useTeacherAIToolsDashboard';
 
 export default function AIToolsPage() {
+  const { user } = useAuthStore();
+  const {
+    gradingJobs,
+    loading,
+    paperCount,
+    pendingReviews,
+    recentActivity,
+  } = useTeacherAIToolsDashboard();
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+
+  if (loading) return <LoadingSpinner />;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -27,15 +35,13 @@ export default function AIToolsPage() {
         description="Create papers and grade submissions with AI assistance"
       />
 
-      {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Papers Generated" value="12" icon={FileText} description="This month" trend={{ value: 20, label: 'vs last month' }} />
-        <StatCard title="Submissions Graded" value="47" icon={CheckCircle} description="This month" trend={{ value: 35, label: 'vs last month' }} />
-        <StatCard title="Avg. Grading Time" value="8s" icon={Clock} description="Per submission" />
-        <StatCard title="Time Saved" value="6.2 hrs" icon={Sparkles} description="This month" />
+        <StatCard title="Papers Generated" value={String(paperCount)} icon={FileText} description="Total papers" />
+        <StatCard title="Submissions Graded" value={String(gradingJobs.length)} icon={CheckCircle} description="Total grading jobs" />
+        <StatCard title="Pending Reviews" value={String(pendingReviews)} icon={Clock} description="Awaiting review" />
+        <StatCard title="AI Powered" value="Claude" icon={Sparkles} description="Anthropic AI" />
       </div>
 
-      {/* Main Action Cards */}
       <div className="grid gap-6 sm:grid-cols-2">
         <Link href={ROUTES.TEACHER_AI_CREATE_PAPER}>
           <Card className="group cursor-pointer transition-all hover:shadow-md hover:border-primary/30">
@@ -80,7 +86,6 @@ export default function AIToolsPage() {
         </Link>
       </div>
 
-      {/* Quick Links */}
       <div className="grid gap-4 sm:grid-cols-2">
         <Link href={ROUTES.TEACHER_AI_PAPERS}>
           <Card className="transition-colors hover:bg-muted/50">
@@ -92,7 +97,7 @@ export default function AIToolsPage() {
                 <h3 className="font-semibold">Paper Library</h3>
                 <p className="text-sm text-muted-foreground">View and manage your generated papers</p>
               </div>
-              <Badge variant="secondary">5 papers</Badge>
+              <Badge variant="secondary">{paperCount} papers</Badge>
             </CardContent>
           </Card>
         </Link>
@@ -107,38 +112,46 @@ export default function AIToolsPage() {
                 <h3 className="font-semibold">Pending Reviews</h3>
                 <p className="text-sm text-muted-foreground">AI-graded submissions awaiting your review</p>
               </div>
-              <Badge variant="secondary">3 pending</Badge>
+              <Badge variant="secondary">{pendingReviews} pending</Badge>
             </CardContent>
           </Card>
         </Link>
       </div>
 
-      {/* Recent Activity */}
-      <div>
-        <h2 className="mb-4 text-lg font-semibold">Recent Activity</h2>
-        <div className="space-y-2">
-          {recentActivity.map((item) => (
-            <Card key={item.id}>
-              <CardContent className="flex items-center gap-4 p-4">
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                  item.type === 'create' ? 'bg-primary/10' : 'bg-emerald-500/10'
-                }`}>
-                  {item.type === 'create' ? (
-                    <FileText className="h-4 w-4 text-primary" />
-                  ) : (
-                    <CheckCircle className="h-4 w-4 text-emerald-600" />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium">{item.action}</p>
-                  <p className="truncate text-sm text-muted-foreground">{item.detail}</p>
-                </div>
-                <span className="shrink-0 text-xs text-muted-foreground">{item.time}</span>
-              </CardContent>
-            </Card>
-          ))}
+      {recentActivity.length > 0 && (
+        <div>
+          <h2 className="mb-4 text-lg font-semibold">Recent Activity</h2>
+          <div className="space-y-2">
+            {recentActivity.map((item) => (
+              <Card key={item.id}>
+                <CardContent className="flex items-center gap-4 p-4">
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+                    item.type === 'create' ? 'bg-primary/10' : 'bg-emerald-500/10'
+                  }`}>
+                    {item.type === 'create' ? (
+                      <FileText className="h-4 w-4 text-primary" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4 text-emerald-600" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{item.action}</p>
+                    <p className="truncate text-sm text-muted-foreground">{item.detail}</p>
+                  </div>
+                  <span className="shrink-0 text-xs text-muted-foreground">{item.time}</span>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {isAdmin && (
+        <div>
+          <h2 className="mb-4 text-lg font-semibold">Usage Statistics (Admin)</h2>
+          <UsageStatsPanel />
+        </div>
+      )}
     </div>
   );
 }

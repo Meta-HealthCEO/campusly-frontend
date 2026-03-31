@@ -1,14 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { PageHeader } from '@/components/shared/PageHeader';
 import {
   Dialog,
@@ -17,83 +12,29 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
-import { Plus, BookOpen, Users, Calendar, FileText } from 'lucide-react';
-import { toast } from 'sonner';
-import { useAuthStore } from '@/stores/useAuthStore';
-import type { Homework, Subject, SchoolClass } from '@/types';
+import { Plus, BookOpen, Users, Calendar, FileText, Trash2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
-import { homeworkSchema, type HomeworkFormData } from '@/lib/validations';
-import apiClient from '@/lib/api-client';
+import { HomeworkForm } from '@/components/homework/HomeworkForm';
+import type { HomeworkFormValues } from '@/components/homework/HomeworkForm';
+import { useTeacherHomework } from '@/hooks/useTeacherHomework';
 import Link from 'next/link';
 
 export default function TeacherHomeworkPage() {
-  const { user } = useAuthStore();
   const [open, setOpen] = useState(false);
-  const [homeworkList, setHomeworkList] = useState<Homework[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [classOptions, setClassOptions] = useState<SchoolClass[]>([]);
-
   const {
-    register,
-    handleSubmit,
-    setValue,
-    reset,
-    formState: { errors },
-  } = useForm<HomeworkFormData>({
-    resolver: zodResolver(homeworkSchema),
-  });
+    teacherHomework,
+    subjects,
+    classOptions,
+    submissionCounts,
+    deleting,
+    createHomework,
+    deleteHomework,
+  } = useTeacherHomework();
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [hwRes, subjectsRes, classesRes] = await Promise.allSettled([
-          apiClient.get('/homework'),
-          apiClient.get('/academic/subjects'),
-          apiClient.get('/academic/classes'),
-        ]);
-        if (hwRes.status === 'fulfilled' && hwRes.value.data) {
-          const data = hwRes.value.data.data ?? hwRes.value.data;
-          if (Array.isArray(data)) setHomeworkList(data);
-        }
-        if (subjectsRes.status === 'fulfilled' && subjectsRes.value.data) {
-          const d = subjectsRes.value.data.data ?? subjectsRes.value.data;
-          const arr = Array.isArray(d) ? d : d.data ?? [];
-          if (arr.length > 0) setSubjects(arr);
-        }
-        if (classesRes.status === 'fulfilled' && classesRes.value.data) {
-          const d = classesRes.value.data.data ?? classesRes.value.data;
-          const arr = Array.isArray(d) ? d : d.data ?? [];
-          if (arr.length > 0) setClassOptions(arr);
-        }
-      } catch {
-        console.error('Failed to load homework data');
-      }
-    }
-    fetchData();
-  }, []);
-
-  const onSubmit = async (data: HomeworkFormData) => {
-    try {
-      const response = await apiClient.post('/homework', data);
-      const newHw = response.data.data ?? response.data;
-      setHomeworkList((prev) => [newHw, ...prev]);
-    } catch {
-      toast.error('Failed to create homework');
-    }
-    setOpen(false);
-    reset();
+  const onSubmit = async (data: HomeworkFormValues) => {
+    const success = await createHomework(data);
+    if (success) setOpen(false);
   };
-
-  const teacherHomework = homeworkList.filter(
-    (hw) => hw.teacherId === user?.id
-  );
 
   return (
     <div className="space-y-6">
@@ -111,117 +52,17 @@ export default function TeacherHomeworkPage() {
             <DialogHeader>
               <DialogTitle>Create New Homework</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  placeholder="Homework title"
-                  {...register('title')}
-                />
-                {errors.title && (
-                  <p className="text-xs text-destructive">
-                    {errors.title.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Describe the homework..."
-                  {...register('description')}
-                />
-                {errors.description && (
-                  <p className="text-xs text-destructive">
-                    {errors.description.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Subject</Label>
-                  <Select
-                    onValueChange={(val) =>
-                      setValue('subjectId', val as string)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select subject" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {subjects.map((subject) => (
-                        <SelectItem key={subject.id} value={subject.id}>
-                          {subject.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.subjectId && (
-                    <p className="text-xs text-destructive">
-                      {errors.subjectId.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Class</Label>
-                  <Select
-                    onValueChange={(val) =>
-                      setValue('classId', val as string)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select class" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {classOptions.map((cls) => (
-                        <SelectItem key={cls.id} value={cls.id}>
-                          {cls.grade?.name ?? cls.gradeName ?? ''} {cls.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.classId && (
-                    <p className="text-xs text-destructive">
-                      {errors.classId.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="dueDate">Due Date</Label>
-                <Input
-                  id="dueDate"
-                  type="date"
-                  {...register('dueDate')}
-                />
-                {errors.dueDate && (
-                  <p className="text-xs text-destructive">
-                    {errors.dueDate.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">Create Homework</Button>
-              </div>
-            </form>
+            <HomeworkForm
+              subjects={subjects}
+              classes={classOptions}
+              onSubmit={onSubmit}
+              onCancel={() => setOpen(false)}
+              submitLabel="Create Homework"
+            />
           </DialogContent>
         </Dialog>
       </PageHeader>
 
-      {/* Homework List */}
       {teacherHomework.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-12">
@@ -235,8 +76,8 @@ export default function TeacherHomeworkPage() {
       ) : (
         <div className="space-y-3">
           {teacherHomework.map((hw) => {
-            const submissionCount = 0; // TODO: fetch from API
-            const gradedCount = 0;
+            const counts = submissionCounts[hw.id] ?? { total: 0, graded: 0 };
+            const displayStatus = hw.status === 'published' ? 'assigned' : hw.status;
 
             return (
               <Link key={hw.id} href={`/teacher/homework/${hw.id}`}>
@@ -258,7 +99,7 @@ export default function TeacherHomeworkPage() {
                         <div className="text-right hidden sm:block">
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <Users className="h-3 w-3" />
-                            {submissionCount} submissions
+                            {counts.total} submissions
                           </div>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <Calendar className="h-3 w-3" />
@@ -267,20 +108,28 @@ export default function TeacherHomeworkPage() {
                         </div>
                         <Badge
                           variant={
-                            hw.status === 'published'
+                            displayStatus === 'assigned'
                               ? 'default'
-                              : hw.status === 'closed'
-                              ? 'secondary'
-                              : 'outline'
+                              : displayStatus === 'closed'
+                                ? 'secondary'
+                                : 'outline'
                           }
                         >
-                          {hw.status}
+                          {displayStatus}
                         </Badge>
-                        {submissionCount > 0 && (
+                        {counts.total > 0 && (
                           <Badge variant="outline">
-                            {gradedCount}/{submissionCount} graded
+                            {counts.graded}/{counts.total} graded
                           </Badge>
                         )}
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={(e) => deleteHomework(hw.id, e)}
+                          disabled={deleting === hw.id}
+                        >
+                          <Trash2 className="h-4 w-4 text-muted-foreground" />
+                        </Button>
                       </div>
                     </div>
                   </CardContent>

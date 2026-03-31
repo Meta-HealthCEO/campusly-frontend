@@ -1,41 +1,33 @@
 'use client';
 
-import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { PageHeader } from '@/components/shared/PageHeader';
 import {
   BookOpen,
   ArrowLeft,
   Calendar,
   Users,
-  Save,
   CheckCircle,
+  Paperclip,
 } from 'lucide-react';
-import { mockHomework, mockSubmissions } from '@/lib/mock-data';
 import { formatDate } from '@/lib/utils';
+import { GradingInterface } from '@/components/homework/GradingInterface';
+import { useTeacherHomeworkDetail } from '@/hooks/useTeacherHomeworkDetail';
 import Link from 'next/link';
-
-interface GradeData {
-  marks: string;
-  feedback: string;
-}
 
 export default function TeacherHomeworkDetailPage() {
   const params = useParams();
   const homeworkId = params.id as string;
-  const homework = mockHomework.find((hw) => hw.id === homeworkId);
-  const submissions = mockSubmissions.filter(
-    (s) => s.homeworkId === homeworkId
-  );
 
-  const [grades, setGrades] = useState<Record<string, GradeData>>({});
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const { homework, submissions, loading, changeStatus, handleGraded } =
+    useTeacherHomeworkDetail(homeworkId);
+
+  if (loading) return <LoadingSpinner />;
 
   if (!homework) {
     return (
@@ -55,36 +47,8 @@ export default function TeacherHomeworkDetailPage() {
     );
   }
 
-  const getGradeData = (submissionId: string): GradeData => {
-    if (grades[submissionId]) return grades[submissionId];
-    const submission = submissions.find((s) => s.id === submissionId);
-    return {
-      marks: submission?.grade !== undefined ? String(submission.grade) : '',
-      feedback: submission?.feedback || '',
-    };
-  };
-
-  const updateGrade = (submissionId: string, field: keyof GradeData, value: string) => {
-    setGrades((prev) => ({
-      ...prev,
-      [submissionId]: {
-        ...getGradeData(submissionId),
-        [field]: value,
-      },
-    }));
-    setSavedIds((prev) => {
-      const next = new Set(prev);
-      next.delete(submissionId);
-      return next;
-    });
-  };
-
-  const handleSave = (submissionId: string) => {
-    setSavedIds((prev) => new Set(prev).add(submissionId));
-  };
-
   const gradedCount = submissions.filter(
-    (s) => s.status === 'graded' || savedIds.has(s.id)
+    (s) => s.mark !== null && s.mark !== undefined
   ).length;
 
   return (
@@ -97,25 +61,45 @@ export default function TeacherHomeworkDetailPage() {
         Back to Homework
       </Link>
 
-      <PageHeader title={homework.title} description={homework.subject?.name ?? homework.subjectName ?? ''} />
+      <PageHeader
+        title={homework.title}
+        description={homework.subjectName}
+      />
 
-      {/* Homework Info */}
       <Card>
         <CardContent className="p-5">
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-xl font-bold">{homework.title}</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {homework.subject?.name ?? homework.subjectName ?? ''}
+                {homework.subjectName}
+                {homework.className ? ` - ${homework.className}` : ''}
               </p>
             </div>
-            <Badge
-              variant={
-                homework.status === 'published' ? 'default' : 'secondary'
-              }
-            >
-              {homework.status}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant={homework.status === 'assigned' ? 'default' : 'secondary'}
+              >
+                {homework.status}
+              </Badge>
+              {homework.status === 'assigned' ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => changeStatus('closed')}
+                >
+                  Close
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => changeStatus('assigned')}
+                >
+                  Reopen
+                </Button>
+              )}
+            </div>
           </div>
           <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
@@ -130,15 +114,34 @@ export default function TeacherHomeworkDetailPage() {
               <CheckCircle className="h-4 w-4" />
               {gradedCount} graded
             </span>
+            <span>Total marks: {homework.totalMarks}</span>
           </div>
           <p className="mt-3 text-sm">{homework.description}</p>
+          {homework.attachments.length > 0 && (
+            <div className="mt-3 space-y-1">
+              <p className="text-xs font-medium text-muted-foreground">Attachments</p>
+              {homework.attachments.map((att, i) => (
+                <a
+                  key={i}
+                  href={att}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-sm text-primary hover:underline"
+                >
+                  <Paperclip className="h-3 w-3" />
+                  {att.split('/').pop() ?? `Attachment ${i + 1}`}
+                </a>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Submissions */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Submissions</CardTitle>
+          <CardTitle className="text-lg">
+            Submissions ({submissions.length})
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {submissions.length === 0 ? (
@@ -147,97 +150,14 @@ export default function TeacherHomeworkDetailPage() {
             </p>
           ) : (
             <div className="space-y-4">
-              {submissions.map((submission) => {
-                const gradeData = getGradeData(submission.id);
-                const isSaved = savedIds.has(submission.id);
-                const isAlreadyGraded = submission.status === 'graded';
-
-                return (
-                  <div
-                    key={submission.id}
-                    className="rounded-lg border p-4 space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">
-                          {submission.student.user.firstName}{' '}
-                          {submission.student.user.lastName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Submitted: {formatDate(submission.submittedAt, 'dd MMM yyyy, HH:mm')}
-                        </p>
-                      </div>
-                      <Badge
-                        variant={
-                          isAlreadyGraded || isSaved
-                            ? 'default'
-                            : submission.status === 'late'
-                            ? 'destructive'
-                            : 'secondary'
-                        }
-                      >
-                        {isSaved
-                          ? 'Graded'
-                          : submission.status}
-                      </Badge>
-                    </div>
-
-                    {submission.content && (
-                      <div className="rounded bg-muted/50 p-3">
-                        <p className="text-sm">{submission.content}</p>
-                      </div>
-                    )}
-
-                    <div className="flex flex-wrap items-end gap-3">
-                      <div className="space-y-1">
-                        <label className="text-xs font-medium text-muted-foreground">
-                          Marks (%)
-                        </label>
-                        <Input
-                          type="number"
-                          min={0}
-                          max={100}
-                          value={gradeData.marks}
-                          onChange={(e) =>
-                            updateGrade(
-                              submission.id,
-                              'marks',
-                              e.target.value
-                            )
-                          }
-                          placeholder="0-100"
-                          className="w-24"
-                        />
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <label className="text-xs font-medium text-muted-foreground">
-                          Feedback
-                        </label>
-                        <Textarea
-                          value={gradeData.feedback}
-                          onChange={(e) =>
-                            updateGrade(
-                              submission.id,
-                              'feedback',
-                              e.target.value
-                            )
-                          }
-                          placeholder="Write feedback..."
-                          className="min-h-[60px]"
-                        />
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => handleSave(submission.id)}
-                        disabled={isSaved || !gradeData.marks}
-                      >
-                        <Save className="mr-1 h-3 w-3" />
-                        {isSaved ? 'Saved' : 'Save'}
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
+              {submissions.map((submission) => (
+                <GradingInterface
+                  key={submission.id}
+                  submission={submission}
+                  totalMarks={homework.totalMarks}
+                  onGraded={handleGraded}
+                />
+              ))}
             </div>
           )}
         </CardContent>

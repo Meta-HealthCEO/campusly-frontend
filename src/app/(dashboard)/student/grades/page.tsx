@@ -1,15 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Progress } from '@/components/ui/progress';
 import { BookOpen, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import apiClient from '@/lib/api-client';
-import { useAuthStore } from '@/stores/useAuthStore';
-import type { StudentGrade, Subject } from '@/types';
+import { useStudentGrades } from '@/hooks/useStudentGrades';
+import type { Subject } from '@/types';
 
 function getGradeColor(percentage: number): string {
   if (percentage >= 80) return 'text-emerald-600';
@@ -26,51 +25,13 @@ function getGradeBadge(percentage: number): { label: string; variant: 'default' 
 }
 
 export default function StudentGradesPage() {
-  const { user } = useAuthStore();
-  const [studentId, setStudentId] = useState<string | null>(null);
-  const [grades, setGrades] = useState<StudentGrade[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const { grades, subjects, loading } = useStudentGrades();
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        // First get the student record for this user
-        const studentsRes = await apiClient.get('/students');
-        const studentsData = studentsRes.data.data ?? studentsRes.data;
-        const studentsList = Array.isArray(studentsData) ? studentsData : studentsData.data ?? [];
-        const me = studentsList.find((s: any) => s.userId === user?.id || s.user?._id === user?.id || s.user?.id === user?.id);
-
-        if (me) {
-          setStudentId(me.id ?? me._id);
-
-          const [marksRes, subjectsRes] = await Promise.allSettled([
-            apiClient.get(`/academic/marks/student/${me.id ?? me._id}`),
-            apiClient.get('/academic/subjects'),
-          ]);
-
-          if (marksRes.status === 'fulfilled' && marksRes.value.data) {
-            const d = marksRes.value.data.data ?? marksRes.value.data;
-            const arr = Array.isArray(d) ? d : d.data ?? [];
-            if (arr.length > 0) setGrades(arr);
-          }
-          if (subjectsRes.status === 'fulfilled' && subjectsRes.value.data) {
-            const d = subjectsRes.value.data.data ?? subjectsRes.value.data;
-            const arr = Array.isArray(d) ? d : d.data ?? [];
-            if (arr.length > 0) setSubjects(arr);
-          }
-        }
-      } catch {
-        console.error('Failed to load grades');
-      }
-    }
-    if (user?.id) fetchData();
-  }, [user?.id]);
-
-  const myGrades = grades; // All grades returned are for this student already
+  if (loading) return <LoadingSpinner />;
 
   const gradesBySubject = subjects
     .map((subject) => {
-      const subjectGrades = myGrades.filter(
+      const subjectGrades = grades.filter(
         (g) => g.assessment.subjectId === subject.id
       );
       if (subjectGrades.length === 0) return null;
@@ -87,7 +48,7 @@ export default function StudentGradesPage() {
     })
     .filter(Boolean) as {
     subject: Subject;
-    grades: typeof myGrades;
+    grades: typeof grades;
     average: number;
   }[];
 
@@ -106,7 +67,6 @@ export default function StudentGradesPage() {
         description="Track your academic performance across all subjects"
       />
 
-      {/* Overall Average */}
       <Card>
         <CardContent className="flex items-center gap-4 p-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10">
@@ -123,7 +83,6 @@ export default function StudentGradesPage() {
         </CardContent>
       </Card>
 
-      {/* Subject Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {gradesBySubject.map(({ subject, grades: subjectGrades, average }) => {
           const gradeBadge = getGradeBadge(average);
@@ -156,9 +115,9 @@ export default function StudentGradesPage() {
                       className="flex items-center justify-between rounded border p-2"
                     >
                       <div>
-                        <p className="text-sm">{grade.assessment?.name ?? (grade as any).assessmentName ?? ''}</p>
+                        <p className="text-sm">{grade.assessment?.name ?? ''}</p>
                         <p className="text-xs text-muted-foreground">
-                          {grade.assessment?.type ?? (grade as any).assessmentType ?? ''}
+                          {grade.assessment?.type ?? ''}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -168,7 +127,7 @@ export default function StudentGradesPage() {
                             getGradeColor(grade.percentage)
                           )}
                         >
-                          {grade.marks}/{grade.assessment?.totalMarks ?? (grade as any).totalMarks ?? ''}
+                          {grade.marks}/{grade.assessment?.totalMarks ?? ''}
                         </span>
                         {grade.percentage >= 70 ? (
                           <TrendingUp className="h-3 w-3 text-emerald-500" />

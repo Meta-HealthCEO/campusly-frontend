@@ -117,7 +117,7 @@ export function SchoolSettingsForm({ school, onSave }: SchoolSettingsFormProps) 
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="bg-[#2563EB] hover:bg-[#1d4ed8]"
+            className="bg-blue-600 hover:bg-blue-700"
           >
             {isSubmitting ? 'Saving...' : 'Save Settings'}
           </Button>
