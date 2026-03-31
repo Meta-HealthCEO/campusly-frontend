@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Badge } from '@/components/ui/badge';
-import { mockInvoices } from '@/lib/mock-data';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import apiClient from '@/lib/api-client';
+import { useAuthStore } from '@/stores/useAuthStore';
 import type { Invoice } from '@/types';
 
 const statusStyles: Record<string, string> = {
@@ -60,22 +60,26 @@ const columns: ColumnDef<Invoice>[] = [
 ];
 
 export default function InvoicesPage() {
-  const [data, setData] = useState<Invoice[]>(mockInvoices);
+  const { user } = useAuthStore();
+  const [data, setData] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await apiClient.get('/fee/invoices');
-        if (response.data) setData(response.data.data ?? response.data);
-      } catch (error) {
-        console.warn('API unavailable, using mock data');
+        const response = await apiClient.get(`/fees/invoices/school/${user?.schoolId}`);
+        if (response.data) {
+          const d = response.data.data ?? response.data;
+          setData(Array.isArray(d) ? d : d.data ?? []);
+        }
+      } catch {
+        console.error('Failed to load invoices');
       } finally {
         setLoading(false);
       }
     }
     fetchData();
-  }, []);
+  }, [user?.schoolId]);
 
   return (
     <div className="space-y-6">

@@ -6,7 +6,6 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCard } from '@/components/shared/StatCard';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Badge } from '@/components/ui/badge';
-import { mockWallets, mockStudents } from '@/lib/mock-data';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import apiClient from '@/lib/api-client';
 
@@ -63,54 +62,36 @@ const columns: ColumnDef<WalletRow>[] = [
   },
 ];
 
-function buildWalletRows(wallets: typeof mockWallets): WalletRow[] {
-  return wallets.map((w) => {
-    const student = mockStudents.find((s) => s.id === (w.studentId));
-    return {
-      id: w.id,
-      studentName: student ? `${student.user.firstName} ${student.user.lastName}` : 'Unknown',
-      wristbandId: w.wristbandId || '-',
-      balance: w.balance,
-      dailyLimit: w.dailyLimit,
-      isActive: w.isActive,
-      lastTopUp: w.lastTopUp,
-    };
-  });
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildApiWalletRows(wallets: any[]): WalletRow[] {
-  return wallets.map((w) => ({
-    id: w.id,
-    studentName:
-      w.studentName ||
-      (w.student
-        ? `${w.student.user?.firstName ?? w.student.firstName ?? ''} ${w.student.user?.lastName ?? w.student.lastName ?? ''}`.trim()
-        : 'Unknown'),
-    wristbandId: w.wristbandId || w.wristband_id || '-',
-    balance: w.balance ?? 0,
-    dailyLimit: w.dailyLimit ?? w.daily_limit ?? 0,
-    isActive: w.isActive ?? w.is_active ?? false,
-    lastTopUp: w.lastTopUp || w.last_top_up || undefined,
-  }));
+function buildApiWalletRows(students: any[]): WalletRow[] {
+  return students
+    .filter((s) => s.walletId)
+    .map((s) => ({
+      id: s.walletId || s.id,
+      studentName: `${s.user?.firstName ?? s.firstName ?? ''} ${s.user?.lastName ?? s.lastName ?? ''}`.trim() || 'Unknown',
+      wristbandId: '-',
+      balance: s.wallet?.balance ?? 0,
+      dailyLimit: s.wallet?.dailyLimit ?? s.wallet?.daily_limit ?? 0,
+      isActive: s.wallet?.isActive ?? false,
+      lastTopUp: s.wallet?.lastTopUp ?? undefined,
+    }));
 }
 
 export default function WalletPage() {
-  const [walletData, setWalletData] = useState<WalletRow[]>(() => buildWalletRows(mockWallets));
+  const [walletData, setWalletData] = useState<WalletRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await apiClient.get('/wallet');
+        const response = await apiClient.get('/students');
         if (response.data) {
           const raw = response.data.data ?? response.data;
-          if (Array.isArray(raw)) {
-            setWalletData(buildApiWalletRows(raw));
-          }
+          const arr = Array.isArray(raw) ? raw : raw.data ?? [];
+          setWalletData(buildApiWalletRows(arr));
         }
-      } catch (error) {
-        console.warn('API unavailable, using mock data');
+      } catch {
+        console.error('Failed to load wallet data');
       } finally {
         setLoading(false);
       }

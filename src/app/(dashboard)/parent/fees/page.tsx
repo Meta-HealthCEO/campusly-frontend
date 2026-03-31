@@ -22,7 +22,7 @@ import {
   CreditCard, DollarSign, FileText, CheckCircle2, AlertTriangle,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { mockInvoices, mockPayments, mockStudents } from '@/lib/mock-data';
+import { useAuthStore } from '@/stores/useAuthStore';
 import apiClient from '@/lib/api-client';
 import type { Invoice, Payment } from '@/types';
 
@@ -221,38 +221,37 @@ const paymentColumns: ColumnDef<Payment, unknown>[] = [
 ];
 
 export default function FeesPage() {
-  const mockParentChildren = mockStudents.slice(0, 2);
-  const mockParentInvoices = mockInvoices.filter((inv) =>
-    mockParentChildren.some((c) => c.id === inv.studentId)
-  );
-  const mockParentPayments = mockPayments.filter((p) =>
-    mockParentInvoices.some((inv) => inv.id === p.invoiceId)
-  );
-
-  const [invoices, setInvoices] = useState(mockParentInvoices);
-  const [payments, setPayments] = useState(mockParentPayments);
+  const { user } = useAuthStore();
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [invRes, payRes] = await Promise.allSettled([
-          apiClient.get('/fee/invoices'),
-          apiClient.get('/fee/payments'),
-        ]);
-        if (invRes.status === 'fulfilled' && invRes.value.data) {
-          const data = invRes.value.data.data ?? invRes.value.data;
-          if (Array.isArray(data)) setInvoices(data);
-        }
-        if (payRes.status === 'fulfilled' && payRes.value.data) {
-          const data = payRes.value.data.data ?? payRes.value.data;
-          if (Array.isArray(data)) setPayments(data);
+        // Fetch invoices for the school
+        const invRes = await apiClient.get(`/fees/invoices/school/${user?.schoolId}`);
+        const invData = invRes.data.data ?? invRes.data;
+        const invoiceList: Invoice[] = Array.isArray(invData) ? invData : invData.data ?? [];
+        setInvoices(invoiceList);
+
+        // Fetch payments for each invoice
+        if (invoiceList.length > 0) {
+          const paymentPromises = invoiceList.map((inv) =>
+            apiClient.get(`/fees/payments/${inv.id}`).catch(() => ({ data: { data: [] } }))
+          );
+          const paymentResults = await Promise.all(paymentPromises);
+          const allPayments = paymentResults.flatMap((r) => {
+            const d = r.data.data ?? r.data;
+            return Array.isArray(d) ? d : d.data ?? [];
+          });
+          setPayments(allPayments);
         }
       } catch {
-        console.warn('API unavailable, using mock data');
+        console.error('Failed to load fee data');
       }
     }
-    fetchData();
-  }, []);
+    if (user?.schoolId) fetchData();
+  }, [user?.schoolId]);
 
   const totalOutstanding = invoices.reduce(
     (sum, inv) => sum + inv.balanceDue,

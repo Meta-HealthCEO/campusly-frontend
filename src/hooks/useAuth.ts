@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { getRoleDashboardPath } from '@/lib/auth';
 import apiClient from '@/lib/api-client';
-import type { LoginCredentials } from '@/types';
+import type { LoginCredentials, User } from '@/types';
 
 export function useAuth() {
   const router = useRouter();
@@ -18,11 +18,29 @@ export function useAuth() {
     const refreshToken = responseData.refreshToken ?? responseData.refresh_token;
     // Normalize school_admin → admin for frontend routing
     const role = userData.role === 'school_admin' ? 'admin' : userData.role;
-    storeLogin({ ...userData, role }, { accessToken, refreshToken });
+    const user: User = {
+      id: userData._id ?? userData.id,
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      role,
+      phone: userData.phone ?? '',
+      schoolId: userData.schoolId ?? '',
+      isActive: userData.isActive ?? true,
+      avatar: userData.profileImage ?? userData.avatar ?? undefined,
+      createdAt: userData.createdAt ?? '',
+      updatedAt: userData.updatedAt ?? '',
+    };
+    storeLogin(user, { accessToken, refreshToken: refreshToken ?? '' });
     router.push(getRoleDashboardPath(role));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await apiClient.post('/auth/logout');
+    } catch {
+      // Ignore errors — logout should always succeed locally
+    }
     storeLogout();
     router.push('/login');
   };

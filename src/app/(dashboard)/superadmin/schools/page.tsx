@@ -1,56 +1,98 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import Link from 'next/link';
+import { useEffect, useRef, useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { MoreHorizontal, Plus, Search } from 'lucide-react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { SubscriptionBadge } from '@/components/school';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Card, CardContent } from '@/components/ui/card';
-import { mockTenants } from '@/lib/mock-data';
-import { formatCurrency } from '@/lib/utils';
-import type { TenantStatus, SubscriptionTier } from '@/types';
+import { useSchoolStore } from '@/stores/useSchoolStore';
+import type { SchoolDocument } from '@/types';
 
-const STATUS_COLORS: Record<TenantStatus, string> = {
-  active: 'bg-emerald-100 text-emerald-700',
-  trial: 'bg-blue-100 text-blue-700',
-  suspended: 'bg-red-100 text-red-700',
-  cancelled: 'bg-gray-100 text-gray-700',
-};
-
-const TIER_COLORS: Record<SubscriptionTier, string> = {
-  enterprise: 'bg-purple-100 text-purple-700',
-  growth: 'bg-indigo-100 text-indigo-700',
-  starter: 'bg-amber-100 text-amber-700',
-};
+function StatusBadge({ isActive, isDeleted }: { isActive: boolean; isDeleted: boolean }) {
+  if (isDeleted) {
+    return <Badge className="bg-gray-100 text-gray-700">Deleted</Badge>;
+  }
+  if (!isActive) {
+    return <Badge className="bg-red-100 text-red-700">Suspended</Badge>;
+  }
+  return <Badge className="bg-emerald-100 text-emerald-700">Active</Badge>;
+}
 
 export default function SuperAdminSchoolsPage() {
+  const router = useRouter();
+  const { schools, schoolsLoading, fetchSchools, updateSchool } = useSchoolStore();
+
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [tierFilter, setTierFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [tierFilter, setTierFilter] = useState('all');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    fetchSchools();
+  }, [fetchSchools]);
+
+  const handleSearchChange = (term: string) => {
+    setSearch(term);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchSchools({ search: term });
+    }, 300);
+  };
 
   const filtered = useMemo(() => {
-    return mockTenants.filter((t) => {
-      const matchesSearch =
-        t.name.toLowerCase().includes(search.toLowerCase()) ||
-        t.adminEmail.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
-      const matchesTier = tierFilter === 'all' || t.tier === tierFilter;
-      return matchesSearch && matchesStatus && matchesTier;
+    return schools.filter((s) => {
+      if (statusFilter === 'active' && (!s.isActive || s.isDeleted)) return false;
+      if (statusFilter === 'suspended' && (s.isActive || s.isDeleted)) return false;
+      if (tierFilter !== 'all' && s.subscription?.tier !== tierFilter) return false;
+      return true;
     });
-  }, [search, statusFilter, tierFilter]);
+  }, [schools, statusFilter, tierFilter]);
+
+  const handleToggleStatus = async (school: SchoolDocument) => {
+    const newActive = !school.isActive;
+    try {
+      await updateSchool(school.id, { isActive: newActive });
+      await fetchSchools({ search });
+      toast.success(`${school.name} has been ${newActive ? 'activated' : 'suspended'}.`);
+    } catch {
+      toast.error(`Failed to update ${school.name}.`);
+    }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <PageHeader title="Schools" description="Manage all tenant schools on the platform" />
-        <Link href="/superadmin/onboard"><Button>
-            <Plus className="mr-2 h-4 w-4" /> Onboard School
-          </Button></Link>
+        <Button onClick={() => router.push('/superadmin/onboard')}>
+          <Plus className="mr-2 h-4 w-4" />
+          Onboard School
+        </Button>
       </div>
 
       <Card>
@@ -61,31 +103,39 @@ export default function SuperAdminSchoolsPage() {
               <Input
                 placeholder="Search by name or email..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-9"
               />
             </div>
-            <Select value={statusFilter} onValueChange={(v) => { if (v !== null) setStatusFilter(v); }}>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => {
+                if (v) setStatusFilter(v);
+              }}
+            >
               <SelectTrigger className="w-36">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="trial">Trial</SelectItem>
                 <SelectItem value="suspended">Suspended</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={tierFilter} onValueChange={(v) => { if (v !== null) setTierFilter(v); }}>
+            <Select
+              value={tierFilter}
+              onValueChange={(v) => {
+                if (v) setTierFilter(v);
+              }}
+            >
               <SelectTrigger className="w-36">
                 <SelectValue placeholder="Tier" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Tiers</SelectItem>
-                <SelectItem value="enterprise">Enterprise</SelectItem>
-                <SelectItem value="growth">Growth</SelectItem>
-                <SelectItem value="starter">Starter</SelectItem>
+                <SelectItem value="basic">Basic</SelectItem>
+                <SelectItem value="standard">Standard</SelectItem>
+                <SelectItem value="premium">Premium</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -99,43 +149,48 @@ export default function SuperAdminSchoolsPage() {
               <TableHead>School</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Tier</TableHead>
-              <TableHead className="text-right">Students</TableHead>
-              <TableHead className="text-right">MRR</TableHead>
+              <TableHead>City</TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length === 0 ? (
+            {schoolsLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  Loading schools...
+                </TableCell>
+              </TableRow>
+            ) : filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                   No schools found.
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((tenant) => (
-                <TableRow key={tenant.id}>
+              filtered.map((school) => (
+                <TableRow key={school.id}>
                   <TableCell>
                     <div>
-                      <p className="font-medium">{tenant.name}</p>
-                      <p className="text-xs text-muted-foreground">{tenant.adminEmail}</p>
+                      <p className="font-medium">{school.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {school.contactInfo?.email}
+                      </p>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${STATUS_COLORS[tenant.status]}`}>
-                      {tenant.status}
-                    </span>
+                    <StatusBadge isActive={school.isActive} isDeleted={school.isDeleted} />
                   </TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${TIER_COLORS[tenant.tier]}`}>
-                      {tenant.tier}
-                    </span>
+                    {school.subscription ? (
+                      <SubscriptionBadge
+                        tier={school.subscription.tier}
+                        expiresAt={school.subscription.expiresAt}
+                      />
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
                   </TableCell>
-                  <TableCell className="text-right">{tenant.studentCount.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">
-                    {tenant.status === 'trial' || tenant.status === 'suspended'
-                      ? <span className="text-muted-foreground">—</span>
-                      : formatCurrency(tenant.mrr)}
-                  </TableCell>
+                  <TableCell>{school.address?.city ?? '—'}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger>
@@ -144,11 +199,13 @@ export default function SuperAdminSchoolsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Link href={`/superadmin/schools/${tenant.id}`}>View Details</Link>
+                        <DropdownMenuItem
+                          onSelect={() => router.push(`/superadmin/schools/${school.id}`)}
+                        >
+                          View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          {tenant.status === 'suspended' ? 'Activate' : 'Suspend'}
+                        <DropdownMenuItem onSelect={() => handleToggleStatus(school)}>
+                          {school.isActive ? 'Suspend' : 'Activate'}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -163,4 +220,3 @@ export default function SuperAdminSchoolsPage() {
     </div>
   );
 }
-

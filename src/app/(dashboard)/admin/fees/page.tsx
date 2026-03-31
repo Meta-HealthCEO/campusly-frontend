@@ -22,9 +22,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { mockFeeTypes, mockInvoices } from '@/lib/mock-data';
 import { formatCurrency } from '@/lib/utils';
 import apiClient from '@/lib/api-client';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { feeTypeSchema, type FeeTypeFormData } from '@/lib/validations';
 import type { FeeType, Invoice } from '@/types';
 
@@ -53,8 +53,9 @@ const feeTypeColumns: ColumnDef<FeeType>[] = [
 ];
 
 export default function FeesPage() {
-  const [feeTypes, setFeeTypes] = useState<FeeType[]>(mockFeeTypes);
-  const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
+  const { user } = useAuthStore();
+  const [feeTypes, setFeeTypes] = useState<FeeType[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const {
@@ -72,38 +73,44 @@ export default function FeesPage() {
     async function fetchData() {
       try {
         const [feeTypesRes, invoicesRes] = await Promise.all([
-          apiClient.get('/fee/types'),
-          apiClient.get('/fee/invoices'),
+          apiClient.get(`/fees/types/school/${user?.schoolId}`),
+          apiClient.get(`/fees/invoices/school/${user?.schoolId}`),
         ]);
-        if (feeTypesRes.data) setFeeTypes(feeTypesRes.data.data ?? feeTypesRes.data);
-        if (invoicesRes.data) setInvoices(invoicesRes.data.data ?? invoicesRes.data);
-      } catch (error) {
-        console.warn('API unavailable, using mock data');
+        if (feeTypesRes.data) {
+          const d = feeTypesRes.data.data ?? feeTypesRes.data;
+          setFeeTypes(Array.isArray(d) ? d : d.data ?? []);
+        }
+        if (invoicesRes.data) {
+          const d = invoicesRes.data.data ?? invoicesRes.data;
+          setInvoices(Array.isArray(d) ? d : d.data ?? []);
+        }
+      } catch {
+        console.error('Failed to load fee data');
       } finally {
         setLoading(false);
       }
     }
     fetchData();
-  }, []);
+  }, [user?.schoolId]);
 
   const onSubmit = async (data: FeeTypeFormData) => {
     try {
-      await apiClient.post('/fee/types', data);
+      await apiClient.post('/fees/types', data);
       toast.success('Fee type added successfully!');
       reset();
       setDialogOpen(false);
       // Refresh fee types list
       try {
-        const response = await apiClient.get('/fee/types');
-        if (response.data) setFeeTypes(response.data.data ?? response.data);
+        const response = await apiClient.get(`/fees/types/school/${user?.schoolId}`);
+        if (response.data) {
+          const d = response.data.data ?? response.data;
+          setFeeTypes(Array.isArray(d) ? d : d.data ?? []);
+        }
       } catch {
         // Keep existing list if refresh fails
       }
-    } catch (error) {
-      console.warn('Failed to save fee type via API');
-      toast.success('Fee type added successfully!');
-      reset();
-      setDialogOpen(false);
+    } catch {
+      toast.error('Failed to create fee type');
     }
   };
 

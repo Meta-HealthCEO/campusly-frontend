@@ -1,10 +1,13 @@
 'use client';
 
-import { mockSchool } from '@/lib/mock-data';
+import { useSchoolStore } from '@/stores/useSchoolStore';
 
 export function useModule() {
+  const school = useSchoolStore((s) => s.school);
+
   const isModuleEnabled = (moduleId: string): boolean => {
-    return mockSchool.enabledModules.includes(moduleId);
+    if (!school) return true; // Allow all modules while school is loading
+    return school.modulesEnabled.includes(moduleId);
   };
 
   return { isModuleEnabled };

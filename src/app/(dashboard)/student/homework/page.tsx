@@ -6,9 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { BookOpen, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
-import { mockHomework, mockSubmissions } from '@/lib/mock-data';
 import { formatDate } from '@/lib/utils';
 import apiClient from '@/lib/api-client';
+import { useAuthStore } from '@/stores/useAuthStore';
+import type { Homework, HomeworkSubmission } from '@/types';
 import Link from 'next/link';
 
 const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: typeof CheckCircle }> = {
@@ -19,30 +20,39 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
 };
 
 export default function StudentHomeworkPage() {
-  const [homeworkList, setHomeworkList] = useState(mockHomework.filter((hw) => hw.status === 'published'));
-  const [submissions, setSubmissions] = useState(mockSubmissions);
+  const { user } = useAuthStore();
+  const [homeworkList, setHomeworkList] = useState<Homework[]>([]);
+  const [submissions, setSubmissions] = useState<HomeworkSubmission[]>([]);
 
   useEffect(() => {
     async function fetchData() {
       try {
+        // Find current student
+        const studentsRes = await apiClient.get('/students');
+        const studentsData = studentsRes.data.data ?? studentsRes.data;
+        const studentsList = Array.isArray(studentsData) ? studentsData : studentsData.data ?? [];
+        const me = studentsList.find((s: any) => s.userId === user?.id || s.user?._id === user?.id || s.user?.id === user?.id);
+
         const [hwRes, subRes] = await Promise.allSettled([
           apiClient.get('/homework'),
-          apiClient.get('/homework/submissions'),
+          me ? apiClient.get(`/homework/student/${me.id ?? me._id}/submissions`) : Promise.reject('no student'),
         ]);
+
         if (hwRes.status === 'fulfilled' && hwRes.value.data) {
-          const data = hwRes.value.data.data ?? hwRes.value.data;
-          if (Array.isArray(data)) setHomeworkList(data.filter((hw: any) => hw.status === 'published'));
+          const d = hwRes.value.data.data ?? hwRes.value.data;
+          const arr = Array.isArray(d) ? d : d.data ?? [];
+          setHomeworkList(arr.filter((hw: any) => hw.status === 'published'));
         }
         if (subRes.status === 'fulfilled' && subRes.value.data) {
-          const data = subRes.value.data.data ?? subRes.value.data;
-          if (Array.isArray(data)) setSubmissions(data);
+          const d = subRes.value.data.data ?? subRes.value.data;
+          setSubmissions(Array.isArray(d) ? d : d.data ?? []);
         }
       } catch {
-        console.warn('API unavailable, using mock data');
+        console.error('Failed to load homework');
       }
     }
-    fetchData();
-  }, []);
+    if (user?.id) fetchData();
+  }, [user?.id]);
 
   function getHomeworkStatus(homeworkId: string): 'submitted' | 'graded' | 'pending' | 'overdue' {
     const submission = submissions.find((s: any) => s.homeworkId === homeworkId);

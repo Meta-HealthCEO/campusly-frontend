@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
-import { mockDebtors } from '@/lib/mock-data';
 import { formatCurrency } from '@/lib/utils';
 import apiClient from '@/lib/api-client';
+import { useAuthStore } from '@/stores/useAuthStore';
 import type { DebtorEntry } from '@/types';
 
 const columns: ColumnDef<DebtorEntry>[] = [
@@ -58,22 +58,26 @@ const columns: ColumnDef<DebtorEntry>[] = [
 ];
 
 export default function DebtorsPage() {
-  const [data, setData] = useState<DebtorEntry[]>(mockDebtors);
+  const { user } = useAuthStore();
+  const [data, setData] = useState<DebtorEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await apiClient.get('/fee/debtors-report');
-        if (response.data) setData(response.data.data ?? response.data);
-      } catch (error) {
-        console.warn('API unavailable, using mock data');
+        const response = await apiClient.get(`/fees/debtors/school/${user?.schoolId}`);
+        if (response.data) {
+          const d = response.data.data ?? response.data;
+          setData(Array.isArray(d) ? d : d.data ?? []);
+        }
+      } catch {
+        console.error('Failed to load debtors report');
       } finally {
         setLoading(false);
       }
     }
     fetchData();
-  }, []);
+  }, [user?.schoolId]);
 
   return (
     <div className="space-y-6">

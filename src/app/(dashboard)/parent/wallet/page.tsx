@@ -23,9 +23,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { mockStudents, mockWallets, mockWalletTransactions } from '@/lib/mock-data';
+import { useAuthStore } from '@/stores/useAuthStore';
 import apiClient from '@/lib/api-client';
-import type { WalletTransaction } from '@/types';
+import type { Student, Wallet as WalletType, WalletTransaction } from '@/types';
 
 const transactionColumns: ColumnDef<WalletTransaction, unknown>[] = [
   {
@@ -74,26 +74,65 @@ const transactionColumns: ColumnDef<WalletTransaction, unknown>[] = [
 ];
 
 export default function WalletPage() {
+  const { user } = useAuthStore();
   const [loadAmount, setLoadAmount] = useState('');
   const [dialogOpen, setDialogOpen] = useState<string | null>(null);
-  const [children, setChildren] = useState(mockStudents.slice(0, 2));
-  const [wallets, setWallets] = useState(mockWallets);
-  const [transactions, setTransactions] = useState(mockWalletTransactions);
+  const [children, setChildren] = useState<Student[]>([]);
+  const [wallets, setWallets] = useState<WalletType[]>([]);
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await apiClient.get('/wallet');
-        if (response.data) {
-          const data = response.data.data ?? response.data;
-          if (Array.isArray(data) && data.length > 0) setWallets(data);
-        }
+        // Find current parent
+        const parentsRes = await apiClient.get('/parents');
+        const parentsData = parentsRes.data.data ?? parentsRes.data;
+        const parentsList = Array.isArray(parentsData) ? parentsData : parentsData.data ?? [];
+        const me = parentsList.find((p: any) => p.userId === user?.id || p.user?._id === user?.id || p.user?.id === user?.id);
+
+        if (!me) return;
+
+        // Fetch students (children)
+        const studentsRes = await apiClient.get('/students');
+        const studentsData = studentsRes.data.data ?? studentsRes.data;
+        const allStudents: Student[] = Array.isArray(studentsData) ? studentsData : studentsData.data ?? [];
+        const myChildren = allStudents.filter((s) =>
+          me.studentIds?.includes(s.id) || me.studentIds?.includes((s as any)._id)
+        );
+        setChildren(myChildren);
+
+        // Fetch wallets for each child
+        const walletPromises = myChildren.map((child) =>
+          apiClient.get(`/wallets/student/${child.id ?? (child as any)._id}`).catch(() => null)
+        );
+        const walletResults = await Promise.all(walletPromises);
+        const fetchedWallets: WalletType[] = walletResults
+          .filter((r): r is NonNullable<typeof r> => r !== null)
+          .map((r) => {
+            const d = r.data.data ?? r.data;
+            return d.wallet ?? d;
+          })
+          .filter(Boolean);
+        setWallets(fetchedWallets);
+
+        // Fetch transactions for each wallet
+        const txPromises = fetchedWallets.map((w) =>
+          apiClient.get(`/wallets/${w.id ?? (w as any)._id}/transactions`).catch(() => null)
+        );
+        const txResults = await Promise.all(txPromises);
+        const allTxns: WalletTransaction[] = txResults
+          .filter((r): r is NonNullable<typeof r> => r !== null)
+          .flatMap((r) => {
+            const d = r.data.data ?? r.data;
+            return Array.isArray(d) ? d : d.data ?? [];
+          });
+        setTransactions(allTxns);
       } catch {
-        console.warn('API unavailable, using mock data');
+        console.error('Failed to load wallet data');
       }
     }
-    fetchData();
-  }, []);
+    if (user?.id) fetchData();
+  }, [user?.id]);
 
   const childWallets = children.map((child) => {
     const wallet = wallets.find((w) => w.studentId === child.id);
@@ -112,13 +151,18 @@ export default function WalletPage() {
     const amount = parseFloat(loadAmount);
     if (!amount || amount < 10) return;
     try {
-      await apiClient.post('/wallet/load', { walletId, amount: Math.round(amount * 100) });
+      await apiClient.post(`/wallets/${walletId}/load`, {
+        amount: Math.round(amount * 100),
+        description: 'Parent top-up',
+      });
       toast.success('Wallet topped up successfully!');
-      // Refresh wallets
-      const response = await apiClient.get('/wallet');
-      if (response.data) {
-        const data = response.data.data ?? response.data;
-        if (Array.isArray(data)) setWallets(data);
+      // Refresh wallet data — find which student this wallet belongs to
+      const wallet = wallets.find((w) => (w.id ?? (w as any)._id) === walletId);
+      if (wallet) {
+        const refreshRes = await apiClient.get(`/wallets/student/${wallet.studentId}`);
+        const d = refreshRes.data.data ?? refreshRes.data;
+        const refreshed = d.wallet ?? d;
+        setWallets((prev) => prev.map((w) => (w.id ?? (w as any)._id) === walletId ? refreshed : w));
       }
     } catch {
       toast.error('Failed to load money. Please try again.');

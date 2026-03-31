@@ -20,7 +20,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { mockTeachers } from '@/lib/mock-data';
 import { staffSchema, type StaffFormData } from '@/lib/validations';
 import apiClient from '@/lib/api-client';
 import type { Teacher } from '@/types';
@@ -71,7 +70,7 @@ const columns: ColumnDef<Teacher>[] = [
 
 export default function StaffPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [staffList, setStaffList] = useState(mockTeachers);
+  const [staffList, setStaffList] = useState<Teacher[]>([]);
   const {
     register,
     handleSubmit,
@@ -87,10 +86,11 @@ export default function StaffPage() {
         const response = await apiClient.get('/staff');
         if (response.data) {
           const data = response.data.data ?? response.data;
-          if (Array.isArray(data)) setStaffList(data);
+          const arr = Array.isArray(data) ? data : data.staff ?? [];
+          setStaffList(arr);
         }
       } catch {
-        console.warn('API unavailable, using mock data');
+        console.error('Failed to load staff');
       }
     }
     fetchData();
@@ -105,14 +105,14 @@ export default function StaffPage() {
         const response = await apiClient.get('/staff');
         if (response.data) {
           const list = response.data.data ?? response.data;
-          if (Array.isArray(list)) setStaffList(list);
+          const arr = Array.isArray(list) ? list : list.staff ?? [];
+          setStaffList(arr);
         }
       } catch {
-        // Silently ignore refresh failure
+        console.error('Failed to refresh staff list');
       }
     } catch {
-      // Graceful degradation — still show success toast
-      toast.success('Staff member added successfully!');
+      toast.error('Failed to add staff member');
     }
     reset();
     setDialogOpen(false);

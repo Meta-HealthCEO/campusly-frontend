@@ -8,7 +8,8 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Users, Save, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
-import { mockStudents, mockClasses } from '@/lib/mock-data';
+import { useAuthStore } from '@/stores/useAuthStore';
+import type { Student, SchoolClass } from '@/types';
 import apiClient from '@/lib/api-client';
 
 type AttendanceStatus = 'present' | 'absent' | 'late';
@@ -21,33 +22,36 @@ interface StudentAttendance {
 const periods = ['1', '2', '3', '4', '5', '6'];
 
 export default function TeacherAttendancePage() {
-  const [selectedClass, setSelectedClass] = useState<string>('c1');
+  const { user } = useAuthStore();
+  const [selectedClass, setSelectedClass] = useState<string>('');
   const [selectedPeriod, setSelectedPeriod] = useState<string>('1');
   const [attendance, setAttendance] = useState<StudentAttendance[]>([]);
   const [saved, setSaved] = useState(false);
-  const [students, setStudents] = useState(mockStudents);
-  const [classes, setClasses] = useState(mockClasses);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<SchoolClass[]>([]);
 
   useEffect(() => {
     async function fetchData() {
       try {
         const [studentsRes, classesRes] = await Promise.allSettled([
           apiClient.get('/students'),
-          apiClient.get('/classes'),
+          apiClient.get('/academic/classes'),
         ]);
         if (studentsRes.status === 'fulfilled' && studentsRes.value.data) {
-          const data = studentsRes.value.data.data ?? studentsRes.value.data;
-          if (Array.isArray(data) && data.length > 0) setStudents(data);
+          const d = studentsRes.value.data.data ?? studentsRes.value.data;
+          const arr = Array.isArray(d) ? d : d.data ?? [];
+          if (arr.length > 0) setStudents(arr);
         }
         if (classesRes.status === 'fulfilled' && classesRes.value.data) {
-          const data = classesRes.value.data.data ?? classesRes.value.data;
-          if (Array.isArray(data) && data.length > 0) {
-            setClasses(data);
-            setSelectedClass(data[0]?.id ?? 'c1');
+          const d = classesRes.value.data.data ?? classesRes.value.data;
+          const arr = Array.isArray(d) ? d : d.data ?? [];
+          if (arr.length > 0) {
+            setClasses(arr);
+            setSelectedClass(arr[0]?.id ?? '');
           }
         }
       } catch {
-        console.warn('API unavailable, using mock data');
+        console.error('Failed to load attendance data');
       }
     }
     fetchData();

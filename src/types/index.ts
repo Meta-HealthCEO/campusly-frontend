@@ -650,3 +650,83 @@ export interface RegisterSchoolData {
   postalCode: string;
   schoolType: 'primary' | 'secondary' | 'combined';
 }
+
+// ─── School (Backend-aligned) ────────────────────────────────────────────────
+
+export interface SchoolAddress {
+  street: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  country: string;
+}
+
+export interface SchoolContactInfo {
+  email: string;
+  phone: string;
+  website?: string;
+}
+
+export interface SchoolSubscription {
+  tier: 'basic' | 'standard' | 'premium';
+  expiresAt: string;
+}
+
+export interface SchoolAcademicSettings {
+  academicYear: number;
+  terms: number;
+  gradingSystem: 'percentage' | 'letter' | 'gpa';
+}
+
+export type SchoolType = 'primary' | 'secondary' | 'combined' | 'special';
+
+export interface SchoolDocument {
+  id: string;
+  name: string;
+  address: SchoolAddress;
+  logo?: string;
+  contactInfo: SchoolContactInfo;
+  subscription: SchoolSubscription;
+  modulesEnabled: string[];
+  settings: SchoolAcademicSettings;
+  principal?: string;
+  emisNumber?: string;
+  type?: SchoolType;
+  isActive: boolean;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSchoolInput {
+  name: string;
+  address: SchoolAddress;
+  contactInfo: SchoolContactInfo;
+  subscription: SchoolSubscription;
+  settings: SchoolAcademicSettings;
+  logo?: string;
+  modulesEnabled?: string[];
+  principal?: string;
+  emisNumber?: string;
+  type?: SchoolType;
+}
+
+export interface UpdateSchoolInput {
+  name?: string;
+  address?: Partial<SchoolAddress>;
+  contactInfo?: Partial<SchoolContactInfo>;
+  subscription?: Partial<SchoolSubscription>;
+  settings?: Partial<SchoolAcademicSettings>;
+  logo?: string;
+  modulesEnabled?: string[];
+  principal?: string;
+  emisNumber?: string;
+  type?: SchoolType;
+  isActive?: boolean;
+}
+
+export interface UpdateSettingsInput {
+  academicYear?: number;
+  terms?: number;
+  gradingSystem?: 'percentage' | 'letter' | 'gpa';
+}

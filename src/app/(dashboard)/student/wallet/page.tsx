@@ -14,14 +14,10 @@ import {
   ShoppingBag,
   CreditCard,
 } from 'lucide-react';
-import {
-  mockWallets,
-  mockWalletTransactions,
-  mockTuckshopItems,
-  mockStudents,
-} from '@/lib/mock-data';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import apiClient from '@/lib/api-client';
+import { useAuthStore } from '@/stores/useAuthStore';
+import type { Wallet as WalletType, WalletTransaction, TuckshopItem } from '@/types';
 
 const transactionIcons: Record<string, typeof ArrowUpCircle> = {
   topup: ArrowUpCircle,
@@ -36,38 +32,51 @@ const transactionColors: Record<string, string> = {
 };
 
 export default function StudentWalletPage() {
-  const currentStudent = mockStudents[0];
-  const mockWallet = mockWallets.find((w) => w.studentId === currentStudent.id);
-  const mockTxns = mockWalletTransactions.filter((t) => t.walletId === mockWallet?.id);
-
-  const [wallet, setWallet] = useState(mockWallet);
-  const [transactions, setTransactions] = useState(mockTxns);
-  const [menuItems, setMenuItems] = useState(mockTuckshopItems);
+  const { user } = useAuthStore();
+  const [wallet, setWallet] = useState<WalletType | null>(null);
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  const [menuItems, setMenuItems] = useState<TuckshopItem[]>([]);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [walletRes, menuRes] = await Promise.allSettled([
-          apiClient.get(`/wallet/${currentStudent.id}`),
-          apiClient.get('/tuckshop/menu-items'),
-        ]);
-        if (walletRes.status === 'fulfilled' && walletRes.value.data) {
-          const data = walletRes.value.data.data ?? walletRes.value.data;
-          if (data) {
-            setWallet(data.wallet ?? data);
-            if (Array.isArray(data.transactions)) setTransactions(data.transactions);
+        // Find current student
+        const studentsRes = await apiClient.get('/students');
+        const studentsData = studentsRes.data.data ?? studentsRes.data;
+        const studentsList = Array.isArray(studentsData) ? studentsData : studentsData.data ?? [];
+        const me = studentsList.find((s: any) => s.userId === user?.id || s.user?._id === user?.id || s.user?.id === user?.id);
+
+        if (me) {
+          const sid = me.id ?? me._id;
+          const [walletRes, menuRes] = await Promise.allSettled([
+            apiClient.get(`/wallets/student/${sid}`),
+            apiClient.get('/tuck-shop/menu'),
+          ]);
+
+          if (walletRes.status === 'fulfilled' && walletRes.value.data) {
+            const d = walletRes.value.data.data ?? walletRes.value.data;
+            setWallet(d.wallet ?? d);
+            // If wallet has an ID, fetch transactions
+            const walletId = d.wallet?.id ?? d.wallet?._id ?? d.id ?? d._id;
+            if (walletId) {
+              try {
+                const txRes = await apiClient.get(`/wallets/${walletId}/transactions`);
+                const txData = txRes.data.data ?? txRes.data;
+                setTransactions(Array.isArray(txData) ? txData : txData.data ?? []);
+              } catch { /* no transactions */ }
+            }
+          }
+          if (menuRes.status === 'fulfilled' && menuRes.value.data) {
+            const d = menuRes.value.data.data ?? menuRes.value.data;
+            setMenuItems(Array.isArray(d) ? d : d.data ?? []);
           }
         }
-        if (menuRes.status === 'fulfilled' && menuRes.value.data) {
-          const data = menuRes.value.data.data ?? menuRes.value.data;
-          if (Array.isArray(data) && data.length > 0) setMenuItems(data);
-        }
       } catch {
-        console.warn('API unavailable, using mock data');
+        console.error('Failed to load wallet data');
       }
     }
-    fetchData();
-  }, []);
+    if (user?.id) fetchData();
+  }, [user?.id]);
 
   return (
     <div className="space-y-6">

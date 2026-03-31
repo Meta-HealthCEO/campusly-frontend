@@ -7,7 +7,6 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { mockStudents } from '@/lib/mock-data';
 import apiClient from '@/lib/api-client';
 import type { Student } from '@/types';
 
@@ -49,7 +48,7 @@ const columns: ColumnDef<Student>[] = [
 ];
 
 export default function StudentsPage() {
-  const [students, setStudents] = useState<Student[]>(mockStudents);
+  const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -58,10 +57,10 @@ export default function StudentsPage() {
         const response = await apiClient.get('/students');
         if (response.data) {
           const data = response.data.data ?? response.data;
-          if (Array.isArray(data) && data.length > 0) setStudents(data);
+          if (Array.isArray(data)) setStudents(data); else if (data?.data) setStudents(data.data);
         }
       } catch {
-        console.warn('API unavailable, using mock data');
+        console.error('Failed to load students');
       } finally {
         setLoading(false);
       }

@@ -11,32 +11,34 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Users, BookOpen } from 'lucide-react';
-import { mockClasses, mockStudents } from '@/lib/mock-data';
+import type { Student, SchoolClass } from '@/types';
 import { cn, getInitials } from '@/lib/utils';
 import apiClient from '@/lib/api-client';
 
 export default function TeacherClassesPage() {
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
-  const [classes, setClasses] = useState(mockClasses);
-  const [students, setStudents] = useState(mockStudents);
+  const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
 
   useEffect(() => {
     async function fetchData() {
       try {
         const [classesRes, studentsRes] = await Promise.allSettled([
-          apiClient.get('/classes'),
+          apiClient.get('/academic/classes'),
           apiClient.get('/students'),
         ]);
         if (classesRes.status === 'fulfilled' && classesRes.value.data) {
-          const data = classesRes.value.data.data ?? classesRes.value.data;
-          if (Array.isArray(data) && data.length > 0) setClasses(data);
+          const d = classesRes.value.data.data ?? classesRes.value.data;
+          const arr = Array.isArray(d) ? d : d.data ?? [];
+          if (arr.length > 0) setClasses(arr);
         }
         if (studentsRes.status === 'fulfilled' && studentsRes.value.data) {
-          const data = studentsRes.value.data.data ?? studentsRes.value.data;
-          if (Array.isArray(data) && data.length > 0) setStudents(data);
+          const d = studentsRes.value.data.data ?? studentsRes.value.data;
+          const arr = Array.isArray(d) ? d : d.data ?? [];
+          if (arr.length > 0) setStudents(arr);
         }
       } catch {
-        console.warn('API unavailable, using mock data');
+        console.error('Failed to load classes');
       }
     }
     fetchData();

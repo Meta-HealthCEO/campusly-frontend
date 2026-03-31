@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BarChartComponent } from '@/components/charts';
-import { mockTuckshopItems, mockDailySales } from '@/lib/mock-data';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import apiClient from '@/lib/api-client';
 import type { TuckshopItem } from '@/types';
@@ -62,17 +61,28 @@ const columns: ColumnDef<TuckshopItem>[] = [
 ];
 
 export default function TuckshopPage() {
-  const [menuItems, setMenuItems] = useState<TuckshopItem[]>(mockTuckshopItems);
-  const [dailySales, setDailySales] = useState(mockDailySales);
+  const [menuItems, setMenuItems] = useState<TuckshopItem[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [dailySales, setDailySales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await apiClient.get('/tuckshop/menu-items');
-        if (response.data) setMenuItems(response.data.data ?? response.data);
-      } catch (error) {
-        console.warn('API unavailable, using mock data');
+        const [menuRes, salesRes] = await Promise.all([
+          apiClient.get('/tuck-shop/menu'),
+          apiClient.get('/tuck-shop/sales/daily'),
+        ]);
+        if (menuRes.data) {
+          const d = menuRes.data.data ?? menuRes.data;
+          setMenuItems(Array.isArray(d) ? d : d.data ?? []);
+        }
+        if (salesRes.data) {
+          const d = salesRes.data.data ?? salesRes.data;
+          setDailySales(Array.isArray(d) ? d : d.data ?? []);
+        }
+      } catch {
+        console.error('Failed to load tuckshop data');
       } finally {
         setLoading(false);
       }

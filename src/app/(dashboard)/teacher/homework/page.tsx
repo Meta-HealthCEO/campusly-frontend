@@ -25,25 +25,20 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { Plus, BookOpen, Users, Calendar, FileText } from 'lucide-react';
-import {
-  mockHomework,
-  mockSubmissions,
-  mockSubjects,
-  mockClasses,
-  mockTeachers,
-} from '@/lib/mock-data';
+import { toast } from 'sonner';
+import { useAuthStore } from '@/stores/useAuthStore';
+import type { Homework, Subject, SchoolClass } from '@/types';
 import { formatDate } from '@/lib/utils';
 import { homeworkSchema, type HomeworkFormData } from '@/lib/validations';
 import apiClient from '@/lib/api-client';
 import Link from 'next/link';
 
-const currentTeacher = mockTeachers[0];
-
 export default function TeacherHomeworkPage() {
+  const { user } = useAuthStore();
   const [open, setOpen] = useState(false);
-  const [homeworkList, setHomeworkList] = useState(mockHomework);
-  const [subjects, setSubjects] = useState(mockSubjects);
-  const [classOptions, setClassOptions] = useState(mockClasses);
+  const [homeworkList, setHomeworkList] = useState<Homework[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [classOptions, setClassOptions] = useState<SchoolClass[]>([]);
 
   const {
     register,
@@ -60,23 +55,25 @@ export default function TeacherHomeworkPage() {
       try {
         const [hwRes, subjectsRes, classesRes] = await Promise.allSettled([
           apiClient.get('/homework'),
-          apiClient.get('/subjects'),
-          apiClient.get('/classes'),
+          apiClient.get('/academic/subjects'),
+          apiClient.get('/academic/classes'),
         ]);
         if (hwRes.status === 'fulfilled' && hwRes.value.data) {
           const data = hwRes.value.data.data ?? hwRes.value.data;
           if (Array.isArray(data)) setHomeworkList(data);
         }
         if (subjectsRes.status === 'fulfilled' && subjectsRes.value.data) {
-          const data = subjectsRes.value.data.data ?? subjectsRes.value.data;
-          if (Array.isArray(data) && data.length > 0) setSubjects(data);
+          const d = subjectsRes.value.data.data ?? subjectsRes.value.data;
+          const arr = Array.isArray(d) ? d : d.data ?? [];
+          if (arr.length > 0) setSubjects(arr);
         }
         if (classesRes.status === 'fulfilled' && classesRes.value.data) {
-          const data = classesRes.value.data.data ?? classesRes.value.data;
-          if (Array.isArray(data) && data.length > 0) setClassOptions(data);
+          const d = classesRes.value.data.data ?? classesRes.value.data;
+          const arr = Array.isArray(d) ? d : d.data ?? [];
+          if (arr.length > 0) setClassOptions(arr);
         }
       } catch {
-        console.warn('API unavailable, using mock data');
+        console.error('Failed to load homework data');
       }
     }
     fetchData();
@@ -88,14 +85,14 @@ export default function TeacherHomeworkPage() {
       const newHw = response.data.data ?? response.data;
       setHomeworkList((prev) => [newHw, ...prev]);
     } catch {
-      console.warn('API unavailable');
+      toast.error('Failed to create homework');
     }
     setOpen(false);
     reset();
   };
 
   const teacherHomework = homeworkList.filter(
-    (hw) => hw.teacherId === currentTeacher.id
+    (hw) => hw.teacherId === user?.id
   );
 
   return (
@@ -238,12 +235,8 @@ export default function TeacherHomeworkPage() {
       ) : (
         <div className="space-y-3">
           {teacherHomework.map((hw) => {
-            const submissions = mockSubmissions.filter(
-              (s) => s.homeworkId === hw.id
-            );
-            const gradedCount = submissions.filter(
-              (s) => s.status === 'graded'
-            ).length;
+            const submissionCount = 0; // TODO: fetch from API
+            const gradedCount = 0;
 
             return (
               <Link key={hw.id} href={`/teacher/homework/${hw.id}`}>
@@ -265,7 +258,7 @@ export default function TeacherHomeworkPage() {
                         <div className="text-right hidden sm:block">
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <Users className="h-3 w-3" />
-                            {submissions.length} submissions
+                            {submissionCount} submissions
                           </div>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <Calendar className="h-3 w-3" />
@@ -283,9 +276,9 @@ export default function TeacherHomeworkPage() {
                         >
                           {hw.status}
                         </Badge>
-                        {submissions.length > 0 && (
+                        {submissionCount > 0 && (
                           <Badge variant="outline">
-                            {gradedCount}/{submissions.length} graded
+                            {gradedCount}/{submissionCount} graded
                           </Badge>
                         )}
                       </div>

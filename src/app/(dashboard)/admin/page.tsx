@@ -6,30 +6,33 @@ import { StatCard } from '@/components/shared/StatCard';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChartComponent, BarChartComponent, PieChartComponent } from '@/components/charts';
-import { mockAdminStats, mockRevenueData, mockAttendanceByGrade, mockFeeStatusData } from '@/lib/mock-data';
 import { formatCurrency } from '@/lib/utils';
 import apiClient from '@/lib/api-client';
+import type { DashboardStats } from '@/types';
 
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState(mockAdminStats);
-  const [revenueData, setRevenueData] = useState(mockRevenueData);
-  const [attendanceData, setAttendanceData] = useState(mockAttendanceByGrade);
-  const [feeStatusData, setFeeStatusData] = useState(mockFeeStatusData);
+  const [stats, setStats] = useState<DashboardStats>({ totalStudents: 0, totalStaff: 0, revenueCollected: 0, collectionRate: 0, attendanceRate: 0, outstandingFees: 0, walletBalance: 0 });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [revenueData, setRevenueData] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [attendanceData, setAttendanceData] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [feeStatusData, setFeeStatusData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await apiClient.get('/report/dashboard');
+        const response = await apiClient.get('/reports/dashboard');
         if (response.data) {
           const d = response.data.data ?? response.data;
-          if (d.stats) setStats({ ...mockAdminStats, ...d.stats });
+          if (d.stats) setStats((prev) => ({ ...prev, ...d.stats }));
           if (d.revenueData) setRevenueData(d.revenueData);
           if (d.attendanceByGrade) setAttendanceData(d.attendanceByGrade);
           if (d.feeStatus) setFeeStatusData(d.feeStatus);
         }
       } catch {
-        console.warn('API unavailable, using mock data');
+        console.error('Failed to load dashboard data');
       } finally {
         setLoading(false);
       }

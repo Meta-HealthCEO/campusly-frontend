@@ -1,143 +1,208 @@
 'use client';
 
-import { use } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, CheckCircle2, Circle } from 'lucide-react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { SchoolProfileCard, SubscriptionBadge } from '@/components/school';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Checkbox } from '@/components/ui/checkbox';
-import { mockTenants, mockPlatformInvoices } from '@/lib/mock-data';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { CheckCircle2, Circle } from 'lucide-react';
 import { MODULES } from '@/lib/constants';
-import { formatCurrency, formatDate } from '@/lib/utils';
-import type { TenantStatus, SubscriptionTier } from '@/types';
-import { toast } from 'sonner';
+import { useSchoolStore } from '@/stores/useSchoolStore';
 
-const STATUS_STYLES: Record<TenantStatus, string> = {
-  active: 'bg-emerald-100 text-emerald-700',
-  trial: 'bg-blue-100 text-blue-700',
-  suspended: 'bg-red-100 text-red-700',
-  cancelled: 'bg-gray-100 text-gray-700',
-};
-
-const TIER_STYLES: Record<SubscriptionTier, string> = {
-  enterprise: 'bg-purple-100 text-purple-700',
-  growth: 'bg-indigo-100 text-indigo-700',
-  starter: 'bg-amber-100 text-amber-700',
-};
-
-const TIER_PRICE: Record<SubscriptionTier, number> = {
-  enterprise: 1499900,
-  growth: 799900,
-  starter: 299900,
-};
-
-export default function TenantDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function SchoolDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
   const router = useRouter();
+  const { school, schoolLoading, schoolError, fetchSchool, updateSchool, deleteSchool } =
+    useSchoolStore();
 
-  const tenant = mockTenants.find((t) => t.id === id);
-  if (!tenant) {
+  const [statusPending, setStatusPending] = useState(false);
+  const [deletePending, setDeletePending] = useState(false);
+
+  useEffect(() => {
+    fetchSchool(id);
+  }, [id, fetchSchool]);
+
+  const handleToggleStatus = async () => {
+    if (!school) return;
+    setStatusPending(true);
+    try {
+      const newActive = !school.isActive;
+      await updateSchool(id, { isActive: newActive });
+      await fetchSchool(id);
+      toast.success(`${school.name} has been ${newActive ? 'activated' : 'suspended'}.`);
+    } catch {
+      toast.error('Failed to update school status.');
+    } finally {
+      setStatusPending(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!school) return;
+    setDeletePending(true);
+    try {
+      await deleteSchool(id);
+      toast.success(`${school.name} has been deleted.`);
+      router.push('/superadmin/schools');
+    } catch {
+      toast.error('Failed to delete school.');
+      setDeletePending(false);
+    }
+  };
+
+  if (schoolLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <p className="text-muted-foreground text-lg">School not found.</p>
-        <Button variant="outline" onClick={() => router.back()}>Go Back</Button>
+      <div className="flex items-center justify-center py-24">
+        <p className="text-muted-foreground">Loading school...</p>
       </div>
     );
   }
 
-  const tenantInvoices = mockPlatformInvoices.filter((inv) => inv.tenantId === id);
-
-  const handleToggleStatus = () => {
-    const action = tenant.status === 'suspended' ? 'activated' : 'suspended';
-    toast.success(`${tenant.name} has been ${action}`);
-  };
+  if (schoolError || !school || school.id !== id) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4">
+        <p className="text-muted-foreground text-lg">
+          {schoolError ?? 'School not found.'}
+        </p>
+        <Button variant="outline" onClick={() => router.push('/superadmin/schools')}>
+          Back to Schools
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
+        <Button variant="ghost" size="icon" onClick={() => router.push('/superadmin/schools')}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <PageHeader title={tenant.name} description={`${tenant.city}, ${tenant.province}`} />
+        <PageHeader
+          title={school.name}
+          description={`${school.address.city}, ${school.address.province}`}
+        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        {/* School Info */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>School Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-muted-foreground">Admin</p>
-                <p className="font-medium">{tenant.adminName}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Email</p>
-                <p className="font-medium">{tenant.adminEmail}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Students</p>
-                <p className="font-medium">{tenant.studentCount.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Joined</p>
-                <p className="font-medium">{formatDate(tenant.createdAt)}</p>
-              </div>
-            </div>
-            <Separator />
-            <div className="flex items-center gap-3">
-              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium capitalize ${STATUS_STYLES[tenant.status]}`}>
-                {tenant.status}
-              </span>
-              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium capitalize ${TIER_STYLES[tenant.tier]}`}>
-                {tenant.tier}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="lg:col-span-2">
+          <SchoolProfileCard school={school} />
+        </div>
 
-        {/* Subscription */}
         <Card>
           <CardHeader>
             <CardTitle>Subscription</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <p className="text-xs text-muted-foreground">Plan</p>
-              <p className="font-semibold capitalize text-lg">{tenant.tier}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Monthly Rate</p>
-              <p className="font-semibold text-lg">
-                {tenant.status === 'trial' ? 'Free Trial' : formatCurrency(TIER_PRICE[tenant.tier])}
-              </p>
-            </div>
-            {tenant.trialEndsAt && (
-              <div>
-                <p className="text-xs text-muted-foreground">Trial Ends</p>
-                <p className="font-medium text-amber-600">{formatDate(tenant.trialEndsAt)}</p>
-              </div>
+          <CardContent className="space-y-4">
+            {school.subscription ? (
+              <>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Plan</p>
+                  <SubscriptionBadge
+                    tier={school.subscription.tier}
+                    expiresAt={school.subscription.expiresAt}
+                  />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Expires</p>
+                  <p className="font-medium text-sm">
+                    {new Date(school.subscription.expiresAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">No subscription data.</p>
             )}
-            <Separator />
-            <div className="flex flex-col gap-2">
-              <Button
-                variant={tenant.status === 'suspended' ? 'default' : 'destructive'}
-                size="sm"
-                onClick={handleToggleStatus}
-              >
-                {tenant.status === 'suspended' ? 'Activate School' : 'Suspend School'}
-              </Button>
+
+            <div className="pt-2 space-y-2">
+              <Dialog>
+                <DialogTrigger
+                  render={
+                    <Button
+                      variant={school.isActive ? 'destructive' : 'default'}
+                      size="sm"
+                      className="w-full"
+                    />
+                  }
+                >
+                  {school.isActive ? 'Suspend School' : 'Activate School'}
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>
+                      {school.isActive ? 'Suspend' : 'Activate'} School
+                    </DialogTitle>
+                    <DialogDescription>
+                      {school.isActive
+                        ? `Are you sure you want to suspend ${school.name}? Users will lose access.`
+                        : `Are you sure you want to activate ${school.name}?`}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button
+                      variant={school.isActive ? 'destructive' : 'default'}
+                      onClick={handleToggleStatus}
+                      disabled={statusPending}
+                    >
+                      {statusPending
+                        ? 'Saving...'
+                        : school.isActive
+                        ? 'Suspend'
+                        : 'Activate'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog>
+                <DialogTrigger
+                  render={
+                    <Button variant="outline" size="sm" className="w-full text-destructive" />
+                  }
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete School
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Delete School</DialogTitle>
+                    <DialogDescription>
+                      This action is permanent. All data for{' '}
+                      <strong>{school.name}</strong> will be deleted. This cannot be
+                      undone.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button
+                      variant="destructive"
+                      onClick={handleDelete}
+                      disabled={deletePending}
+                    >
+                      {deletePending ? 'Deleting...' : 'Delete Permanently'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Modules */}
       <Card>
         <CardHeader>
           <CardTitle>Enabled Modules</CardTitle>
@@ -145,13 +210,14 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {MODULES.map((mod) => {
-              const enabled = tenant.enabledModules.includes(mod.id);
+              const enabled = school.modulesEnabled.includes(mod.id);
               return (
                 <div key={mod.id} className="flex items-center gap-3 rounded-lg border p-3">
-                  <Checkbox
-                    checked={enabled}
-                    onCheckedChange={() => toast.info(`Module toggled: ${mod.name}`)}
-                  />
+                  {enabled ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  ) : (
+                    <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
+                  )}
                   <div>
                     <p className="text-sm font-medium">{mod.name}</p>
                     <p className="text-xs text-muted-foreground">{mod.description}</p>
@@ -163,64 +229,29 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
         </CardContent>
       </Card>
 
-      {/* Usage Stats */}
       <Card>
         <CardHeader>
-          <CardTitle>Usage Stats</CardTitle>
+          <CardTitle>Academic Settings</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div className="rounded-lg bg-muted/50 p-4 text-center">
-              <p className="text-2xl font-bold">{tenant.studentCount}</p>
-              <p className="text-xs text-muted-foreground mt-1">Students</p>
+              <p className="text-2xl font-bold">{school.settings?.academicYear ?? '—'}</p>
+              <p className="text-xs text-muted-foreground mt-1">Academic Year</p>
             </div>
             <div className="rounded-lg bg-muted/50 p-4 text-center">
-              <p className="text-2xl font-bold">{tenant.enabledModules.length}</p>
-              <p className="text-xs text-muted-foreground mt-1">Active Modules</p>
+              <p className="text-2xl font-bold">{school.settings?.terms ?? '—'}</p>
+              <p className="text-xs text-muted-foreground mt-1">Terms</p>
             </div>
             <div className="rounded-lg bg-muted/50 p-4 text-center">
-              <p className="text-2xl font-bold">{tenantInvoices.filter(i => i.status === 'paid').length}</p>
-              <p className="text-xs text-muted-foreground mt-1">Paid Invoices</p>
-            </div>
-            <div className="rounded-lg bg-muted/50 p-4 text-center">
-              <p className="text-2xl font-bold">{tenantInvoices.length}</p>
-              <p className="text-xs text-muted-foreground mt-1">Total Invoices</p>
+              <p className="text-2xl font-bold capitalize">
+                {school.settings?.gradingSystem ?? '—'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Grading</p>
             </div>
           </div>
         </CardContent>
       </Card>
-
-      {/* Billing History */}
-      {tenantInvoices.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Billing History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {tenantInvoices.map((inv) => (
-                <div key={inv.id} className="flex items-center justify-between rounded-lg border p-3">
-                  <div>
-                    <p className="text-sm font-medium">{inv.invoiceNumber}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(inv.issuedDate)}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium">{formatCurrency(inv.amount)}</span>
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${{
-                      paid: 'bg-emerald-100 text-emerald-700',
-                      sent: 'bg-blue-100 text-blue-700',
-                      overdue: 'bg-red-100 text-red-700',
-                      draft: 'bg-gray-100 text-gray-700',
-                    }[inv.status]}`}>
-                      {inv.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
