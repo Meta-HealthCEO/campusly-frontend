@@ -1,0 +1,526 @@
+﻿=== Academic ===
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.post(
+  router.get(
+  router.get(
+  router.get(
+  router.post('/exams', authenticate, authorize('super_admin', 'school_admin'), validate(examCreateSchema), AcademicController.createExam);
+  router.get('/exams', authenticate, AcademicController.listExams);
+  router.get('/exams/:id', authenticate, AcademicController.getExam);
+  router.put('/exams/:id', authenticate, authorize('super_admin', 'school_admin'), validate(examUpdateSchema), AcademicController.updateExam);
+  router.delete('/exams/:id', authenticate, authorize('super_admin', 'school_admin'), AcademicController.deleteExam);
+  router.post('/exam-timetable', authenticate, authorize('super_admin', 'school_admin'), validate(examTimetableCreateSchema), AcademicController.createExamTimetable);
+  router.get('/exam-timetable/exam/:examId', authenticate, AcademicController.listExamTimetable);
+  router.get('/exam-timetable/:id', authenticate, AcademicController.getExamTimetable);
+  router.put('/exam-timetable/:id', authenticate, authorize('super_admin', 'school_admin'), validate(examTimetableUpdateSchema), AcademicController.updateExamTimetable);
+  router.delete('/exam-timetable/:id', authenticate, authorize('super_admin', 'school_admin'), AcademicController.deleteExamTimetable);
+  router.post('/past-papers', authenticate, authorize('super_admin', 'school_admin', 'teacher'), validate(pastPaperCreateSchema), AcademicController.createPastPaper);
+  router.get('/past-papers', authenticate, AcademicController.listPastPapers);
+  router.delete('/past-papers/:id', authenticate, authorize('super_admin', 'school_admin'), AcademicController.deletePastPaper);
+  router.post('/subject-weightings', authenticate, authorize('super_admin', 'school_admin'), validate(subjectWeightingCreateSchema), AcademicController.createSubjectWeighting);
+  router.get('/subject-weightings', authenticate, AcademicController.listSubjectWeightings);
+  router.put('/subject-weightings/:id', authenticate, authorize('super_admin', 'school_admin'), validate(subjectWeightingUpdateSchema), AcademicController.updateSubjectWeighting);
+  router.delete('/subject-weightings/:id', authenticate, authorize('super_admin', 'school_admin'), AcademicController.deleteSubjectWeighting);
+  router.post('/remedials', authenticate, authorize('super_admin', 'school_admin', 'teacher'), validate(remedialCreateSchema), AcademicController.createRemedial);
+  router.get('/remedials', authenticate, authorize('super_admin', 'school_admin', 'teacher'), AcademicController.listRemedials);
+  router.get('/remedials/:id', authenticate, authorize('super_admin', 'school_admin', 'teacher'), AcademicController.getRemedial);
+  router.put('/remedials/:id', authenticate, authorize('super_admin', 'school_admin', 'teacher'), validate(remedialUpdateSchema), AcademicController.updateRemedial);
+  router.delete('/remedials/:id', authenticate, authorize('super_admin', 'school_admin'), AcademicController.deleteRemedial);
+  router.get('/promotion/student/:studentId', authenticate, authorize('super_admin', 'school_admin', 'teacher'), AcademicController.calculatePromotion);
+  router.get('/promotion/grade/:gradeId', authenticate, authorize('super_admin', 'school_admin'), AcademicController.promotionReport);
+
+=== Achiever ===
+  router.post(
+  router.get(
+  router.get(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.post(
+  router.get(
+
+=== AfterCare ===
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.patch(
+  router.get(
+  router.get(
+  router.delete(
+  router.post(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.patch(
+
+=== AITools ===
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.post(
+  router.post(
+  router.post(
+  router.get(
+  router.post(
+  router.post(
+  router.get(
+
+=== Announcement ===
+  router.post(
+  router.get(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.patch(
+  router.patch(
+
+=== Attendance ===
+  router.post(
+  router.post(
+  router.get(
+  router.get(
+  router.get(
+  router.get(
+  router.get(
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+
+=== Audit ===
+  router.get(
+  router.get(
+
+=== Auth ===
+  router.post('/register', authRateLimiter, validate(registerSchema), AuthController.register);
+  router.post('/login', authRateLimiter, validate(loginSchema), AuthController.login);
+  router.post('/refresh', AuthController.refresh);
+  router.post('/logout', authenticate, AuthController.logout);
+  router.post('/forgot-password', authRateLimiter, validate(forgotPasswordSchema), AuthController.forgotPassword);
+  router.post('/reset-password', authRateLimiter, validate(resetPasswordSchema), AuthController.resetPassword);
+  router.get('/me', authenticate, AuthController.getMe);
+
+=== Communication ===
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.get(
+  router.get(
+
+=== Consent ===
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+
+=== Event ===
+  router.post(
+  router.get(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.put(
+  router.get(
+  router.delete(
+  router.post(
+  router.get(
+  router.patch(
+  router.post(
+  router.get(
+  router.patch(
+  router.patch(
+  router.post(
+  router.get(
+  router.get(
+  router.post(
+  router.get(
+  router.delete(
+
+=== Fee ===
+  router.post(
+  router.get(
+  router.get(
+  router.patch(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.patch(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.get(
+  router.post(
+  router.get(
+  router.get(
+  router.post(
+  router.get(
+  router.get(
+  router.patch(
+  router.delete(
+  router.get(
+  router.post(
+  router.get(
+  router.post(
+  router.post(
+  router.post(
+  router.post(
+  router.get(
+  router.post(
+  router.post(
+  router.get(
+  router.post(
+  router.post(
+  router.patch(
+  router.get(
+  router.post(
+  router.get(
+  router.get(
+
+=== Fundraising ===
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.delete(
+  router.post(
+  router.post(
+  router.post(
+  router.get(
+  router.get(
+  router.post(
+  router.get(
+  router.get(
+  router.post(
+  router.get(
+  router.post(
+  router.get(
+  router.get(
+  router.patch(
+  router.post(
+
+=== Homework ===
+  router.post(
+  router.get(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.patch(
+
+=== Learning ===
+  router.post(
+  router.get('/quizzes', authenticate, LearningController.listQuizzes);
+  router.get('/quizzes/:id', authenticate, LearningController.getQuiz);
+  router.put(
+  router.patch(
+  router.delete(
+  router.post(
+  router.get(
+  router.post(
+  router.get('/materials', authenticate, LearningController.getStudyMaterials);
+  router.get('/materials/:id', authenticate, LearningController.getStudyMaterial);
+  router.put(
+  router.delete(
+  router.post('/materials/:id/download', authenticate, LearningController.downloadStudyMaterial);
+  router.post(
+  router.get('/rubrics', authenticate, LearningController.listRubrics);
+  router.get('/rubrics/:id', authenticate, LearningController.getRubric);
+  router.put(
+  router.delete(
+  router.post(
+  router.post(
+  router.get(
+  router.get(
+  router.post(
+  router.post(
+  router.post(
+  router.post(
+  router.get('/submissions/:id', authenticate, LearningController.getSubmission);
+  router.get(
+  router.post(
+  router.get(
+
+=== Library ===
+  router.post('/books', authenticate, authorize('school_admin', 'super_admin'), validate(createBookSchema), LibraryController.createBook);
+  router.get('/books', authenticate, LibraryController.listBooks);
+  router.get('/books/:id', authenticate, LibraryController.getBook);
+  router.put('/books/:id', authenticate, authorize('school_admin', 'super_admin'), validate(updateBookSchema), LibraryController.updateBook);
+  router.delete('/books/:id', authenticate, authorize('school_admin', 'super_admin'), LibraryController.deleteBook);
+  router.post('/loans/issue', authenticate, authorize('school_admin', 'super_admin', 'teacher'), validate(issueBookSchema), LibraryController.issueBook);
+  router.patch('/loans/:id/return', authenticate, authorize('school_admin', 'super_admin', 'teacher'), validate(returnBookSchema), LibraryController.returnBook);
+  router.patch('/loans/:id/lost', authenticate, authorize('school_admin', 'super_admin'), LibraryController.markLost);
+  router.get('/loans/overdue', authenticate, authorize('school_admin', 'super_admin', 'teacher'), LibraryController.getOverdueLoans);
+  router.get('/loans/student/:studentId', authenticate, LibraryController.getStudentLoans);
+  router.post('/challenges', authenticate, authorize('school_admin', 'super_admin', 'teacher'), validate(createChallengeSchema), LibraryController.createChallenge);
+  router.get('/challenges', authenticate, LibraryController.listChallenges);
+  router.get('/challenges/:id', authenticate, LibraryController.getChallenge);
+  router.put('/challenges/:id', authenticate, authorize('school_admin', 'super_admin', 'teacher'), validate(updateChallengeSchema), LibraryController.updateChallenge);
+  router.post('/challenges/:id/join', authenticate, LibraryController.joinChallenge);
+  router.delete('/challenges/:id', authenticate, authorize('school_admin', 'super_admin'), LibraryController.deleteChallenge);
+  router.post('/reading-logs', authenticate, validate(createReadingLogSchema), LibraryController.createReadingLog);
+  router.get('/reading-logs/student/:studentId', authenticate, LibraryController.getStudentReadingLogs);
+  router.get('/leaderboard/:challengeId', authenticate, LibraryController.getLeaderboard);
+
+=== LostFound ===
+  router.post(
+  router.get(
+  router.get(
+  router.get(
+  router.post(
+  router.post(
+  router.post(
+  router.get(
+  router.post(
+  router.delete(
+
+=== Migration ===
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.post(
+  router.get(
+  router.get(
+  router.post(
+  router.get(
+
+=== Notification ===
+  router.post(
+  router.get(
+  router.get(
+  router.patch(
+  router.patch(
+  router.post(
+  router.get(
+  router.put(
+
+=== Parent ===
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.post(
+
+=== Report ===
+  router.get(
+  router.get(
+  router.get(
+  router.get(
+  router.get(
+  router.get(
+  router.get(
+
+=== School ===
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.patch(
+
+=== Sport ===
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.post(
+  router.put(
+  router.get(
+  router.get(
+  router.post(
+  router.get(
+
+=== Staff ===
+  router.get('/', authenticate, authorize('super_admin', 'school_admin'), StaffController.list);
+  router.post('/', authenticate, authorize('super_admin', 'school_admin'), StaffController.create);
+
+=== Student ===
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.patch(
+
+=== SuperAdmin ===
+  router.get('/stats', SuperAdminController.getPlatformStats);
+  router.post('/tenants/onboard', validate(onboardSchoolSchema), SuperAdminController.onboardSchool);
+  router.get('/tenants', SuperAdminController.getAllTenants);
+  router.get('/tenants/:id', SuperAdminController.getTenantDetail);
+  router.patch(
+  router.patch(
+  router.post(
+  router.post(
+  router.get('/revenue', SuperAdminController.getPlatformRevenue);
+  router.get('/tenants/:tenantId/invoices', SuperAdminController.getInvoicesByTenant);
+  router.post(
+  router.get('/tickets', SuperAdminController.listSupportTickets);
+  router.get('/tickets/:id', SuperAdminController.getTicketDetail);
+  router.post(
+  router.patch(
+  router.patch(
+
+=== Transport ===
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.patch(
+  router.post(
+  router.get(
+  router.get(
+  router.patch(
+  router.delete(
+
+=== TuckShop ===
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.patch(
+  router.post(
+  router.get(
+  router.get(
+  router.get(
+
+=== Uniform ===
+  router.post(
+  router.get(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.patch(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.get(
+  router.patch(
+  router.patch(
+  router.post(
+  router.get(
+  router.put(
+  router.delete(
+  router.post(
+  router.get(
+  router.get(
+  router.patch(
+  router.delete(
+  router.get(
+
+=== Wallet ===
+  router.post(
+  router.get(
+  router.post(
+  router.post(
+  router.get(
+  router.post(
+  router.post(
+  router.patch(
+
