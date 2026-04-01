@@ -55,7 +55,8 @@ export function QuestionFilters({ filters, onFiltersChange, subjects, frameworks
       <SearchInput
         placeholder="Search questions..."
         className="w-full sm:w-64"
-        onSearch={(q) => onFiltersChange({ ...filters, tags: q ? [q] : undefined })}
+        value={filters.search ?? ''}
+        onChange={(q) => onFiltersChange({ ...filters, search: q || undefined })}
       />
 
       <Select

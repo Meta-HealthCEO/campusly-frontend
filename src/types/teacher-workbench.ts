@@ -58,13 +58,13 @@ export type MarkingPriority = 'high' | 'medium' | 'low';
 export interface CurriculumFramework {
   id: string;
   _id?: string;
-  name: string;
-  subjectId: string;
-  gradeId: string;
   schoolId: string;
+  name: string;
+  description: string;
+  isDefault: boolean;
+  createdBy: string;
+  gradeId: string;
   term: number;
-  year: number;
-  topics: CurriculumTopic[];
   createdAt: string;
   updatedAt: string;
 }
@@ -72,24 +72,36 @@ export interface CurriculumFramework {
 export interface CurriculumTopic {
   id: string;
   _id?: string;
+  schoolId: string;
   frameworkId: string;
+  subjectId: string;
+  gradeLevel: number;
+  parentTopicId?: string;
+  name: string;
   title: string;
-  description?: string;
+  description: string;
+  term: number;
+  orderIndex: number;
   cognitiveLevel: CognitiveLevel;
+  estimatedPeriods: number;
   estimatedHours: number;
-  order: number;
   children?: CurriculumTopic[];
 }
 
 export interface CurriculumCoverage {
   id: string;
   _id?: string;
+  schoolId: string;
+  teacherId: string;
   topicId: string;
   classId: string;
-  teacherId: string;
   status: CoverageStatus;
-  coveredAt?: string;
-  notes?: string;
+  dateCovered: string | null;
+  coveredAt: string | null;
+  notes: string;
+  linkedLessonPlanId: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CoverageReport {
@@ -115,33 +127,49 @@ export interface MCQOption {
 export interface BankQuestion {
   id: string;
   _id?: string;
-  subjectId: string;
-  gradeId: string;
   schoolId: string;
-  topicId?: string;
+  teacherId: string;
+  frameworkId: string;
+  subjectId: string;
+  gradeLevel: number;
+  gradeId: string;
+  topicId: string | null;
+  questionText: string;
+  questionType: QuestionType;
+  /** Alias for questionType — used by some components */
   type: QuestionType;
+  marks: number;
+  /** Alias for marks — used by some components */
+  totalMarks: number;
   difficulty: Difficulty;
   cognitiveLevel: CognitiveLevel;
-  source: QuestionSource;
-  questionText: string;
-  options?: MCQOption[];
-  correctAnswer?: string;
-  totalMarks: number;
+  modelAnswer: string;
+  /** Alias for modelAnswer — used by some components */
+  correctAnswer: string;
+  markingNotes: string;
+  images: string[];
+  options: MCQOption[];
   tags: string[];
-  createdById: string;
+  source: QuestionSource;
+  usageCount: number;
+  lastUsedDate: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface QuestionFilters {
   subjectId?: string;
+  gradeLevel?: number;
   gradeId?: string;
   topicId?: string;
-  type?: QuestionType;
   difficulty?: Difficulty;
   cognitiveLevel?: CognitiveLevel;
+  questionType?: QuestionType;
+  /** Alias for questionType — used by some components */
+  type?: QuestionType;
   source?: QuestionSource;
-  tags?: string[];
+  tags?: string;
+  search?: string;
 }
 
 // ------------------------------------------------------------
@@ -154,7 +182,7 @@ export interface MarkCriterion {
 }
 
 export interface MemoAnswer {
-  questionNumber: string;
+  questionNumber: number;
   expectedAnswer: string;
   markAllocation: MarkCriterion[];
   commonMistakes: string[];
@@ -170,10 +198,11 @@ export interface PaperMemo {
   id: string;
   _id?: string;
   paperId: string;
+  schoolId: string;
+  teacherId: string;
   sections: MemoSection[];
   totalMarks: number;
   status: MemoStatus;
-  createdById: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -193,10 +222,11 @@ export interface PaperModeration {
   id: string;
   _id?: string;
   paperId: string;
+  schoolId: string;
   submittedBy: string;
   submittedAt: string;
-  moderatorId?: string;
-  moderatedAt?: string;
+  moderatorId: string | null;
+  moderatedAt: string | null;
   status: ModerationStatus;
   comments: string;
   moderationHistory: ModerationEntry[];
@@ -207,21 +237,21 @@ export interface PaperModeration {
 // ------------------------------------------------------------
 
 export interface PlannedAssessment {
-  id: string;
-  _id?: string;
   title: string;
   type: AssessmentPlanType;
   plannedDate: string;
   marks: number;
   weight: number;
   topicIds: string[];
-  assessmentId?: string;
+  assessmentId: string | null;
   status: PlanStatus;
 }
 
 export interface AssessmentPlan {
   id: string;
   _id?: string;
+  schoolId: string;
+  teacherId: string;
   subjectId: string;
   classId: string;
   term: number;
@@ -233,14 +263,16 @@ export interface AssessmentPlan {
 
 export interface DateClash {
   date: string;
-  assessments: PlannedAssessment[];
+  assessments: { title: string; subjectName: string; type: AssessmentPlanType }[];
 }
 
 export interface WeightingInfo {
   subjectId: string;
   subjectName: string;
-  requiredWeight: number;
-  actualWeight: number;
+  requiredFormalWeight: number;
+  actualFormalWeight: number;
+  requiredInformalWeight: number;
+  actualInformalWeight: number;
   totalWeight: number;
 }
 
@@ -267,9 +299,9 @@ export interface MarkingItem {
 
 export interface Student360Academic {
   termAverage: number;
-  trend: 'up' | 'down' | 'stable';
-  subjects: { subjectName: string; average: number }[];
-  markHistory: { date: string; mark: number; assessmentName: string }[];
+  trend: 'improving' | 'declining' | 'stable';
+  subjects: { name: string; mark: number; grade: string; classAvg: number }[];
+  markHistory: { date: string; mark: number }[];
 }
 
 export interface Student360Attendance {
@@ -278,13 +310,13 @@ export interface Student360Attendance {
   absent: number;
   late: number;
   excused: number;
-  pattern?: string;
+  pattern: string | null;
 }
 
 export interface Student360Behaviour {
   netMeritScore: number;
-  recentIncidents: { date: string; description: string; severity: string }[];
-  recentMerits: { date: string; description: string; points: number }[];
+  recentIncidents: { date: string; type: string; severity: string; description: string }[];
+  recentMerits: { date: string; type: string; category: string; points: number; reason: string }[];
 }
 
 export interface Student360Homework {
@@ -295,7 +327,7 @@ export interface Student360Homework {
 }
 
 export interface Student360Communication {
-  lastContactDate?: string;
+  lastContactDate: string | null;
   messageCountThisTerm: number;
 }
 

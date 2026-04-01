@@ -46,13 +46,13 @@ export function QuestionBankBrowser({
   filters,
   onFiltersChange,
 }: QuestionBankBrowserProps) {
-  function handleDifficulty(val: string) {
-    const next = val === 'all' ? undefined : (val as Difficulty);
+  function handleDifficulty(val: string | null) {
+    const next = !val || val === 'all' ? undefined : (val as Difficulty);
     onFiltersChange({ ...filters, difficulty: next });
   }
 
-  function handleCognitive(val: string) {
-    const next = val === 'all' ? undefined : (val as CognitiveLevel);
+  function handleCognitive(val: string | null) {
+    const next = !val || val === 'all' ? undefined : (val as CognitiveLevel);
     onFiltersChange({ ...filters, cognitiveLevel: next });
   }
 
