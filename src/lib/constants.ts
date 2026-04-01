@@ -6,6 +6,8 @@ import {
   Home, CreditCard, Receipt, Megaphone, Ticket,
   Building2, HeadphonesIcon, PlusCircle, PackageSearch,
   Heart, Upload, Shirt, Trophy, Sparkles,
+  Compass, Target,
+  Wrench, Database, FileEdit, CheckCircle, ClipboardCheck,
   type LucideIcon
 } from 'lucide-react';
 
@@ -71,6 +73,25 @@ export const ROUTES = {
   STUDENT_ACHIEVEMENTS: '/student/achievements',
   STUDENT_WALLET: '/student/wallet',
 
+  // Student — Careers
+  STUDENT_CAREERS: '/student/careers',
+  STUDENT_CAREERS_EXPLORE: '/student/careers/explore',
+  STUDENT_CAREERS_APPLICATIONS: '/student/careers/applications',
+  STUDENT_CAREERS_APTITUDE: '/student/careers/aptitude',
+  STUDENT_CAREERS_CAREERS: '/student/careers/careers',
+  STUDENT_CAREERS_SUBJECTS: '/student/careers/subjects',
+  STUDENT_CAREERS_BURSARIES: '/student/careers/bursaries',
+  STUDENT_PORTFOLIO: '/student/portfolio',
+
+  // Parent — Careers
+  PARENT_CAREERS: '/parent/careers',
+  PARENT_PORTFOLIO: '/parent/portfolio',
+
+  // Admin — Careers
+  ADMIN_CAREERS_UNIVERSITIES: '/admin/careers/universities',
+  ADMIN_CAREERS_PROGRAMMES: '/admin/careers/programmes',
+  ADMIN_CAREERS_BURSARIES: '/admin/careers/bursaries',
+
   // Teacher
   TEACHER_DASHBOARD: '/teacher',
   TEACHER_ATTENDANCE: '/teacher/attendance',
@@ -85,6 +106,15 @@ export const ROUTES = {
   TEACHER_AI_CREATE_PAPER: '/teacher/ai-tools/create-paper',
   TEACHER_AI_GRADING: '/teacher/ai-tools/grading',
   TEACHER_AI_PAPERS: '/teacher/ai-tools/papers',
+
+  // Teacher Workbench
+  TEACHER_WORKBENCH: '/teacher/workbench',
+  TEACHER_WORKBENCH_CURRICULUM: '/teacher/workbench/curriculum',
+  TEACHER_WORKBENCH_QUESTION_BANK: '/teacher/workbench/question-bank',
+  TEACHER_WORKBENCH_PAPER_BUILDER: '/teacher/workbench/papers/builder',
+  TEACHER_WORKBENCH_MODERATION: '/teacher/workbench/papers/moderation',
+  TEACHER_WORKBENCH_MARKING_HUB: '/teacher/workbench/marking-hub',
+  TEACHER_WORKBENCH_PLANNER: '/teacher/workbench/planner',
 
   // Tuckshop
   TUCKSHOP_POS: '/tuckshop',
@@ -144,6 +174,14 @@ export const ADMIN_NAV: NavItem[] = [
     ],
   },
   { label: 'Consent', href: ROUTES.ADMIN_CONSENT, icon: Shield, module: 'consent' },
+  {
+    label: 'Career Guidance', href: ROUTES.ADMIN_CAREERS_UNIVERSITIES, icon: Compass, module: 'careers',
+    children: [
+      { label: 'Universities', href: ROUTES.ADMIN_CAREERS_UNIVERSITIES, icon: GraduationCap },
+      { label: 'Programmes', href: ROUTES.ADMIN_CAREERS_PROGRAMMES, icon: BookOpen },
+      { label: 'Bursaries', href: ROUTES.ADMIN_CAREERS_BURSARIES, icon: DollarSign },
+    ],
+  },
   { label: 'Reports', href: ROUTES.ADMIN_REPORTS, icon: BarChart3 },
   { label: 'Settings', href: ROUTES.ADMIN_SETTINGS, icon: Settings },
 ];
@@ -161,6 +199,13 @@ export const PARENT_NAV: NavItem[] = [
   { label: 'Transport', href: ROUTES.PARENT_TRANSPORT, icon: Bus, module: 'transport' },
   { label: 'Lost & Found', href: ROUTES.PARENT_LOST_FOUND, icon: PackageSearch },
   { label: 'Library', href: ROUTES.PARENT_LIBRARY, icon: BookMarked, module: 'library' },
+  {
+    label: 'Career Guidance', href: ROUTES.PARENT_CAREERS, icon: Compass, module: 'careers',
+    children: [
+      { label: 'Overview', href: ROUTES.PARENT_CAREERS, icon: Compass },
+      { label: 'Portfolio', href: ROUTES.PARENT_PORTFOLIO, icon: BookOpen },
+    ],
+  },
 ];
 
 export const STUDENT_NAV: NavItem[] = [
@@ -171,6 +216,17 @@ export const STUDENT_NAV: NavItem[] = [
   { label: 'Library', href: ROUTES.STUDENT_LIBRARY, icon: BookMarked, module: 'library' },
   { label: 'Achievements', href: ROUTES.STUDENT_ACHIEVEMENTS, icon: Award },
   { label: 'Wallet', href: ROUTES.STUDENT_WALLET, icon: Wallet, module: 'wallet' },
+  {
+    label: 'Career Guidance', href: ROUTES.STUDENT_CAREERS, icon: Compass, module: 'careers',
+    children: [
+      { label: 'Dashboard', href: ROUTES.STUDENT_CAREERS, icon: Compass },
+      { label: 'Explore Programmes', href: ROUTES.STUDENT_CAREERS_EXPLORE, icon: GraduationCap },
+      { label: 'My Applications', href: ROUTES.STUDENT_CAREERS_APPLICATIONS, icon: FileText },
+      { label: 'Aptitude Test', href: ROUTES.STUDENT_CAREERS_APTITUDE, icon: Target },
+      { label: 'Bursaries', href: ROUTES.STUDENT_CAREERS_BURSARIES, icon: DollarSign },
+      { label: 'Portfolio', href: ROUTES.STUDENT_PORTFOLIO, icon: BookOpen },
+    ],
+  },
 ];
 
 export const SUPERADMIN_NAV: NavItem[] = [
@@ -200,6 +256,22 @@ export const TEACHER_NAV: NavItem[] = [
   { label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
   { label: 'Communication', href: ROUTES.TEACHER_COMMUNICATION, icon: Megaphone, module: 'communication' },
   { label: 'Reports', href: ROUTES.TEACHER_REPORTS, icon: BarChart3 },
+  {
+    label: 'Workbench',
+    href: ROUTES.TEACHER_WORKBENCH,
+    icon: Wrench,
+    badge: 'NEW',
+    module: 'teacher_workbench',
+    children: [
+      { label: 'Overview', href: ROUTES.TEACHER_WORKBENCH, icon: LayoutDashboard },
+      { label: 'Curriculum', href: ROUTES.TEACHER_WORKBENCH_CURRICULUM, icon: BookOpen },
+      { label: 'Question Bank', href: ROUTES.TEACHER_WORKBENCH_QUESTION_BANK, icon: Database },
+      { label: 'Paper Builder', href: ROUTES.TEACHER_WORKBENCH_PAPER_BUILDER, icon: FileEdit },
+      { label: 'Moderation', href: ROUTES.TEACHER_WORKBENCH_MODERATION, icon: CheckCircle },
+      { label: 'Marking Hub', href: ROUTES.TEACHER_WORKBENCH_MARKING_HUB, icon: ClipboardCheck },
+      { label: 'Planner', href: ROUTES.TEACHER_WORKBENCH_PLANNER, icon: CalendarDays },
+    ],
+  },
 ];
 
 export const MODULES = [
@@ -211,6 +283,7 @@ export const MODULES = [
   { id: 'events', name: 'Events', description: 'Event management and ticketing' },
   { id: 'library', name: 'Library', description: 'Book lending and reading challenges' },
   { id: 'discipline', name: 'Discipline', description: 'Merit/demerit tracking' },
+  { id: 'careers', name: 'Career Guidance', description: 'University guidance, APS calculator, and career planning' },
 ] as const;
 
 export const SA_PROVINCES = [
