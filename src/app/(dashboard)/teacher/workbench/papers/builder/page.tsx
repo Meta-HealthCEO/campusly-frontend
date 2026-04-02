@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -13,6 +13,8 @@ import { PaperConfigPanel } from '@/components/workbench/papers/PaperConfigPanel
 import { useQuestionBank } from '@/hooks/useQuestionBank';
 import { usePaperMemo } from '@/hooks/usePaperMemo';
 import { usePaperModeration } from '@/hooks/usePaperModeration';
+import { printContent } from '@/lib/print-utils';
+import { generatePaperHtml } from '@/lib/paper-pdf';
 import type { BankQuestion } from '@/types';
 import type { PaperBuilderSection } from '@/components/workbench/papers/PaperBuilderPanel';
 import type { PaperConfig } from '@/components/workbench/papers/PaperConfigPanel';
@@ -144,12 +146,40 @@ export default function PaperBuilderPage() {
     await submitForModeration(draftId);
   }, [submitForModeration]);
 
+  const handleExportPdf = useCallback(() => {
+    if (sections.length === 0) {
+      toast.error('Add at least one question before exporting.');
+      return;
+    }
+    const paperSections = sections.map((s) => ({
+      title: s.title,
+      questions: s.questions,
+    }));
+    const metadata = [
+      ...(derivedConfig.subject ? [{ label: 'Subject', value: derivedConfig.subject }] : []),
+      ...(derivedConfig.grade ? [{ label: 'Grade', value: derivedConfig.grade }] : []),
+      ...(derivedConfig.term ? [{ label: 'Term', value: derivedConfig.term }] : []),
+      { label: 'Duration', value: `${derivedConfig.duration} min` },
+      { label: 'Total Marks', value: String(derivedConfig.totalMarks) },
+    ];
+    printContent({
+      title: derivedConfig.subject ? `${derivedConfig.subject} Exam Paper` : 'Exam Paper',
+      subtitle: derivedConfig.grade ? `Grade ${derivedConfig.grade}` : undefined,
+      metadata,
+      bodyHtml: generatePaperHtml(paperSections),
+    });
+  }, [sections, derivedConfig]);
+
   return (
     <div className="flex flex-col gap-4">
       <PageHeader title="Paper Builder">
         <Button variant="ghost" size="sm" onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
+        </Button>
+        <Button variant="outline" size="sm" onClick={handleExportPdf}>
+          <Printer className="h-4 w-4 mr-1" />
+          Export PDF
         </Button>
       </PageHeader>
 

@@ -10,7 +10,9 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { MemoSection } from '@/components/workbench/papers/MemoSection';
 import { usePaperMemo } from '@/hooks/usePaperMemo';
-import type { MemoSection as MemoSectionType, MemoStatus } from '@/types';
+import { printContent } from '@/lib/print-utils';
+import { generateMemoHtml } from '@/lib/paper-pdf';
+import type { MemoSection as MemoSectionType, MemoStatus, PaperMemo } from '@/types';
 
 // Minimal paper question reference: in production this would come from the
 // paper hook — kept lean here to stay within 350 lines.
@@ -76,7 +78,19 @@ export default function PaperMemoPage() {
   }
 
   function handlePrint() {
-    window.print();
+    if (!memo) {
+      window.print();
+      return;
+    }
+    const liveMemo: PaperMemo = { ...memo, sections: localSections, status: localStatus };
+    printContent({
+      title: 'Marking Memo',
+      metadata: [
+        { label: 'Total Marks', value: String(memo.totalMarks) },
+        { label: 'Status', value: localStatus },
+      ],
+      bodyHtml: generateMemoHtml(liveMemo),
+    });
   }
 
   if (loading) return <LoadingSpinner />;
