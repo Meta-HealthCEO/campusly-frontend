@@ -23,3 +23,7 @@ export * from './sport';
 export * from './careers';
 export * from './teacher-workbench';
 export * from './teacher-workbench-views';
+export * from './ai-tutor';
+export * from './payment-gateway';
+export * from './messaging';
+export * from './meetings';

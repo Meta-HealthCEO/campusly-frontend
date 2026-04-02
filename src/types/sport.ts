@@ -203,3 +203,84 @@ export interface CreateAvailabilityInput {
   parentConfirmed?: boolean;
   notes?: string;
 }
+
+// --- Sport-specific stats & player card types ---
+
+export interface StatField {
+  key: string;
+  label: string;
+  type: 'number' | 'time' | 'distance' | 'select' | 'boolean';
+  unit?: string;
+  options?: string[];
+}
+
+export interface SportCodeConfig {
+  code: string;
+  name: string;
+  positions: string[];
+  ratingAttributes: string[];
+  playerStatFields: StatField[];
+  teamStatFields: StatField[];
+}
+
+export interface PlayerMatchStats {
+  studentId: string;
+  studentName?: string;
+  position?: string;
+  stats: Record<string, number | string | boolean>;
+  rating?: number;
+  manOfMatch?: boolean;
+}
+
+export interface MatchStats {
+  id: string;
+  fixtureId: string;
+  teamId: string;
+  sportCode: string;
+  playerStats: PlayerMatchStats[];
+  teamStats: Record<string, number | string>;
+  scorecard?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface PlayerCard {
+  id: string;
+  studentId: string;
+  studentName?: string;
+  sportCode: string;
+  seasonId?: string;
+  overallRating: number;
+  attributes: Record<string, number>;
+  tier: 'bronze' | 'silver' | 'gold' | 'elite';
+  position: string;
+  appearances: number;
+  keyStats: Record<string, number>;
+  personalBests: Record<string, number | string>;
+  formTrend: 'up' | 'down' | 'stable';
+}
+
+export interface PersonalBest {
+  id: string;
+  sportCode: string;
+  event: string;
+  value: number;
+  unit: string;
+  date: string;
+  previousBest?: number;
+}
+
+export interface RecordMatchStatsPayload {
+  sportCode: string;
+  playerStats: { studentId: string; position?: string; stats: Record<string, number | string | boolean> }[];
+  teamStats?: Record<string, number | string>;
+  scorecard?: Record<string, unknown>;
+}
+
+export interface RecordPersonalBestPayload {
+  sportCode: string;
+  event: string;
+  value: number;
+  unit: string;
+  date: string;
+  fixtureId?: string;
+}

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { DollarSign, TrendingUp, AlertCircle, Pencil, Trash2 } from 'lucide-react';
+import { DollarSign, TrendingUp, AlertCircle, Pencil, Trash2, CreditCard } from 'lucide-react';
+import Link from 'next/link';
 import { StatCard } from '@/components/shared/StatCard';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
@@ -92,6 +93,15 @@ export default function FeesPage() {
         <StatCard title="Collected" value={formatCurrency(totalCollected)} icon={DollarSign} />
         <StatCard title="Outstanding" value={formatCurrency(totalOutstanding)} icon={AlertCircle} />
         <StatCard title="Collection Rate" value={`${collectionRate}%`} icon={TrendingUp} />
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <Link href="/admin/fees/online-payments">
+          <Button variant="outline" className="gap-2">
+            <CreditCard className="h-4 w-4" />
+            Online Payments
+          </Button>
+        </Link>
       </div>
 
       <div className="flex items-center justify-between">

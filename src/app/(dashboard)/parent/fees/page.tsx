@@ -24,6 +24,7 @@ import {
 import { toast } from 'sonner';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useParentFees } from '@/hooks/useParentFees';
+import { PayNowButton } from '@/components/payment/PayNowButton';
 import type { Invoice, Payment } from '@/types';
 
 const statusStyles: Record<string, string> = {
@@ -177,7 +178,15 @@ function getInvoiceColumns(onRefresh?: () => void): ColumnDef<Invoice, unknown>[
     header: '',
     cell: ({ row }) => {
       if (row.original.balanceDue > 0 && row.original.status !== 'cancelled') {
-        return <PayDialog invoice={row.original} onPaid={onRefresh} />;
+        return (
+          <div className="flex items-center gap-2">
+            <PayDialog invoice={row.original} onPaid={onRefresh} />
+            <PayNowButton
+              invoiceIds={[row.original.id]}
+              totalAmount={row.original.balanceDue}
+            />
+          </div>
+        );
       }
       return null;
     },

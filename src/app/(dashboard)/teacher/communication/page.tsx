@@ -19,7 +19,8 @@ import {
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
-import { MessageSquare, Send, Mail, Clock } from 'lucide-react';
+import { MessageSquare, Send, Mail, Clock, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
 import { StatusBadge, ChannelBadge } from '@/components/communication/MessageBadges';
 import { ParentRecipientPicker } from '@/components/communication/ParentRecipientPicker';
@@ -90,6 +91,17 @@ export default function TeacherCommunicationPage() {
           Message Parents
         </Button>
       </PageHeader>
+
+      <Link
+        href="/teacher/messages"
+        className="flex items-center justify-between rounded-lg border bg-primary/5 p-4 transition-colors hover:bg-primary/10"
+      >
+        <div>
+          <p className="font-medium text-sm">Direct Messages</p>
+          <p className="text-xs text-muted-foreground">Have a private conversation with a parent</p>
+        </div>
+        <ArrowRight className="h-4 w-4 text-primary" />
+      </Link>
 
       {messages.length === 0 ? (
         <EmptyState

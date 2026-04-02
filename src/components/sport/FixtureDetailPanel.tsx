@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, MapPin, Clock, Home, Plane } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,10 +9,13 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useFixtureResult, useAvailability, useMvpVotes } from '@/hooks/useSport';
+import { useSportStats } from '@/hooks/useSportStats';
 import { AvailabilityPanel } from './AvailabilityPanel';
 import { MvpVotePanel } from './MvpVotePanel';
 import { ResultFormDialog } from './ResultFormDialog';
-import type { SportFixture, SportTeamRef, SportPlayer } from '@/types/sport';
+import { MatchStatsView } from './MatchStatsView';
+import { StatEntryForm } from './StatEntryForm';
+import type { SportFixture, SportTeamRef, SportPlayer, RecordMatchStatsPayload } from '@/types/sport';
 
 interface FixtureDetailPanelProps {
   open: boolean;
@@ -39,7 +42,40 @@ export function FixtureDetailPanel({
   const { result, loading: resultLoading, refetch: refetchResult } = useFixtureResult(fixtureId);
   const { availability, loading: availLoading, refetch: refetchAvail } = useAvailability(fixtureId);
   const { votes, loading: mvpLoading, refetch: refetchMvp } = useMvpVotes(fixtureId);
+  const {
+    matchStats, loading: statsLoading,
+    getMatchStats, recordMatchStats, getSportConfig,
+  } = useSportStats();
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
+  const [sportConfig, setSportConfig] = useState<import('@/types/sport').SportCodeConfig | null>(null);
+  const [showStatForm, setShowStatForm] = useState(false);
+  const [statSaving, setStatSaving] = useState(false);
+
+  // Load match stats and sport config when fixture opens
+  useEffect(() => {
+    if (!fixtureId) return;
+    getMatchStats(fixtureId);
+    const team = fixture?.teamId;
+    const sportCode = typeof team === 'object' && team ? team.sport : '';
+    if (sportCode) {
+      getSportConfig(sportCode).then((cfg) => { if (cfg) setSportConfig(cfg); });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fixtureId]);
+
+  const handleRecordStats = async (data: RecordMatchStatsPayload) => {
+    if (!fixtureId) return;
+    try {
+      setStatSaving(true);
+      await recordMatchStats(fixtureId, data);
+      setShowStatForm(false);
+      getMatchStats(fixtureId);
+    } catch (err: unknown) {
+      console.error('Failed to record stats', err);
+    } finally {
+      setStatSaving(false);
+    }
+  };
 
   if (!fixture) return null;
 
@@ -96,9 +132,10 @@ export function FixtureDetailPanel({
           </div>
 
           <Tabs defaultValue="availability">
-            <TabsList>
+            <TabsList className="flex-wrap">
               <TabsTrigger value="availability">Availability</TabsTrigger>
               <TabsTrigger value="mvp">MVP Voting</TabsTrigger>
+              <TabsTrigger value="stats">Stats</TabsTrigger>
             </TabsList>
             <TabsContent value="availability" className="pt-4">
               <AvailabilityPanel
@@ -119,6 +156,29 @@ export function FixtureDetailPanel({
                 loading={mvpLoading}
                 onRefresh={refetchMvp}
               />
+            </TabsContent>
+            <TabsContent value="stats" className="pt-4">
+              {statsLoading ? (
+                <p className="text-sm text-muted-foreground">Loading stats...</p>
+              ) : matchStats && sportConfig ? (
+                <MatchStatsView stats={matchStats} sportConfig={sportConfig} />
+              ) : sportConfig && !showStatForm ? (
+                <div className="text-center py-6">
+                  <p className="text-sm text-muted-foreground mb-3">No stats recorded for this match.</p>
+                  <Button variant="outline" size="sm" onClick={() => setShowStatForm(true)}>
+                    Record Stats
+                  </Button>
+                </div>
+              ) : sportConfig && showStatForm ? (
+                <StatEntryForm
+                  sportConfig={sportConfig}
+                  players={players.map((p) => ({ id: p._id, name: `${p.firstName} ${p.lastName}` }))}
+                  onSubmit={handleRecordStats}
+                  loading={statSaving}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">Sport config not available.</p>
+              )}
             </TabsContent>
           </Tabs>
         </DialogContent>

@@ -30,3 +30,17 @@ AI exam paper generation (CAPS-aligned), question regeneration, AI-assisted grad
 - Track regenerated questions, keep original and revised versions
 - Teacher can revert individual questions
 - **Why:** "I liked the previous version of question 3" — without history, it's gone forever
+
+### 6. AI Timetable Generation (Clash-Free)
+- Generate school timetables using AI with constraint satisfaction (no teacher/room/class clashes)
+- Inputs: classes, subjects, teachers, rooms, periods per day, break slots
+- AI optimizes for minimal gaps, teacher preferences, subject spread across the week
+- Manual override + re-solve around locked slots
+- **Why:** Timetable generation is one of the most painful admin tasks in schools. Manual timetabling takes days and still produces clashes. AI can solve this in seconds
+
+### 7. AI Sports Performance Analytics
+- Track and analyse student sports performance over time using AI
+- AI identifies trends, strengths, weaknesses, and injury risk patterns
+- Generates per-student and per-team performance reports
+- Recommendations for training focus areas based on data
+- **Why:** Sports programmes lack data-driven coaching. AI analysis turns raw stats into actionable insights for coaches and parents

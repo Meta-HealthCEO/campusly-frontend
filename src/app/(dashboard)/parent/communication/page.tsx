@@ -11,8 +11,9 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import {
-  Mail, MailOpen, AlertCircle, MessageSquare, Megaphone,
+  Mail, MailOpen, AlertCircle, MessageSquare, Megaphone, ArrowRight,
 } from 'lucide-react';
+import Link from 'next/link';
 import { formatDate, formatRelativeDate } from '@/lib/utils';
 import { useParentMessages } from '@/hooks/useParentMessages';
 import type { Message } from '@/types';
@@ -71,6 +72,17 @@ export default function CommunicationPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Link
+        href="/parent/messages"
+        className="flex items-center justify-between rounded-lg border bg-primary/5 p-4 transition-colors hover:bg-primary/10"
+      >
+        <div>
+          <p className="font-medium text-sm">Direct Messages</p>
+          <p className="text-xs text-muted-foreground">Have a private conversation with a teacher</p>
+        </div>
+        <ArrowRight className="h-4 w-4 text-primary" />
+      </Link>
 
       <Card>
         <CardHeader><CardTitle className="text-base">Inbox</CardTitle></CardHeader>

@@ -15,11 +15,12 @@ import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { StatCard } from '@/components/shared/StatCard';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { Wallet, Plus, CreditCard, ShieldCheck } from 'lucide-react';
+import { Wallet, Plus, CreditCard, ShieldCheck, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useCurrentParent } from '@/hooks/useCurrentParent';
 import { useParentWallets } from '@/hooks/useParentWallets';
+import { WalletTopupDialog } from '@/components/payment/WalletTopupDialog';
 import type { WalletTransaction } from '@/types';
 
 const transactionColumns: ColumnDef<WalletTransaction, unknown>[] = [
@@ -65,6 +66,7 @@ export default function WalletPage() {
   const { childWallets, loading, loadMoney } = useParentWallets();
   const [loadAmount, setLoadAmount] = useState('');
   const [dialogOpen, setDialogOpen] = useState<string | null>(null);
+  const [onlineTopupWalletId, setOnlineTopupWalletId] = useState<string | null>(null);
 
   const totalBalance = childWallets.reduce((sum, cw) => sum + (cw.wallet?.balance ?? 0), 0);
 
@@ -115,6 +117,14 @@ export default function WalletPage() {
                       {cw.wallet?.lastTopUp && <span>Last top-up: {formatDate(cw.wallet.lastTopUp)}</span>}
                     </div>
                   </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => setOnlineTopupWalletId(cw.wallet?.id ?? '')}
+                  >
+                    <Globe className="h-4 w-4" />Top Up Online
+                  </Button>
                   <Dialog open={dialogOpen === cw.childId} onOpenChange={(open) => setDialogOpen(open ? cw.childId : null)}>
                     <DialogTrigger render={<Button className="gap-2" />}>
                       <Plus className="h-4 w-4" />Load Money
@@ -140,6 +150,7 @@ export default function WalletPage() {
                       </div>
                     </DialogContent>
                   </Dialog>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -183,6 +194,12 @@ export default function WalletPage() {
           </TabsContent>
         ))}
       </Tabs>
+
+      <WalletTopupDialog
+        open={!!onlineTopupWalletId}
+        onOpenChange={(open) => { if (!open) setOnlineTopupWalletId(null); }}
+        walletId={onlineTopupWalletId ?? ''}
+      />
     </div>
   );
 }
