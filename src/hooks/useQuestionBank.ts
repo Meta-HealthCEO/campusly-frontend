@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
-import { unwrapList, extractErrorMessage } from '@/lib/api-helpers';
+import { unwrapList, unwrapResponse, extractErrorMessage } from '@/lib/api-helpers';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type {
@@ -154,6 +154,16 @@ export function useQuestionBank() {
     [fetchQuestions],
   );
 
+  const uploadImage = useCallback(async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const response = await apiClient.post('/teacher-workbench/uploads/image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    const data = unwrapResponse(response) as { url: string };
+    return data.url;
+  }, []);
+
   return {
     questions,
     loading,
@@ -168,5 +178,6 @@ export function useQuestionBank() {
     updateQuestion,
     deleteQuestion,
     importFromPaper,
+    uploadImage,
   };
 }
