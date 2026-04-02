@@ -46,6 +46,8 @@ export const ROUTES = {
   ADMIN_UNIFORM: '/admin/uniform',
   ADMIN_SPORT: '/admin/sport',
   ADMIN_SPORT_PLAYER_CARDS: '/admin/sport/player-cards',
+  ADMIN_SPORT_AI_ANALYTICS: '/admin/sport/ai-analytics',
+  ADMIN_WHATSAPP_SETTINGS: '/admin/settings/whatsapp',
   ADMIN_ACHIEVER: '/admin/achiever',
   ADMIN_ACHIEVER_HOUSES: '/admin/achiever/houses',
   ADMIN_ACHIEVER_AWARDS: '/admin/achiever/awards',
@@ -70,6 +72,7 @@ export const ROUTES = {
   PARENT_LOST_FOUND: '/parent/lost-found',
   PARENT_LIBRARY: '/parent/library',
   PARENT_MEETINGS: '/parent/meetings',
+  PARENT_SETTINGS: '/parent/settings',
 
   // Student
   STUDENT_DASHBOARD: '/student',
@@ -190,6 +193,7 @@ export const ADMIN_NAV: NavItem[] = [
     children: [
       { label: 'Overview', href: ROUTES.ADMIN_SPORT, icon: Trophy },
       { label: 'Player Cards', href: ROUTES.ADMIN_SPORT_PLAYER_CARDS, icon: Award },
+      { label: 'AI Analytics', href: ROUTES.ADMIN_SPORT_AI_ANALYTICS, icon: Sparkles },
     ],
   },
   {
@@ -216,6 +220,7 @@ export const ADMIN_NAV: NavItem[] = [
     children: [
       { label: 'General', href: ROUTES.ADMIN_SETTINGS, icon: Settings },
       { label: 'Payments', href: ROUTES.ADMIN_PAYMENT_SETTINGS, icon: CreditCard },
+      { label: 'WhatsApp', href: ROUTES.ADMIN_WHATSAPP_SETTINGS, icon: MessageSquare },
     ],
   },
 ];
@@ -235,6 +240,7 @@ export const PARENT_NAV: NavItem[] = [
   { label: 'Lost & Found', href: ROUTES.PARENT_LOST_FOUND, icon: PackageSearch },
   { label: 'Library', href: ROUTES.PARENT_LIBRARY, icon: BookMarked, module: 'library' },
   { label: 'Meetings', href: ROUTES.PARENT_MEETINGS, icon: CalendarCheck },
+  { label: 'Settings', href: ROUTES.PARENT_SETTINGS, icon: Bell },
   { label: 'AI Assistant', href: ROUTES.PARENT_AI_ASSISTANT, icon: Sparkles, module: 'ai_tools' },
   {
     label: 'Career Guidance', href: ROUTES.PARENT_CAREERS, icon: Compass, module: 'careers',

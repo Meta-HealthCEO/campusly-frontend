@@ -11,8 +11,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { PlayerCardDisplay } from '@/components/sport/PlayerCardDisplay';
 import { PersonalBestTable } from '@/components/sport/PersonalBestTable';
 import { RecordPersonalBestDialog } from '@/components/sport/RecordPersonalBestDialog';
+import { AIReportGenerator } from '@/components/sport/AIReportGenerator';
+import { AIReportView } from '@/components/sport/AIReportView';
 import { useSportStats } from '@/hooks/useSportStats';
+import { useAISports } from '@/hooks/useAISports';
 import type { RecordPersonalBestPayload } from '@/types/sport';
+import type { AIPerformanceReport } from '@/types/ai-sports';
 
 export default function PlayerDetailPage() {
   const params = useParams();
@@ -29,6 +33,14 @@ export default function PlayerDetailPage() {
   const [activeSport, setActiveSport] = useState(initialSport);
   const [pbDialogOpen, setPbDialogOpen] = useState(false);
   const [recalculating, setRecalculating] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [latestAIReport, setLatestAIReport] = useState<AIPerformanceReport | null>(null);
+
+  const {
+    reports: aiReports, generating: aiGenerating,
+    generatePlayerAnalysis, generateDevelopmentPlan,
+    generateScoutingReport, generateParentReport, loadReports: loadAIReports,
+  } = useAISports();
 
   useEffect(() => { loadSportConfigs(); }, [loadSportConfigs]);
 
@@ -36,7 +48,8 @@ export default function PlayerDetailPage() {
     if (!studentId || !activeSport) return;
     loadPlayerCard(studentId, activeSport);
     loadPersonalBests(studentId, activeSport);
-  }, [studentId, activeSport, loadPlayerCard, loadPersonalBests]);
+    loadAIReports(studentId, activeSport);
+  }, [studentId, activeSport, loadPlayerCard, loadPersonalBests, loadAIReports]);
 
   // Set initial sport from configs if not provided
   useEffect(() => {
@@ -64,6 +77,30 @@ export default function PlayerDetailPage() {
     loadPersonalBests(studentId, activeSport);
   }, [studentId, activeSport, recordPersonalBest, loadPersonalBests]);
 
+  const handleGenerateReport = useCallback(async (type: string): Promise<AIPerformanceReport | undefined> => {
+    if (!activeSport) return undefined;
+    let report: AIPerformanceReport | undefined;
+    switch (type) {
+      case 'analysis':
+        report = await generatePlayerAnalysis(studentId, activeSport);
+        break;
+      case 'development':
+        report = await generateDevelopmentPlan(studentId, activeSport);
+        break;
+      case 'scouting':
+        report = await generateScoutingReport(studentId, activeSport);
+        break;
+      case 'parent':
+        report = await generateParentReport(studentId, activeSport);
+        break;
+    }
+    if (report) {
+      setLatestAIReport(report);
+      loadAIReports(studentId, activeSport);
+    }
+    return report;
+  }, [studentId, activeSport, generatePlayerAnalysis, generateDevelopmentPlan, generateScoutingReport, generateParentReport, loadAIReports]);
+
   if (loading && !playerCard) return <LoadingSpinner />;
 
   return (
@@ -84,36 +121,55 @@ export default function PlayerDetailPage() {
         </Tabs>
       )}
 
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
-        {/* Player card */}
-        <div className="flex flex-col items-center gap-4">
-          {playerCard ? (
-            <PlayerCardDisplay card={playerCard} />
-          ) : (
-            <p className="text-sm text-muted-foreground">No card available for this sport.</p>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRecalculate}
-            disabled={recalculating || !activeSport}
-          >
-            <RefreshCw className={`mr-1 h-4 w-4 ${recalculating ? 'animate-spin' : ''}`} />
-            Recalculate Card
-          </Button>
-        </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="flex-wrap">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="ai-reports">AI Reports</TabsTrigger>
+        </TabsList>
 
-        {/* Personal bests */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold">Personal Bests</h3>
-            <Button size="sm" onClick={() => setPbDialogOpen(true)}>
-              <Plus className="mr-1 h-4 w-4" /> Record PB
-            </Button>
+        <TabsContent value="overview" className="space-y-6 mt-4">
+          <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+            <div className="flex flex-col items-center gap-4">
+              {playerCard ? (
+                <PlayerCardDisplay card={playerCard} />
+              ) : (
+                <p className="text-sm text-muted-foreground">No card available for this sport.</p>
+              )}
+              <Button variant="outline" size="sm" onClick={handleRecalculate} disabled={recalculating || !activeSport}>
+                <RefreshCw className={`mr-1 h-4 w-4 ${recalculating ? 'animate-spin' : ''}`} />
+                Recalculate Card
+              </Button>
+            </div>
+            <div className="lg:col-span-2 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">Personal Bests</h3>
+                <Button size="sm" onClick={() => setPbDialogOpen(true)}>
+                  <Plus className="mr-1 h-4 w-4" /> Record PB
+                </Button>
+              </div>
+              <PersonalBestTable bests={personalBests} />
+            </div>
           </div>
-          <PersonalBestTable bests={personalBests} />
-        </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="ai-reports" className="space-y-6 mt-4">
+          <AIReportGenerator
+            studentId={studentId}
+            sportCode={activeSport}
+            generating={aiGenerating}
+            onGenerate={handleGenerateReport}
+          />
+          {latestAIReport && <AIReportView report={latestAIReport} />}
+          {aiReports.length > 0 && !latestAIReport && (
+            <div className="space-y-3">
+              <h3 className="font-semibold">Previous Reports</h3>
+              {aiReports.map((r) => (
+                <AIReportView key={r.id} report={r} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       <RecordPersonalBestDialog
         open={pbDialogOpen}
