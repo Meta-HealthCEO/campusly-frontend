@@ -8,7 +8,7 @@ import {
   Heart, Upload, Shirt, Trophy, Sparkles,
   Compass, Target, Clipboard, Newspaper,
   Wrench, Database, FileEdit, CheckCircle, ClipboardCheck,
-  CalendarCheck,
+  CalendarCheck, CalendarCog,
   type LucideIcon
 } from 'lucide-react';
 
@@ -58,6 +58,7 @@ export const ROUTES = {
   ADMIN_PAYMENT_SETTINGS: '/admin/settings/payments',
   ADMIN_MEETINGS: '/admin/meetings',
   ADMIN_SCHOOL_NEWS: '/admin/school-news',
+  ADMIN_TIMETABLE_BUILDER: '/admin/timetable-builder',
 
   // Parent
   PARENT_DASHBOARD: '/parent',
@@ -184,6 +185,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Wallet', href: ROUTES.ADMIN_WALLET, icon: Wallet, module: 'wallet' },
   { label: 'Tuck Shop', href: ROUTES.ADMIN_TUCKSHOP, icon: ShoppingBag, module: 'tuckshop' },
   { label: 'Academics', href: ROUTES.ADMIN_ACADEMICS, icon: BookOpen },
+  { label: 'Timetable Builder', href: ROUTES.ADMIN_TIMETABLE_BUILDER, icon: CalendarCog },
   { label: 'Attendance', href: ROUTES.ADMIN_ATTENDANCE, icon: ClipboardList },
   { label: 'Events', href: ROUTES.ADMIN_EVENTS, icon: CalendarDays, module: 'events' },
   { label: 'Transport', href: ROUTES.ADMIN_TRANSPORT, icon: Bus, module: 'transport' },
