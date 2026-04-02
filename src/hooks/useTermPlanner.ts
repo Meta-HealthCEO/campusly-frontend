@@ -68,7 +68,17 @@ export function useTermPlanner() {
       const res = await apiClient.get(
         `/teacher-workbench/planner/weightings/${plan.subjectId}`,
       );
-      setWeightings(unwrapList<WeightingInfo>(res));
+      const raw = unwrapResponse(res) as Record<string, unknown>;
+      // Backend returns { subjectId, totalPlanned, byType } — wrap in array for UI
+      setWeightings([{
+        subjectId: String(raw.subjectId ?? ''),
+        subjectName: '',
+        requiredFormalWeight: 0,
+        actualFormalWeight: Number(raw.totalPlanned ?? 0),
+        requiredInformalWeight: 0,
+        actualInformalWeight: 0,
+        totalWeight: Number(raw.totalPlanned ?? 0),
+      }]);
     } catch (err: unknown) {
       console.error('Failed to load weightings', err);
     }

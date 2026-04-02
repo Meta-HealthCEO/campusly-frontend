@@ -14,21 +14,21 @@ import type {
 
 interface CreateFrameworkData {
   name: string;
-  subjectId: string;
-  gradeId: string;
-  term: number;
-  year: number;
+  description?: string;
+  isDefault?: boolean;
 }
 
 interface CreateTopicData {
   frameworkId: string;
-  title: string;
+  subjectId: string;
+  gradeLevel: number;
+  name: string;
   description?: string;
   cognitiveLevel: string;
-  estimatedHours: number;
-  order: number;
+  estimatedPeriods: number;
+  orderIndex: number;
   parentTopicId?: string;
-  term?: number;
+  term: number;
 }
 
 interface UpdateCoverageData {

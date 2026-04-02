@@ -57,26 +57,29 @@ export default function CurriculumPage() {
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkJson, setBulkJson] = useState('');
   const [topicForm, setTopicForm] = useState({
-    title: '',
+    name: '',
     description: '',
     cognitiveLevel: 'knowledge',
-    estimatedHours: 1,
-    order: 1,
+    estimatedPeriods: 1,
+    orderIndex: 1,
     term: 1,
   });
 
   const handleAddTopic = async () => {
-    if (!topicForm.title || !selectedFramework) return;
+    if (!topicForm.name || !selectedFramework || !selectedSubject) return;
     await createTopic({
       frameworkId: selectedFramework,
-      title: topicForm.title,
+      subjectId: selectedSubject,
+      gradeLevel: selectedGrade ? Number(selectedGrade) : 1,
+      name: topicForm.name,
       description: topicForm.description,
       cognitiveLevel: topicForm.cognitiveLevel,
-      estimatedHours: topicForm.estimatedHours,
-      order: topicForm.order,
+      estimatedPeriods: topicForm.estimatedPeriods,
+      orderIndex: topicForm.orderIndex,
+      term: topicForm.term,
     });
     setAddTopicOpen(false);
-    setTopicForm({ title: '', description: '', cognitiveLevel: 'knowledge', estimatedHours: 1, order: 1, term: 1 });
+    setTopicForm({ name: '', description: '', cognitiveLevel: 'knowledge', estimatedPeriods: 1, orderIndex: 1, term: 1 });
   };
 
   const handleBulkImport = async () => {
@@ -226,11 +229,11 @@ export default function CurriculumPage() {
           </DialogHeader>
           <div className="flex-1 overflow-y-auto py-4 space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="topic-title">Title <span className="text-destructive">*</span></Label>
+              <Label htmlFor="topic-name">Name <span className="text-destructive">*</span></Label>
               <Input
-                id="topic-title"
-                value={topicForm.title}
-                onChange={(e) => setTopicForm((p) => ({ ...p, title: e.target.value }))}
+                id="topic-name"
+                value={topicForm.name}
+                onChange={(e) => setTopicForm((p) => ({ ...p, name: e.target.value }))}
                 placeholder="e.g. Algebraic Expressions"
               />
             </div>
@@ -262,20 +265,20 @@ export default function CurriculumPage() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label htmlFor="topic-hours">Estimated Hours</Label>
+                <Label htmlFor="topic-periods">Estimated Periods</Label>
                 <Input
-                  id="topic-hours"
+                  id="topic-periods"
                   type="number"
                   min={1}
-                  value={topicForm.estimatedHours}
-                  onChange={(e) => setTopicForm((p) => ({ ...p, estimatedHours: Number(e.target.value) }))}
+                  value={topicForm.estimatedPeriods}
+                  onChange={(e) => setTopicForm((p) => ({ ...p, estimatedPeriods: Number(e.target.value) }))}
                 />
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddTopicOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddTopic} disabled={!topicForm.title || !selectedFramework}>
+            <Button onClick={handleAddTopic} disabled={!topicForm.name || !selectedFramework || !selectedSubject}>
               Add Topic
             </Button>
           </DialogFooter>

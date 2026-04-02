@@ -32,14 +32,13 @@ export function useMarkingHub() {
 
   const { overdueCount, dueTodayCount } = useMemo(() => {
     const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${y}-${m}-${d}`;
     return {
-      overdueCount: items.filter(
-        (item) => item.dueDate < todayStr && item.priority === 'high',
-      ).length,
-      dueTodayCount: items.filter(
-        (item) => item.dueDate === todayStr,
-      ).length,
+      overdueCount: items.filter(item => item.dueDate < todayStr && item.priority === 'high').length,
+      dueTodayCount: items.filter(item => item.dueDate === todayStr).length,
     };
   }, [items]);
 

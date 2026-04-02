@@ -41,8 +41,8 @@ function newSection(index: number): PaperBuilderSection {
 export default function PaperBuilderPage() {
   const router = useRouter();
   const { questions, loading, filters, setFilters } = useQuestionBank();
-  const { generating, generateMemo } = usePaperMemo();
-  const { submitting, submitForModeration } = usePaperModeration();
+  const { generating } = usePaperMemo();
+  const { submitting } = usePaperModeration();
 
   const [sections, setSections] = useState<PaperBuilderSection[]>([]);
   const [config, setConfig] = useState<PaperConfig>(DEFAULT_CONFIG);
@@ -137,16 +137,12 @@ export default function PaperBuilderPage() {
   }, [derivedConfig, sections]);
 
   const handleGenerateMemo = useCallback(async () => {
-    // For draft papers not yet persisted to the server, use a local draft ID
-    const draftId = `draft_${Date.now()}`;
-    await generateMemo(draftId);
-  }, [generateMemo]);
+    toast.error('Save the paper to the server first before generating a memo.');
+  }, []);
 
   const handleSubmitModeration = useCallback(async () => {
-    // Save draft first to get a stable ID, then submit
-    const draftId = `draft_${Date.now()}`;
-    await submitForModeration(draftId);
-  }, [submitForModeration]);
+    toast.error('Save the paper to the server first before submitting for moderation.');
+  }, []);
 
   const handleExportPdf = useCallback(() => {
     if (sections.length === 0) {
