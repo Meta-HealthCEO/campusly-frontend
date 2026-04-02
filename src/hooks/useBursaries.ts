@@ -24,6 +24,9 @@ export interface UseBursariesReturn {
   refetch: (filters?: BursaryFilters) => Promise<void>;
   fetchMatched: (studentId: string) => Promise<void>;
   fetchById: (id: string) => Promise<Bursary>;
+  createBursary: (data: Record<string, unknown>) => Promise<Bursary>;
+  updateBursary: (id: string, data: Record<string, unknown>) => Promise<Bursary>;
+  importBursaries: (file: File) => Promise<{ imported: number; skipped: number; errors: { row: number; reason: string }[] }>;
 }
 
 export function useBursaries(initialFilters?: BursaryFilters): UseBursariesReturn {
@@ -85,6 +88,30 @@ export function useBursaries(initialFilters?: BursaryFilters): UseBursariesRetur
     return unwrapResponse<Bursary>(response);
   }, []);
 
+  const createBursary = useCallback(async (data: Record<string, unknown>): Promise<Bursary> => {
+    const res = await apiClient.post('/careers/bursaries', data);
+    const b = unwrapResponse<Bursary>(res);
+    await fetchBursaries();
+    return b;
+  }, [fetchBursaries]);
+
+  const updateBursary = useCallback(async (id: string, data: Record<string, unknown>): Promise<Bursary> => {
+    const res = await apiClient.put(`/careers/bursaries/${id}`, data);
+    const b = unwrapResponse<Bursary>(res);
+    await fetchBursaries();
+    return b;
+  }, [fetchBursaries]);
+
+  const importBursaries = useCallback(async (file: File): Promise<{ imported: number; skipped: number; errors: { row: number; reason: string }[] }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await apiClient.post('/careers/bursaries/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    await fetchBursaries();
+    return unwrapResponse(res);
+  }, [fetchBursaries]);
+
   useEffect(() => {
     fetchBursaries(initialFilters);
   }, [fetchBursaries, initialFilters]);
@@ -100,5 +127,8 @@ export function useBursaries(initialFilters?: BursaryFilters): UseBursariesRetur
     refetch: fetchBursaries,
     fetchMatched,
     fetchById,
+    createBursary,
+    updateBursary,
+    importBursaries,
   };
 }

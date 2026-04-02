@@ -20,6 +20,8 @@ interface UseUniversitiesReturn {
   error: string | null;
   refetch: (filters?: UniversityFilters) => Promise<void>;
   fetchById: (id: string) => Promise<University>;
+  createUniversity: (data: Record<string, unknown>) => Promise<University>;
+  updateUniversity: (id: string, data: Record<string, unknown>) => Promise<University>;
 }
 
 export function useUniversities(initialFilters?: UniversityFilters): UseUniversitiesReturn {
@@ -65,6 +67,20 @@ export function useUniversities(initialFilters?: UniversityFilters): UseUniversi
     return unwrapResponse<University>(response);
   }, []);
 
+  const createUniversity = useCallback(async (data: Record<string, unknown>): Promise<University> => {
+    const res = await apiClient.post('/careers/universities', data);
+    const uni = unwrapResponse<University>(res);
+    await fetchUniversities();
+    return uni;
+  }, [fetchUniversities]);
+
+  const updateUniversity = useCallback(async (id: string, data: Record<string, unknown>): Promise<University> => {
+    const res = await apiClient.put(`/careers/universities/${id}`, data);
+    const uni = unwrapResponse<University>(res);
+    await fetchUniversities();
+    return uni;
+  }, [fetchUniversities]);
+
   useEffect(() => {
     void fetchUniversities(initialFilters);
   }, [fetchUniversities, initialFilters]);
@@ -78,5 +94,7 @@ export function useUniversities(initialFilters?: UniversityFilters): UseUniversi
     error,
     refetch: fetchUniversities,
     fetchById,
+    createUniversity,
+    updateUniversity,
   };
 }

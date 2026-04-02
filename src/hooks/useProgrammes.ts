@@ -23,6 +23,9 @@ interface UseProgrammesReturn {
   error: string | null;
   refetch: (filters?: ProgrammeFilters) => Promise<void>;
   fetchById: (id: string) => Promise<Programme>;
+  createProgramme: (data: Record<string, unknown>) => Promise<Programme>;
+  updateProgramme: (id: string, data: Record<string, unknown>) => Promise<Programme>;
+  importProgrammes: (file: File) => Promise<{ imported: number; skipped: number; errors: { row: number; reason: string }[] }>;
 }
 
 export function useProgrammes(initialFilters?: ProgrammeFilters): UseProgrammesReturn {
@@ -71,6 +74,30 @@ export function useProgrammes(initialFilters?: ProgrammeFilters): UseProgrammesR
     return unwrapResponse<Programme>(response);
   }, []);
 
+  const createProgramme = useCallback(async (data: Record<string, unknown>): Promise<Programme> => {
+    const res = await apiClient.post('/careers/programmes', data);
+    const prog = unwrapResponse<Programme>(res);
+    await fetchProgrammes();
+    return prog;
+  }, [fetchProgrammes]);
+
+  const updateProgramme = useCallback(async (id: string, data: Record<string, unknown>): Promise<Programme> => {
+    const res = await apiClient.put(`/careers/programmes/${id}`, data);
+    const prog = unwrapResponse<Programme>(res);
+    await fetchProgrammes();
+    return prog;
+  }, [fetchProgrammes]);
+
+  const importProgrammes = useCallback(async (file: File): Promise<{ imported: number; skipped: number; errors: { row: number; reason: string }[] }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await apiClient.post('/careers/programmes/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    await fetchProgrammes();
+    return unwrapResponse(res);
+  }, [fetchProgrammes]);
+
   useEffect(() => {
     void fetchProgrammes(initialFilters);
   }, [fetchProgrammes, initialFilters]);
@@ -84,5 +111,8 @@ export function useProgrammes(initialFilters?: ProgrammeFilters): UseProgrammesR
     error,
     refetch: fetchProgrammes,
     fetchById,
+    createProgramme,
+    updateProgramme,
+    importProgrammes,
   };
 }
