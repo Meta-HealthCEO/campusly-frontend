@@ -17,6 +17,11 @@ import {
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useParentEvents } from '@/hooks/useParentEvents';
+import { useEventICal, useEventFeedback } from '@/hooks/useEventEnhancements';
+import { AddToCalendarButton } from '@/components/events/AddToCalendarButton';
+import { WaitlistButton } from '@/components/events/WaitlistButton';
+import { EventRating } from '@/components/events/EventRating';
+import { StarDisplay } from '@/components/events/StarDisplay';
 import type { SchoolEvent } from '@/types';
 
 const typeStyles: Record<string, string> = {
@@ -29,17 +34,23 @@ const typeStyles: Record<string, string> = {
 
 export default function EventsPage() {
   const { events, loading, buyTicket } = useParentEvents();
+  const { downloadICal } = useEventICal();
   const [selectedEvent, setSelectedEvent] = useState<SchoolEvent | null>(null);
   const [ticketDialogOpen, setTicketDialogOpen] = useState(false);
+  const [feedbackEventId, setFeedbackEventId] = useState('');
 
   const sortedEvents = [...events].sort(
-    (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+    (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
   );
 
   const handleBuyTicket = (event: SchoolEvent) => {
     setSelectedEvent(event);
     setTicketDialogOpen(true);
   };
+
+  const isPastEvent = (event: SchoolEvent) => new Date(event.endDate || event.startDate) < new Date();
+  const isFullEvent = (event: SchoolEvent) =>
+    event.maxAttendees !== undefined && event.maxAttendees > 0;
 
   if (loading) return <LoadingSpinner />;
 
@@ -50,104 +61,196 @@ export default function EventsPage() {
       {sortedEvents.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2">
           {sortedEvents.map((event) => (
-            <Card key={event.id} className="overflow-hidden">
-              <div className={`h-1.5 ${typeStyles[event.type]?.split(' ')[0] ?? 'bg-gray-200'}`} />
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <CardTitle className="text-base">{event.title}</CardTitle>
-                    <CardDescription className="mt-1">{event.description}</CardDescription>
-                  </div>
-                  <Badge variant="secondary" className={typeStyles[event.type] ?? ''}>
-                    {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Calendar className="h-4 w-4 shrink-0" />
-                    <span>{formatDate(event.startDate, 'EEEE, dd MMMM yyyy')}</span>
-                  </div>
-                  {!event.isAllDay && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Clock className="h-4 w-4 shrink-0" />
-                      <span>{formatDate(event.startDate, 'HH:mm')} - {formatDate(event.endDate, 'HH:mm')}</span>
-                    </div>
-                  )}
-                  {event.isAllDay && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Clock className="h-4 w-4 shrink-0" /><span>All Day Event</span>
-                    </div>
-                  )}
-                  {event.location && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <MapPin className="h-4 w-4 shrink-0" /><span>{event.location}</span>
-                    </div>
-                  )}
-                  {event.maxAttendees && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Users className="h-4 w-4 shrink-0" /><span>Max {event.maxAttendees} attendees</span>
-                    </div>
-                  )}
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {event.requiresConsent && <Badge variant="outline" className="text-xs">Consent Required</Badge>}
-                    {event.ticketPrice != null && event.ticketPrice > 0 && (
-                      <div className="flex items-center gap-1 text-sm">
-                        <Tag className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="font-medium">{formatCurrency(event.ticketPrice)}</span>
-                      </div>
-                    )}
-                  </div>
-                  {event.ticketPrice != null && event.ticketPrice > 0 && (
-                    <Button size="sm" className="gap-1" onClick={() => handleBuyTicket(event)}>
-                      <Ticket className="h-3.5 w-3.5" />Buy Ticket
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <EventCardItem
+              key={event.id}
+              event={event}
+              typeStyles={typeStyles}
+              isPast={isPastEvent(event)}
+              isFull={isFullEvent(event)}
+              onBuyTicket={handleBuyTicket}
+              onDownloadICal={downloadICal}
+              onFeedback={() => setFeedbackEventId(event.id)}
+            />
           ))}
         </div>
       ) : (
         <EmptyState icon={Calendar} title="No upcoming events" description="There are no upcoming events at the moment. Check back later." />
       )}
 
-      <Dialog open={ticketDialogOpen} onOpenChange={setTicketDialogOpen}>
-        <DialogContent>
-          {selectedEvent && (
-            <>
-              <DialogHeader><DialogTitle>Purchase Ticket</DialogTitle></DialogHeader>
-              <div className="space-y-4 pt-2">
-                <div className="rounded-lg bg-muted/50 p-4 space-y-2">
-                  <p className="font-medium">{selectedEvent.title}</p>
-                  <p className="text-sm text-muted-foreground">{formatDate(selectedEvent.startDate, 'EEEE, dd MMMM yyyy')}</p>
-                  {selectedEvent.location && <p className="text-sm text-muted-foreground">{selectedEvent.location}</p>}
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Ticket Price</span>
-                  <span className="text-lg font-bold">{formatCurrency(selectedEvent.ticketPrice ?? 0)}</span>
-                </div>
-                <Button className="w-full" onClick={async () => {
-                  try {
-                    await buyTicket(selectedEvent.id);
-                    toast.success('Ticket purchased successfully!');
-                    setTicketDialogOpen(false);
-                  } catch (err: unknown) {
-                    toast.error(err instanceof Error ? err.message : 'Failed to purchase ticket');
-                  }
-                }}>
-                  Confirm Purchase - {formatCurrency(selectedEvent.ticketPrice ?? 0)}
-                </Button>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      <TicketDialog
+        open={ticketDialogOpen}
+        onOpenChange={setTicketDialogOpen}
+        event={selectedEvent}
+        onBuy={buyTicket}
+      />
+
+      <FeedbackDialog
+        eventId={feedbackEventId}
+        open={!!feedbackEventId}
+        onOpenChange={(o) => { if (!o) setFeedbackEventId(''); }}
+      />
     </div>
+  );
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+interface EventCardItemProps {
+  event: SchoolEvent;
+  typeStyles: Record<string, string>;
+  isPast: boolean;
+  isFull: boolean;
+  onBuyTicket: (event: SchoolEvent) => void;
+  onDownloadICal: (id: string, title: string) => Promise<void>;
+  onFeedback: () => void;
+}
+
+function EventCardItem({
+  event, typeStyles: styles, isPast, isFull,
+  onBuyTicket, onDownloadICal, onFeedback,
+}: EventCardItemProps) {
+  return (
+    <Card className="overflow-hidden">
+      <div className={`h-1.5 ${styles[event.type]?.split(' ')[0] ?? 'bg-gray-200'}`} />
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <CardTitle className="text-base">{event.title}</CardTitle>
+            <CardDescription className="mt-1">{event.description}</CardDescription>
+          </div>
+          <Badge variant="secondary" className={styles[event.type] ?? ''}>
+            {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="space-y-2 text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Calendar className="h-4 w-4 shrink-0" />
+            <span>{formatDate(event.startDate, 'EEEE, dd MMMM yyyy')}</span>
+          </div>
+          {!event.isAllDay && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Clock className="h-4 w-4 shrink-0" />
+              <span>{formatDate(event.startDate, 'HH:mm')} - {formatDate(event.endDate, 'HH:mm')}</span>
+            </div>
+          )}
+          {event.isAllDay && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Clock className="h-4 w-4 shrink-0" /><span>All Day Event</span>
+            </div>
+          )}
+          {event.location && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <MapPin className="h-4 w-4 shrink-0" /><span>{event.location}</span>
+            </div>
+          )}
+          {event.maxAttendees && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Users className="h-4 w-4 shrink-0" /><span>Max {event.maxAttendees} attendees</span>
+            </div>
+          )}
+        </div>
+        <Separator />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {event.requiresConsent && <Badge variant="outline" className="text-xs">Consent Required</Badge>}
+            {event.ticketPrice != null && event.ticketPrice > 0 && (
+              <div className="flex items-center gap-1 text-sm">
+                <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="font-medium">{formatCurrency(event.ticketPrice)}</span>
+              </div>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1">
+            <AddToCalendarButton eventId={event.id} eventTitle={event.title} onDownload={onDownloadICal} />
+            {isPast && (
+              <Button size="sm" variant="outline" className="gap-1" onClick={onFeedback}>
+                Rate Event
+              </Button>
+            )}
+            {isFull && !isPast && <WaitlistButton onJoin={async () => { /* parent-level waitlist join */ }} />}
+            {event.ticketPrice != null && event.ticketPrice > 0 && !isPast && (
+              <Button size="sm" className="gap-1" onClick={() => onBuyTicket(event)}>
+                <Ticket className="h-3.5 w-3.5" />Buy Ticket
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function TicketDialog({
+  open, onOpenChange, event, onBuy,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  event: SchoolEvent | null;
+  onBuy: (id: string) => Promise<void>;
+}) {
+  if (!event) return null;
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Purchase Ticket</DialogTitle></DialogHeader>
+        <div className="space-y-4 pt-2">
+          <div className="rounded-lg bg-muted/50 p-4 space-y-2">
+            <p className="font-medium">{event.title}</p>
+            <p className="text-sm text-muted-foreground">{formatDate(event.startDate, 'EEEE, dd MMMM yyyy')}</p>
+            {event.location && <p className="text-sm text-muted-foreground">{event.location}</p>}
+          </div>
+          <Separator />
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Ticket Price</span>
+            <span className="text-lg font-bold">{formatCurrency(event.ticketPrice ?? 0)}</span>
+          </div>
+          <Button className="w-full" onClick={async () => {
+            try {
+              await onBuy(event.id);
+              toast.success('Ticket purchased successfully!');
+              onOpenChange(false);
+            } catch (err: unknown) {
+              toast.error(err instanceof Error ? err.message : 'Failed to purchase ticket');
+            }
+          }}>
+            Confirm Purchase - {formatCurrency(event.ticketPrice ?? 0)}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function FeedbackDialog({
+  eventId, open, onOpenChange,
+}: {
+  eventId: string;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const { submitFeedback, averageRating, totalReviews, fetchFeedback } = useEventFeedback(eventId);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="flex flex-col max-h-[85vh]">
+        <DialogHeader><DialogTitle>Rate This Event</DialogTitle></DialogHeader>
+        <div className="flex-1 overflow-y-auto py-4 space-y-4">
+          {totalReviews > 0 && (
+            <div className="rounded-lg bg-muted/50 p-3">
+              <StarDisplay rating={averageRating} totalReviews={totalReviews} size="md" />
+            </div>
+          )}
+          <EventRating
+            onSubmit={submitFeedback}
+            onSuccess={() => {
+              fetchFeedback();
+              onOpenChange(false);
+            }}
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

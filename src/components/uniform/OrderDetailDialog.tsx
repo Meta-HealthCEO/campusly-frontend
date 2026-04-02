@@ -10,6 +10,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { OrderTimeline } from './OrderTimeline';
 import type { UniformOrder, UniformOrderStatus, PopulatedStudent, PopulatedUser } from './types';
 
 const STATUS_FLOW: UniformOrderStatus[] = [
@@ -127,6 +128,12 @@ export function OrderDetailDialog({ open, onOpenChange, order, onStatusUpdate }:
 
           <div className="text-right text-lg font-bold">
             Total: {formatCurrency(order.totalAmount)}
+          </div>
+
+          {/* Timeline */}
+          <div className="border-t pt-4">
+            <p className="text-sm font-medium mb-3">Order Timeline</p>
+            <OrderTimeline orderId={order.id} currentStatus={order.status} />
           </div>
 
           {/* Actions */}

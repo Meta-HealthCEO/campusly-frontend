@@ -100,6 +100,15 @@ function mapId<T extends Record<string, unknown>>(item: T): T & { id: string } {
 
 /* ── Hook ── */
 
+export interface RouteCapacityStat {
+  routeId: string;
+  routeName: string;
+  capacity: number;
+  assignedCount: number;
+  availableSpots: number;
+  utilisationPercent: number;
+}
+
 export function useTransport() {
   const { user } = useAuthStore();
   const schoolId = user?.schoolId ?? '';
@@ -108,6 +117,8 @@ export function useTransport() {
   const [assignments, setAssignments] = useState<TransportAssignment[]>([]);
   const [boardingLogs, setBoardingLogs] = useState<BoardingLog[]>([]);
   const [alerts, setAlerts] = useState<TransportAlert[]>([]);
+  const [capacityOverview, setCapacityOverview] = useState<RouteCapacityStat[]>([]);
+  const [capacityLoading, setCapacityLoading] = useState(false);
   const [loading, setLoading] = useState(true);
 
   /* ── Routes ── */
@@ -277,6 +288,21 @@ export function useTransport() {
     await fetchAlerts();
   };
 
+  /* ── Capacity Overview ── */
+  const fetchCapacityOverview = useCallback(async () => {
+    setCapacityLoading(true);
+    try {
+      const res = await apiClient.get('/transport/capacity-overview');
+      const raw = unwrapResponse(res);
+      const arr = Array.isArray(raw) ? raw : raw.data ?? [];
+      setCapacityOverview(arr as RouteCapacityStat[]);
+    } catch {
+      console.error('Failed to load capacity overview');
+    } finally {
+      setCapacityLoading(false);
+    }
+  }, []);
+
   /* ── Students (for assignment form) ── */
   const [students, setStudents] = useState<SimpleStudent[]>([]);
 
@@ -310,15 +336,18 @@ export function useTransport() {
       fetchAssignments(),
       fetchBoardingLogs({ date: new Date().toISOString().split('T')[0] }),
       fetchAlerts(),
+      fetchCapacityOverview(),
     ]).finally(() => setLoading(false));
-  }, [schoolId, fetchRoutes, fetchAssignments, fetchBoardingLogs, fetchAlerts]);
+  }, [schoolId, fetchRoutes, fetchAssignments, fetchBoardingLogs, fetchAlerts, fetchCapacityOverview]);
 
   return {
     routes, assignments, boardingLogs, alerts, loading,
+    capacityOverview, capacityLoading,
     students, fetchStudents,
     fetchRoutes, createRoute, updateRoute, deleteRoute,
     fetchAssignments, createAssignment, updateAssignment, deleteAssignment,
     fetchBoardingLogs, createBoardingLog, logAlight,
     fetchAlerts, createAlert, resolveAlert, deleteAlert,
+    fetchCapacityOverview,
   };
 }

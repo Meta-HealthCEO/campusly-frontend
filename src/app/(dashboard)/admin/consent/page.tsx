@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Pencil, Trash2, Eye, FileText, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Pencil, Trash2, Eye, FileText, CheckCircle2, XCircle, Clock, BarChart3 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCard } from '@/components/shared/StatCard';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
@@ -12,6 +12,7 @@ import { CreateConsentFormDialog } from '@/components/consent/CreateConsentFormD
 import { EditConsentFormDialog } from '@/components/consent/EditConsentFormDialog';
 import { DeleteConsentFormDialog } from '@/components/consent/DeleteConsentFormDialog';
 import { ConsentResponsesPanel } from '@/components/consent/ConsentResponsesPanel';
+import { ConsentStatsPanel } from '@/components/consent/ConsentStatsPanel';
 import { ConsentFormFilter } from './ConsentFormFilter';
 import { useConsentForms } from '@/hooks/useConsent';
 import { formatDate } from '@/lib/utils';
@@ -31,6 +32,7 @@ export default function AdminConsentPage() {
   const [editForm, setEditForm] = useState<ApiConsentForm | null>(null);
   const [deleteForm, setDeleteForm] = useState<ApiConsentForm | null>(null);
   const [viewForm, setViewForm] = useState<ApiConsentForm | null>(null);
+  const [statsForm, setStatsForm] = useState<ApiConsentForm | null>(null);
 
   const columns: ColumnDef<ApiConsentForm>[] = [
     { accessorKey: 'title', header: 'Title' },
@@ -63,6 +65,9 @@ export default function AdminConsentPage() {
           <Button variant="ghost" size="sm" onClick={() => setViewForm(row.original)}>
             <Eye className="h-4 w-4" />
           </Button>
+          <Button variant="ghost" size="sm" onClick={() => setStatsForm(row.original)}>
+            <BarChart3 className="h-4 w-4" />
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => setEditForm(row.original)}>
             <Pencil className="h-4 w-4" />
           </Button>
@@ -85,6 +90,14 @@ export default function AdminConsentPage() {
   const activeCount = totalForms - expiredCount;
 
   if (loading) return <LoadingSpinner />;
+
+  if (statsForm) {
+    return (
+      <div className="space-y-6">
+        <ConsentStatsPanel form={statsForm} onBack={() => setStatsForm(null)} />
+      </div>
+    );
+  }
 
   if (viewForm) {
     return (

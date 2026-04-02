@@ -4,8 +4,9 @@ import { Pencil, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { CampaignProgressBar } from './CampaignProgressBar';
+import { ShareCampaignButton } from './ShareCampaignButton';
+import { formatDate } from '@/lib/utils';
 import type { Campaign } from '@/hooks/useFundraising';
 
 const statusStyles: Record<string, string> = {
@@ -31,9 +32,6 @@ interface CampaignCardProps {
 
 export function CampaignCard({ campaign, onEdit, onDelete }: CampaignCardProps) {
   const status = getStatus(campaign);
-  const progress = campaign.targetAmount > 0
-    ? Math.min(Math.round((campaign.raisedAmount / campaign.targetAmount) * 100), 100)
-    : 0;
 
   return (
     <Card>
@@ -44,6 +42,7 @@ export function CampaignCard({ campaign, onEdit, onDelete }: CampaignCardProps) 
             <Badge variant="secondary" className={statusStyles[status] ?? ''}>
               {status}
             </Badge>
+            <ShareCampaignButton campaignTitle={campaign.title} campaignId={campaign.id} />
             <Button size="xs" variant="ghost" onClick={() => onEdit(campaign)}>
               <Pencil className="h-3 w-3" />
             </Button>
@@ -55,18 +54,12 @@ export function CampaignCard({ campaign, onEdit, onDelete }: CampaignCardProps) 
         {campaign.description && <CardDescription>{campaign.description}</CardDescription>}
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">
-            Raised: <span className="font-medium text-foreground">{formatCurrency(campaign.raisedAmount)}</span>
-          </span>
-          <span className="text-muted-foreground">
-            Target: <span className="font-medium text-foreground">{formatCurrency(campaign.targetAmount)}</span>
-          </span>
-        </div>
-        <Progress value={progress} />
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>{progress}% funded</span>
-          <span>{formatDate(campaign.startDate)} - {formatDate(campaign.endDate)}</span>
+        <CampaignProgressBar
+          targetAmount={campaign.targetAmount}
+          raisedAmount={campaign.raisedAmount}
+        />
+        <div className="text-xs text-muted-foreground text-right">
+          {formatDate(campaign.startDate)} - {formatDate(campaign.endDate)}
         </div>
       </CardContent>
     </Card>

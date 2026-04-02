@@ -1,20 +1,23 @@
 'use client';
 
+import { useEffect } from 'react';
 import {
   Users, UserCheck, CheckCircle2, Clock,
-  CalendarDays, ShieldCheck, DollarSign,
+  CalendarDays, ShieldCheck, DollarSign, AlertTriangle,
 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCard } from '@/components/shared/StatCard';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useAftercare } from '@/hooks/useAftercare';
+import { useAftercareLatePickups } from '@/hooks/useAftercareLatePickups';
 import { EnrolledTab } from '@/components/aftercare/EnrolledTab';
 import { AttendanceTab } from '@/components/aftercare/AttendanceTab';
 import { PickupAuthTab } from '@/components/aftercare/PickupAuthTab';
 import { SignOutTab } from '@/components/aftercare/SignOutTab';
 import { ActivitiesTab } from '@/components/aftercare/ActivitiesTab';
 import { BillingTab } from '@/components/aftercare/BillingTab';
+import { LatePickupAlert } from '@/components/aftercare/LatePickupAlert';
 
 export default function AfterCarePage() {
   const {
@@ -27,6 +30,14 @@ export default function AfterCarePage() {
     createActivity, updateActivity, deleteActivity,
     fetchInvoices, generateInvoices, markInvoicePaid,
   } = useAftercare();
+
+  const { latePickups, loading: lateLoading, fetchLatePickups } = useAftercareLatePickups();
+
+  useEffect(() => {
+    if (!loading) {
+      fetchLatePickups();
+    }
+  }, [loading, fetchLatePickups]);
 
   if (loading) {
     return <LoadingSpinner size="lg" />;
@@ -52,8 +63,11 @@ export default function AfterCarePage() {
         <StatCard title="Pending Pickup" value={String(pendingPickup)} icon={Clock} description="Still at school" />
       </div>
 
+      {/* Late pickup alert — always visible at top */}
+      <LatePickupAlert latePickups={latePickups} loading={lateLoading} />
+
       <Tabs defaultValue="enrolled">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="enrolled">
             <Users className="h-4 w-4 mr-1.5" /> Enrolled
           </TabsTrigger>

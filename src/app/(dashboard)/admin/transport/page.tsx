@@ -1,6 +1,6 @@
 'use client';
 
-import { Bus, UserPlus, LogIn, AlertTriangle } from 'lucide-react';
+import { Bus, UserPlus, LogIn, AlertTriangle, BarChart3 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useTransport } from '@/hooks/useTransport';
@@ -9,10 +9,12 @@ import { RoutesTab } from '@/components/transport/RoutesTab';
 import { AssignmentsTab } from '@/components/transport/AssignmentsTab';
 import { BoardingLogsTab } from '@/components/transport/BoardingLogsTab';
 import { AlertsTab } from '@/components/transport/AlertsTab';
+import { CapacityOverviewPanel } from '@/components/transport/CapacityOverviewPanel';
 
 export default function AdminTransportPage() {
   const {
     routes, assignments, boardingLogs, alerts, loading,
+    capacityOverview, capacityLoading,
     students, fetchStudents,
     createRoute, updateRoute, deleteRoute,
     fetchAssignments, createAssignment, updateAssignment, deleteAssignment,
@@ -56,6 +58,9 @@ export default function AdminTransportPage() {
           <TabsTrigger value="alerts">
             <AlertTriangle className="h-4 w-4 mr-1.5" /> Alerts
           </TabsTrigger>
+          <TabsTrigger value="capacity">
+            <BarChart3 className="h-4 w-4 mr-1.5" /> Capacity
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="routes">
@@ -98,6 +103,13 @@ export default function AdminTransportPage() {
             onResolveAlert={resolveAlert}
             onDeleteAlert={deleteAlert}
             onFetchAlerts={fetchAlerts}
+          />
+        </TabsContent>
+
+        <TabsContent value="capacity">
+          <CapacityOverviewPanel
+            capacityData={capacityOverview}
+            loading={capacityLoading}
           />
         </TabsContent>
       </Tabs>
