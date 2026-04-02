@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, User, GraduationCap, CreditCard, CalendarCheck, Heart, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, User, GraduationCap, CreditCard, CalendarCheck, Heart, Pencil, Trash2, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,9 @@ import { AcademicTab } from '@/components/students/AcademicTab';
 import { FinancialTab } from '@/components/students/FinancialTab';
 import { AttendanceTab } from '@/components/students/AttendanceTab';
 import { MedicalProfileForm } from '@/components/students/MedicalProfileForm';
+import { StudentPhotoUpload } from '@/components/students/StudentPhotoUpload';
 import { useStudentProfile, deleteStudent } from '@/hooks/useStudentProfile';
+import { useStudentPhoto } from '@/hooks/useStudentPhoto';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import type { Student as StudentType } from '@/types';
 
@@ -40,6 +42,7 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
   const { id } = use(params);
   const router = useRouter();
   const { student, grades, invoices, attendance, loading, error, refetch } = useStudentProfile(id);
+  const { uploadPhoto, uploading } = useStudentPhoto();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -61,6 +64,7 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
 
   const u = getStudentUser(student);
   const status = student.enrollmentStatus ?? 'active';
+  const fullName = `${u.firstName} ${u.lastName}`.trim();
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -77,7 +81,7 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Link href="/admin/students">
             <Button variant="ghost" size="sm">
@@ -85,17 +89,29 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
               Back
             </Button>
           </Link>
+          <StudentPhotoUpload
+            studentId={id}
+            currentPhotoUrl={student.photoUrl}
+            studentName={fullName}
+            onUpload={uploadPhoto}
+            uploading={uploading}
+            onSuccess={refetch}
+          />
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              {u.firstName} {u.lastName}
-            </h1>
+            <h1 className="text-2xl font-bold tracking-tight">{fullName}</h1>
             <p className="text-muted-foreground">{student.admissionNumber}</p>
           </div>
           <Badge className={statusStyles[status] ?? statusStyles.active}>
             {status.charAt(0).toUpperCase() + status.slice(1)}
           </Badge>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link href={`/admin/students/${id}/transcript`}>
+            <Button variant="outline" size="sm">
+              <FileText className="mr-1 h-4 w-4" />
+              Transcript
+            </Button>
+          </Link>
           <Link href={`/admin/students/${id}/edit`}>
             <Button variant="outline" size="sm">
               <Pencil className="mr-1 h-4 w-4" />
@@ -128,7 +144,7 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
       </div>
 
       <Tabs defaultValue="personal">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="personal"><User className="mr-1 h-4 w-4" />Personal</TabsTrigger>
           <TabsTrigger value="academic"><GraduationCap className="mr-1 h-4 w-4" />Academic</TabsTrigger>
           <TabsTrigger value="financial"><CreditCard className="mr-1 h-4 w-4" />Financial</TabsTrigger>

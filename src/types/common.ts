@@ -98,6 +98,7 @@ export interface Student {
   afterCareRequired?: boolean;
   saIdNumber?: string;
   luritsNumber?: string;
+  photoUrl?: string;
   walletId?: string;
   wallet?: Wallet;
   houseId?: string;

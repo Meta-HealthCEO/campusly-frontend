@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { getInitials } from '@/lib/utils';
 import { getRoleLabel } from '@/lib/auth';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 export function TopBar() {
   const { toggleSidebar } = useUIStore();
@@ -32,6 +33,9 @@ export function TopBar() {
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Theme toggle */}
+        <ThemeToggle />
+
         {/* Notifications */}
         <NotificationBell />
 

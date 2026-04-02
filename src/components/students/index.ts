@@ -3,3 +3,8 @@ export { AttendanceTab } from './AttendanceTab';
 export { FinancialTab } from './FinancialTab';
 export { MedicalProfileForm } from './MedicalProfileForm';
 export { PersonalTab } from './PersonalTab';
+export { StudentAvatar } from './StudentAvatar';
+export { StudentPhotoUpload } from './StudentPhotoUpload';
+export { BulkImportDialog } from './BulkImportDialog';
+export { CSVPreviewTable } from './CSVPreviewTable';
+export { TranscriptView } from './TranscriptView';

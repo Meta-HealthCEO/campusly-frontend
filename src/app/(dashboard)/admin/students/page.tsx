@@ -9,7 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ExportButton } from '@/components/shared/ExportButton';
+import { StudentAvatar } from '@/components/students/StudentAvatar';
+import { BulkImportDialog } from '@/components/students/BulkImportDialog';
 import { useStudents } from '@/hooks/useStudents';
+import { useStudentBulkImport } from '@/hooks/useStudentBulkImport';
 import type { Student } from '@/types';
 
 function getStudentName(row: Student): string {
@@ -34,6 +37,18 @@ const statusStyles: Record<string, string> = {
 };
 
 const columns: ColumnDef<Student>[] = [
+  {
+    id: 'avatar',
+    header: '',
+    cell: ({ row }) => (
+      <StudentAvatar
+        photoUrl={row.original.photoUrl}
+        name={getStudentName(row.original)}
+        size="sm"
+      />
+    ),
+    size: 48,
+  },
   { accessorKey: 'admissionNumber', header: 'Admission No' },
   {
     id: 'name',
@@ -66,13 +81,23 @@ const columns: ColumnDef<Student>[] = [
 
 export default function StudentsPage() {
   const router = useRouter();
-  const { students, loading } = useStudents();
+  const { students, loading, refetch } = useStudents();
+  const { uploadAndValidate, confirmImport, downloadTemplate, validating, importing } =
+    useStudentBulkImport();
 
   if (loading) return <LoadingSpinner />;
 
   return (
     <div className="space-y-6">
       <PageHeader title="Students" description="Manage student enrolments and profiles">
+        <BulkImportDialog
+          onDownloadTemplate={downloadTemplate}
+          onValidate={uploadAndValidate}
+          onImport={confirmImport}
+          validating={validating}
+          importing={importing}
+          onSuccess={refetch}
+        />
         <ExportButton endpoint="/students/export" filename="students.csv" />
         <Link href="/admin/students/new">
           <Button>

@@ -90,3 +90,59 @@ export interface StudentGrade {
   comment?: string;
   gradedById: string;
 }
+
+// ─── Transcript Types ──────────────────────────────────────────────────────
+
+export interface TranscriptSubject {
+  name: string;
+  mark: number;
+  total: number;
+  percentage: number;
+  symbol: string;
+}
+
+export interface TranscriptTerm {
+  term: number;
+  subjects: TranscriptSubject[];
+  termAverage: number;
+}
+
+export interface TranscriptYear {
+  year: number;
+  terms: TranscriptTerm[];
+}
+
+export interface TranscriptData {
+  student: {
+    name: string;
+    admissionNumber: string;
+    currentGrade: string;
+    dateOfBirth: string | null;
+  };
+  school: { name: string };
+  years: TranscriptYear[];
+  overallAverage: number;
+  generatedAt: string;
+}
+
+// ─── Bulk Import Types ─────────────────────────────────────────────────────
+
+export interface BulkImportRowError {
+  row: number;
+  field: string;
+  message: string;
+}
+
+export interface BulkImportValidationResult {
+  valid: Record<string, string>[];
+  errors: BulkImportRowError[];
+  totalRows: number;
+}
+
+export interface BulkImportResult {
+  imported: number;
+  skipped: number;
+  errors: string[];
+  validationErrors: BulkImportRowError[];
+  totalRows: number;
+}
