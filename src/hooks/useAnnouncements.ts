@@ -31,7 +31,7 @@ export interface Announcement {
   publishedAt: string | null;
   expiresAt: string | null;
   scheduledPublishDate: string | null;
-  readBy: string[];
+  readBy: Array<{ userId: string; readAt: string }>;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -78,7 +78,7 @@ function mapAnnouncement(raw: Record<string, unknown>): Announcement {
     publishedAt: (raw.publishedAt as string) ?? null,
     expiresAt: (raw.expiresAt as string) ?? null,
     scheduledPublishDate: (raw.scheduledPublishDate as string) ?? null,
-    readBy: (raw.readBy as string[]) ?? [],
+    readBy: (raw.readBy as Array<{ userId: string; readAt: string }>) ?? [],
     isDeleted: (raw.isDeleted as boolean) ?? false,
     createdAt: (raw.createdAt as string) ?? '',
     updatedAt: (raw.updatedAt as string) ?? '',
@@ -209,6 +209,30 @@ export function useAnnouncementCrud() {
     return mapAnnouncement(raw as Record<string, unknown>);
   };
 
+  const schedulePublish = async (id: string, publishAt: string): Promise<Announcement> => {
+    const res = await apiClient.patch(`/announcements/${id}/schedule`, { publishAt });
+    const raw = unwrapResponse(res);
+    return mapAnnouncement(raw as Record<string, unknown>);
+  };
+
+  const markAnnouncementRead = async (id: string): Promise<void> => {
+    await apiClient.patch(`/announcements/${id}/mark-read`);
+  };
+
+  const getReadAnalytics = async (id: string) => {
+    const res = await apiClient.get(`/announcements/${id}/read-analytics`);
+    const raw = unwrapResponse(res) as Record<string, unknown>;
+    return {
+      readCount: (raw.readCount as number) ?? 0,
+      targetAudience: (raw.targetAudience as string) ?? 'all',
+      roleBreakdown: (raw.roleBreakdown ?? {}) as Record<string, number>,
+      readers: (raw.readers ?? []) as Array<{
+        user: { _id: string; firstName: string; lastName: string; email: string; role: string } | string;
+        readAt: string;
+      }>,
+    };
+  };
+
   return {
     schoolId,
     createAnnouncement,
@@ -216,5 +240,8 @@ export function useAnnouncementCrud() {
     deleteAnnouncement,
     publishAnnouncement,
     unpublishAnnouncement,
+    schedulePublish,
+    markAnnouncementRead,
+    getReadAnalytics,
   };
 }

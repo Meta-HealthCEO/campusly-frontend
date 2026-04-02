@@ -7,6 +7,8 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChartComponent } from '@/components/charts';
 import { RevenueChart } from '@/components/superadmin/RevenueChart';
+import { PlatformAnalyticsPanel } from '@/components/superadmin/PlatformAnalyticsPanel';
+import { HealthOverviewTable } from '@/components/superadmin/HealthOverviewTable';
 import { useSuperAdminStore } from '@/stores/useSuperAdminStore';
 import { useSuperAdmin } from '@/hooks/useSuperAdmin';
 import { formatCurrency } from '@/lib/utils';
@@ -14,7 +16,7 @@ import { formatCurrency } from '@/lib/utils';
 export default function SuperAdminDashboardPage() {
   const { stats, statsLoading, revenue, revenueLoading, tenants } =
     useSuperAdminStore();
-  const { fetchStats, fetchRevenue, fetchTenants } = useSuperAdmin();
+  const { fetchStats, fetchRevenue, fetchTenants, fetchPlatformAnalytics, fetchHealthOverview } = useSuperAdmin();
 
   useEffect(() => {
     fetchStats();
@@ -64,6 +66,8 @@ export default function SuperAdminDashboardPage() {
     <div className="space-y-6">
       <PageHeader title="Platform Overview" description="Campusly platform metrics at a glance" />
 
+      <PlatformAnalyticsPanel fetchAnalytics={fetchPlatformAnalytics} />
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Schools"
@@ -111,6 +115,7 @@ export default function SuperAdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
+      <HealthOverviewTable fetchHealthOverview={fetchHealthOverview} />
     </div>
   );
 }

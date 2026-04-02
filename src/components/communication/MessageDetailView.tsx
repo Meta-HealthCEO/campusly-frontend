@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { StatusBadge, ChannelBadge } from './MessageBadges';
 import { DeliveryStatsPanel } from './DeliveryStatsPanel';
 import { DeliveryLogsTable } from './DeliveryLogsTable';
+import { ReadReceiptDashboard } from './ReadReceiptDashboard';
 import { useMessageDetail } from '@/hooks/useCommunication';
 import { formatDate } from '@/lib/utils';
 import type { BulkMessageSender } from './types';
@@ -21,7 +22,8 @@ interface MessageDetailViewProps {
 export function MessageDetailView({ messageId, onBack }: MessageDetailViewProps) {
   const {
     message, stats, logs, logsPage, logsTotalPages, loading,
-    fetchLogs,
+    readStats, readReceipts,
+    fetchLogs, fetchReadReceipts,
   } = useMessageDetail(messageId);
 
   useEffect(() => {
@@ -87,6 +89,12 @@ export function MessageDetailView({ messageId, onBack }: MessageDetailViewProps)
       </Card>
 
       <DeliveryStatsPanel stats={stats} />
+
+      <ReadReceiptDashboard
+        readStats={readStats}
+        readReceipts={readReceipts}
+        onLoadReceipts={() => fetchReadReceipts()}
+      />
 
       <DeliveryLogsTable
         logs={logs}

@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { AnnouncementPriorityBadge } from './AnnouncementPriorityBadge';
 import { AnnouncementStatusBadge } from './AnnouncementStatusBadge';
+import { AnnouncementReadStats } from './AnnouncementReadStats';
+import { SchedulePublishPicker } from './SchedulePublishPicker';
 import { formatDate } from '@/lib/utils';
 import type { Announcement, AnnouncementAuthor } from '@/hooks/useAnnouncements';
 
@@ -14,6 +16,16 @@ interface AnnouncementDetailProps {
   onDelete?: () => void;
   onPublish?: () => void;
   onUnpublish?: () => void;
+  onSchedulePublish?: (publishAt: string) => Promise<void>;
+  getReadAnalytics?: (id: string) => Promise<{
+    readCount: number;
+    targetAudience: string;
+    roleBreakdown: Record<string, number>;
+    readers: Array<{
+      user: { _id: string; firstName: string; lastName: string; email: string; role: string } | string;
+      readAt: string;
+    }>;
+  }>;
 }
 
 function getAuthorName(authorId: AnnouncementAuthor | string): string {
@@ -36,6 +48,8 @@ export function AnnouncementDetail({
   onDelete,
   onPublish,
   onUnpublish,
+  onSchedulePublish,
+  getReadAnalytics,
 }: AnnouncementDetailProps) {
   const readCount = announcement.readBy.length;
   const dateStr = announcement.publishedAt ?? announcement.createdAt;
@@ -87,13 +101,25 @@ export function AnnouncementDetail({
           </div>
         )}
 
-        {readCount > 0 && (
+        {getReadAnalytics && announcement.isPublished ? (
+          <AnnouncementReadStats
+            announcementId={announcement.id}
+            getReadAnalytics={getReadAnalytics}
+          />
+        ) : readCount > 0 ? (
           <div className="flex gap-6 rounded-lg border p-3">
             <div>
               <p className="text-xs text-muted-foreground">Read by</p>
               <p className="text-lg font-bold">{readCount}</p>
             </div>
           </div>
+        ) : null}
+
+        {onSchedulePublish && !announcement.isPublished && (
+          <SchedulePublishPicker
+            onSchedule={onSchedulePublish}
+            currentSchedule={announcement.scheduledPublishDate}
+          />
         )}
 
         {announcement.expiresAt && (

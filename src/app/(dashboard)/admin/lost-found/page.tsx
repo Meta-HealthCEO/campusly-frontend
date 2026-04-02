@@ -11,13 +11,14 @@ import { ReportFoundItemDialog } from '@/components/lost-found/ReportFoundItemDi
 import { ArchiveConfirmDialog } from '@/components/lost-found/ArchiveConfirmDialog';
 import { AdminFoundItemsTable } from '@/components/lost-found/AdminFoundItemsTable';
 import { AdminLostReportsTable } from '@/components/lost-found/AdminLostReportsTable';
+import { HotspotReport } from '@/components/lost-found/HotspotReport';
 import type { FoundItemFormData } from '@/lib/validations';
 
 export default function AdminLostFoundPage() {
   const {
     foundItems, lostReports, stats, loading,
     reportFoundItem, claimItem, verifyItem, matchItems,
-    fetchSuggestions, archiveOldItems, softDelete, refresh,
+    fetchSuggestions, archiveOldItems, softDelete, fetchHotspotReport, refresh,
   } = useLostFound();
 
   const onReportSubmit = async (data: FoundItemFormData) => {
@@ -94,6 +95,7 @@ export default function AdminLostFoundPage() {
           <TabsTrigger value="lost">Lost Reports</TabsTrigger>
           <TabsTrigger value="matched">Matched</TabsTrigger>
           <TabsTrigger value="archived">Archived</TabsTrigger>
+          <TabsTrigger value="hotspot">Hotspot Report</TabsTrigger>
         </TabsList>
 
         <TabsContent value="found">
@@ -132,6 +134,10 @@ export default function AdminLostFoundPage() {
             onDelete={softDelete}
             searchPlaceholder="Search archived items..."
           />
+        </TabsContent>
+
+        <TabsContent value="hotspot">
+          <HotspotReport fetchHotspotReport={fetchHotspotReport} />
         </TabsContent>
       </Tabs>
     </div>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Send } from 'lucide-react';
+import { Send, CalendarClock } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +35,7 @@ interface ComposeMessageDialogProps {
   onOpenChange: (open: boolean) => void;
   templates: MessageTemplate[];
   onSend: (data: Omit<SendBulkMessageInput, 'schoolId'>) => Promise<void>;
+  onSchedule?: (data: Omit<SendBulkMessageInput, 'schoolId'> & { scheduledFor: string }) => Promise<void>;
 }
 
 const channels: { value: ChannelType; label: string }[] = [
@@ -45,9 +46,11 @@ const channels: { value: ChannelType; label: string }[] = [
 ];
 
 export function ComposeMessageDialog({
-  open, onOpenChange, templates, onSend,
+  open, onOpenChange, templates, onSend, onSchedule,
 }: ComposeMessageDialogProps) {
   const [submitting, setSubmitting] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>();
   const [scope, setScope] = useState<{
     type: RecipientScopeType;
@@ -152,13 +155,61 @@ export function ComposeMessageDialog({
 
           <BulkMessageScopePicker value={scope} onChange={setScope} />
 
-          <DialogFooter>
+          {onSchedule && (
+            <div className="space-y-2 border-t pt-3">
+              <Label className="text-xs text-muted-foreground">Or schedule for later</Label>
+              <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
+                <Input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="w-full" />
+                <Input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="w-full" />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
+            {onSchedule && scheduleDate && scheduleTime && (
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={submitting}
+                onClick={handleSubmit(async (data) => {
+                  setSubmitting(true);
+                  try {
+                    const scheduledFor = new Date(`${scheduleDate}T${scheduleTime}`).toISOString();
+                    await onSchedule({
+                      subject: data.subject,
+                      body: data.body,
+                      channel: data.channel,
+                      templateId: selectedTemplateId,
+                      recipients: {
+                        type: scope.type,
+                        targetIds: scope.targetIds.length > 0 ? scope.targetIds : undefined,
+                      },
+                      scheduledFor,
+                    });
+                    toast.success('Message scheduled!');
+                    reset();
+                    setScope({ type: 'school', targetIds: [] });
+                    setScheduleDate('');
+                    setScheduleTime('');
+                    onOpenChange(false);
+                  } catch (err: unknown) {
+                    const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Failed to schedule';
+                    toast.error(msg);
+                  } finally {
+                    setSubmitting(false);
+                  }
+                })}
+              >
+                <CalendarClock className="mr-2 h-4 w-4" />
+                Schedule
+              </Button>
+            )}
             <Button type="submit" disabled={submitting}>
               <Send className="mr-2 h-4 w-4" />
-              {submitting ? 'Sending...' : 'Send Message'}
+              {submitting ? 'Sending...' : 'Send Now'}
             </Button>
           </DialogFooter>
         </form>

@@ -109,7 +109,15 @@ export function useBulkMessages() {
     return mapped;
   };
 
-  return { messages, total, page, totalPages, loading, fetchMessages, sendMessage, setPage };
+  const scheduleMessage = async (data: Omit<SendBulkMessageInput, 'schoolId'> & { scheduledFor: string }) => {
+    const { scheduledFor, ...rest } = data;
+    const res = await apiClient.post('/communication/schedule', { ...rest, schoolId, scheduledFor });
+    const mapped = mapBulkMessage(unwrapResponse(res));
+    setMessages((prev) => [mapped, ...prev]);
+    return mapped;
+  };
+
+  return { messages, total, page, totalPages, loading, fetchMessages, sendMessage, scheduleMessage, setPage };
 }
 
 // ============== useMessageDetail ==============
@@ -164,9 +172,52 @@ export function useMessageDetail(messageId: string) {
 
   useEffect(() => { fetchDetail(); }, [fetchDetail]);
 
+  const [readStats, setReadStats] = useState<{
+    totalRecipients: number;
+    readCount: number;
+    readPercentage: number;
+    avgTimeToReadMinutes: number;
+  } | null>(null);
+  const [readReceipts, setReadReceipts] = useState<Array<{
+    userId: { id: string; firstName: string; lastName: string; email: string } | string;
+    readAt: string;
+  }>>([]);
+
+  const fetchReadStats = useCallback(async () => {
+    if (!messageId) return;
+    try {
+      const res = await apiClient.get(`/communication/messages/${messageId}/read-stats`);
+      const raw = unwrapResponse(res);
+      setReadStats({
+        totalRecipients: (raw.totalRecipients as number) ?? 0,
+        readCount: (raw.readCount as number) ?? 0,
+        readPercentage: (raw.readPercentage as number) ?? 0,
+        avgTimeToReadMinutes: (raw.avgTimeToReadMinutes as number) ?? 0,
+      });
+    } catch {
+      console.error('Failed to load read stats');
+    }
+  }, [messageId]);
+
+  const fetchReadReceipts = useCallback(async () => {
+    if (!messageId) return;
+    try {
+      const res = await apiClient.get(`/communication/messages/${messageId}/read-receipts`);
+      const raw = unwrapResponse(res);
+      setReadReceipts(Array.isArray(raw) ? raw : []);
+    } catch {
+      console.error('Failed to load read receipts');
+    }
+  }, [messageId]);
+
+  useEffect(() => {
+    fetchReadStats();
+  }, [fetchReadStats]);
+
   return {
     message, stats, logs, logsTotal, logsPage, logsTotalPages, loading,
-    fetchDetail, fetchLogs, setLogsPage,
+    readStats, readReceipts,
+    fetchDetail, fetchLogs, fetchReadStats, fetchReadReceipts, setLogsPage,
   };
 }
 
