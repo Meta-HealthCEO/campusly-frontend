@@ -42,7 +42,7 @@ export function BursaryForm({
     setValue,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<BursaryFormData>({
+  } = useForm({
     resolver: zodResolver(bursarySchema),
     defaultValues: { fieldOfStudy: ['any'], ...initialData },
   });
@@ -53,12 +53,13 @@ export function BursaryForm({
     }
   }, [open, initialData, reset]);
 
-  const handleFormSubmit = async (data: BursaryFormData) => {
+  const handleFormSubmit = async (data: Record<string, unknown>) => {
+    const formData = data as unknown as BursaryFormData;
     try {
       const payload: BursaryFormData = {
-        ...data,
-        annualValue: data.annualValue
-          ? Math.round(data.annualValue * 100)
+        ...formData,
+        annualValue: formData.annualValue
+          ? Math.round(formData.annualValue * 100)
           : undefined,
       };
       await onSubmit(payload);

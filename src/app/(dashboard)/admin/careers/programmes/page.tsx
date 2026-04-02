@@ -107,15 +107,11 @@ export default function ProgrammesPage() {
   }, [editingProgramme, updateProgramme, refetch]);
 
   const handleImport = useCallback(async (file: File) => {
-    try {
-      await importProgrammes(file);
-      toast.success('Programmes imported successfully');
-      setImportOpen(false);
-      refetch();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to import programmes';
-      toast.error(message);
-    }
+    const result = await importProgrammes(file);
+    toast.success('Programmes imported successfully');
+    setImportOpen(false);
+    refetch();
+    return result;
   }, [importProgrammes, refetch]);
 
   const handleEdit = useCallback((programme: Programme) => {

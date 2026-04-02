@@ -43,8 +43,8 @@ export function useUniversities(initialFilters?: UniversityFilters): UseUniversi
       if (merged?.type) params.type = merged.type;
       if (merged?.province) params.province = merged.province;
       if (merged?.search) params.search = merged.search;
-      if (merged?.page) params.page = merged.page;
-      if (merged?.limit) params.limit = merged.limit;
+      if (merged?.page != null) params.page = merged.page;
+      if (merged?.limit != null) params.limit = merged.limit;
 
       const response = await apiClient.get('/careers/universities', { params });
       const data = unwrapResponse<CareersPaginatedResponse<University>>(response);

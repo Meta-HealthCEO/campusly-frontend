@@ -49,8 +49,8 @@ export function useBursaries(initialFilters?: BursaryFilters): UseBursariesRetur
       if (merged.field) params.field = merged.field;
       if (merged.provider) params.provider = merged.provider;
       if (merged.search) params.search = merged.search;
-      if (merged.page) params.page = merged.page;
-      if (merged.limit) params.limit = merged.limit;
+      if (merged.page != null) params.page = merged.page;
+      if (merged.limit != null) params.limit = merged.limit;
 
       const response = await apiClient.get('/careers/bursaries', { params });
       const data = unwrapResponse<CareersPaginatedResponse<Bursary>>(response);

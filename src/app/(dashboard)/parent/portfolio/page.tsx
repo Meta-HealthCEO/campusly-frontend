@@ -59,7 +59,7 @@ export default function ParentPortfolioPage() {
           {children.length > 1 && (
             <Select
               value={activeChildId}
-              onValueChange={(val: string) => setSelectedChildId(val)}
+              onValueChange={(val: unknown) => setSelectedChildId(val as string)}
             >
               <SelectTrigger className="w-full sm:w-52">
                 <SelectValue placeholder="Select child" />

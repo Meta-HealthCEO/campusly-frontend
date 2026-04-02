@@ -33,8 +33,8 @@ export function useProgrammeMatcher(
         if (merged.status) params.status = merged.status;
         if (merged.universityId) params.universityId = merged.universityId;
         if (merged.field) params.field = merged.field;
-        if (merged.page) params.page = merged.page;
-        if (merged.limit) params.limit = merged.limit;
+        if (merged.page != null) params.page = merged.page;
+        if (merged.limit != null) params.limit = merged.limit;
 
         const response = await apiClient.get(
           `/careers/match/student/${studentId}`,

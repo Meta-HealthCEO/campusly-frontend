@@ -58,7 +58,7 @@ export function ProgrammeForm({
     setValue,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<ProgrammeFormData>({
+  } = useForm({
     resolver: zodResolver(programmeSchema),
     defaultValues: { minimumAPS: 0, careerOutcomes: [], ...initialData },
   });
@@ -69,12 +69,13 @@ export function ProgrammeForm({
     }
   }, [open, initialData, reset]);
 
-  const handleFormSubmit = async (data: ProgrammeFormData) => {
+  const handleFormSubmit = async (data: unknown) => {
     try {
+      const formData = data as unknown as ProgrammeFormData;
       const payload: ProgrammeFormData = {
-        ...data,
-        annualTuition: data.annualTuition
-          ? Math.round(data.annualTuition * 100)
+        ...formData,
+        annualTuition: formData.annualTuition
+          ? Math.round(formData.annualTuition * 100)
           : undefined,
       };
       await onSubmit(payload);

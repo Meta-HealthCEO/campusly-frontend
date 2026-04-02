@@ -69,7 +69,7 @@ export function ProgrammeFilter({ onFilterChange, universities }: ProgrammeFilte
 
           <Select
             value={filters.matchStatus}
-            onValueChange={(val: string) => updateFilter('matchStatus', val)}
+            onValueChange={(val: unknown) => updateFilter('matchStatus', val as string)}
           >
             <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="Match status" />
@@ -86,7 +86,7 @@ export function ProgrammeFilter({ onFilterChange, universities }: ProgrammeFilte
         <div className="flex flex-col sm:flex-row gap-3">
           <Select
             value={filters.universityId}
-            onValueChange={(val: string) => updateFilter('universityId', val)}
+            onValueChange={(val: unknown) => updateFilter('universityId', val as string)}
           >
             <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="University" />
@@ -103,7 +103,7 @@ export function ProgrammeFilter({ onFilterChange, universities }: ProgrammeFilte
 
           <Select
             value={filters.province}
-            onValueChange={(val: string) => updateFilter('province', val)}
+            onValueChange={(val: unknown) => updateFilter('province', val as string)}
           >
             <SelectTrigger className="w-full sm:w-44">
               <SelectValue placeholder="Province" />
@@ -120,7 +120,7 @@ export function ProgrammeFilter({ onFilterChange, universities }: ProgrammeFilte
 
           <Select
             value={filters.qualificationType}
-            onValueChange={(val: string) => updateFilter('qualificationType', val)}
+            onValueChange={(val: unknown) => updateFilter('qualificationType', val as string)}
           >
             <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="Qualification" />

@@ -58,7 +58,7 @@ export function UniversityForm({
     setValue,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<UniversityFormData>({
+  } = useForm({
     resolver: zodResolver(universitySchema),
     defaultValues: { applicationFee: 0, ...initialData },
   });
@@ -69,11 +69,12 @@ export function UniversityForm({
     }
   }, [open, initialData, reset]);
 
-  const handleFormSubmit = async (data: UniversityFormData) => {
+  const handleFormSubmit = async (data: unknown) => {
     try {
+      const formData = data as unknown as UniversityFormData;
       await onSubmit({
-        ...data,
-        applicationFee: Math.round(data.applicationFee * 100),
+        ...formData,
+        applicationFee: Math.round(formData.applicationFee * 100),
       });
       toast.success(
         initialData ? 'University updated' : 'University created',

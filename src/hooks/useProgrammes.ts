@@ -50,8 +50,8 @@ export function useProgrammes(initialFilters?: ProgrammeFilters): UseProgrammesR
       if (merged?.maxAPS) params.maxAPS = merged.maxAPS;
       if (merged?.field) params.field = merged.field;
       if (merged?.search) params.search = merged.search;
-      if (merged?.page) params.page = merged.page;
-      if (merged?.limit) params.limit = merged.limit;
+      if (merged?.page != null) params.page = merged.page;
+      if (merged?.limit != null) params.limit = merged.limit;
 
       const response = await apiClient.get('/careers/programmes', { params });
       const data = unwrapResponse<CareersPaginatedResponse<Programme>>(response);

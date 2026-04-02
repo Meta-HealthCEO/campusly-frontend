@@ -68,7 +68,7 @@ export default function ParentCareersPage() {
   const dataLoading = apsLoading || matchLoading || appsLoading;
 
   const childSelector = children.length > 1 ? (
-    <Select value={selectedChildId} onValueChange={setSelectedChildId}>
+    <Select value={selectedChildId} onValueChange={(val: unknown) => setSelectedChildId(val as string)}>
       <SelectTrigger className="w-full sm:w-56">
         <SelectValue placeholder="Select a child" />
       </SelectTrigger>

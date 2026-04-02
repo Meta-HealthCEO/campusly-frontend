@@ -44,7 +44,7 @@ export function useCareerExplorer(initialFilters?: CareerFilters): UseCareerExpl
 
   useEffect(() => {
     fetchCareers(initialFilters);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fetchCareers]);
 
   return {
     careers,

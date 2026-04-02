@@ -4,15 +4,16 @@ import { useState, useCallback } from 'react';
 import { FileText, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
+import type { CareerApplication } from '@/types';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { useApplications } from '@/hooks/useApplications';
 import { useProgrammeMatcher } from '@/hooks/useProgrammeMatcher';
 
-import PageHeader from '@/components/shared/PageHeader';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
-import LoadingSpinner from '@/components/shared/LoadingSpinner';
-import ApplicationTracker from '@/components/careers/ApplicationTracker';
-import ApplicationForm from '@/components/careers/ApplicationForm';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { ApplicationTracker } from '@/components/careers/ApplicationTracker';
+import { ApplicationForm } from '@/components/careers/ApplicationForm';
 import DeadlineTimeline from '@/components/careers/DeadlineTimeline';
 import { Button } from '@/components/ui/button';
 
@@ -45,7 +46,7 @@ export default function ApplicationsPage() {
 
   const handleUpdateStatus = useCallback(
     (id: string, status: string) => {
-      updateApplication(id, { status } as { status: string })
+      updateApplication(id, { status } as Partial<CareerApplication>)
         .then(() => toast.success('Application status updated'))
         .catch(() => toast.error('Failed to update status'));
     },
