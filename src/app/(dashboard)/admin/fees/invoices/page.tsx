@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { ExportButton } from '@/components/shared/ExportButton';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useInvoices } from '@/hooks/useAdminFees';
 import { CreateInvoiceDialog } from '@/components/fees/CreateInvoiceDialog';
@@ -118,6 +119,7 @@ export default function InvoicesPage() {
           <Users className="mr-2 h-4 w-4" />
           Bulk Generate
         </Button>
+        <ExportButton endpoint="/fees/export/invoices" filename="invoices.csv" />
         <div className="ml-auto flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Status:</span>
           <Select value={statusFilter} onValueChange={(val: unknown) => setStatusFilter(val as string)}>

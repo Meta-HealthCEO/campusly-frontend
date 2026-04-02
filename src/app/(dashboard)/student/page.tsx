@@ -8,6 +8,7 @@ import { StatCard } from '@/components/shared/StatCard';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { AnnouncementBanner } from '@/components/announcements/AnnouncementBanner';
+import { FeaturedBanner } from '@/components/school-news/FeaturedBanner';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { useStudentDashboard } from '@/hooks/useStudentDashboard';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -41,6 +42,8 @@ export default function StudentDashboard() {
       </div>
 
       <AnnouncementBanner limit={3} />
+
+      <FeaturedBanner limit={3} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

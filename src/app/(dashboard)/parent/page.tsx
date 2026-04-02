@@ -15,6 +15,7 @@ import { formatCurrency, formatDate, formatRelativeDate } from '@/lib/utils';
 import { useCurrentParent } from '@/hooks/useCurrentParent';
 import { useParentDashboard } from '@/hooks/useParentDashboard';
 import { AnnouncementBanner } from '@/components/announcements/AnnouncementBanner';
+import { FeaturedBanner } from '@/components/school-news/FeaturedBanner';
 import Link from 'next/link';
 import type { Notification } from '@/types';
 
@@ -125,6 +126,8 @@ export default function ParentDashboard() {
       </div>
 
       <AnnouncementBanner limit={3} />
+
+      <FeaturedBanner limit={3} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

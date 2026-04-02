@@ -33,3 +33,4 @@ export * from './notice-board';
 export * from './digest';
 export * from './accounting';
 export * from './student-360';
+export * from './school-news';

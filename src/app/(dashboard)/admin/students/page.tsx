@@ -8,6 +8,7 @@ import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { ExportButton } from '@/components/shared/ExportButton';
 import { useStudents } from '@/hooks/useStudents';
 import type { Student } from '@/types';
 
@@ -72,6 +73,7 @@ export default function StudentsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Students" description="Manage student enrolments and profiles">
+        <ExportButton endpoint="/students/export" filename="students.csv" />
         <Link href="/admin/students/new">
           <Button>
             <Plus className="mr-2 h-4 w-4" />

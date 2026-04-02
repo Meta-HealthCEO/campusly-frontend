@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { ExportButton } from '@/components/shared/ExportButton';
 import { DailyAttendanceSummaryChart } from '@/components/attendance/DailyAttendanceSummaryChart';
 import { AbsenteeList } from '@/components/attendance/AbsenteeList';
 import { ChronicAbsenteeTable } from '@/components/attendance/ChronicAbsenteeTable';
@@ -54,6 +55,12 @@ export default function AdminAttendancePage() {
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
             className="w-full sm:w-40"
+          />
+          <ExportButton
+            endpoint="/attendance/export"
+            filename="attendance.csv"
+            params={{ dateFrom: selectedDate, dateTo: selectedDate }}
+            label="Export Day"
           />
         </div>
       </PageHeader>

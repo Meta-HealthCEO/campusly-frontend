@@ -57,6 +57,7 @@ export const ROUTES = {
   ADMIN_ACCOUNTING: '/admin/fees/accounting',
   ADMIN_PAYMENT_SETTINGS: '/admin/settings/payments',
   ADMIN_MEETINGS: '/admin/meetings',
+  ADMIN_SCHOOL_NEWS: '/admin/school-news',
 
   // Parent
   PARENT_DASHBOARD: '/parent',
@@ -75,6 +76,7 @@ export const ROUTES = {
   PARENT_MEETINGS: '/parent/meetings',
   PARENT_NOTICE_BOARD: '/parent/notice-board',
   PARENT_DIGEST: '/parent/digest',
+  PARENT_HOMEWORK: '/parent/homework',
   PARENT_SETTINGS: '/parent/settings',
 
   // Student
@@ -189,6 +191,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Library', href: ROUTES.ADMIN_LIBRARY, icon: BookMarked, module: 'library' },
   { label: 'After Care', href: ROUTES.ADMIN_AFTERCARE, icon: Clock },
   { label: 'Announcements', href: ROUTES.ADMIN_ANNOUNCEMENTS, icon: Megaphone },
+  { label: 'School News', href: ROUTES.ADMIN_SCHOOL_NEWS, icon: Newspaper },
   { label: 'Fundraising', href: ROUTES.ADMIN_FUNDRAISING, icon: Heart },
   { label: 'Learning', href: ROUTES.ADMIN_LEARNING, icon: BookMarked },
   { label: 'Data Migration', href: ROUTES.ADMIN_MIGRATION, icon: Upload },
@@ -236,6 +239,7 @@ export const PARENT_NAV: NavItem[] = [
   { label: 'Fees', href: ROUTES.PARENT_FEES, icon: CreditCard, module: 'fees' },
   { label: 'Academics', href: ROUTES.PARENT_ACADEMICS, icon: BookOpen },
   { label: 'Attendance', href: ROUTES.PARENT_ATTENDANCE, icon: UserCheck },
+  { label: 'Homework', href: ROUTES.PARENT_HOMEWORK, icon: ClipboardList, module: 'homework' },
   { label: 'Messages', href: ROUTES.PARENT_MESSAGES, icon: MessageSquare },
   { label: 'Notice Board', href: ROUTES.PARENT_NOTICE_BOARD, icon: Clipboard },
   { label: 'Daily Digest', href: ROUTES.PARENT_DIGEST, icon: Newspaper },

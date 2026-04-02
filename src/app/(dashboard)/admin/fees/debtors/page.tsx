@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { ExportButton } from '@/components/shared/ExportButton';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { CollectionStageBadge } from '@/components/fees/FeeStatusBadge';
 import { DebtorActions } from '@/components/fees/DebtorActions';
@@ -49,7 +50,9 @@ export default function DebtorsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Debtors Ageing Report" description="Outstanding fees broken down by ageing period" />
+      <PageHeader title="Debtors Ageing Report" description="Outstanding fees broken down by ageing period">
+        <ExportButton endpoint="/fees/export/debtors" filename="debtors.csv" />
+      </PageHeader>
       <DataTable columns={columns} data={data} searchKey="parentName" searchPlaceholder="Search by parent name..." />
 
       {actions.length > 0 && (
