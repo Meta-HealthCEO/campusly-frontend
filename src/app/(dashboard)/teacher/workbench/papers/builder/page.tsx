@@ -124,7 +124,9 @@ export default function PaperBuilderPage() {
     try {
       // Persist to localStorage as MVP draft storage
       const draft = { config: derivedConfig, sections };
-      localStorage.setItem('paper_builder_draft', JSON.stringify(draft));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('paper_builder_draft', JSON.stringify(draft));
+      }
       toast.success('Draft saved');
     } catch (err: unknown) {
       console.error('Failed to save draft:', err);

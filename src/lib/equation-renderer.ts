@@ -1,5 +1,18 @@
 import katex from 'katex';
 
+/**
+ * Escape HTML special characters in a plain-text string to prevent XSS.
+ * Applied to all non-math text segments before concatenation with KaTeX output.
+ */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // Regex: explicit $$...$$ display math (must come before inline $ check)
 const DISPLAY_MATH_REGEX = /\$\$([^$]+)\$\$/g;
 
@@ -84,60 +97,113 @@ function normaliseToLatex(expr: string): string {
  * Returns the original text if no math is detected, or if all renderings fail.
  */
 export function renderEquations(text: string): string {
-  if (!containsMath(text)) return text;
+  if (!containsMath(text)) return escapeHtml(text);
 
-  let result = text;
+  // Split on math delimiters so we can escape plain-text segments separately.
+  // Strategy: accumulate parts; replace math matches with KaTeX HTML;
+  // escape everything that is not already KaTeX output.
+  // We process by splitting on $$...$$ first, then $...$ within plain segments,
+  // then fallback patterns. After all substitutions the non-math remainder is
+  // escaped via a sentinel approach: temporarily mark KaTeX output so it is
+  // skipped by escapeHtml at the end.
+
+  // Use a unique sentinel that cannot appear in teacher input.
+  const KATEX_SENTINEL = '\x00KATEX\x00';
+
+  // Collect rendered parts: [{ isKatex: bool, text: string }]
+  type Part = { isKatex: boolean; text: string };
+  const parts: Part[] = [{ isKatex: false, text: text }];
+
+  function processParts(
+    regex: RegExp,
+    replacer: (match: string, ...groups: string[]) => string | null,
+  ): void {
+    const next: Part[] = [];
+    for (const part of parts) {
+      if (part.isKatex) {
+        next.push(part);
+        continue;
+      }
+      // Reset regex state
+      regex.lastIndex = 0;
+      let lastIndex = 0;
+      let m: RegExpExecArray | null;
+      while ((m = regex.exec(part.text)) !== null) {
+        if (m.index > lastIndex) {
+          next.push({ isKatex: false, text: part.text.slice(lastIndex, m.index) });
+        }
+        const rendered = replacer(m[0], ...m.slice(1));
+        if (rendered !== null && rendered !== m[0]) {
+          next.push({ isKatex: true, text: rendered });
+        } else {
+          next.push({ isKatex: false, text: m[0] });
+        }
+        lastIndex = m.index + m[0].length;
+      }
+      if (lastIndex < part.text.length) {
+        next.push({ isKatex: false, text: part.text.slice(lastIndex) });
+      }
+    }
+    // Replace parts in-place
+    parts.splice(0, parts.length, ...next);
+    // Reset regexes that are global
+    regex.lastIndex = 0;
+  }
 
   // 1. Display math: $$...$$
-  result = result.replace(DISPLAY_MATH_REGEX, (_match, inner: string) => {
+  processParts(DISPLAY_MATH_REGEX, (_match, inner: string) => {
     const latex = normaliseToLatex(inner.trim());
     const rendered = renderSingleExpression(latex, true);
-    return rendered === latex ? _match : rendered;
+    return rendered === latex ? null : rendered;
   });
 
   // 2. Inline math: $...$
-  result = result.replace(INLINE_MATH_REGEX, (_match, inner: string) => {
+  processParts(INLINE_MATH_REGEX, (_match, inner: string) => {
     const latex = normaliseToLatex(inner.trim());
     const rendered = renderSingleExpression(latex, false);
-    return rendered === latex ? _match : rendered;
+    return rendered === latex ? null : rendered;
   });
 
-  // 3. sqrt(...) — not already inside a KaTeX span
-  result = result.replace(SQRT_REGEX, (_match, inner: string) => {
+  // 3. sqrt(...)
+  processParts(SQRT_REGEX, (_match, inner: string) => {
     const latex = `\\sqrt{${inner.trim()}}`;
     const rendered = renderSingleExpression(latex, false);
-    return rendered === latex ? _match : rendered;
+    return rendered === latex ? null : rendered;
   });
 
   // 4. frac(a,b)
-  result = result.replace(FRAC_REGEX, (_match, num: string, den: string) => {
+  processParts(FRAC_REGEX, (_match, num: string, den: string) => {
     const latex = `\\frac{${num.trim()}}{${den.trim()}}`;
     const rendered = renderSingleExpression(latex, false);
-    return rendered === latex ? _match : rendered;
+    return rendered === latex ? null : rendered;
   });
 
-  // 5. Superscript: token^exponent (skip if already inside katex HTML)
-  result = result.replace(SUPERSCRIPT_REGEX, (match) => {
+  // 5. Superscript: token^exponent
+  processParts(SUPERSCRIPT_REGEX, (match) => {
     const latex = normaliseToLatex(match);
     const rendered = renderSingleExpression(latex, false);
-    return rendered === latex ? match : rendered;
+    return rendered === latex ? null : rendered;
   });
 
   // 6. Subscript: token_sub
-  result = result.replace(SUBSCRIPT_REGEX, (match) => {
+  processParts(SUBSCRIPT_REGEX, (match) => {
     const latex = normaliseToLatex(match);
     const rendered = renderSingleExpression(latex, false);
-    return rendered === latex ? match : rendered;
+    return rendered === latex ? null : rendered;
   });
 
-  // 7. Simple variable expressions (low-confidence, only render if both sides resolved)
-  result = result.replace(VARIABLE_EXPR_REGEX, (match) => {
-    // Avoid double-rendering content already wrapped by KaTeX
-    if (match.includes('katex')) return match;
+  // 7. Simple variable expressions
+  processParts(VARIABLE_EXPR_REGEX, (match) => {
+    if (match.includes('katex')) return match; // already rendered
     const latex = normaliseToLatex(match);
     const rendered = renderSingleExpression(latex, false);
-    return rendered === latex ? match : rendered;
+    return rendered === latex ? null : rendered;
   });
 
-  return result;
+  void KATEX_SENTINEL;
+
+  // Combine: escape plain-text parts, pass KaTeX HTML through as-is
+  return parts
+    .map((p) => (p.isKatex ? p.text : escapeHtml(p.text)))
+    .join('');
 }

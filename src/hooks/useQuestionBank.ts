@@ -61,8 +61,8 @@ export function useQuestionBank() {
         if (subRes.status === 'fulfilled') {
           setSubjects(unwrapList<Subject>(subRes.value));
         }
-      } catch {
-        console.error('Failed to load question bank metadata');
+      } catch (err: unknown) {
+        console.error('Failed to load question bank metadata', err);
       }
     }
     if (schoolId) fetchMeta();
@@ -82,8 +82,8 @@ export function useQuestionBank() {
         if (gradeId) params.gradeId = gradeId;
         const res = await apiClient.get('/teacher-workbench/curriculum/topics', { params });
         setTopics(unwrapList<CurriculumTopic>(res));
-      } catch {
-        console.error('Failed to load topics');
+      } catch (err: unknown) {
+        console.error('Failed to load topics', err);
       }
     }
     fetchTopics();

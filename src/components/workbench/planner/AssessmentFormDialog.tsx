@@ -74,19 +74,21 @@ export function AssessmentFormDialog({
   const selectedTopicIds = watch('topicIds');
 
   useEffect(() => {
-    if (initialData) {
-      reset({
-        title: initialData.title,
-        type: initialData.type,
-        plannedDate: initialData.plannedDate.slice(0, 10),
-        marks: initialData.marks,
-        weight: initialData.weight,
-        topicIds: initialData.topicIds,
-      });
-    } else {
-      reset({ title: '', type: 'test', plannedDate: '', marks: 100, weight: 0, topicIds: [] });
+    if (open) {
+      if (initialData) {
+        reset({
+          title: initialData.title,
+          type: initialData.type,
+          plannedDate: initialData.plannedDate.slice(0, 10),
+          marks: initialData.marks,
+          weight: initialData.weight,
+          topicIds: initialData.topicIds,
+        });
+      } else {
+        reset({ title: '', type: 'test', plannedDate: '', marks: 100, weight: 0, topicIds: [] });
+      }
     }
-  }, [initialData, reset]);
+  }, [open, initialData, reset]);
 
   function handleFormSubmit(data: FormData) {
     onSubmit({

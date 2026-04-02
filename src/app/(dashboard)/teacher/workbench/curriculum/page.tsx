@@ -113,48 +113,60 @@ export default function CurriculumPage() {
 
       {/* Filter bar */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <Select value={selectedFramework} onValueChange={(v: unknown) => setSelectedFramework(v as string)}>
+        <Select
+          value={selectedFramework || 'all'}
+          onValueChange={(v: unknown) => setSelectedFramework((v as string) === 'all' ? '' : (v as string))}
+        >
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="All frameworks" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All frameworks</SelectItem>
+            <SelectItem value="all">All frameworks</SelectItem>
             {frameworks.map((f) => (
               <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Select value={selectedSubject} onValueChange={(v: unknown) => setSelectedSubject(v as string)}>
+        <Select
+          value={selectedSubject || 'all'}
+          onValueChange={(v: unknown) => setSelectedSubject((v as string) === 'all' ? '' : (v as string))}
+        >
           <SelectTrigger className="w-full sm:w-44">
             <SelectValue placeholder="All subjects" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All subjects</SelectItem>
+            <SelectItem value="all">All subjects</SelectItem>
             {subjects.map((s) => (
               <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Select value={selectedClass} onValueChange={(v: unknown) => setSelectedClass(v as string)}>
+        <Select
+          value={selectedClass || 'all'}
+          onValueChange={(v: unknown) => setSelectedClass((v as string) === 'all' ? '' : (v as string))}
+        >
           <SelectTrigger className="w-full sm:w-44">
             <SelectValue placeholder="Select class" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">No class</SelectItem>
+            <SelectItem value="all">No class</SelectItem>
             {classes.map((c) => (
               <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Select value={selectedGrade} onValueChange={(v: unknown) => setSelectedGrade(v as string)}>
+        <Select
+          value={selectedGrade || 'all'}
+          onValueChange={(v: unknown) => setSelectedGrade((v as string) === 'all' ? '' : (v as string))}
+        >
           <SelectTrigger className="w-full sm:w-44">
             <SelectValue placeholder="All grades" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All grades</SelectItem>
+            <SelectItem value="all">All grades</SelectItem>
             {[...new Set(frameworks.map((f) => f.gradeId))].map((g) => (
               <SelectItem key={g} value={g}>{g}</SelectItem>
             ))}

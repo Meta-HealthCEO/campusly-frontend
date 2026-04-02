@@ -22,3 +22,4 @@ export * from './notifications';
 export * from './sport';
 export * from './careers';
 export * from './teacher-workbench';
+export * from './teacher-workbench-views';

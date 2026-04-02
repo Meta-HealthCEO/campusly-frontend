@@ -123,6 +123,7 @@ export function PaperBuilderPanel({
                             onClick={() => onMoveQuestion(section.id, idx, idx - 1)}
                             disabled={idx === 0}
                             title="Move up"
+                            aria-label="Move question up"
                           >
                             <ChevronUp className="h-3 w-3" />
                           </button>
@@ -133,6 +134,7 @@ export function PaperBuilderPanel({
                             }
                             disabled={idx === section.questions.length - 1}
                             title="Move down"
+                            aria-label="Move question down"
                           >
                             <ChevronDown className="h-3 w-3" />
                           </button>
@@ -141,6 +143,7 @@ export function PaperBuilderPanel({
                           className="shrink-0 h-4 w-4 text-muted-foreground hover:text-destructive"
                           onClick={() => onRemoveQuestion(section.id, idx)}
                           title="Remove question"
+                          aria-label="Remove question"
                         >
                           <X className="h-3.5 w-3.5" />
                         </button>

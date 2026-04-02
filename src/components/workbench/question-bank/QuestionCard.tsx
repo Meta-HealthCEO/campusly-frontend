@@ -38,7 +38,7 @@ export function QuestionCard({ question, onEdit, onDelete, expanded, onToggle }:
             {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </span>
           <div className="flex-1 min-w-0">
-            <p className={`text-sm font-medium ${expanded ? '' : 'line-clamp-2'} truncate`}>
+            <p className={`text-sm font-medium ${expanded ? '' : 'line-clamp-2'}`}>
               {question.questionText}
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-2">

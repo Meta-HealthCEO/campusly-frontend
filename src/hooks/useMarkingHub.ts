@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapList } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -30,16 +30,18 @@ export function useMarkingHub() {
     fetchPending();
   }, [fetchPending]);
 
-  const now = new Date();
-  const todayStr = now.toISOString().slice(0, 10);
-
-  const overdueCount = items.filter(
-    (item) => item.dueDate < todayStr && item.priority === 'high',
-  ).length;
-
-  const dueTodayCount = items.filter(
-    (item) => item.dueDate === todayStr,
-  ).length;
+  const { overdueCount, dueTodayCount } = useMemo(() => {
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    return {
+      overdueCount: items.filter(
+        (item) => item.dueDate < todayStr && item.priority === 'high',
+      ).length,
+      dueTodayCount: items.filter(
+        (item) => item.dueDate === todayStr,
+      ).length,
+    };
+  }, [items]);
 
   return {
     items,
