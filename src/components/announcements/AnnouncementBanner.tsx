@@ -81,7 +81,7 @@ export function AnnouncementBanner({
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-1.5 min-w-0">
                 {a.priority === 'urgent' && (
-                  <AlertTriangle className="h-3.5 w-3.5 text-red-500 shrink-0" />
+                  <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />
                 )}
                 {a.pinned && (
                   <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500 shrink-0" />

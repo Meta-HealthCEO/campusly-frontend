@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import type { Student, Invoice } from '@/types';
 
 export interface StatementSummary {
@@ -32,7 +33,7 @@ export function useStatementStudents() {
     async function fetchStudents() {
       try {
         const response = await apiClient.get('/students');
-        const raw = response.data.data ?? response.data;
+        const raw = unwrapResponse(response);
         const list = Array.isArray(raw)
           ? raw
           : (raw as Record<string, unknown>).students ??
@@ -67,10 +68,7 @@ export async function generateStatement(
     if (fromDate) body.fromDate = fromDate;
     if (toDate) body.toDate = toDate;
     const response = await apiClient.post('/fees/statements', body);
-    const raw = (response.data.data ?? response.data) as Record<
-      string,
-      unknown
-    >;
+    const raw = unwrapResponse(response);
     const invoicesArr: Invoice[] = Array.isArray(raw.invoices)
       ? (raw.invoices as Invoice[])
       : [];

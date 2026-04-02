@@ -56,7 +56,7 @@ export function SubmissionCard({ job, onReview, onPublish }: SubmissionCardProps
               <p className="font-bold">{finalMark}/{result.maxMark}</p>
               <p className={`text-xs font-medium ${
                 percentage >= 70 ? 'text-emerald-600' :
-                percentage >= 50 ? 'text-orange-500' : 'text-red-500'
+                percentage >= 50 ? 'text-orange-500' : 'text-destructive'
               }`}>{percentage}%</p>
             </div>
           )}

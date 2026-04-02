@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -10,30 +10,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAuditStore } from '@/stores/useAuditStore';
-import apiClient from '@/lib/api-client';
-
-interface School {
-  _id: string;
-  name: string;
-}
+import { useAuditApi } from '@/hooks/useAuditApi';
 
 export function AuditSchoolSelector() {
-  const [schools, setSchools] = useState<School[]>([]);
-  const { filters, setFilter, fetchLogs } = useAuditStore();
+  const { schools, filters, setFilter } = useAuditStore();
+  const { fetchLogs, fetchSchools } = useAuditApi();
 
   useEffect(() => {
-    async function loadSchools() {
-      try {
-        const res = await apiClient.get('/schools');
-        const raw = res.data.data ?? res.data;
-        const arr: School[] = Array.isArray(raw) ? raw : raw.schools ?? [];
-        setSchools(arr);
-      } catch {
-        console.error('Failed to load schools');
-      }
-    }
-    loadSchools();
-  }, []);
+    fetchSchools();
+  }, [fetchSchools]);
 
   const handleChange = (val: unknown) => {
     const schoolId = val as string;

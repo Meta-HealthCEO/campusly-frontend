@@ -53,7 +53,7 @@ export default function StudentTimetablePage() {
               <thead>
                 <tr className="border-b">
                   <th className="p-3 text-left text-sm font-medium text-muted-foreground w-20">Period</th>
-                  {days.map((day) => (<th key={day} className="p-3 text-left text-sm font-medium text-muted-foreground">{dayLabels[day]}</th>))}
+                  {days.map((day) => (<th key={day} className="p-3 text-left text-sm font-medium text-muted-foreground min-w-[120px]">{dayLabels[day]}</th>))}
                 </tr>
               </thead>
               <tbody>
@@ -75,8 +75,8 @@ export default function StudentTimetablePage() {
                       return (
                         <td key={day} className="p-2">
                           <div className={cn('rounded-lg border p-3 space-y-0.5', subjectColors[getSubjectId(slot)] || 'bg-muted')}>
-                            <p className="text-sm font-medium">{getSubjectName(slot)}</p>
-                            <p className="text-xs opacity-80">{slot.room}</p>
+                            <p className="text-sm font-medium truncate">{getSubjectName(slot)}</p>
+                            <p className="text-xs opacity-80 truncate">{slot.room}</p>
                           </div>
                         </td>
                       );

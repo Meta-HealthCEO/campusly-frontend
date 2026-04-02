@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { StudentSelector } from '@/components/fees/StudentSelector';
-import apiClient from '@/lib/api-client';
+import { useFeeTypesList } from '@/hooks/useFeeDialogData';
+import { useExemptionMutations, extractErrorMessage } from '@/hooks/useFeeMutations';
 import type { FeeType } from '@/types';
 
 interface CreateExemptionDialogProps {
@@ -41,6 +42,8 @@ export function CreateExemptionDialog({
   schoolId,
   onSuccess,
 }: CreateExemptionDialogProps) {
+  const { feeTypes } = useFeeTypesList(schoolId, open && !!schoolId);
+  const { createExemption } = useExemptionMutations();
   const [studentId, setStudentId] = useState('');
   const [feeTypeId, setFeeTypeId] = useState('');
   const [exemptionType, setExemptionType] = useState('');
@@ -49,23 +52,7 @@ export function CreateExemptionDialog({
   const [reason, setReason] = useState('');
   const [validFrom, setValidFrom] = useState('');
   const [validTo, setValidTo] = useState('');
-  const [feeTypes, setFeeTypes] = useState<FeeType[]>([]);
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!open || !schoolId) return;
-    async function fetchFeeTypes() {
-      try {
-        const response = await apiClient.get(`/fees/types/school/${schoolId}`);
-        const raw = response.data.data ?? response.data;
-        const list: FeeType[] = Array.isArray(raw) ? raw : raw.feeTypes ?? raw.data ?? [];
-        setFeeTypes(list);
-      } catch {
-        console.error('Failed to load fee types');
-      }
-    }
-    fetchFeeTypes();
-  }, [open, schoolId]);
 
   const resetForm = () => {
     setStudentId('');
@@ -85,7 +72,7 @@ export function CreateExemptionDialog({
     }
     setSubmitting(true);
     try {
-      const body: Record<string, unknown> = {
+      await createExemption({
         studentId,
         schoolId,
         feeTypeId,
@@ -93,20 +80,15 @@ export function CreateExemptionDialog({
         reason,
         validFrom,
         validTo,
-      };
-      if (discountPercentage) body.discountPercentage = parseFloat(discountPercentage);
-      if (fixedAmount) body.fixedAmount = parseInt(fixedAmount, 10);
-
-      await apiClient.post('/fees/exemptions', body);
+        discountPercentage: discountPercentage ? parseFloat(discountPercentage) : undefined,
+        fixedAmount: fixedAmount ? parseInt(fixedAmount, 10) : undefined,
+      });
       toast.success('Fee exemption created successfully!');
       resetForm();
       onOpenChange(false);
       onSuccess();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to create exemption';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to create exemption'));
     } finally {
       setSubmitting(false);
     }

@@ -27,7 +27,7 @@ const transactionIcons: Record<string, typeof ArrowUpCircle> = {
 const transactionColors: Record<string, string> = {
   topup: 'text-emerald-600',
   load: 'text-emerald-600',
-  purchase: 'text-red-600',
+  purchase: 'text-destructive',
   refund: 'text-blue-600',
 };
 
@@ -100,7 +100,7 @@ export default function StudentWalletPage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className={`text-sm font-semibold ${tx.type === 'purchase' ? 'text-red-600' : 'text-emerald-600'}`}>
+                          <p className={`text-sm font-semibold ${tx.type === 'purchase' ? 'text-destructive' : 'text-emerald-600'}`}>
                             {tx.type === 'purchase' ? '-' : '+'}{formatCurrency(tx.amount)}
                           </p>
                           <p className="text-xs text-muted-foreground">
@@ -137,7 +137,7 @@ export default function StudentWalletPage() {
                         {formatCurrency(item.price)}
                       </span>
                       {item.allergens.length > 0 && (
-                        <div className="flex gap-1">
+                        <div className="flex flex-wrap gap-1 max-w-xs">
                           {item.allergens.map((allergen) => (
                             <Badge key={allergen} variant="outline" className="text-xs">
                               {allergen}

@@ -111,74 +111,76 @@ export function RubricEditorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl flex flex-col max-h-[85vh]">
         <DialogHeader>
           <DialogTitle>{initialData ? 'Edit Rubric' : 'Create Rubric'}</DialogTitle>
           <DialogDescription>Build a reusable assessment rubric with criteria and levels.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Rubric Name *</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Essay Writing Rubric" required />
-            </div>
-            <div className="space-y-2">
-              <Label>Subject (optional)</Label>
-              <Select value={subjectId} onValueChange={(v: unknown) => setSubjectId(v as string)}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="Cross-subject" /></SelectTrigger>
-                <SelectContent>
-                  {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Checkbox id="reusable" checked={reusable} onCheckedChange={(c) => setReusable(c === true)} />
-            <Label htmlFor="reusable">Reusable (available to other teachers)</Label>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="font-medium">Criteria</h4>
-              <p className="text-sm text-muted-foreground">Total: {computedTotalPoints} pts</p>
-            </div>
-            {criteria.map((c, ci) => (
-              <div key={ci} className="rounded-lg border p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h5 className="text-sm font-medium">Criterion {ci + 1}</h5>
-                  {criteria.length > 1 && (
-                    <Button type="button" size="xs" variant="outline" className="text-destructive" onClick={() => removeCriterion(ci)}>
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  )}
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Input value={c.name} onChange={(e) => updateCriterion(ci, { name: e.target.value })} placeholder="Criterion name" />
-                  <Input value={c.description} onChange={(e) => updateCriterion(ci, { description: e.target.value })} placeholder="Description" />
-                </div>
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Levels:</p>
-                  {c.levels.map((l, li) => (
-                    <div key={li} className="flex items-center gap-2">
-                      <Input className="w-24" value={l.label} onChange={(e) => updateLevel(ci, li, { label: e.target.value })} placeholder="Label" />
-                      <Input className="flex-1" value={l.description} onChange={(e) => updateLevel(ci, li, { description: e.target.value })} placeholder="Description" />
-                      <Input className="w-20" type="number" value={l.points} onChange={(e) => updateLevel(ci, li, { points: Number(e.target.value) })} min={0} />
-                      {c.levels.length > 1 && (
-                        <Button type="button" size="xs" variant="outline" onClick={() => removeLevel(ci, li)}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  <Button type="button" size="xs" variant="outline" onClick={() => addLevel(ci)}>
-                    <Plus className="mr-1 h-3 w-3" /> Add Level
-                  </Button>
-                </div>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto py-4 space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Rubric Name *</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Essay Writing Rubric" required />
               </div>
-            ))}
-            <Button type="button" variant="outline" onClick={addCriterion}>
-              <Plus className="mr-2 h-4 w-4" /> Add Criterion
-            </Button>
+              <div className="space-y-2">
+                <Label>Subject (optional)</Label>
+                <Select value={subjectId} onValueChange={(v: unknown) => setSubjectId(v as string)}>
+                  <SelectTrigger className="w-full"><SelectValue placeholder="Cross-subject" /></SelectTrigger>
+                  <SelectContent>
+                    {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox id="reusable" checked={reusable} onCheckedChange={(c) => setReusable(c === true)} />
+              <Label htmlFor="reusable">Reusable (available to other teachers)</Label>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium">Criteria</h4>
+                <p className="text-sm text-muted-foreground">Total: {computedTotalPoints} pts</p>
+              </div>
+              {criteria.map((c, ci) => (
+                <div key={ci} className="rounded-lg border p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h5 className="text-sm font-medium">Criterion {ci + 1}</h5>
+                    {criteria.length > 1 && (
+                      <Button type="button" size="xs" variant="outline" className="text-destructive" onClick={() => removeCriterion(ci)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Input value={c.name} onChange={(e) => updateCriterion(ci, { name: e.target.value })} placeholder="Criterion name" />
+                    <Input value={c.description} onChange={(e) => updateCriterion(ci, { description: e.target.value })} placeholder="Description" />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">Levels:</p>
+                    {c.levels.map((l, li) => (
+                      <div key={li} className="flex items-center gap-2">
+                        <Input className="w-24" value={l.label} onChange={(e) => updateLevel(ci, li, { label: e.target.value })} placeholder="Label" />
+                        <Input className="flex-1" value={l.description} onChange={(e) => updateLevel(ci, li, { description: e.target.value })} placeholder="Description" />
+                        <Input className="w-20" type="number" value={l.points} onChange={(e) => updateLevel(ci, li, { points: Number(e.target.value) })} min={0} />
+                        {c.levels.length > 1 && (
+                          <Button type="button" size="xs" variant="outline" onClick={() => removeLevel(ci, li)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    <Button type="button" size="xs" variant="outline" onClick={() => addLevel(ci)}>
+                      <Plus className="mr-1 h-3 w-3" /> Add Level
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <Button type="button" variant="outline" onClick={addCriterion}>
+                <Plus className="mr-2 h-4 w-4" /> Add Criterion
+              </Button>
+            </div>
           </div>
 
           <DialogFooter>

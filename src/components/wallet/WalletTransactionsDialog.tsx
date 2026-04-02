@@ -55,7 +55,7 @@ const txColumns: ColumnDef<WalletTransaction, unknown>[] = [
       const { type, amount } = row.original;
       const isPositive = type === 'topup' || type === 'refund';
       return (
-        <span className={isPositive ? 'text-emerald-600 font-medium' : 'text-red-600 font-medium'}>
+        <span className={isPositive ? 'text-emerald-600 font-medium' : 'text-destructive font-medium'}>
           {isPositive ? '+' : '-'}{formatCurrency(amount)}
         </span>
       );

@@ -48,7 +48,7 @@ const transactionColumns: ColumnDef<WalletTransaction, unknown>[] = [
       const amount = row.original.amount;
       const isPurchase = row.original.type === 'purchase';
       return (
-        <span className={isPurchase ? 'text-red-600 font-medium' : 'text-emerald-600 font-medium'}>
+        <span className={isPurchase ? 'text-destructive font-medium' : 'text-emerald-600 font-medium'}>
           {isPurchase ? '-' : '+'}{formatCurrency(amount)}
         </span>
       );
@@ -119,7 +119,7 @@ export default function WalletPage() {
                     <DialogTrigger render={<Button className="gap-2" />}>
                       <Plus className="h-4 w-4" />Load Money
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle>Load Money - {cw.childFirstName}</DialogTitle>
                       </DialogHeader>
@@ -129,7 +129,7 @@ export default function WalletPage() {
                           <Input id="amount" type="number" placeholder="e.g. 100.00" value={loadAmount} onChange={(e) => setLoadAmount(e.target.value)} min="10" step="10" />
                           <p className="text-xs text-muted-foreground">Minimum top-up: R10.00</p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           {[50, 100, 200, 500].map((preset) => (
                             <Button key={preset} variant="outline" size="sm" onClick={() => setLoadAmount(String(preset))}>R{preset}</Button>
                           ))}
@@ -158,7 +158,7 @@ export default function WalletPage() {
                   </div>
                   <div className="rounded-lg border p-4">
                     <div className="flex items-center gap-2 mb-2"><Wallet className="h-4 w-4 text-emerald-600" /><p className="text-sm font-medium">Wallet Status</p></div>
-                    <Badge variant="secondary" className={cw.wallet?.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}>
+                    <Badge variant="secondary" className={cw.wallet?.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-destructive/10 text-destructive'}>
                       {cw.wallet?.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                     <p className="text-xs text-muted-foreground mt-2">{cw.wallet?.isActive ? 'Wallet is enabled for purchases' : 'Wallet is currently disabled'}</p>

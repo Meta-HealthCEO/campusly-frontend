@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import apiClient from '@/lib/api-client';
-import { unwrapList } from '@/lib/api-helpers';
+import { unwrapList, unwrapResponse } from '@/lib/api-helpers';
 import { useCurrentStudent } from './useCurrentStudent';
 import type { Wallet, WalletTransaction, TuckshopItem } from '@/types';
 
@@ -24,16 +24,17 @@ export function useStudentWallet(): StudentWalletResult {
       return;
     }
 
+    const currentStudent = student;
     async function fetchData() {
       try {
-        const sid = student!._id ?? student!.id;
+        const sid = currentStudent._id ?? currentStudent.id;
         const [walletRes, menuRes] = await Promise.allSettled([
           apiClient.get(`/wallets/student/${sid}`),
           apiClient.get('/tuck-shop/menu'),
         ]);
 
         if (walletRes.status === 'fulfilled' && walletRes.value.data) {
-          const d = walletRes.value.data.data ?? walletRes.value.data;
+          const d = unwrapResponse(walletRes.value);
           setWallet(d.wallet ?? d);
           // If wallet has an ID, fetch transactions
           const walletId = d.wallet?.id ?? d.wallet?._id ?? d.id ?? d._id;

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapList } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { Student } from '@/types';
 
@@ -24,9 +25,8 @@ export function useExams() {
     try {
       setLoading(true);
       const res = await apiClient.get('/academic/exams');
-      const raw = (res.data as Record<string, unknown>).data ?? res.data;
-      const arr = Array.isArray(raw) ? raw : (raw as Record<string, unknown>).data ?? [];
-      setExams((arr as Record<string, unknown>[]).map((e) => ({
+      const arr = unwrapList<Record<string, unknown>>(res);
+      setExams(arr.map((e) => ({
         id: (e.id as string) ?? '',
         name: (e.name as string) ?? '',
         term: (e.term as number) ?? 0,
@@ -56,9 +56,8 @@ export function useExamSlots(examId: string | null) {
     try {
       setLoading(true);
       const res = await apiClient.get(`/academic/exam-timetable/exam/${examId}`);
-      const raw = (res.data as Record<string, unknown>).data ?? res.data;
-      const arr = Array.isArray(raw) ? raw : (raw as Record<string, unknown>).data ?? [];
-      setSlots((arr as Record<string, unknown>[]).map((s) => ({
+      const arr = unwrapList<Record<string, unknown>>(res);
+      setSlots(arr.map((s) => ({
         id: (s.id as string) ?? '',
         subjectName: (typeof s.subjectId === 'object'
           ? ((s.subjectId as Record<string, unknown>)?.name as string) : '') ?? '',
@@ -110,12 +109,9 @@ export function usePastPapers() {
       const res = await apiClient.get('/academic/past-papers', {
         params: { schoolId },
       });
-      const raw = (res.data as Record<string, unknown>).data ?? res.data;
-      const arr = Array.isArray(raw)
-        ? raw
-        : (raw as Record<string, unknown>).data ?? [];
+      const arr = unwrapList<Record<string, unknown>>(res);
       setPapers(
-        (arr as Record<string, unknown>[]).map((p) => ({
+        arr.map((p) => ({
           id: (p.id as string) ?? '',
           subjectName:
             typeof p.subjectId === 'object'
@@ -175,9 +171,8 @@ export function useRemedials() {
         apiClient.get('/students'),
       ]);
       if (stuRes.status === 'fulfilled') {
-        const raw = (stuRes.value.data as Record<string, unknown>).data ?? stuRes.value.data;
-        const arr = Array.isArray(raw) ? raw : (raw as Record<string, unknown>).data ?? [];
-        setStudents((arr as Record<string, unknown>[]).map((s) => {
+        const arr = unwrapList<Record<string, unknown>>(stuRes.value);
+        setStudents(arr.map((s) => {
           const userId = s.userId as Record<string, unknown> | undefined;
           return {
             id: (s.id as string) ?? '',
@@ -188,9 +183,8 @@ export function useRemedials() {
         }));
       }
       if (remRes.status === 'fulfilled') {
-        const raw = (remRes.value.data as Record<string, unknown>).data ?? remRes.value.data;
-        const arr = Array.isArray(raw) ? raw : (raw as Record<string, unknown>).data ?? [];
-        setRecords((arr as Record<string, unknown>[]).map((r) => {
+        const arr = unwrapList<Record<string, unknown>>(remRes.value);
+        setRecords(arr.map((r) => {
           const stu = r.studentId as Record<string, unknown> | string;
           const sub = r.subjectId as Record<string, unknown> | string;
           let studentName = '';
@@ -255,9 +249,8 @@ export function useWeightings() {
       const res = await apiClient.get('/academic/subject-weightings', {
         params: { schoolId },
       });
-      const raw = (res.data as Record<string, unknown>).data ?? res.data;
-      const arr = Array.isArray(raw) ? raw : [];
-      setWeightings((arr as Record<string, unknown>[]).map((w) => ({
+      const arr = unwrapList<Record<string, unknown>>(res);
+      setWeightings(arr.map((w) => ({
         id: (w.id as string) ?? '',
         subjectName: typeof w.subjectId === 'object'
           ? ((w.subjectId as Record<string, unknown>)?.name as string) ?? '' : '',

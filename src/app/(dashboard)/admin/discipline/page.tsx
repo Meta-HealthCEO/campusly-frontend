@@ -5,81 +5,30 @@ import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
-import { toast } from 'sonner';
-import { useAuthStore } from '@/stores/useAuthStore';
-import apiClient from '@/lib/api-client';
-import type { Student } from '@/types';
 import { DisciplineTable } from '@/components/attendance/DisciplineTable';
 import { DisciplineForm } from '@/components/attendance/DisciplineForm';
-
-interface DisciplineRecord {
-  _id: string;
-  studentId: {
-    _id: string;
-    userId?: { firstName?: string; lastName?: string };
-    admissionNumber?: string;
-  } | string;
-  reportedBy?: { firstName?: string; lastName?: string };
-  type: string;
-  severity: string;
-  description: string;
-  status: string;
-  outcome?: string;
-  parentNotified?: boolean;
-  createdAt: string;
-}
+import { useDiscipline } from '@/hooks/useDiscipline';
 
 export default function AdminDisciplinePage() {
-  const { user } = useAuthStore();
   const [open, setOpen] = useState(false);
-  const [records, setRecords] = useState<DisciplineRecord[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('');
 
-  const fetchRecords = async () => {
-    try {
-      const params: Record<string, string> = { schoolId: user?.schoolId ?? '' };
-      if (statusFilter) params.status = statusFilter;
-      if (typeFilter) params.type = typeFilter;
-      const res = await apiClient.get('/attendance/discipline', { params });
-      const raw = res.data.data ?? res.data;
-      const arr = Array.isArray(raw) ? raw : raw.data ?? [];
-      setRecords(arr);
-    } catch {
-      console.error('Failed to load discipline records');
-    }
-  };
+  const {
+    records, students, loading,
+    fetchRecords, initialize,
+    createRecord, deleteRecord,
+  } = useDiscipline();
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const [, studentsRes] = await Promise.allSettled([
-          fetchRecords(),
-          apiClient.get('/students'),
-        ]);
-        if (studentsRes.status === 'fulfilled') {
-          const d = studentsRes.value.data.data ?? studentsRes.value.data;
-          const arr = Array.isArray(d) ? d : d.data ?? [];
-          setStudents(arr.map((s: Record<string, unknown>) => ({
-            ...s,
-            id: (s.id ?? s._id) as string,
-          })));
-        }
-      } catch {
-        console.error('Failed to load data');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, [user?.schoolId]);
+    initialize();
+  }, [initialize]);
 
   useEffect(() => {
     if (!loading) {
-      fetchRecords();
+      fetchRecords({ status: statusFilter, type: typeFilter });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, typeFilter]);
 
   const handleSubmit = async (data: {
@@ -91,27 +40,8 @@ export default function AdminDisciplinePage() {
     outcome?: string;
     parentNotified?: boolean;
   }) => {
-    try {
-      await apiClient.post('/attendance/discipline', {
-        ...data,
-        schoolId: user?.schoolId,
-      });
-      toast.success('Discipline record created');
-      setOpen(false);
-      await fetchRecords();
-    } catch {
-      toast.error('Failed to create discipline record');
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await apiClient.delete(`/attendance/discipline/${id}`);
-      toast.success('Discipline record deleted');
-      await fetchRecords();
-    } catch {
-      toast.error('Failed to delete discipline record');
-    }
+    await createRecord(data);
+    setOpen(false);
   };
 
   if (loading) {
@@ -167,7 +97,7 @@ export default function AdminDisciplinePage() {
       <DisciplineTable
         records={records}
         canDelete={true}
-        onDelete={handleDelete}
+        onDelete={deleteRecord}
       />
 
       <DisciplineForm

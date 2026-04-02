@@ -4,17 +4,18 @@ import { useState } from 'react';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
+import { useAuth } from '@/hooks/useAuth';
 import type { ForgotPasswordFormData } from '@/components/auth/ForgotPasswordForm';
-import apiClient from '@/lib/api-client';
 
 export default function ForgotPasswordPage() {
+  const { forgotPassword } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const onSubmit = async (data: ForgotPasswordFormData) => {
     setIsLoading(true);
     try {
-      await apiClient.post('/auth/forgot-password', { email: data.email });
+      await forgotPassword(data.email);
     } catch {
       // Intentionally swallow errors to prevent email enumeration
     } finally {

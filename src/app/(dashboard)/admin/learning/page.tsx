@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
   BookOpen, FileQuestion, BarChart3, ClipboardList, Upload, Plus,
 } from 'lucide-react';
@@ -12,8 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLearningStore } from '@/stores/useLearningStore';
-import apiClient from '@/lib/api-client';
-import type { Subject, SchoolClass, Grade } from '@/types';
+import { useLearningApi } from '@/hooks/useLearningApi';
+import { useLearningAcademicData } from '@/hooks/useLearningAcademicData';
 import {
   MaterialUploadDialog, QuizBuilderDialog, RubricEditorDialog,
   QuizResultsView, getMaterialColumns, getQuizColumns, getRubricColumns,
@@ -24,15 +24,14 @@ export default function LearningPage() {
   const { user } = useAuthStore();
   const schoolId = user?.schoolId ?? '';
 
+  const { materials, materialsLoading, quizzes, quizzesLoading, rubrics, rubricsLoading } = useLearningStore();
   const {
-    materials, materialsLoading, fetchMaterials, uploadMaterial, deleteMaterial, recordDownload,
-    quizzes, quizzesLoading, fetchQuizzes, createQuiz, publishQuiz, deleteQuiz,
-    rubrics, rubricsLoading, fetchRubrics, createRubric, updateRubric, deleteRubric,
-  } = useLearningStore();
+    fetchMaterials, uploadMaterial, deleteMaterial, recordDownload,
+    fetchQuizzes, createQuiz, publishQuiz, deleteQuiz,
+    fetchRubrics, createRubric, updateRubric, deleteRubric,
+  } = useLearningApi();
 
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [classes, setClasses] = useState<SchoolClass[]>([]);
-  const [grades, setGrades] = useState<Grade[]>([]);
+  const { subjects, classes, grades, fetchAcademicData } = useLearningAcademicData();
 
   const [materialDialogOpen, setMaterialDialogOpen] = useState(false);
   const [quizDialogOpen, setQuizDialogOpen] = useState(false);
@@ -40,35 +39,12 @@ export default function LearningPage() {
   const [editingRubric, setEditingRubric] = useState<Rubric | null>(null);
   const [resultsQuizId, setResultsQuizId] = useState<string | null>(null);
 
-  const loadAcademicData = useCallback(async () => {
-    const results = await Promise.allSettled([
-      apiClient.get('/academic/subjects'),
-      apiClient.get('/academic/classes'),
-      apiClient.get('/academic/grades'),
-    ]);
-    if (results[0].status === 'fulfilled') {
-      const raw = results[0].value.data.data ?? results[0].value.data;
-      const arr = Array.isArray(raw) ? raw : raw.data ?? [];
-      setSubjects(arr.map((s: Record<string, unknown>) => ({ ...s, id: (s._id as string) ?? (s.id as string) })) as Subject[]);
-    }
-    if (results[1].status === 'fulfilled') {
-      const raw = results[1].value.data.data ?? results[1].value.data;
-      const arr = Array.isArray(raw) ? raw : raw.data ?? [];
-      setClasses(arr.map((c: Record<string, unknown>) => ({ ...c, id: (c._id as string) ?? (c.id as string) })) as SchoolClass[]);
-    }
-    if (results[2].status === 'fulfilled') {
-      const raw = results[2].value.data.data ?? results[2].value.data;
-      const arr = Array.isArray(raw) ? raw : raw.data ?? [];
-      setGrades(arr.map((g: Record<string, unknown>) => ({ ...g, id: (g._id as string) ?? (g.id as string) })) as Grade[]);
-    }
-  }, []);
-
   useEffect(() => {
-    loadAcademicData();
+    fetchAcademicData();
     fetchMaterials();
     fetchQuizzes();
     fetchRubrics();
-  }, [loadAcademicData, fetchMaterials, fetchQuizzes, fetchRubrics]);
+  }, [fetchAcademicData, fetchMaterials, fetchQuizzes, fetchRubrics]);
 
   const handleDownload = (material: StudyMaterial) => {
     recordDownload(material.id);

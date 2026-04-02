@@ -51,7 +51,7 @@ export default function AdminLostFoundPage() {
     <div className="space-y-6">
       <PageHeader title="Lost & Found" description="Manage found items, lost reports, and match them together.">
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" onClick={() => refresh()}>
+          <Button variant="ghost" size="icon" onClick={() => refresh()} aria-label="Refresh">
             <RotateCw className="h-4 w-4" />
           </Button>
           <ArchiveConfirmDialog onConfirm={archiveOldItems} />

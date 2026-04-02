@@ -15,7 +15,7 @@ import {
   Dialog, DialogTrigger, DialogContent, DialogHeader,
   DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
-import apiClient from '@/lib/api-client';
+import { useConsentMutations } from '@/hooks/useConsent';
 
 interface CreateConsentFormDialogProps {
   open: boolean;
@@ -44,6 +44,7 @@ export function CreateConsentFormDialog({
   const [requiresBothParents, setRequiresBothParents] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const { createForm } = useConsentMutations();
 
   useEffect(() => {
     if (!open) {
@@ -73,18 +74,16 @@ export function CreateConsentFormDialog({
     if (!validate()) return;
     setSubmitting(true);
     try {
-      const payload: Record<string, unknown> = {
+      await createForm({
         schoolId,
         title: title.trim(),
         type,
         createdBy: userId,
-      };
-      if (description.trim()) payload.description = description.trim();
-      if (expiryDate) payload.expiryDate = new Date(expiryDate).toISOString();
-      if (attachmentUrl.trim()) payload.attachmentUrl = attachmentUrl.trim();
-      if (requiresBothParents) payload.requiresBothParents = true;
-
-      await apiClient.post('/consent/forms', payload);
+        description: description.trim() || undefined,
+        expiryDate: expiryDate ? new Date(expiryDate).toISOString() : undefined,
+        attachmentUrl: attachmentUrl.trim() || undefined,
+        requiresBothParents: requiresBothParents || undefined,
+      });
       toast.success('Consent form created successfully!');
       onOpenChange(false);
       onSuccess();

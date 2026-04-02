@@ -88,8 +88,9 @@ export default function TeacherLessonPlansPage() {
         <Button
           size="icon"
           variant="ghost"
-          className="text-red-500 hover:text-red-700"
+          className="text-destructive hover:text-destructive"
           onClick={() => deletePlan(row.original._id)}
+          aria-label="Delete lesson plan"
         >
           <Trash2 className="h-4 w-4" />
         </Button>

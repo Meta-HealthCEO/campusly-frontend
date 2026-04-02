@@ -108,7 +108,7 @@ export default function AcademicPerformanceReportPage() {
             <Card>
               <CardContent className="p-6">
                 <p className="text-sm font-medium text-muted-foreground">Below {PASS_THRESHOLD}%</p>
-                <p className="text-2xl font-bold text-red-600">{belowThreshold.length}</p>
+                <p className="text-2xl font-bold text-destructive">{belowThreshold.length}</p>
               </CardContent>
             </Card>
           </div>
@@ -138,7 +138,7 @@ export default function AcademicPerformanceReportPage() {
           {belowThreshold.length > 0 && (
             <Card className="border-red-200 dark:border-red-900">
               <CardHeader>
-                <CardTitle className="text-red-600">
+                <CardTitle className="text-destructive">
                   Subjects Below Pass Threshold ({PASS_THRESHOLD}%)
                 </CardTitle>
               </CardHeader>
@@ -147,7 +147,7 @@ export default function AcademicPerformanceReportPage() {
                   {belowThreshold.map((s) => (
                     <li key={s.subjectId} className="text-sm">
                       <span className="font-medium">{s.subjectName}</span> ({s.subjectCode}) —{' '}
-                      <span className="text-red-600 font-semibold">{s.averagePercentage}%</span>
+                      <span className="text-destructive font-semibold">{s.averagePercentage}%</span>
                     </li>
                   ))}
                 </ul>

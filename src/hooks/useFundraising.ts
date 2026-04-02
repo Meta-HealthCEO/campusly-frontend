@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type {
   Campaign, Donation, Raffle, RafflePrize, RaffleTicket,
@@ -66,7 +67,7 @@ export function useFundraising() {
     setCampaignsLoading(true);
     try {
       const res = await apiClient.get('/fundraising/campaigns');
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = raw.campaigns ?? (Array.isArray(raw) ? raw : []);
       setCampaigns(mapList<Campaign>(arr as Record<string, unknown>[]));
     } catch {
@@ -107,7 +108,7 @@ export function useFundraising() {
       const params: Record<string, string> = {};
       if (campaignId) params.campaignId = campaignId;
       const res = await apiClient.get('/fundraising/donations', { params });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = raw.donations ?? (Array.isArray(raw) ? raw : []);
       const mapped = (arr as Record<string, unknown>[]).map((d) => {
         const item = mapId(d) as unknown as Donation;
@@ -143,7 +144,7 @@ export function useFundraising() {
     setRafflesLoading(true);
     try {
       const res = await apiClient.get('/fundraising/raffles');
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = raw.raffles ?? (Array.isArray(raw) ? raw : []);
       const mapped = (arr as Record<string, unknown>[]).map((r) => {
         const item = mapId(r) as unknown as Raffle;
@@ -171,7 +172,7 @@ export function useFundraising() {
     const res = await apiClient.post(`/fundraising/raffles/${raffleId}/draw`);
     toast.success('Winners drawn successfully!');
     await fetchRaffles();
-    const raw = res.data.data ?? res.data;
+    const raw = unwrapResponse(res);
     return Array.isArray(raw) ? mapList<RaffleTicket>(raw as Record<string, unknown>[]) : [];
   }, [fetchRaffles]);
 
@@ -181,7 +182,7 @@ export function useFundraising() {
     setTaxCertsLoading(true);
     try {
       const res = await apiClient.get('/fundraising/tax-certificates');
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = raw.certificates ?? (Array.isArray(raw) ? raw : []);
       setTaxCerts(mapList<TaxCertificate>(arr as Record<string, unknown>[]));
     } catch {
@@ -206,7 +207,7 @@ export function useFundraising() {
     setDonorWallLoading(true);
     try {
       const res = await apiClient.get(`/fundraising/campaigns/${campaignId}/donor-wall`);
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = raw.entries ?? (Array.isArray(raw) ? raw : []);
       setDonorWall(mapList<DonorWallEntry>(arr as Record<string, unknown>[]));
     } catch {
@@ -231,7 +232,7 @@ export function useFundraising() {
     setRecurringLoading(true);
     try {
       const res = await apiClient.get('/fundraising/recurring-donations');
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = raw.recurringDonations ?? (Array.isArray(raw) ? raw : []);
       const mapped = (arr as Record<string, unknown>[]).map((r) => {
         const item = mapId(r) as unknown as RecurringDonation;
@@ -263,7 +264,7 @@ export function useFundraising() {
 
   const processRecurring = useCallback(async () => {
     const res = await apiClient.post('/fundraising/recurring-donations/process');
-    const raw = res.data.data ?? res.data;
+    const raw = unwrapResponse(res);
     const result = raw as { processed: number; failed: number };
     toast.success(`Processed ${result.processed} donations (${result.failed} failed)`);
     await Promise.all([fetchRecurring(), fetchDonations(), fetchCampaigns()]);

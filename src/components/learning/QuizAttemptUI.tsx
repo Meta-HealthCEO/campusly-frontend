@@ -112,7 +112,7 @@ export function QuizAttemptUI({ quiz, onSubmit }: QuizAttemptUIProps) {
             <div className="text-center space-y-2">
               <p className="text-4xl font-bold">{result.percentage}%</p>
               <p className="text-lg text-muted-foreground">Score: {result.totalScore}/{quiz.totalPoints}</p>
-              <Badge variant="secondary" className={result.percentage >= 50 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}>
+              <Badge variant="secondary" className={result.percentage >= 50 ? 'bg-emerald-100 text-emerald-800' : 'bg-destructive/10 text-destructive'}>
                 {result.percentage >= 50 ? 'Passed' : 'Failed'}
               </Badge>
             </div>
@@ -129,7 +129,7 @@ export function QuizAttemptUI({ quiz, onSubmit }: QuizAttemptUIProps) {
                   {a.isCorrect ? (
                     <CheckCircle2 className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
                   ) : (
-                    <XCircle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
+                    <XCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
                   )}
                   <div className="flex-1">
                     <p className="font-medium text-sm">{q.questionText}</p>
@@ -161,7 +161,7 @@ export function QuizAttemptUI({ quiz, onSubmit }: QuizAttemptUIProps) {
         <div className="flex items-center justify-between rounded-lg border p-3">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground" />
-            <span className={`font-mono font-bold ${timeLeft < 60 ? 'text-red-600' : ''}`}>
+            <span className={`font-mono font-bold ${timeLeft < 60 ? 'text-destructive' : ''}`}>
               {formatTime(timeLeft)}
             </span>
           </div>

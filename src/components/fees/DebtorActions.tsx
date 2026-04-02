@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ArrowUpCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -14,8 +14,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/utils';
-import apiClient from '@/lib/api-client';
-import type { Invoice } from '@/types';
+import { useDebtorInvoices } from '@/hooks/useFeeDialogData';
 import { EscalateDialog } from '@/components/fees/EscalateDialog';
 import { WriteOffDialog } from '@/components/fees/WriteOffDialog';
 
@@ -29,30 +28,12 @@ interface DebtorActionsProps {
 export function DebtorActions({ studentName, studentId, schoolId, onSuccess }: DebtorActionsProps) {
   const [actionType, setActionType] = useState<'escalate' | 'write_off' | null>(null);
   const [selectDialogOpen, setSelectDialogOpen] = useState(false);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState('');
-  const [loadingInvoices, setLoadingInvoices] = useState(false);
-
-  useEffect(() => {
-    if (!selectDialogOpen || !schoolId) return;
-    async function fetchInvoices() {
-      setLoadingInvoices(true);
-      try {
-        const response = await apiClient.get(
-          `/fees/invoices/school/${schoolId}`,
-          { params: { studentId } }
-        );
-        const raw = response.data.data ?? response.data;
-        const list: Invoice[] = Array.isArray(raw) ? raw : raw.invoices ?? raw.data ?? [];
-        setInvoices(list.filter((inv) => inv.status !== 'paid' && inv.status !== 'cancelled'));
-      } catch {
-        console.error('Failed to load invoices');
-      } finally {
-        setLoadingInvoices(false);
-      }
-    }
-    fetchInvoices();
-  }, [selectDialogOpen, schoolId, studentId]);
+  const { invoices, loading: loadingInvoices } = useDebtorInvoices(
+    schoolId,
+    studentId,
+    selectDialogOpen,
+  );
 
   const openAction = (type: 'escalate' | 'write_off') => {
     setActionType(type);

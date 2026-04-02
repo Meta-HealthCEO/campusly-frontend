@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapList, unwrapResponse } from '@/lib/api-helpers';
 import { toast } from 'sonner';
 
 // ---------- API types (backend-aligned) ----------
@@ -122,20 +123,8 @@ export interface AwardHousePointsInput {
 
 // ---------- Unwrap helpers ----------
 
-function unwrapArray<T>(res: { data: unknown }): T[] {
-  const raw = (res.data as Record<string, unknown>).data ?? res.data;
-  if (Array.isArray(raw)) return raw as T[];
-  const inner = (raw as Record<string, unknown>).data;
-  return Array.isArray(inner) ? (inner as T[]) : [];
-}
-
-function unwrapObject<T>(res: { data: unknown }): T {
-  const raw = (res.data as Record<string, unknown>).data ?? res.data;
-  return raw as T;
-}
-
-function unwrapPaginated<T>(res: { data: unknown }): { items: T[]; total: number } {
-  const outer = (res.data as Record<string, unknown>).data ?? res.data;
+function unwrapPaginated<T>(res: { data: { data?: unknown } }): { items: T[]; total: number } {
+  const outer = unwrapResponse(res);
   const obj = outer as Record<string, unknown>;
   const items = Array.isArray(obj.data) ? (obj.data as T[]) : Array.isArray(obj) ? (obj as T[]) : [];
   const total = typeof obj.total === 'number' ? obj.total : items.length;
@@ -166,12 +155,12 @@ export function useAchiever() {
 
   const createAchievement = useCallback(async (data: CreateAchievementInput) => {
     const res = await apiClient.post('/achiever/achievements', data);
-    return unwrapObject<ApiAchievement>(res);
+    return unwrapResponse<ApiAchievement>(res);
   }, []);
 
   const updateAchievement = useCallback(async (id: string, data: Partial<CreateAchievementInput>) => {
     const res = await apiClient.put(`/achiever/achievements/${id}`, data);
-    return unwrapObject<ApiAchievement>(res);
+    return unwrapResponse<ApiAchievement>(res);
   }, []);
 
   const deleteAchievement = useCallback(async (id: string) => {
@@ -180,37 +169,37 @@ export function useAchiever() {
 
   const fetchWallOfFame = useCallback(async (params?: Record<string, string | number>) => {
     const res = await apiClient.get('/achiever/achievements/wall-of-fame', { params });
-    return unwrapObject<WallOfFameData>(res);
+    return unwrapResponse<WallOfFameData>(res);
   }, []);
 
   const fetchTopMarks = useCallback(async (params: { term: number; academicYear: number }) => {
     const res = await apiClient.get('/achiever/achievements/top-marks', { params });
-    return unwrapArray<TopMarkEntry>(res);
+    return unwrapList<TopMarkEntry>(res);
   }, []);
 
   const fetchHouses = useCallback(async (params?: Record<string, string | number>) => {
     const res = await apiClient.get('/achiever/houses', { params });
-    return unwrapArray<ApiHousePoints>(res);
+    return unwrapList<ApiHousePoints>(res);
   }, []);
 
   const fetchLeaderboard = useCallback(async (params?: Record<string, string | number>) => {
     const res = await apiClient.get('/achiever/houses/leaderboard', { params });
-    return unwrapArray<ApiHousePoints>(res);
+    return unwrapList<ApiHousePoints>(res);
   }, []);
 
   const createHouse = useCallback(async (data: CreateHouseInput) => {
     const res = await apiClient.post('/achiever/houses', data);
-    return unwrapObject<ApiHousePoints>(res);
+    return unwrapResponse<ApiHousePoints>(res);
   }, []);
 
   const updateHouse = useCallback(async (id: string, data: Partial<CreateHouseInput>) => {
     const res = await apiClient.put(`/achiever/houses/${id}`, data);
-    return unwrapObject<ApiHousePoints>(res);
+    return unwrapResponse<ApiHousePoints>(res);
   }, []);
 
   const awardHousePoints = useCallback(async (data: AwardHousePointsInput) => {
     const res = await apiClient.post('/achiever/houses/points', data);
-    return unwrapObject<ApiHousePointLog>(res);
+    return unwrapResponse<ApiHousePointLog>(res);
   }, []);
 
   const fetchHouseHistory = useCallback(async (houseId: string, page = 1, limit = 20) => {

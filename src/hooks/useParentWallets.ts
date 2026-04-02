@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
-import { unwrapList, mapId } from '@/lib/api-helpers';
+import { unwrapList, unwrapResponse, mapId } from '@/lib/api-helpers';
 import { useCurrentParent } from './useCurrentParent';
 import type { Wallet, WalletTransaction } from '@/types';
 
@@ -39,7 +39,7 @@ export function useParentWallets(): ParentWalletsResult {
         let txns: WalletTransaction[] = [];
         try {
           const wRes = await apiClient.get(`/wallets/student/${child.id}`);
-          const wRaw = wRes.data.data ?? wRes.data;
+          const wRaw = unwrapResponse(wRes);
           wallet = wRaw.wallet ?? wRaw;
           if (wallet) {
             wallet = { ...wallet, id: (wallet as unknown as { _id?: string })._id ?? wallet.id };
@@ -76,7 +76,7 @@ export function useParentWallets(): ParentWalletsResult {
     // Refresh this child's wallet
     try {
       const refreshRes = await apiClient.get(`/wallets/student/${childId}`);
-      const d = refreshRes.data.data ?? refreshRes.data;
+      const d = unwrapResponse(refreshRes);
       const refreshed: Wallet = d.wallet ?? d;
       const normalized = { ...refreshed, id: (refreshed as unknown as { _id?: string })._id ?? refreshed.id };
       setChildWallets((prev) => prev.map((cw) =>

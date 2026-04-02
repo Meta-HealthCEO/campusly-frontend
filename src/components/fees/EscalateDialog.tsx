@@ -14,7 +14,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import apiClient from '@/lib/api-client';
+import { useDebtMutations, extractErrorMessage } from '@/hooks/useFeeMutations';
 
 interface EscalateDialogProps {
   open: boolean;
@@ -42,6 +42,7 @@ export function EscalateDialog({
   const [stage, setStage] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { escalateCollection } = useDebtMutations();
 
   const handleSubmit = async () => {
     if (!stage) {
@@ -50,7 +51,7 @@ export function EscalateDialog({
     }
     setSubmitting(true);
     try {
-      await apiClient.post('/fees/collections/escalate', {
+      await escalateCollection({
         invoiceId,
         stage,
         notes: notes || undefined,
@@ -61,10 +62,7 @@ export function EscalateDialog({
       onOpenChange(false);
       onSuccess();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to escalate collection';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to escalate collection'));
     } finally {
       setSubmitting(false);
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { DollarSign, ShoppingBag, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,19 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { StatCard } from '@/components/shared/StatCard';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { formatCurrency } from '@/lib/utils';
-import apiClient from '@/lib/api-client';
-
-interface PaymentMethodBreakdown {
-  paymentMethod: string;
-  totalSales: number;
-  orderCount: number;
-}
-
-interface DailySalesData {
-  totalSales: number;
-  orderCount: number;
-  byPaymentMethod: PaymentMethodBreakdown[];
-}
+import { useTuckShopDailySales } from '@/hooks/useTuckShop';
 
 interface DailySalesReportProps {
   schoolId: string;
@@ -41,28 +29,7 @@ const PAYMENT_METHOD_COLORS: Record<string, string> = {
 
 export function DailySalesReport({ schoolId }: DailySalesReportProps) {
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [salesData, setSalesData] = useState<DailySalesData | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const fetchSales = useCallback(async (selectedDate: string) => {
-    if (!schoolId) return;
-    setLoading(true);
-    try {
-      const response = await apiClient.get('/tuck-shop/sales/daily', {
-        params: { schoolId, date: selectedDate },
-      });
-      const raw = response.data.data ?? response.data;
-      setSalesData({
-        totalSales: raw.totalSales ?? 0,
-        orderCount: raw.orderCount ?? 0,
-        byPaymentMethod: Array.isArray(raw.byPaymentMethod) ? raw.byPaymentMethod : [],
-      });
-    } catch {
-      setSalesData({ totalSales: 0, orderCount: 0, byPaymentMethod: [] });
-    } finally {
-      setLoading(false);
-    }
-  }, [schoolId]);
+  const { salesData, loading, fetchSales } = useTuckShopDailySales(schoolId);
 
   useEffect(() => {
     fetchSales(date);

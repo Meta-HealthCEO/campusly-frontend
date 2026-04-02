@@ -91,7 +91,7 @@ export default function WalletPage() {
           className={
             row.original.isActive
               ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+              : 'bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive'
           }
         >
           {row.original.isActive ? 'Active' : 'Inactive'}
@@ -161,40 +161,40 @@ export default function WalletPage() {
             open={dialog.type === 'create'}
             onOpenChange={(o) => { if (!o) closeDialog(); }}
             studentName={dialog.row.studentName}
-            onConfirm={() => createWallet(dialog.row!.studentId)}
+            onConfirm={() => createWallet(dialog.row?.studentId ?? '')}
           />
           <LoadMoneyDialog
             open={dialog.type === 'load'}
             onOpenChange={(o) => { if (!o) closeDialog(); }}
             studentName={dialog.row.studentName}
-            onConfirm={(amount) => loadMoney(dialog.row!.walletId!, amount)}
+            onConfirm={(amount) => loadMoney(dialog.row?.walletId ?? '', amount)}
           />
           <DeductMoneyDialog
             open={dialog.type === 'deduct'}
             onOpenChange={(o) => { if (!o) closeDialog(); }}
             studentName={dialog.row.studentName}
             currentBalance={dialog.row.balance}
-            onConfirm={(amount, desc) => deductMoney(dialog.row!.walletId!, amount, desc)}
+            onConfirm={(amount, desc) => deductMoney(dialog.row?.walletId ?? '', amount, desc)}
           />
           <DailyLimitDialog
             open={dialog.type === 'dailyLimit'}
             onOpenChange={(o) => { if (!o) closeDialog(); }}
             studentName={dialog.row.studentName}
             currentLimit={dialog.row.dailyLimit}
-            onConfirm={(limit) => updateDailyLimit(dialog.row!.walletId!, limit)}
+            onConfirm={(limit) => updateDailyLimit(dialog.row?.walletId ?? '', limit)}
           />
           <LinkWristbandDialog
             open={dialog.type === 'linkWristband'}
             onOpenChange={(o) => { if (!o) closeDialog(); }}
             studentName={dialog.row.studentName}
-            onConfirm={(wbId) => linkWristband(dialog.row!.studentId, wbId)}
+            onConfirm={(wbId) => linkWristband(dialog.row?.studentId ?? '', wbId)}
           />
           <UnlinkWristbandDialog
             open={dialog.type === 'unlinkWristband'}
             onOpenChange={(o) => { if (!o) closeDialog(); }}
             studentName={dialog.row.studentName}
             wristbandId={dialog.row.wristbandId}
-            onConfirm={() => unlinkWristband(dialog.row!.wristbandId)}
+            onConfirm={() => unlinkWristband(dialog.row?.wristbandId ?? '')}
           />
           <WalletTransactionsDialog
             open={dialog.type === 'transactions'}
@@ -220,7 +220,7 @@ interface WalletRowActionsProps {
 function WalletRowActions({ row, onAction, onViewTx }: WalletRowActionsProps) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label="More options" />}>
         <MoreHorizontal className="h-4 w-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

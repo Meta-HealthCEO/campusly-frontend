@@ -1,11 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { formatCurrency } from '@/lib/utils';
-import apiClient from '@/lib/api-client';
-import type { Invoice } from '@/types';
+import { useInvoicesList } from '@/hooks/useFeeDialogData';
 
 interface InvoiceSelectorProps {
   schoolId: string;
@@ -22,28 +20,7 @@ export function InvoiceSelector({
   onValueChange,
   label = 'Invoice',
 }: InvoiceSelectorProps) {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchInvoices() {
-      if (!schoolId) return;
-      try {
-        const params: Record<string, string> = {};
-        if (studentId) params.studentId = studentId;
-        const response = await apiClient.get(`/fees/invoices/school/${schoolId}`, { params });
-        const raw = response.data.data ?? response.data;
-        const list: Invoice[] = Array.isArray(raw) ? raw : raw.invoices ?? raw.data ?? [];
-        setInvoices(list);
-      } catch {
-        console.error('Failed to load invoices');
-      } finally {
-        setLoading(false);
-      }
-    }
-    setLoading(true);
-    fetchInvoices();
-  }, [schoolId, studentId]);
+  const { invoices, loading } = useInvoicesList(schoolId, studentId);
 
   return (
     <div className="space-y-2">

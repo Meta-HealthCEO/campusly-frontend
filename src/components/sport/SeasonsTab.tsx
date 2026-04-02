@@ -9,8 +9,8 @@ import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import apiClient from '@/lib/api-client';
 import { useStandings } from '@/hooks/useSport';
+import { deleteSeason } from '@/hooks/useSportMutations';
 import { SeasonFormDialog } from './SeasonFormDialog';
 import { StandingsTable } from './StandingsTable';
 import type { Season } from '@/types/sport';
@@ -43,7 +43,7 @@ export function SeasonsTab({ seasons, loading, schoolId, onRefresh }: SeasonsTab
   async function handleDelete(s: Season) {
     if (!confirm(`Delete season "${s.name}"?`)) return;
     try {
-      await apiClient.delete(`/sport/seasons/${s.id}`);
+      await deleteSeason(s.id);
       toast.success('Season deleted successfully');
       if (activeSeason?.id === s.id) setActiveSeason(null);
       onRefresh();
@@ -64,20 +64,20 @@ export function SeasonsTab({ seasons, loading, schoolId, onRefresh }: SeasonsTab
       <Badge className={
         row.original.isActive
           ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+          : 'bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive'
       }>
         {row.original.isActive ? 'Active' : 'Inactive'}
       </Badge>
     )},
     { id: 'actions', header: 'Actions', enableSorting: false, cell: ({ row }) => (
       <div className="flex gap-1">
-        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); viewStandings(row.original); }}>
+        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); viewStandings(row.original); }} aria-label="View standings">
           <BarChart3 className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }}>
+        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }} aria-label="Edit season">
           <Pencil className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); handleDelete(row.original); }}>
+        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); handleDelete(row.original); }} aria-label="Delete season">
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
       </div>

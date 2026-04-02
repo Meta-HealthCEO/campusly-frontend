@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAuditStore } from '@/stores/useAuditStore';
+import { useAuditApi } from '@/hooks/useAuditApi';
 import type { AuditFilterParams } from '@/stores/useAuditStore';
 
 const ACTION_OPTIONS = [
@@ -31,7 +32,8 @@ function toLocalDateInputValue(iso: string | undefined): string {
 }
 
 export function AuditFilterBar() {
-  const { filters, setFilter, resetFilters, fetchLogs } = useAuditStore();
+  const { filters, setFilter, resetFilters } = useAuditStore();
+  const { fetchLogs } = useAuditApi();
 
   const hasActiveFilters = !!(
     filters.userId ||

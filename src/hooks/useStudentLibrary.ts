@@ -22,8 +22,9 @@ export function useStudentLibrary(): StudentLibraryResult {
       return;
     }
 
+    const currentStudent = student;
     async function fetchData() {
-      const sid = student!._id ?? student!.id;
+      const sid = currentStudent._id ?? currentStudent.id;
       const results = await Promise.allSettled([
         apiClient.get('/library/books'),
         apiClient.get(`/library/loans/student/${sid}`),

@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMigrationStore } from '@/stores/useMigrationStore';
+import { useMigrationApi } from '@/hooks/useMigrationApi';
 
 interface ValidationResultsProps {
   jobId: string;
@@ -31,7 +32,8 @@ interface ValidationResultsProps {
 }
 
 export function ValidationResultsStep({ jobId, onBack }: ValidationResultsProps) {
-  const { activeJob, activeJobLoading, validateJob, setWizardStep } = useMigrationStore();
+  const { activeJob, activeJobLoading, setWizardStep } = useMigrationStore();
+  const { validateJob } = useMigrationApi();
   const results = activeJob?.validationResults;
   const hasBlockingErrors = results?.errors?.some((e) => e.row === 0) ?? false;
   const hasResults = !!results;

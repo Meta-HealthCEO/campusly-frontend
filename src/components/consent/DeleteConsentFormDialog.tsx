@@ -7,7 +7,7 @@ import {
   Dialog, DialogContent, DialogHeader,
   DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
-import apiClient from '@/lib/api-client';
+import { useConsentMutations } from '@/hooks/useConsent';
 import type { ApiConsentForm } from './types';
 
 interface DeleteConsentFormDialogProps {
@@ -21,12 +21,13 @@ export function DeleteConsentFormDialog({
   open, onOpenChange, form, onSuccess,
 }: DeleteConsentFormDialogProps) {
   const [deleting, setDeleting] = useState(false);
+  const { deleteForm } = useConsentMutations();
 
   async function handleDelete() {
     if (!form) return;
     setDeleting(true);
     try {
-      await apiClient.delete(`/consent/forms/${form.id}`);
+      await deleteForm(form.id);
       toast.success('Consent form deleted successfully!');
       onOpenChange(false);
       onSuccess();

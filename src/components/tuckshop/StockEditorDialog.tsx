@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
+import { useTuckShopMenuMutations } from '@/hooks/useTuckShop';
 import type { TuckshopItem } from '@/types';
 
 interface StockEditorDialogProps {
@@ -20,6 +20,7 @@ interface StockEditorDialogProps {
 }
 
 export function StockEditorDialog({ open, onOpenChange, item, onSaved }: StockEditorDialogProps) {
+  const { updateStock, extractErrorMessage } = useTuckShopMenuMutations();
   const [stock, setStock] = useState('0');
   const [submitting, setSubmitting] = useState(false);
 
@@ -40,14 +41,12 @@ export function StockEditorDialog({ open, onOpenChange, item, onSaved }: StockEd
 
     setSubmitting(true);
     try {
-      await apiClient.patch(`/tuck-shop/menu/${item.id}/stock`, { stock: value });
+      await updateStock(item.id, value);
       toast.success('Stock updated');
       onSaved();
       onOpenChange(false);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })
-        ?.response?.data?.message ?? 'Failed to update stock';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to update stock'));
     } finally {
       setSubmitting(false);
     }

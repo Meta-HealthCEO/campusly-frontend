@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 
 // ---------- Types ----------
 
@@ -112,10 +113,59 @@ function unwrapArray<T>(responseData: unknown): T[] {
   return [];
 }
 
+export interface ClassOption {
+  id: string;
+  name: string;
+}
+
+export interface DashboardData {
+  stats: {
+    totalStudents: number;
+    totalStaff: number;
+    revenueCollected: number;
+    collectionRate: number;
+    attendanceRate: number;
+    outstandingFees: number;
+    walletBalance: number;
+  };
+  revenueData: Record<string, unknown>[];
+  attendanceData: Record<string, unknown>[];
+  feeStatusData: { name: string; value: number; color?: string }[];
+}
+
 // ---------- Hook ----------
 
 export function useReports() {
   const [loading, setLoading] = useState(false);
+
+  const fetchDashboard = useCallback(async (): Promise<DashboardData | null> => {
+    setLoading(true);
+    try {
+      const response = await apiClient.get('/reports/dashboard');
+      if (!response.data) return null;
+      const d = unwrapResponse(response);
+      const raw = d.stats ?? d;
+      return {
+        stats: {
+          totalStudents: raw.totalStudents ?? 0,
+          totalStaff: raw.totalStaff ?? 0,
+          revenueCollected: raw.totalRevenueThisMonth ?? raw.revenueCollected ?? 0,
+          collectionRate: raw.feeCollectionRate ?? raw.collectionRate ?? 0,
+          attendanceRate: raw.attendanceRate ?? 0,
+          outstandingFees: raw.outstandingFees ?? 0,
+          walletBalance: raw.walletBalance ?? 0,
+        },
+        revenueData: d.revenueData ?? [],
+        attendanceData: d.attendanceByGrade ?? [],
+        feeStatusData: d.feeStatus ?? [],
+      };
+    } catch {
+      console.error('Failed to load dashboard data');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const fetchRevenue = useCallback(async (filters: Partial<ReportFilters>) => {
     setLoading(true);
@@ -221,13 +271,30 @@ export function useReports() {
     []
   );
 
+  const fetchClasses = useCallback(async (): Promise<ClassOption[]> => {
+    try {
+      const response = await apiClient.get('/academic/classes');
+      const raw = unwrapResponse(response);
+      const arr = Array.isArray(raw) ? raw : raw.data ?? [];
+      return arr.map((c: Record<string, unknown>) => ({
+        id: (c._id as string) ?? (c.id as string) ?? '',
+        name: (c.name as string) ?? 'Unknown',
+      }));
+    } catch {
+      console.error('Failed to load classes');
+      return [];
+    }
+  }, []);
+
   return {
     loading,
+    fetchDashboard,
     fetchRevenue,
     fetchAttendance,
     fetchAcademicPerformance,
     fetchStudentReportCard,
     fetchDebtors,
     fetchTuckShopSales,
+    fetchClasses,
   };
 }

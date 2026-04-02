@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { useAuthStore } from '@/stores/useAuthStore';
-import apiClient from '@/lib/api-client';
+import { useUniformStats } from '@/hooks/useUniform';
 import { UniformStatCards } from '@/components/uniform/UniformStatCards';
 import { CatalogTab } from '@/components/uniform/CatalogTab';
 import { OrdersTab } from '@/components/uniform/OrdersTab';
@@ -12,48 +11,8 @@ import { PreOrdersTab } from '@/components/uniform/PreOrdersTab';
 import { SecondHandTab } from '@/components/uniform/SecondHandTab';
 import { LowStockTab } from '@/components/uniform/LowStockTab';
 
-interface Stats {
-  totalItems: number;
-  activeOrders: number;
-  secondHandListings: number;
-  lowStockCount: number;
-}
-
 export default function AdminUniformPage() {
-  const { user } = useAuthStore();
-  const schoolId = user?.schoolId ?? '';
-  const [stats, setStats] = useState<Stats>({
-    totalItems: 0, activeOrders: 0, secondHandListings: 0, lowStockCount: 0,
-  });
-
-  const fetchStats = useCallback(async () => {
-    if (!schoolId) return;
-    try {
-      const [itemsRes, ordersRes, listingsRes, lowStockRes] = await Promise.allSettled([
-        apiClient.get('/uniform/items', { params: { schoolId } }),
-        apiClient.get('/uniform/orders', { params: { schoolId, status: 'pending' } }),
-        apiClient.get('/uniform/second-hand', { params: { schoolId, status: 'available' } }),
-        apiClient.get('/uniform/low-stock', { params: { schoolId } }),
-      ]);
-
-      const extractTotal = (res: PromiseSettledResult<{ data: { data?: { total?: number } } }>) => {
-        if (res.status === 'fulfilled') {
-          const raw = res.value.data.data ?? res.value.data;
-          return (raw as Record<string, unknown>).total as number ?? 0;
-        }
-        return 0;
-      };
-
-      setStats({
-        totalItems: extractTotal(itemsRes as PromiseSettledResult<{ data: { data?: { total?: number } } }>),
-        activeOrders: extractTotal(ordersRes as PromiseSettledResult<{ data: { data?: { total?: number } } }>),
-        secondHandListings: extractTotal(listingsRes as PromiseSettledResult<{ data: { data?: { total?: number } } }>),
-        lowStockCount: extractTotal(lowStockRes as PromiseSettledResult<{ data: { data?: { total?: number } } }>),
-      });
-    } catch {
-      console.error('Failed to load uniform stats');
-    }
-  }, [schoolId]);
+  const { stats, fetchStats } = useUniformStats();
 
   useEffect(() => {
     fetchStats();

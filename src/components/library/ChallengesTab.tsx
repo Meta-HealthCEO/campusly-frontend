@@ -159,10 +159,10 @@ export function ChallengesTab({
                     <Button variant="outline" size="sm" onClick={() => viewLeaderboard(c.id)}>
                       <Trophy className="mr-1 h-3 w-3" /> Leaderboard
                     </Button>
-                    <Button variant="ghost" size="icon-sm" onClick={() => openEdit(c)}>
+                    <Button variant="ghost" size="icon-sm" onClick={() => openEdit(c)} aria-label="Edit challenge">
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(c)}>
+                    <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(c)} aria-label="Delete challenge">
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>

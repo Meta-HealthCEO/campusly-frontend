@@ -122,7 +122,7 @@ export const STATUS_COLORS: Record<MigrationStatus, string> = {
   validating: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
   importing: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
   completed: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
-  failed: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  failed: 'bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive',
 };
 
 export const CAMPUSLY_TARGET_FIELDS = [

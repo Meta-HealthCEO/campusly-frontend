@@ -86,7 +86,7 @@ export default function TeacherAttendancePage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-3 grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-emerald-600">{presentCount}</p>
@@ -95,7 +95,7 @@ export default function TeacherAttendancePage() {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-red-600">{absentCount}</p>
+            <p className="text-2xl font-bold text-destructive">{absentCount}</p>
             <p className="text-xs text-muted-foreground">Absent</p>
           </CardContent>
         </Card>

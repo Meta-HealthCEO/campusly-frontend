@@ -15,7 +15,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/utils';
-import apiClient from '@/lib/api-client';
+import { useInvoiceMutations, extractErrorMessage } from '@/hooks/useFeeMutations';
 import type { Invoice } from '@/types';
 
 interface RecordPaymentDialogProps {
@@ -35,6 +35,7 @@ const methodLabels: Record<PaymentMethod, string> = {
 };
 
 export function RecordPaymentDialog({ open, onOpenChange, invoice, onSuccess }: RecordPaymentDialogProps) {
+  const { recordPayment } = useInvoiceMutations();
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | ''>('');
   const [reference, setReference] = useState('');
@@ -77,7 +78,7 @@ export function RecordPaymentDialog({ open, onOpenChange, invoice, onSuccess }: 
     setSubmitting(true);
     const invoiceId = (invoice as unknown as Record<string, string>)._id ?? invoice.id;
     try {
-      await apiClient.post(`/fees/invoices/${invoiceId}/pay`, {
+      await recordPayment(invoiceId, {
         amount: amountCents,
         paymentMethod,
         reference: reference || undefined,
@@ -88,10 +89,7 @@ export function RecordPaymentDialog({ open, onOpenChange, invoice, onSuccess }: 
       resetForm();
       onSuccess();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to record payment';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to record payment'));
     } finally {
       setSubmitting(false);
     }
@@ -119,7 +117,7 @@ export function RecordPaymentDialog({ open, onOpenChange, invoice, onSuccess }: 
               </div>
               <div className="flex justify-between font-medium">
                 <span>Balance Due</span>
-                <span className="text-red-600">{formatCurrency(balanceDue)}</span>
+                <span className="text-destructive">{formatCurrency(balanceDue)}</span>
               </div>
             </div>
 

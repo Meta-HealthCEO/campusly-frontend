@@ -14,9 +14,10 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { TrendingUp, Search } from 'lucide-react';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { useGrades } from '@/hooks/useAcademics';
+import { usePromotionReport } from '@/hooks/useAcademicMutationsExtended';
+import type { GradeReport } from '@/hooks/useAcademicMutationsExtended';
 
 interface PromotionStudent {
   studentId: string;
@@ -30,18 +31,9 @@ interface PromotionStudent {
   promoted: boolean;
 }
 
-interface GradeReport {
-  gradeId: string;
-  year: number;
-  totalStudents: number;
-  promoted: number;
-  notPromoted: number;
-  promotionRate: number;
-  students: PromotionStudent[];
-}
-
 export function PromotionTab() {
   const { grades } = useGrades();
+  const { fetchPromotionReport } = usePromotionReport();
   const [selectedGradeId, setSelectedGradeId] = useState('');
   const [year, setYear] = useState('2026');
   const [report, setReport] = useState<GradeReport | null>(null);
@@ -54,18 +46,15 @@ export function PromotionTab() {
     }
     try {
       setLoading(true);
-      const res = await apiClient.get(`/academic/promotion/grade/${selectedGradeId}`, {
-        params: { year: Number(year) },
-      });
-      const raw = (res.data as Record<string, unknown>).data ?? res.data;
-      setReport(raw as GradeReport);
+      const data = await fetchPromotionReport(selectedGradeId, Number(year));
+      setReport(data);
     } catch (err: unknown) {
       toast.error(extractErrorMessage(err, 'Failed to load promotion report'));
       setReport(null);
     } finally {
       setLoading(false);
     }
-  }, [selectedGradeId, year]);
+  }, [selectedGradeId, year, fetchPromotionReport]);
 
   const columns: ColumnDef<PromotionStudent>[] = [
     { accessorKey: 'admissionNumber', header: 'Adm No.' },
@@ -79,7 +68,7 @@ export function PromotionTab() {
       header: 'Average',
       cell: ({ row }) => {
         const avg = row.original.overallAverage;
-        const color = avg >= 80 ? 'text-emerald-600' : avg >= 60 ? 'text-blue-600' : avg >= 50 ? 'text-amber-600' : 'text-red-600';
+        const color = avg >= 80 ? 'text-emerald-600' : avg >= 60 ? 'text-blue-600' : avg >= 50 ? 'text-amber-600' : 'text-destructive';
         return <span className={`font-semibold ${color}`}>{Math.round(avg)}%</span>;
       },
     },
@@ -156,7 +145,7 @@ export function PromotionTab() {
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-red-600">{report.notPromoted}</p>
+                <p className="text-2xl font-bold text-destructive">{report.notPromoted}</p>
                 <p className="text-sm text-muted-foreground">Not Promoted</p>
               </CardContent>
             </Card>

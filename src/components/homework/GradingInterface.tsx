@@ -7,7 +7,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Save, FileText, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
 import { formatDate } from '@/lib/utils';
 
 interface SubmissionData {
@@ -30,9 +29,15 @@ interface GradingInterfaceProps {
   submission: SubmissionData;
   totalMarks: number;
   onGraded: (updatedSubmission: SubmissionData) => void;
+  onGradeSubmission: (
+    submissionId: string,
+    body: { mark: number; feedback?: string },
+  ) => Promise<SubmissionData>;
 }
 
-export function GradingInterface({ submission, totalMarks, onGraded }: GradingInterfaceProps) {
+export function GradingInterface({
+  submission, totalMarks, onGraded, onGradeSubmission,
+}: GradingInterfaceProps) {
   const [mark, setMark] = useState<string>(
     submission.mark !== null && submission.mark !== undefined
       ? String(submission.mark)
@@ -62,13 +67,9 @@ export function GradingInterface({ submission, totalMarks, onGraded }: GradingIn
     try {
       const body: { mark: number; feedback?: string } = { mark: markNum };
       if (feedback.trim()) body.feedback = feedback.trim();
-      const res = await apiClient.patch(
-        `/homework/submissions/${submission.id}/grade`,
-        body
-      );
-      const updated = res.data.data ?? res.data;
+      const updated = await onGradeSubmission(submission.id, body);
       toast.success('Submission graded successfully');
-      onGraded({ ...submission, ...updated, id: updated._id ?? updated.id ?? submission.id });
+      onGraded({ ...submission, ...updated, id: updated.id ?? submission.id });
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
         ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
@@ -119,7 +120,7 @@ export function GradingInterface({ submission, totalMarks, onGraded }: GradingIn
         </div>
       )}
 
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-col sm:flex-row items-end gap-3">
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">
             Mark (out of {totalMarks})

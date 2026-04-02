@@ -14,7 +14,7 @@ function getGradeColor(percentage: number): string {
   if (percentage >= 80) return 'text-emerald-600';
   if (percentage >= 60) return 'text-blue-600';
   if (percentage >= 50) return 'text-amber-600';
-  return 'text-red-600';
+  return 'text-destructive';
 }
 
 function getGradeBadge(percentage: number): { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' } {
@@ -105,7 +105,7 @@ export default function StudentGradesPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Assessments
                   </p>
@@ -132,7 +132,7 @@ export default function StudentGradesPage() {
                         {grade.percentage >= 70 ? (
                           <TrendingUp className="h-3 w-3 text-emerald-500" />
                         ) : grade.percentage < 50 ? (
-                          <TrendingDown className="h-3 w-3 text-red-500" />
+                          <TrendingDown className="h-3 w-3 text-destructive" />
                         ) : null}
                       </div>
                     </div>

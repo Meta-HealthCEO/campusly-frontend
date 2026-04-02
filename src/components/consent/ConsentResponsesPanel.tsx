@@ -8,9 +8,8 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ConsentStatusBadge } from './ConsentStatusBadge';
 import { ArrowLeft, CheckCircle2, XCircle, Clock, Users } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
-import apiClient from '@/lib/api-client';
+import { useConsentMutations } from '@/hooks/useConsent';
 import type { ApiConsentForm, ApiConsentResponse } from './types';
-import { normalizeConsentResponse } from './types';
 
 interface ConsentResponsesPanelProps {
   form: ApiConsentForm;
@@ -23,31 +22,24 @@ export function ConsentResponsesPanel({ form, onBack }: ConsentResponsesPanelPro
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const { fetchResponses } = useConsentMutations();
 
-  const fetchResponses = useCallback(async () => {
+  const loadResponses = useCallback(async () => {
     try {
-      const res = await apiClient.get(
-        `/consent/responses/form/${form.id}`,
-        { params: { page, limit: 20 } },
-      );
-      const raw = res.data.data ?? res.data;
-      const arr = Array.isArray(raw)
-        ? raw
-        : (raw.responses ?? raw.data ?? []);
-      const items = (arr as Record<string, unknown>[]).map(normalizeConsentResponse);
-      setResponses(items);
-      setTotal(typeof raw.total === 'number' ? raw.total : items.length);
-      setTotalPages(typeof raw.totalPages === 'number' ? raw.totalPages : 1);
+      const result = await fetchResponses(form.id, page, 20);
+      setResponses(result.responses);
+      setTotal(result.total);
+      setTotalPages(result.totalPages);
     } catch {
       console.error('Failed to load consent responses');
     } finally {
       setLoading(false);
     }
-  }, [form.id, page]);
+  }, [form.id, page, fetchResponses]);
 
   useEffect(() => {
-    fetchResponses();
-  }, [fetchResponses]);
+    loadResponses();
+  }, [loadResponses]);
 
   const grantedCount = responses.filter((r) => r.response === 'granted').length;
   const deniedCount = responses.filter((r) => r.response === 'denied').length;
@@ -115,8 +107,8 @@ export function ConsentResponsesPanel({ form, onBack }: ConsentResponsesPanelPro
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-xl bg-red-100 p-2.5">
-              <XCircle className="h-5 w-5 text-red-700" />
+            <div className="rounded-xl bg-destructive/10 p-2.5">
+              <XCircle className="h-5 w-5 text-destructive" />
             </div>
             <div>
               <p className="text-2xl font-bold">{deniedCount}</p>

@@ -4,21 +4,36 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { getRoleDashboardPath } from '@/lib/auth';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import type { LoginCredentials, User } from '@/types';
+
+export interface RegisterPayload {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  phone?: string;
+}
+
+export interface ResetPasswordPayload {
+  token: string;
+  password: string;
+}
 
 export function useAuth() {
   const router = useRouter();
   const { login: storeLogin, logout: storeLogout, user, isAuthenticated } = useAuthStore();
 
   const login = async (credentials: LoginCredentials) => {
-    const { data } = await apiClient.post('/auth/login', credentials);
-    const responseData = data.data ?? data;
+    const response = await apiClient.post('/auth/login', credentials);
+    const responseData = unwrapResponse(response);
     const userData = responseData.user ?? responseData;
     const accessToken = responseData.accessToken ?? responseData.access_token;
     const refreshToken = responseData.refreshToken ?? responseData.refresh_token;
     // Normalize school_admin → admin for frontend routing
     const role = userData.role === 'school_admin' ? 'admin' : userData.role;
-    const user: User = {
+    const authUser: User = {
       id: userData._id ?? userData.id,
       email: userData.email,
       firstName: userData.firstName,
@@ -31,7 +46,7 @@ export function useAuth() {
       createdAt: userData.createdAt ?? '',
       updatedAt: userData.updatedAt ?? '',
     };
-    storeLogin(user, { accessToken, refreshToken: refreshToken ?? '' });
+    storeLogin(authUser, { accessToken, refreshToken: refreshToken ?? '' });
     router.push(getRoleDashboardPath(role));
   };
 
@@ -45,5 +60,17 @@ export function useAuth() {
     router.push('/login');
   };
 
-  return { login, logout, user, isAuthenticated };
+  const register = async (payload: RegisterPayload) => {
+    await apiClient.post('/auth/register', payload);
+  };
+
+  const forgotPassword = async (email: string) => {
+    await apiClient.post('/auth/forgot-password', { email });
+  };
+
+  const resetPassword = async (payload: ResetPasswordPayload) => {
+    await apiClient.post('/auth/reset-password', payload);
+  };
+
+  return { login, logout, register, forgotPassword, resetPassword, user, isAuthenticated };
 }

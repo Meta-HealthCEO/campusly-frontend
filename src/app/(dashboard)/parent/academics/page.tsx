@@ -40,7 +40,7 @@ const assessmentColumns: ColumnDef<StudentGrade, unknown>[] = [
     accessorKey: 'percentage', header: 'Percentage',
     cell: ({ row }) => {
       const pct = row.original.percentage;
-      const color = pct >= 75 ? 'text-emerald-600' : pct >= 50 ? 'text-amber-600' : 'text-red-600';
+      const color = pct >= 75 ? 'text-emerald-600' : pct >= 50 ? 'text-amber-600' : 'text-destructive';
       return <span className={`font-semibold ${color}`}>{pct}%</span>;
     },
   },
@@ -140,15 +140,15 @@ export default function AcademicsPage() {
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-2">
                             <p className="font-medium text-sm">{subject.name}</p>
-                            {subject.trend > 0 ? <TrendingUp className="h-4 w-4 text-emerald-600" /> : subject.trend < 0 ? <TrendingDown className="h-4 w-4 text-red-600" /> : <Minus className="h-4 w-4 text-muted-foreground" />}
+                            {subject.trend > 0 ? <TrendingUp className="h-4 w-4 text-emerald-600" /> : subject.trend < 0 ? <TrendingDown className="h-4 w-4 text-destructive" /> : <Minus className="h-4 w-4 text-muted-foreground" />}
                           </div>
-                          <p className={`text-2xl font-bold ${subject.average >= 75 ? 'text-emerald-600' : subject.average >= 50 ? 'text-amber-600' : 'text-red-600'}`}>{subject.average}%</p>
+                          <p className={`text-2xl font-bold ${subject.average >= 75 ? 'text-emerald-600' : subject.average >= 50 ? 'text-amber-600' : 'text-destructive'}`}>{subject.average}%</p>
                           <div className="flex items-center justify-between mt-2">
                             <p className="text-xs text-muted-foreground">Latest: {subject.latestGrade}%</p>
-                            {subject.trend !== 0 && <p className={`text-xs font-medium ${subject.trend > 0 ? 'text-emerald-600' : 'text-red-600'}`}>{subject.trend > 0 ? '+' : ''}{subject.trend}%</p>}
+                            {subject.trend !== 0 && <p className={`text-xs font-medium ${subject.trend > 0 ? 'text-emerald-600' : 'text-destructive'}`}>{subject.trend > 0 ? '+' : ''}{subject.trend}%</p>}
                           </div>
                           <div className="mt-2 h-1.5 w-full rounded-full bg-muted">
-                            <div className={`h-1.5 rounded-full ${subject.average >= 75 ? 'bg-emerald-500' : subject.average >= 50 ? 'bg-amber-500' : 'bg-red-500'}`} style={{ width: `${subject.average}%` }} />
+                            <div className={`h-1.5 rounded-full ${subject.average >= 75 ? 'bg-emerald-500' : subject.average >= 50 ? 'bg-amber-500' : 'bg-destructive/100'}`} style={{ width: `${subject.average}%` }} />
                           </div>
                         </CardContent>
                       </Card>

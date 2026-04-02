@@ -4,6 +4,7 @@ import { Download, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useAuditStore } from '@/stores/useAuditStore';
+import { useAuditApi } from '@/hooks/useAuditApi';
 import type { AuditLog } from '@/stores/useAuditStore';
 
 interface AuditExportButtonProps {
@@ -60,7 +61,8 @@ function triggerDownload(content: string, filename: string) {
 }
 
 export function AuditExportButton({ filename }: AuditExportButtonProps) {
-  const { exporting, exportLogs } = useAuditStore();
+  const { exporting } = useAuditStore();
+  const { exportLogs } = useAuditApi();
 
   const handleExport = async () => {
     try {

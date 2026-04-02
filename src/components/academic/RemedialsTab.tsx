@@ -17,9 +17,9 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Plus, Pencil, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { useSubjects, useRemedials } from '@/hooks/useAcademics';
+import { useRemedialMutations } from '@/hooks/useAcademicMutationsExtended';
 import type { RemedialRecord } from '@/hooks/useAcademics';
 import { formatDate } from '@/lib/utils';
 import type { Student } from '@/types';
@@ -30,7 +30,8 @@ const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'outline'> = {
 
 export function RemedialsTab() {
   const { subjects } = useSubjects();
-  const { records, students, loading, refetch: fetchRecords, schoolId } = useRemedials();
+  const { records, students, loading, refetch: fetchRecords } = useRemedials();
+  const { createRemedial, updateRemedial, deleteRemedial } = useRemedialMutations();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<RemedialRecord | null>(null);
@@ -64,17 +65,17 @@ export function RemedialsTab() {
     const progressArr = form.progress.split(',').map((s) => s.trim()).filter(Boolean);
     try {
       const payload = {
-        studentId: form.studentId, subjectId: form.subjectId, schoolId,
+        studentId: form.studentId, subjectId: form.subjectId,
         identifiedDate: new Date(form.identifiedDate).toISOString(),
         areas: areasArr, interventions: interventionsArr, progress: progressArr,
         status: form.status,
         reviewDate: form.reviewDate ? new Date(form.reviewDate).toISOString() : undefined,
       };
       if (editing) {
-        await apiClient.put(`/academic/remedials/${editing.id}`, payload);
+        await updateRemedial(editing.id, payload);
         toast.success('Remedial record updated');
       } else {
-        await apiClient.post('/academic/remedials', payload);
+        await createRemedial(payload);
         toast.success('Remedial record created');
       }
       setDialogOpen(false);
@@ -85,7 +86,7 @@ export function RemedialsTab() {
   }
 
   async function handleDelete(id: string) {
-    try { await apiClient.delete(`/academic/remedials/${id}`); toast.success('Record deleted'); fetchRecords(); }
+    try { await deleteRemedial(id); toast.success('Record deleted'); fetchRecords(); }
     catch (err: unknown) {
       toast.error(extractErrorMessage(err, 'Failed to delete record'));
     }
@@ -104,8 +105,8 @@ export function RemedialsTab() {
     { id: 'areas', header: 'Areas', accessorFn: (r) => r.areas.length },
     { id: 'actions', header: '', cell: ({ row }) => (
       <div className="flex gap-1">
-        <Button variant="ghost" size="icon-sm" onClick={() => openEdit(row.original)}><Pencil className="h-3 w-3" /></Button>
-        <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(row.original.id)}><Trash2 className="h-3 w-3 text-destructive" /></Button>
+        <Button variant="ghost" size="icon-sm" onClick={() => openEdit(row.original)} aria-label="Edit remedial"><Pencil className="h-3 w-3" /></Button>
+        <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(row.original.id)} aria-label="Delete remedial"><Trash2 className="h-3 w-3 text-destructive" /></Button>
       </div>
     )},
   ];

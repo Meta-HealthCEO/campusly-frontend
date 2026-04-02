@@ -75,7 +75,7 @@ export default function TransportPage() {
                       <CardTitle className="text-base flex items-center gap-2"><Route className="h-5 w-5 text-primary" />{route.name}</CardTitle>
                       <CardDescription>{route.description}</CardDescription>
                     </div>
-                    <Badge variant="secondary" className={route.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}>
+                    <Badge variant="secondary" className={route.isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-destructive/10 text-destructive'}>
                       {route.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>

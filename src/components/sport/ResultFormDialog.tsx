@@ -14,7 +14,7 @@ import {
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
-import apiClient from '@/lib/api-client';
+import { createResult, updateResult } from '@/hooks/useSportMutations';
 import type { MatchResult, SportPlayer } from '@/types/sport';
 
 interface ScorerRow {
@@ -88,10 +88,10 @@ export function ResultFormDialog({
         notes: notes.trim() || undefined,
       };
       if (existingResult) {
-        await apiClient.put(`/sport/fixtures/${fixtureId}/result`, payload);
+        await updateResult(fixtureId, payload);
         toast.success('Match result updated');
       } else {
-        await apiClient.post(`/sport/fixtures/${fixtureId}/result`, payload);
+        await createResult(fixtureId, payload);
         toast.success('Match result created successfully');
       }
       onOpenChange(false);
@@ -150,7 +150,7 @@ export function ResultFormDialog({
                 </Select>
                 <Input type="number" min={0} className="w-20" value={s.goals}
                   onChange={(e) => updateScorer(idx, 'goals', Number(e.target.value))} />
-                <Button type="button" variant="ghost" size="icon-sm" onClick={() => removeScorer(idx)}>
+                <Button type="button" variant="ghost" size="icon-sm" onClick={() => removeScorer(idx)} aria-label="Remove scorer">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>

@@ -44,7 +44,7 @@ function getPercentageColor(pct: number): string {
   if (pct >= 80) return 'text-emerald-600 dark:text-emerald-400';
   if (pct >= 60) return 'text-blue-600 dark:text-blue-400';
   if (pct >= 50) return 'text-yellow-600 dark:text-yellow-400';
-  return 'text-red-600 dark:text-red-400';
+  return 'text-destructive dark:text-destructive';
 }
 
 export function ReportCardTable({ marks, term, academicYear }: ReportCardTableProps) {

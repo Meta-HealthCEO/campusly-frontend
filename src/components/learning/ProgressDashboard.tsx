@@ -15,7 +15,7 @@ interface ProgressDashboardProps {
 const trendConfig = {
   improving: { icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-100 text-emerald-800', label: 'Improving' },
   stable: { icon: Minus, color: 'text-amber-600', bg: 'bg-amber-100 text-amber-800', label: 'Stable' },
-  declining: { icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-100 text-red-800', label: 'Declining' },
+  declining: { icon: TrendingDown, color: 'text-destructive', bg: 'bg-destructive/10 text-destructive', label: 'Declining' },
 };
 
 export function ProgressDashboard({ progress }: ProgressDashboardProps) {

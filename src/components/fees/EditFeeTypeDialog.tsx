@@ -16,7 +16,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import apiClient from '@/lib/api-client';
+import { useFeeTypeMutations, extractErrorMessage } from '@/hooks/useFeeMutations';
 import { feeTypeSchema, type FeeTypeFormData } from '@/lib/validations';
 import type { FeeType } from '@/types';
 
@@ -28,6 +28,7 @@ interface EditFeeTypeDialogProps {
 }
 
 export function EditFeeTypeDialog({ open, onOpenChange, feeType, onSuccess }: EditFeeTypeDialogProps) {
+  const { updateFeeType } = useFeeTypeMutations('');
   const {
     register,
     handleSubmit,
@@ -54,15 +55,12 @@ export function EditFeeTypeDialog({ open, onOpenChange, feeType, onSuccess }: Ed
     if (!feeType) return;
     const feeId = feeType._id ?? feeType.id;
     try {
-      await apiClient.patch(`/fees/types/${feeId}`, data);
+      await updateFeeType(feeId, data);
       toast.success('Fee type updated successfully!');
       onOpenChange(false);
       onSuccess();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to update fee type';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to update fee type'));
     }
   };
 

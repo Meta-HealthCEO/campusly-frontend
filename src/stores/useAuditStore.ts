@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import apiClient from '@/lib/api-client';
 
 type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'export';
 
@@ -42,6 +41,11 @@ export interface AuditFilterParams {
   schoolId?: string;
 }
 
+export interface AuditSchool {
+  _id: string;
+  name: string;
+}
+
 interface AuditState {
   logs: AuditLog[];
   total: number;
@@ -50,16 +54,22 @@ interface AuditState {
   filters: AuditFilterParams;
   exporting: boolean;
   exportError: string | null;
+  schools: AuditSchool[];
 
-  fetchLogs: () => Promise<void>;
+  // State setters
+  setLogs: (logs: AuditLog[], total: number) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
   setFilter: (patch: Partial<AuditFilterParams>) => void;
   resetFilters: () => void;
-  exportLogs: () => Promise<AuditLog[]>;
+  setExporting: (exporting: boolean) => void;
+  setExportError: (error: string | null) => void;
+  setSchools: (schools: AuditSchool[]) => void;
 }
 
 const DEFAULT_FILTERS: AuditFilterParams = { page: 1, limit: 20 };
 
-export const useAuditStore = create<AuditState>((set, get) => ({
+export const useAuditStore = create<AuditState>((set) => ({
   logs: [],
   total: 0,
   loading: false,
@@ -67,35 +77,11 @@ export const useAuditStore = create<AuditState>((set, get) => ({
   filters: { ...DEFAULT_FILTERS },
   exporting: false,
   exportError: null,
+  schools: [],
 
-  fetchLogs: async () => {
-    set({ loading: true, error: null });
-    try {
-      const { filters } = get();
-      const params: Record<string, string | number> = {};
-      if (filters.page) params.page = filters.page;
-      if (filters.limit) params.limit = filters.limit;
-      if (filters.userId) params.userId = filters.userId;
-      if (filters.entity) params.entity = filters.entity;
-      if (filters.action) params.action = filters.action;
-      if (filters.startDate) params.startDate = filters.startDate;
-      if (filters.endDate) params.endDate = filters.endDate;
-      if (filters.schoolId) params.schoolId = filters.schoolId;
-
-      const res = await apiClient.get('/audit/logs', { params });
-      const raw = res.data.data ?? res.data;
-      const logs: AuditLog[] = Array.isArray(raw) ? raw : raw.logs ?? [];
-      const total: number = typeof raw.total === 'number' ? raw.total : logs.length;
-      set({ logs, total });
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to load audit logs';
-      set({ error: msg, logs: [], total: 0 });
-    } finally {
-      set({ loading: false });
-    }
-  },
+  setLogs: (logs, total) => set({ logs, total }),
+  setLoading: (loading) => set({ loading }),
+  setError: (error) => set({ error }),
 
   setFilter: (patch) => {
     set((state) => {
@@ -110,34 +96,9 @@ export const useAuditStore = create<AuditState>((set, get) => ({
     });
   },
 
-  resetFilters: () => {
-    set({ filters: { ...DEFAULT_FILTERS } });
-  },
+  resetFilters: () => set({ filters: { ...DEFAULT_FILTERS } }),
 
-  exportLogs: async () => {
-    set({ exporting: true, exportError: null });
-    try {
-      const { filters } = get();
-      const params: Record<string, string> = {};
-      if (filters.userId) params.userId = filters.userId;
-      if (filters.entity) params.entity = filters.entity;
-      if (filters.action) params.action = filters.action;
-      if (filters.startDate) params.startDate = filters.startDate;
-      if (filters.endDate) params.endDate = filters.endDate;
-      if (filters.schoolId) params.schoolId = filters.schoolId;
-
-      const res = await apiClient.get('/audit/logs/export', { params });
-      const raw = res.data.data ?? res.data;
-      const logs: AuditLog[] = Array.isArray(raw) ? raw : [];
-      return logs;
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to export audit logs';
-      set({ exportError: msg });
-      throw new Error('Export failed');
-    } finally {
-      set({ exporting: false });
-    }
-  },
+  setExporting: (exporting) => set({ exporting }),
+  setExportError: (error) => set({ exportError: error }),
+  setSchools: (schools) => set({ schools }),
 }));

@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useLearningStore } from '@/stores/useLearningStore';
+import { useLearningApi } from '@/hooks/useLearningApi';
 import { QuizAttemptUI } from '@/components/learning/QuizAttemptUI';
 import { getPopulatedName } from '@/components/learning/types';
 import { useFetchQuiz } from '@/hooks/useStudentMaterials';
@@ -16,7 +17,8 @@ import type { Quiz, QuizAnswer, QuizAttempt } from '@/components/learning/types'
 import { formatDate } from '@/lib/utils';
 
 export default function StudentQuizzesPage() {
-  const { quizzes, quizzesLoading, fetchQuizzes, submitQuizAttempt } = useLearningStore();
+  const { quizzes, quizzesLoading } = useLearningStore();
+  const { fetchQuizzes, submitQuizAttempt } = useLearningApi();
   const { fetchFullQuiz } = useFetchQuiz();
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
 

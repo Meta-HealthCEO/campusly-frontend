@@ -120,15 +120,15 @@ function RouteCard({ route, onEdit, onDelete }: {
               className={
                 route.isActive
                   ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                  : 'bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive'
               }
             >
               {route.isActive ? 'Active' : 'Inactive'}
             </Badge>
-            <Button variant="ghost" size="icon-sm" onClick={onEdit}>
+            <Button variant="ghost" size="icon-sm" onClick={onEdit} aria-label="Edit route">
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="ghost" size="icon-sm" onClick={onDelete} className="text-destructive">
+            <Button variant="ghost" size="icon-sm" onClick={onDelete} className="text-destructive" aria-label="Delete route">
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -155,7 +155,7 @@ function RouteCard({ route, onEdit, onDelete }: {
 
         <div>
           <p className="mb-2 text-sm font-medium">Stops</p>
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-[400px] overflow-y-auto">
             {route.stops.map((stop, index) => (
               <div key={index} className="flex items-start gap-3">
                 <div className="flex flex-col items-center">

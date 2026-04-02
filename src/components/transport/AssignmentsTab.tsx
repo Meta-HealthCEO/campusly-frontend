@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Plus, Trash2, Pencil, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,22 +16,16 @@ import {
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Badge } from '@/components/ui/badge';
-import apiClient from '@/lib/api-client';
-import { useAuthStore } from '@/stores/useAuthStore';
 import type {
   BusRoute, TransportAssignment, PopulatedStudent, PopulatedRoute,
+  SimpleStudent,
 } from '@/hooks/useTransport';
-
-interface SimpleStudent {
-  id: string;
-  firstName: string;
-  lastName: string;
-  admissionNumber: string;
-}
 
 interface AssignmentsTabProps {
   assignments: TransportAssignment[];
   routes: BusRoute[];
+  students: SimpleStudent[];
+  fetchStudents: () => Promise<void>;
   onCreateAssignment: (data: {
     studentId: string; busRouteId: string; stopName: string;
     direction: 'morning' | 'afternoon' | 'both';
@@ -63,12 +57,11 @@ const DIRECTION_LABELS: Record<string, string> = {
 };
 
 export function AssignmentsTab({
-  assignments, routes, onCreateAssignment, onUpdateAssignment,
+  assignments, routes, students, fetchStudents,
+  onCreateAssignment, onUpdateAssignment,
   onDeleteAssignment, onFilterByRoute,
 }: AssignmentsTabProps) {
-  const { user } = useAuthStore();
   const [formOpen, setFormOpen] = useState(false);
-  const [students, setStudents] = useState<SimpleStudent[]>([]);
   const [filterRouteId, setFilterRouteId] = useState('');
   const [editTarget, setEditTarget] = useState<TransportAssignment | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TransportAssignment | null>(null);
@@ -84,27 +77,6 @@ export function AssignmentsTab({
 
   const activeRoutes = routes.filter((r) => r.isActive);
   const selectedRoute = routes.find((r) => r.id === selectedRouteId);
-
-  const fetchStudents = useCallback(async () => {
-    try {
-      const res = await apiClient.get('/students', {
-        params: { schoolId: user?.schoolId ?? '' },
-      });
-      const raw = res.data.data ?? res.data;
-      const arr = Array.isArray(raw) ? raw : raw.students ?? raw.data ?? [];
-      setStudents(arr.map((s: Record<string, unknown>) => {
-        const u = s.userId as Record<string, unknown> | undefined;
-        return {
-          id: (s._id as string) ?? (s.id as string),
-          firstName: (u?.firstName as string) ?? '',
-          lastName: (u?.lastName as string) ?? '',
-          admissionNumber: (s.admissionNumber as string) ?? '',
-        };
-      }));
-    } catch {
-      console.error('Failed to load students');
-    }
-  }, [user?.schoolId]);
 
   useEffect(() => { fetchStudents(); }, [fetchStudents]);
 
@@ -209,10 +181,10 @@ export function AssignmentsTab({
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon-sm" onClick={() => openEditForm(row.original)}>
+          <Button variant="ghost" size="icon-sm" onClick={() => openEditForm(row.original)} aria-label="Edit assignment">
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon-sm" className="text-destructive" onClick={() => setDeleteTarget(row.original)}>
+          <Button variant="ghost" size="icon-sm" className="text-destructive" onClick={() => setDeleteTarget(row.original)} aria-label="Delete assignment">
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>

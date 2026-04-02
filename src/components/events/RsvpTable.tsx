@@ -15,7 +15,7 @@ interface RsvpTableProps {
 
 const statusStyles: Record<string, string> = {
   attending: 'bg-emerald-100 text-emerald-700',
-  not_attending: 'bg-red-100 text-red-700',
+  not_attending: 'bg-destructive/10 text-destructive',
   maybe: 'bg-yellow-100 text-yellow-700',
 };
 

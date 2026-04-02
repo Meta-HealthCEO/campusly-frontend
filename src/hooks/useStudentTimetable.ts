@@ -20,9 +20,10 @@ export function useStudentTimetable(): StudentTimetableResult {
       return;
     }
 
+    const currentStudent = student;
     async function fetchTimetable() {
       try {
-        const classRaw = student!.class ?? student!.classId;
+        const classRaw = currentStudent.class ?? currentStudent.classId;
         const classId = typeof classRaw === 'object' && classRaw !== null
           ? (classRaw as { _id?: string; id?: string })._id ?? (classRaw as { id?: string }).id ?? ''
           : (classRaw as string) ?? '';

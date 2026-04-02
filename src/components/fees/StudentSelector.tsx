@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import apiClient from '@/lib/api-client';
+import { useStudentsList } from '@/hooks/useFeeDialogData';
 import type { Student } from '@/types';
 
 interface StudentSelectorProps {
@@ -25,24 +24,7 @@ export function StudentSelector({
   label = 'Student',
   placeholder = 'Select a student...',
 }: StudentSelectorProps) {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchStudents() {
-      try {
-        const response = await apiClient.get('/students');
-        const raw = response.data.data ?? response.data;
-        const list: Student[] = Array.isArray(raw) ? raw : raw.students ?? raw.data ?? [];
-        setStudents(list);
-      } catch {
-        console.error('Failed to load students');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchStudents();
-  }, []);
+  const { students, loading } = useStudentsList();
 
   return (
     <div className="space-y-2">

@@ -46,7 +46,7 @@ export function HouseLeaderboard({ houses, highlightHouseId, loading, compact }:
             style={{ backgroundColor: house.houseColor }}
           />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate" style={{ color: house.houseColor }}>{house.houseName}</p>
+            <p className="text-sm font-medium truncate">{house.houseName}</p>
             {!compact && <p className="text-xs text-muted-foreground">Term {house.term}, {house.year}</p>}
           </div>
           <div className="flex items-center gap-1 shrink-0">

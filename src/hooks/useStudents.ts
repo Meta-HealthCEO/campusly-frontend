@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
-import { mapId, unwrapList } from '@/lib/api-helpers';
+import { mapId, unwrapList, unwrapResponse } from '@/lib/api-helpers';
 import type { Student } from '@/types';
 
 export function useStudents() {
@@ -30,7 +30,7 @@ export function useStudents() {
 export async function fetchStudentById(id: string): Promise<Student | null> {
   try {
     const res = await apiClient.get(`/students/${id}`);
-    const raw = res.data.data ?? res.data;
+    const raw = unwrapResponse(res);
     const mapped = mapId(raw as Record<string, unknown>);
     return mapped as unknown as Student;
   } catch {

@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { getStoredTokens, clearStoredTokens } from '@/lib/auth';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import type { User } from '@/types';
 
 interface AuthProviderProps {
@@ -24,7 +25,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     apiClient
       .get('/auth/me')
       .then((response) => {
-        const raw = response.data.data ?? response.data;
+        const raw = unwrapResponse(response);
         const userData = raw.user ?? raw;
         const user: User = {
           id: userData._id ?? userData.id,

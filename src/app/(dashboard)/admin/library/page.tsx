@@ -10,15 +10,12 @@ import { useLibrary } from '@/hooks/useLibrary';
 import { BooksTab } from '@/components/library/BooksTab';
 import { LoansTab } from '@/components/library/LoansTab';
 import { ChallengesTab } from '@/components/library/ChallengesTab';
-import apiClient from '@/lib/api-client';
-import type { Student } from '@/types';
 
 export default function AdminLibraryPage() {
   const { user } = useAuthStore();
   const schoolId = user?.schoolId ?? '';
   const lib = useLibrary(schoolId);
 
-  const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -33,23 +30,12 @@ export default function AdminLibraryPage() {
   useEffect(() => {
     async function init() {
       try {
-        const results = await Promise.allSettled([
+        await Promise.allSettled([
           lib.fetchBooks(),
           lib.fetchOverdueLoans(),
           lib.fetchChallenges(),
-          apiClient.get('/students'),
+          lib.fetchStudents(),
         ]);
-
-        if (results[3].status === 'fulfilled') {
-          const raw = results[3].value.data.data ?? results[3].value.data;
-          const arr = Array.isArray(raw) ? raw : raw.data ?? [];
-          setStudents(
-            (arr as Record<string, unknown>[]).map((s) => ({
-              ...s,
-              id: (s._id as string) ?? (s.id as string),
-            })) as Student[],
-          );
-        }
       } catch {
         console.error('Failed to initialise library data');
       } finally {
@@ -141,7 +127,7 @@ export default function AdminLibraryPage() {
             loans={lib.overdueLoans}
             loading={lib.overdueLoading}
             books={lib.books}
-            students={students}
+            students={lib.libraryStudents}
             onIssueLoan={lib.issueLoan}
             onReturnLoan={lib.returnLoan}
             onMarkLost={lib.markLost}

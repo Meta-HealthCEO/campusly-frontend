@@ -7,14 +7,15 @@ import { toast } from 'sonner';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { ResetPasswordForm } from '@/components/auth/ResetPasswordForm';
+import { useAuth } from '@/hooks/useAuth';
 import type { ResetPasswordFormData } from '@/components/auth/ResetPasswordForm';
-import apiClient from '@/lib/api-client';
 import Link from 'next/link';
 
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
+  const { resetPassword } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -26,7 +27,7 @@ function ResetPasswordContent() {
     setIsLoading(true);
     setApiError(null);
     try {
-      await apiClient.post('/auth/reset-password', {
+      await resetPassword({
         token,
         password: data.password,
       });

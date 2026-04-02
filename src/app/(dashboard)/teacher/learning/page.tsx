@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertTriangle, BookOpen } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
 import { useLearningStore } from '@/stores/useLearningStore';
+import { useLearningApi } from '@/hooks/useLearningApi';
 import { StrugglingStudentsAlert } from '@/components/learning/StrugglingStudentsAlert';
 import { SubmissionViewer } from '@/components/learning/SubmissionViewer';
 import { useTeacherLearning } from '@/hooks/useTeacherLearning';
@@ -49,11 +50,11 @@ const submissionColumns: ColumnDef<AssignmentSubmission>[] = [
 ];
 
 export default function TeacherLearningPage() {
+  const { submissions, submissionsLoading, rubrics } = useLearningStore();
   const {
-    submissions, submissionsLoading, fetchSubmissions,
-    rubrics, fetchRubrics, gradeSubmission, requestRevision,
+    fetchSubmissions, fetchRubrics, gradeSubmission, requestRevision,
     enablePeerReview,
-  } = useLearningStore();
+  } = useLearningApi();
 
   const { classes, homework } = useTeacherLearning();
   const [selectedClassId, setSelectedClassId] = useState('');
@@ -61,7 +62,7 @@ export default function TeacherLearningPage() {
   const [viewingSubmission, setViewingSubmission] = useState<AssignmentSubmission | null>(null);
 
   // Trigger rubric fetch on mount (the hook loads classes/homework)
-  useState(() => { fetchRubrics(); });
+  useEffect(() => { fetchRubrics(); }, []);
 
   if (viewingSubmission) {
     return (

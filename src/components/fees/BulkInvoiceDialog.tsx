@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,8 +15,10 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/utils';
-import apiClient from '@/lib/api-client';
-import type { FeeType, Grade, Student } from '@/types';
+import { useBulkInvoiceDialogData } from '@/hooks/useFeeDialogData';
+import { useInvoiceMutations, extractErrorMessage } from '@/hooks/useFeeMutations';
+import type { FeeType } from '@/types';
+import type { FeeScheduleOption } from '@/hooks/useFeeDialogData';
 
 interface BulkInvoiceDialogProps {
   open: boolean;
@@ -25,43 +27,12 @@ interface BulkInvoiceDialogProps {
   onSuccess: () => void;
 }
 
-interface FeeScheduleOption {
-  id: string;
-  _id?: string;
-  feeTypeId: FeeType | string;
-  academicYear: number;
-  term?: number;
-  dueDate: string;
-}
-
-function extractGrades(res: { data: unknown }): Grade[] {
-  const raw = (res.data as Record<string, unknown>).data ?? res.data;
-  if (Array.isArray(raw)) return raw as Grade[];
-  const d = raw as Record<string, unknown>;
-  const arr = d.grades ?? d.data;
-  return Array.isArray(arr) ? (arr as Grade[]) : [];
-}
-
-function extractStudents(res: { data: unknown }): Student[] {
-  const raw = (res.data as Record<string, unknown>).data ?? res.data;
-  if (Array.isArray(raw)) return raw as Student[];
-  const d = raw as Record<string, unknown>;
-  const arr = d.students ?? d.data;
-  return Array.isArray(arr) ? (arr as Student[]) : [];
-}
-
-function extractSchedules(res: { data: unknown }): FeeScheduleOption[] {
-  const raw = (res.data as Record<string, unknown>).data ?? res.data;
-  if (Array.isArray(raw)) return raw as FeeScheduleOption[];
-  const d = raw as Record<string, unknown>;
-  const arr = d.schedules ?? d.data;
-  return Array.isArray(arr) ? (arr as FeeScheduleOption[]) : [];
-}
-
 export function BulkInvoiceDialog({ open, onOpenChange, schoolId, onSuccess }: BulkInvoiceDialogProps) {
-  const [grades, setGrades] = useState<Grade[]>([]);
-  const [allStudents, setAllStudents] = useState<Student[]>([]);
-  const [schedules, setSchedules] = useState<FeeScheduleOption[]>([]);
+  const { grades, allStudents, schedules } = useBulkInvoiceDialogData(
+    schoolId,
+    open && !!schoolId,
+  );
+  const { createBulkInvoices } = useInvoiceMutations();
   const [selectedGradeId, setSelectedGradeId] = useState('');
   const [feeScheduleId, setFeeScheduleId] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -69,25 +40,6 @@ export function BulkInvoiceDialog({ open, onOpenChange, schoolId, onSuccess }: B
     { description: '', amount: 0 },
   ]);
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!open || !schoolId) return;
-    async function fetchData() {
-      try {
-        const [gradeRes, studRes, schedRes] = await Promise.all([
-          apiClient.get('/academic/grades'),
-          apiClient.get('/students'),
-          apiClient.get(`/fees/schedules/school/${schoolId}`),
-        ]);
-        setGrades(extractGrades(gradeRes));
-        setAllStudents(extractStudents(studRes));
-        setSchedules(extractSchedules(schedRes));
-      } catch {
-        console.error('Failed to load data for bulk invoicing');
-      }
-    }
-    fetchData();
-  }, [open, schoolId]);
 
   const studentsInGrade = selectedGradeId
     ? allStudents.filter((s) => s.gradeId === selectedGradeId || (s.grade && (s.grade.id ?? (s.grade as unknown as Record<string, string>)._id) === selectedGradeId))
@@ -121,25 +73,19 @@ export function BulkInvoiceDialog({ open, onOpenChange, schoolId, onSuccess }: B
     setSubmitting(true);
     try {
       const studentIds = studentsInGrade.map((s) => s._id ?? s.id);
-      const payload: Record<string, unknown> = {
+      await createBulkInvoices({
         schoolId,
         studentIds,
         items,
         dueDate,
-      };
-      if (feeScheduleId) {
-        payload.feeScheduleId = feeScheduleId;
-      }
-      await apiClient.post('/fees/invoices/bulk', payload);
+        feeScheduleId: feeScheduleId || undefined,
+      });
       toast.success(`Bulk invoices created for ${studentIds.length} students!`);
       resetForm();
       onOpenChange(false);
       onSuccess();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to create bulk invoices';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to create bulk invoices'));
     } finally {
       setSubmitting(false);
     }

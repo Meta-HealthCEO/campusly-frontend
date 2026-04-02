@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse, unwrapList } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { WalletTransaction } from '@/types';
 
@@ -46,9 +47,9 @@ export function useAdminWallets() {
     setLoading(true);
     try {
       const response = await apiClient.get('/students');
-      const raw = response.data.data ?? response.data;
+      const raw = unwrapResponse(response);
       const rawObj = raw as Record<string, unknown>;
-      const studentArr = rawObj.students ?? rawObj.data;
+      const studentArr = (rawObj as Record<string, unknown>).students ?? (rawObj as Record<string, unknown>).data;
       const students: Record<string, unknown>[] = Array.isArray(raw)
         ? raw
         : Array.isArray(studentArr) ? studentArr as Record<string, unknown>[] : [];
@@ -67,7 +68,7 @@ export function useAdminWallets() {
         const walletRes = walletResults[i];
 
         if (walletRes.status === 'fulfilled') {
-          const w = walletRes.value.data.data ?? walletRes.value.data;
+          const w = unwrapResponse(walletRes.value);
           return {
             studentId: sid,
             studentName: name,
@@ -186,7 +187,7 @@ export function useAdminWallets() {
     setTransactions([]);
     try {
       const response = await apiClient.get(`/wallets/${walletId}/transactions`);
-      const raw = response.data.data ?? response.data;
+      const raw = unwrapResponse(response);
       const txns = (raw as Record<string, unknown>).transactions
         ?? (Array.isArray(raw) ? raw : (raw as Record<string, unknown>).data ?? []);
       const mapped: WalletTransaction[] = (txns as Record<string, unknown>[]).map((t) => ({

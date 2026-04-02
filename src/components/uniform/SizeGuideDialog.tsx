@@ -16,7 +16,7 @@ import {
 import { Plus, Trash2 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
+import { useSizeGuideMutations } from '@/hooks/useUniformMutations';
 import type { UniformItem, SizeGuide, SizeGuideMeasurement } from './types';
 
 interface SizeGuideDialogProps {
@@ -32,6 +32,9 @@ interface FormValues {
 }
 
 export function SizeGuideDialog({ open, onOpenChange, item, schoolId }: SizeGuideDialogProps) {
+  const {
+    fetchSizeGuide, createSizeGuide, updateSizeGuide, deleteSizeGuide, extractErrorMessage,
+  } = useSizeGuideMutations();
   const [sizeGuide, setSizeGuide] = useState<SizeGuide | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -45,23 +48,20 @@ export function SizeGuideDialog({ open, onOpenChange, item, schoolId }: SizeGuid
   const fetchGuide = useCallback(async () => {
     if (!item) return;
     setLoading(true);
-    try {
-      const response = await apiClient.get(`/uniform/items/${item.id}/size-guide`);
-      const raw = response.data.data ?? response.data;
-      const guide: SizeGuide = { ...raw, id: raw._id ?? raw.id };
-      setSizeGuide(guide);
-      reset({ sizeChartImageUrl: guide.sizeChartImageUrl, notes: guide.notes ?? '' });
-      setMeasurements(guide.measurements ?? []);
+    const result = await fetchSizeGuide(item.id);
+    if (result) {
+      setSizeGuide(result.sizeGuide);
+      reset({ sizeChartImageUrl: result.sizeGuide.sizeChartImageUrl, notes: result.sizeGuide.notes ?? '' });
+      setMeasurements(result.sizeGuide.measurements ?? []);
       setIsEditing(false);
-    } catch {
+    } else {
       setSizeGuide(null);
       reset({ sizeChartImageUrl: '', notes: '' });
       setMeasurements([]);
       setIsEditing(true);
-    } finally {
-      setLoading(false);
     }
-  }, [item, reset]);
+    setLoading(false);
+  }, [item, reset, fetchSizeGuide]);
 
   useEffect(() => {
     if (open && item) fetchGuide();
@@ -98,17 +98,15 @@ export function SizeGuideDialog({ open, onOpenChange, item, schoolId }: SizeGuid
     setSaving(true);
     try {
       if (sizeGuide) {
-        await apiClient.put(`/uniform/items/${item.id}/size-guide`, body);
+        await updateSizeGuide(item.id, body);
         toast.success('Size guide updated');
       } else {
-        await apiClient.post(`/uniform/items/${item.id}/size-guide`, body);
+        await createSizeGuide(item.id, body);
         toast.success('Size guide created');
       }
       await fetchGuide();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })
-        ?.response?.data?.message ?? 'Failed to save size guide';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to save size guide'));
     } finally {
       setSaving(false);
     }
@@ -117,17 +115,14 @@ export function SizeGuideDialog({ open, onOpenChange, item, schoolId }: SizeGuid
   const handleDelete = async () => {
     if (!item) return;
     try {
-      await apiClient.delete(`/uniform/items/${item.id}/size-guide`);
+      await deleteSizeGuide(item.id);
       toast.success('Size guide deleted');
       setSizeGuide(null);
       setMeasurements([]);
       reset({ sizeChartImageUrl: '', notes: '' });
       setIsEditing(true);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to delete size guide';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to delete size guide'));
     }
   };
 
@@ -286,7 +281,7 @@ function MeasurementEditor({ measurements, onUpdate, onRemove }: {
                 <Input value={m.length} onChange={(e) => onUpdate(i, 'length', e.target.value)} placeholder="66cm" />
               </TableCell>
               <TableCell>
-                <Button type="button" size="icon-xs" variant="ghost" onClick={() => onRemove(i)}>
+                <Button type="button" size="icon-xs" variant="ghost" onClick={() => onRemove(i)} aria-label="Remove size">
                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
                 </Button>
               </TableCell>

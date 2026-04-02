@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapList, unwrapResponse } from '@/lib/api-helpers';
 import type { Grade, SchoolClass, Parent } from '@/types';
 
 interface StudentFormOptions {
@@ -7,18 +8,6 @@ interface StudentFormOptions {
   classes: SchoolClass[];
   parents: Parent[];
   loading: boolean;
-}
-
-function unwrap<T>(response: { data: { data?: unknown } }): T[] {
-  const raw = response.data.data ?? response.data;
-  if (Array.isArray(raw)) return raw as T[];
-  if (typeof raw === 'object' && raw !== null) {
-    const obj = raw as Record<string, unknown>;
-    for (const key of Object.keys(obj)) {
-      if (Array.isArray(obj[key])) return obj[key] as T[];
-    }
-  }
-  return [];
 }
 
 function normalizeId<T extends { _id?: string; id?: string }>(item: T): T & { id: string } {
@@ -39,9 +28,9 @@ export function useStudentFormOptions(): StudentFormOptions {
           apiClient.get('/academic/classes'),
           apiClient.get('/parents'),
         ]);
-        setGrades(unwrap<Grade>(gradesRes).map(normalizeId));
-        setClasses(unwrap<SchoolClass>(classesRes).map(normalizeId));
-        setParents(unwrap<Parent>(parentsRes).map(normalizeId));
+        setGrades(unwrapList<Grade>(gradesRes).map(normalizeId));
+        setClasses(unwrapList<SchoolClass>(classesRes).map(normalizeId));
+        setParents(unwrapList<Parent>(parentsRes).map(normalizeId));
       } catch {
         console.error('Failed to load form options');
       } finally {
@@ -85,7 +74,7 @@ export async function createStudent(
       role: 'student',
       schoolId,
     });
-    const userData = userRes.data.data ?? userRes.data;
+    const userData = unwrapResponse(userRes);
     const userId = userData._id ?? userData.id ?? userData.user?._id ?? userData.user?.id;
 
     if (!userId) {

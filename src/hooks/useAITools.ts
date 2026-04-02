@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import { toast } from 'sonner';
 import type {
   GeneratedPaper,
@@ -32,7 +33,7 @@ export function useAITools() {
     setLoading(true);
     try {
       const response = await apiClient.post('/ai-tools/generate-paper', payload);
-      const raw = response.data.data ?? response.data;
+      const raw = unwrapResponse(response);
       const paper = mapPaper(raw as Record<string, unknown>);
       setCurrentPaper(paper);
       toast.success('Paper generated successfully!');
@@ -60,7 +61,7 @@ export function useAITools() {
       if (filters?.status) params.status = filters.status;
       if (page) params.page = page;
       const response = await apiClient.get('/ai-tools/papers', { params });
-      const raw = response.data.data ?? response.data;
+      const raw = unwrapResponse(response);
       const papersData = raw.papers ?? (Array.isArray(raw) ? raw : []);
       setPapers(
         (papersData as Record<string, unknown>[]).map(mapPaper),
@@ -80,7 +81,7 @@ export function useAITools() {
     setLoading(true);
     try {
       const response = await apiClient.get(`/ai-tools/papers/${id}`);
-      const raw = response.data.data ?? response.data;
+      const raw = unwrapResponse(response);
       const paper = mapPaper(raw as Record<string, unknown>);
       setCurrentPaper(paper);
       return paper;
@@ -101,7 +102,7 @@ export function useAITools() {
   ) => {
     try {
       const response = await apiClient.put(`/ai-tools/papers/${id}`, updates);
-      const raw = response.data.data ?? response.data;
+      const raw = unwrapResponse(response);
       const paper = mapPaper(raw as Record<string, unknown>);
       setCurrentPaper(paper);
       setPapers(prev => prev.map(p => p.id === id ? paper : p));
@@ -139,7 +140,7 @@ export function useAITools() {
         `/ai-tools/papers/${paperId}/regenerate-question`,
         { sectionIndex, questionIndex },
       );
-      const raw = response.data.data ?? response.data;
+      const raw = unwrapResponse(response);
       const paper = mapPaper(raw as Record<string, unknown>);
       setCurrentPaper(paper);
       toast.success('Question regenerated!');
@@ -156,7 +157,7 @@ export function useAITools() {
   const submitGrade = useCallback(async (payload: GradePayload) => {
     try {
       const response = await apiClient.post('/ai-tools/grade', payload);
-      const raw = response.data.data ?? response.data;
+      const raw = unwrapResponse(response);
       const job = mapJob(raw as Record<string, unknown>);
       setGradingJobs(prev => [...prev, job]);
       return job;
@@ -172,7 +173,7 @@ export function useAITools() {
   const submitBulkGrade = useCallback(async (payload: BulkGradePayload) => {
     try {
       const response = await apiClient.post('/ai-tools/grade/bulk', payload);
-      const raw = response.data.data ?? response.data;
+      const raw = unwrapResponse(response);
       const jobs = (Array.isArray(raw) ? raw : [raw]).map(
         (j: unknown) => mapJob(j as Record<string, unknown>),
       );
@@ -192,7 +193,7 @@ export function useAITools() {
     const interval = setInterval(async () => {
       try {
         const response = await apiClient.get(`/ai-tools/grade/${jobId}`);
-        const raw = response.data.data ?? response.data;
+        const raw = unwrapResponse(response);
         const job = mapJob(raw as Record<string, unknown>);
         setGradingJobs(prev => prev.map(j => j.id === jobId ? job : j));
         if (['completed', 'reviewed', 'published'].includes(job.status)) {
@@ -219,7 +220,7 @@ export function useAITools() {
         finalMark,
         teacherNotes: teacherNotes ?? '',
       });
-      const raw = response.data.data ?? response.data;
+      const raw = unwrapResponse(response);
       const job = mapJob(raw as Record<string, unknown>);
       setGradingJobs(prev => prev.map(j => j.id === jobId ? job : j));
       toast.success('Grade reviewed successfully');
@@ -236,7 +237,7 @@ export function useAITools() {
   const publishGrade = useCallback(async (jobId: string) => {
     try {
       const response = await apiClient.post(`/ai-tools/grade/${jobId}/publish`);
-      const raw = response.data.data ?? response.data;
+      const raw = unwrapResponse(response);
       const job = mapJob(raw as Record<string, unknown>);
       setGradingJobs(prev => prev.map(j => j.id === jobId ? job : j));
       toast.success('Grade published');
@@ -257,7 +258,7 @@ export function useAITools() {
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
       const response = await apiClient.get('/ai-tools/usage', { params });
-      const raw = response.data.data ?? response.data;
+      const raw = unwrapResponse(response);
       setUsageStats(raw as UsageStats);
     } catch {
       console.error('Failed to load usage stats');

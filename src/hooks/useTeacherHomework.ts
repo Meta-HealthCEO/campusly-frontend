@@ -3,7 +3,7 @@ import apiClient from '@/lib/api-client';
 import { unwrapList, unwrapResponse, extractErrorMessage } from '@/lib/api-helpers';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { normalizeHomework } from '@/components/homework/helpers';
+import { normalizeHomework } from '@/lib/homework-helpers';
 import type { Homework, Subject, SchoolClass } from '@/types';
 import type { HomeworkFormValues } from '@/components/homework/HomeworkForm';
 
@@ -91,7 +91,7 @@ export function useTeacherHomework() {
           dueDate: new Date(data.dueDate).toISOString(),
         };
         const response = await apiClient.post('/homework', payload);
-        const raw = unwrapResponse<Record<string, unknown>>(response);
+        const raw = unwrapResponse(response);
         const newHw = normalizeHomework(
           raw as Parameters<typeof normalizeHomework>[0],
         );

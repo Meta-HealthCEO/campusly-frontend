@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import apiClient from '@/lib/api-client';
+import { useTuckShopStudents, useTuckShopOrderHistory } from '@/hooks/useTuckShop';
 import type { Student } from '@/types';
 
 interface OrderItem {
@@ -56,7 +56,8 @@ function getStudentName(s: Student): string {
 }
 
 export function OrderHistoryDialog({ open, onOpenChange }: OrderHistoryDialogProps) {
-  const [students, setStudents] = useState<Student[]>([]);
+  const { students, fetchStudents } = useTuckShopStudents();
+  const { fetchStudentOrders } = useTuckShopOrderHistory();
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
@@ -66,44 +67,20 @@ export function OrderHistoryDialog({ open, onOpenChange }: OrderHistoryDialogPro
 
   useEffect(() => {
     if (!open) return;
-    async function fetchStudents() {
-      try {
-        const res = await apiClient.get('/students');
-        const raw = res.data.data ?? res.data;
-        const list: Student[] = Array.isArray(raw) ? raw : raw.students ?? raw.data ?? [];
-        setStudents(list);
-      } catch {
-        console.error('Failed to load students');
-      }
-    }
     fetchStudents();
     setSelectedStudentId('');
     setOrders([]);
     setPage(1);
-  }, [open]);
+  }, [open, fetchStudents]);
 
   const fetchOrders = useCallback(async (studentId: string, pageNum: number) => {
     if (!studentId) return;
     setLoading(true);
-    try {
-      const res = await apiClient.get(`/tuck-shop/orders/student/${studentId}`, {
-        params: { page: pageNum, limit: 10 },
-      });
-      const raw = res.data.data ?? res.data;
-      const orderList = Array.isArray(raw) ? raw : raw.orders ?? raw.data ?? [];
-      setOrders(
-        orderList.map((o: Record<string, unknown>) => ({
-          ...o,
-          id: (o._id as string) ?? (o.id as string),
-        })),
-      );
-      setTotalPages(typeof raw.totalPages === 'number' ? raw.totalPages : 1);
-    } catch {
-      setOrders([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    const result = await fetchStudentOrders(studentId, pageNum);
+    setOrders(result.orders as Order[]);
+    setTotalPages(result.totalPages);
+    setLoading(false);
+  }, [fetchStudentOrders]);
 
   useEffect(() => {
     if (selectedStudentId) {

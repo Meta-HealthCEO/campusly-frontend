@@ -14,6 +14,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { AuditActionBadge } from './AuditActionBadge';
 import { AuditChangesExpander } from './AuditChangesExpander';
 import { useAuditStore } from '@/stores/useAuditStore';
+import { useAuditApi } from '@/hooks/useAuditApi';
 import type { AuditLog } from '@/stores/useAuditStore';
 
 function formatTimestamp(iso: string): string {
@@ -38,8 +39,9 @@ function LoadingSkeleton() {
 }
 
 export function AuditTable() {
-  const { logs, total, loading, error, filters, setFilter, fetchLogs } =
+  const { logs, total, loading, error, filters, setFilter } =
     useAuditStore();
+  const { fetchLogs } = useAuditApi();
 
   const page = filters.page ?? 1;
   const limit = filters.limit ?? 20;

@@ -70,7 +70,7 @@ export function QuestionCard({
                 </div>
               </div>
             ) : (
-              <p className="text-sm whitespace-pre-line">{question.questionText}</p>
+              <p className="text-sm whitespace-pre-line break-words">{question.questionText}</p>
             )}
             {showModelAnswer && question.modelAnswer && (
               <div className="mt-2 rounded-lg bg-emerald-50 p-3 text-sm">

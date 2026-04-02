@@ -69,7 +69,7 @@ export default function TeacherClassesPage() {
                       className={cn(
                         'h-full rounded-full transition-all',
                         capacityPercentage > 90
-                          ? 'bg-red-500'
+                          ? 'bg-destructive/100'
                           : capacityPercentage > 75
                           ? 'bg-amber-500'
                           : 'bg-emerald-500'

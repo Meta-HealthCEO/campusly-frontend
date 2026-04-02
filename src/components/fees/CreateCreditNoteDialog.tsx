@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { InvoiceSelector } from '@/components/fees/InvoiceSelector';
 import { StudentSelector } from '@/components/fees/StudentSelector';
-import apiClient from '@/lib/api-client';
+import { useCreditNoteMutations, extractErrorMessage } from '@/hooks/useFeeMutations';
 
 interface CreateCreditNoteDialogProps {
   open: boolean;
@@ -31,6 +31,7 @@ export function CreateCreditNoteDialog({
   schoolId,
   onSuccess,
 }: CreateCreditNoteDialogProps) {
+  const { createCreditNote } = useCreditNoteMutations();
   const [studentId, setStudentId] = useState('');
   const [invoiceId, setInvoiceId] = useState('');
   const [amount, setAmount] = useState('');
@@ -56,7 +57,7 @@ export function CreateCreditNoteDialog({
     }
     setSubmitting(true);
     try {
-      await apiClient.post('/fees/credit-notes', {
+      await createCreditNote({
         invoiceId,
         studentId,
         schoolId,
@@ -68,10 +69,7 @@ export function CreateCreditNoteDialog({
       onOpenChange(false);
       onSuccess();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to create credit note';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to create credit note'));
     } finally {
       setSubmitting(false);
     }

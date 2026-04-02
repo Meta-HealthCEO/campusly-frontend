@@ -29,9 +29,9 @@ import type {
 
 const ALERT_TYPE_ICONS: Record<AlertType, React.ReactNode> = {
   delay: <Clock className="h-4 w-4 text-amber-500" />,
-  breakdown: <Wrench className="h-4 w-4 text-red-500" />,
+  breakdown: <Wrench className="h-4 w-4 text-destructive" />,
   route_change: <Route className="h-4 w-4 text-blue-500" />,
-  emergency: <Siren className="h-4 w-4 text-red-600" />,
+  emergency: <Siren className="h-4 w-4 text-destructive" />,
   weather: <CloudRain className="h-4 w-4 text-sky-500" />,
 };
 
@@ -184,7 +184,7 @@ export function AlertsTab({
               <CheckCircle className="h-3.5 w-3.5 mr-1" /> Resolve
             </Button>
           )}
-          <Button variant="ghost" size="icon-sm" className="text-destructive" onClick={() => setDeleteTarget(row.original)}>
+          <Button variant="ghost" size="icon-sm" className="text-destructive" onClick={() => setDeleteTarget(row.original)} aria-label="Delete alert">
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>

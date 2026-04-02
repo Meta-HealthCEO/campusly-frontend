@@ -15,10 +15,9 @@ import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
 import { extractErrorMessage } from '@/lib/api-helpers';
-import { useAuthStore } from '@/stores/useAuthStore';
 import { useClasses, useSubjects, useAssessments } from '@/hooks/useAcademics';
+import { useAssessmentMutations } from '@/hooks/useAcademicMutations';
 import { formatDate } from '@/lib/utils';
 import type { Assessment } from '@/types';
 
@@ -38,10 +37,9 @@ function getTypeBadgeVariant(type: string): 'default' | 'secondary' | 'destructi
 }
 
 export function AssessmentsTab() {
-  const { user } = useAuthStore();
-  const schoolId = user?.schoolId ?? '';
   const { classes } = useClasses();
   const { subjects } = useSubjects();
+  const { createAssessment, updateAssessment, deleteAssessment } = useAssessmentMutations();
 
   const [filterClassId, setFilterClassId] = useState('');
   const [filterTerm, setFilterTerm] = useState('');
@@ -82,16 +80,16 @@ export function AssessmentsTab() {
   async function handleSubmit() {
     try {
       const payload = {
-        name: form.name, subjectId: form.subjectId, classId: form.classId, schoolId,
+        name: form.name, subjectId: form.subjectId, classId: form.classId,
         type: form.type, totalMarks: Number(form.totalMarks), weight: Number(form.weight),
         term: Number(form.term), academicYear: Number(form.academicYear),
         date: form.date ? new Date(form.date).toISOString() : new Date().toISOString(),
       };
       if (editing) {
-        await apiClient.put(`/academic/assessments/${editing.id}`, payload);
+        await updateAssessment(editing.id, payload);
         toast.success('Assessment updated');
       } else {
-        await apiClient.post('/academic/assessments', payload);
+        await createAssessment(payload);
         toast.success('Assessment created');
       }
       setDialogOpen(false);
@@ -103,7 +101,7 @@ export function AssessmentsTab() {
 
   async function handleDelete(id: string) {
     try {
-      await apiClient.delete(`/academic/assessments/${id}`);
+      await deleteAssessment(id);
       toast.success('Assessment deleted');
       refetch();
     } catch (err: unknown) {
@@ -141,8 +139,8 @@ export function AssessmentsTab() {
       id: 'actions', header: '',
       cell: ({ row }) => (
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon-sm" onClick={() => openEdit(row.original)}><Pencil className="h-3 w-3" /></Button>
-          <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(row.original.id)}><Trash2 className="h-3 w-3 text-destructive" /></Button>
+          <Button variant="ghost" size="icon-sm" onClick={() => openEdit(row.original)} aria-label="Edit assessment"><Pencil className="h-3 w-3" /></Button>
+          <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(row.original.id)} aria-label="Delete assessment"><Trash2 className="h-3 w-3 text-destructive" /></Button>
         </div>
       ),
     },

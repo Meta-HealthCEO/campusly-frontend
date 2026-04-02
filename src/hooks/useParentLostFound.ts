@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
-import { unwrapList, mapId } from '@/lib/api-helpers';
+import { unwrapList, unwrapResponse, mapId } from '@/lib/api-helpers';
 import type { FoundItem, LostReport } from '@/types';
 
 interface ParentLostFoundResult {
@@ -8,6 +8,7 @@ interface ParentLostFoundResult {
   lostReports: LostReport[];
   loading: boolean;
   submitLostReport: (data: Record<string, unknown>) => Promise<void>;
+  claimItem: (itemId: string) => Promise<void>;
   refetchLostReports: () => Promise<void>;
 }
 
@@ -44,7 +45,7 @@ export function useParentLostFound(childIdSet: Set<string>): ParentLostFoundResu
   const fetchData = useCallback(async () => {
     try {
       const res = await apiClient.get('/lost-found');
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       if (Array.isArray(raw)) {
         const { found, lost } = separateItems(raw as Record<string, unknown>[], childIdSet);
         setFoundItems(found);
@@ -72,7 +73,7 @@ export function useParentLostFound(childIdSet: Set<string>): ParentLostFoundResu
     await apiClient.post('/lost-found', { ...data, type: 'lost' });
     // Refresh lost reports
     const res = await apiClient.get('/lost-found');
-    const rawResp = res.data.data ?? res.data;
+    const rawResp = unwrapResponse(res);
     if (Array.isArray(rawResp)) {
       const lost = (rawResp as Record<string, unknown>[]).filter(
         (item) =>
@@ -87,9 +88,13 @@ export function useParentLostFound(childIdSet: Set<string>): ParentLostFoundResu
     }
   }, []);
 
+  const claimItem = useCallback(async (itemId: string) => {
+    await apiClient.post(`/lost-found/${itemId}/claim`);
+  }, []);
+
   const refetchLostReports = useCallback(async () => {
     await fetchData();
   }, [fetchData]);
 
-  return { foundItems, lostReports, loading, submitLostReport, refetchLostReports };
+  return { foundItems, lostReports, loading, submitLostReport, claimItem, refetchLostReports };
 }

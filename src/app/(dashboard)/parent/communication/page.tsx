@@ -21,7 +21,7 @@ const priorityStyles: Record<string, string> = {
   low: 'bg-gray-100 text-gray-800',
   normal: 'bg-blue-100 text-blue-800',
   high: 'bg-amber-100 text-amber-800',
-  urgent: 'bg-red-100 text-red-800',
+  urgent: 'bg-destructive/10 text-destructive',
 };
 
 const typeIcons: Record<string, React.ElementType> = {
@@ -66,7 +66,7 @@ export default function CommunicationPage() {
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-xl bg-red-100 p-2.5"><AlertCircle className="h-5 w-5 text-red-700" /></div>
+            <div className="rounded-xl bg-destructive/10 p-2.5"><AlertCircle className="h-5 w-5 text-destructive" /></div>
             <div><p className="text-2xl font-bold">{messages.filter((m) => m.priority === 'urgent').length}</p><p className="text-sm text-muted-foreground">Urgent</p></div>
           </CardContent>
         </Card>
@@ -97,7 +97,7 @@ export default function CommunicationPage() {
                       <p className="text-xs text-muted-foreground mt-0.5">From: {message.sender.firstName} {message.sender.lastName}</p>
                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{message.body}</p>
                     </div>
-                    <div className="text-xs text-muted-foreground shrink-0 text-right">
+                    <div className="text-xs text-muted-foreground shrink-0 text-right whitespace-nowrap">
                       {message.createdAt && <><p>{formatRelativeDate(message.createdAt)}</p><p className="mt-0.5">{formatDate(message.createdAt, 'dd MMM')}</p></>}
                     </div>
                   </div>

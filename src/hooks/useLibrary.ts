@@ -2,7 +2,9 @@
 
 import { useState, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse, unwrapList, mapId } from '@/lib/api-helpers';
 import { toast } from 'sonner';
+import type { Student } from '@/types';
 
 // ---------- Local types (not touching src/types/index.ts) ----------
 
@@ -59,18 +61,8 @@ export interface LeaderboardEntry {
 
 // ---------- Helper ----------
 
-function mapId(item: Record<string, unknown>): Record<string, unknown> & { id: string } {
-  return { ...item, id: (item._id as string) ?? (item.id as string) };
-}
-
-function unwrapArray<T>(res: { data: unknown }): T[] {
-  const outer = res.data as Record<string, unknown>;
-  const raw = (outer.data ?? outer) as unknown;
-  if (Array.isArray(raw)) return raw.map((r) => mapId(r as Record<string, unknown>)) as unknown as T[];
-  const obj = raw as Record<string, unknown>;
-  const arr = obj.data;
-  if (Array.isArray(arr)) return arr.map((r) => mapId(r as Record<string, unknown>)) as unknown as T[];
-  return [];
+function unwrapListWithId<T>(res: { data: { data?: unknown } }): T[] {
+  return unwrapList<Record<string, unknown>>(res).map((r) => mapId(r)) as unknown as T[];
 }
 
 // ---------- Hook ----------
@@ -96,6 +88,26 @@ export function useLibrary(schoolId: string) {
   // Leaderboard
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+
+  // ---- Students (for loan forms) ----
+
+  const [libraryStudents, setLibraryStudents] = useState<Student[]>([]);
+
+  const fetchStudents = useCallback(async () => {
+    try {
+      const res = await apiClient.get('/students');
+      const raw = unwrapResponse(res);
+      const arr = Array.isArray(raw) ? raw : (raw as Record<string, unknown>).data ?? [];
+      setLibraryStudents(
+        (arr as Record<string, unknown>[]).map((s) => ({
+          ...s,
+          id: (s._id as string) ?? (s.id as string),
+        })) as Student[],
+      );
+    } catch {
+      console.error('Failed to load students for library');
+    }
+  }, []);
 
   // ---- Books ----
 
@@ -149,7 +161,7 @@ export function useLibrary(schoolId: string) {
     setOverdueLoading(true);
     try {
       const res = await apiClient.get('/library/loans/overdue', { params: { schoolId } });
-      setOverdueLoans(unwrapArray<BookLoanRecord>(res));
+      setOverdueLoans(unwrapListWithId<BookLoanRecord>(res));
     } catch {
       console.error('Failed to load overdue loans');
     } finally {
@@ -161,7 +173,7 @@ export function useLibrary(schoolId: string) {
     setLoansLoading(true);
     try {
       const res = await apiClient.get('/library/loans/overdue', { params: { schoolId } });
-      setLoans(unwrapArray<BookLoanRecord>(res));
+      setLoans(unwrapListWithId<BookLoanRecord>(res));
     } catch {
       console.error('Failed to load loans');
     } finally {
@@ -190,7 +202,7 @@ export function useLibrary(schoolId: string) {
     setChallengesLoading(true);
     try {
       const res = await apiClient.get('/library/challenges', { params: { schoolId } });
-      setChallenges(unwrapArray<ReadingChallengeRecord>(res));
+      setChallenges(unwrapListWithId<ReadingChallengeRecord>(res));
     } catch {
       console.error('Failed to load challenges');
     } finally {
@@ -232,6 +244,7 @@ export function useLibrary(schoolId: string) {
   }, []);
 
   return {
+    libraryStudents, fetchStudents,
     books, booksLoading, booksTotal, fetchBooks, createBook, updateBook, deleteBook,
     loans, loansLoading, fetchAllLoans,
     overdueLoans, overdueLoading, fetchOverdueLoans,

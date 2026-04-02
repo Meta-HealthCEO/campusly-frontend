@@ -13,6 +13,7 @@ import {
 import { ArrowLeft, ArrowRight, Save, Loader2, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMigrationStore } from '@/stores/useMigrationStore';
+import { useMigrationApi } from '@/hooks/useMigrationApi';
 import { TemplateSelector } from './TemplateSelector';
 import type { FieldMapping, SourceSystem } from '@/types/migration';
 import { CAMPUSLY_TARGET_FIELDS } from '@/types/migration';
@@ -36,7 +37,8 @@ export function ColumnMapper({
 }: ColumnMapperProps) {
   const [mapping, setMapping] = useState<Record<string, string>>(initialMapping);
   const [templateOpen, setTemplateOpen] = useState(false);
-  const { updateMapping, activeJobLoading } = useMigrationStore();
+  const { activeJobLoading } = useMigrationStore();
+  const { updateMapping } = useMigrationApi();
 
   useEffect(() => {
     setMapping(initialMapping);
@@ -143,6 +145,7 @@ export function ColumnMapper({
                   size="icon-sm"
                   onClick={() => removeSourceColumn(sourceCol)}
                   className="text-muted-foreground hover:text-destructive"
+                  aria-label="Remove column"
                 >
                   &times;
                 </Button>

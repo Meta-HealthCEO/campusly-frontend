@@ -55,7 +55,7 @@ const myReportColumns: ColumnDef<LostReport>[] = [
 export default function ParentLostFoundPage() {
   const { children, loading: parentLoading } = useCurrentParent();
   const childIdSet = useMemo(() => new Set(children.map((c) => c.id)), [children]);
-  const { foundItems, lostReports, loading, submitLostReport } = useParentLostFound(childIdSet);
+  const { foundItems, lostReports, loading, submitLostReport, claimItem } = useParentLostFound(childIdSet);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'gallery' | 'list'>('gallery');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -82,7 +82,7 @@ export default function ParentLostFoundPage() {
     { id: 'category', header: 'Category', accessorKey: 'category', cell: ({ row }) => <Badge variant="secondary" className={categoryStyles[row.original.category] ?? ''}>{categoryLabels[row.original.category] ?? row.original.category}</Badge> },
     { accessorKey: 'location', header: 'Location' },
     { accessorKey: 'dateFound', header: 'Date Found', cell: ({ row }) => formatDate(row.original.dateFound) },
-    { id: 'actions', header: '', cell: ({ row }) => row.original.status === 'unclaimed' ? <ClaimDialog item={row.original} /> : <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">Claimed</Badge> },
+    { id: 'actions', header: '', cell: ({ row }) => row.original.status === 'unclaimed' ? <ClaimDialog item={row.original} onClaimItem={claimItem} /> : <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">Claimed</Badge> },
   ];
 
   if (loading || parentLoading) return <LoadingSpinner />;
@@ -215,8 +215,8 @@ export default function ParentLostFoundPage() {
                 </SelectContent>
               </Select>
               <div className="flex rounded-lg border">
-                <Button variant={viewMode === 'gallery' ? 'secondary' : 'ghost'} size="icon-sm" onClick={() => setViewMode('gallery')}><LayoutGrid className="h-4 w-4" /></Button>
-                <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon-sm" onClick={() => setViewMode('list')}><List className="h-4 w-4" /></Button>
+                <Button variant={viewMode === 'gallery' ? 'secondary' : 'ghost'} size="icon-sm" onClick={() => setViewMode('gallery')} aria-label="Grid view"><LayoutGrid className="h-4 w-4" /></Button>
+                <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon-sm" onClick={() => setViewMode('list')} aria-label="List view"><List className="h-4 w-4" /></Button>
               </div>
             </div>
           </div>
@@ -225,7 +225,7 @@ export default function ParentLostFoundPage() {
           {filteredItems.length > 0 ? (
             viewMode === 'gallery' ? (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredItems.map((item) => <FoundItemCard key={item.id} item={item} />)}
+                {filteredItems.map((item) => <FoundItemCard key={item.id} item={item} onClaimItem={claimItem} />)}
               </div>
             ) : (
               <DataTable columns={foundListColumns} data={filteredItems} searchKey="name" searchPlaceholder="Search found items..." />

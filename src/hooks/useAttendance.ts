@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 
 export interface DailyClassSummary {
@@ -45,7 +46,7 @@ export function useAdminAttendance(selectedDate: string) {
       ]);
 
       if (dailyRes.status === 'fulfilled') {
-        const raw = dailyRes.value.data.data ?? dailyRes.value.data;
+        const raw = unwrapResponse(dailyRes.value);
         setDailyReport(
           Array.isArray(raw)
             ? (raw as DailyClassSummary[])
@@ -55,8 +56,7 @@ export function useAdminAttendance(selectedDate: string) {
       }
 
       if (absenteesRes.status === 'fulfilled') {
-        const raw =
-          absenteesRes.value.data.data ?? absenteesRes.value.data;
+        const raw = unwrapResponse(absenteesRes.value);
         setAbsentees(
           Array.isArray(raw)
             ? (raw as AbsenteeRecord[])

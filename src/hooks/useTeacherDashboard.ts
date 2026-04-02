@@ -52,7 +52,7 @@ export function useTeacherDashboard(): DashboardData {
 
       // Timetable
       if (timetableRes.status === 'fulfilled') {
-        const raw = unwrapResponse<Record<string, unknown>>(timetableRes.value);
+        const raw = unwrapResponse(timetableRes.value);
         const arr = Array.isArray(raw)
           ? raw
           : ((raw as Record<string, unknown>).timetable ??

@@ -9,6 +9,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { formatDate } from '@/lib/utils';
 import { useLearningStore } from '@/stores/useLearningStore';
+import { useLearningApi } from '@/hooks/useLearningApi';
 import type { QuizAttempt } from './types';
 
 interface QuizResultsViewProps {
@@ -40,7 +41,7 @@ const resultColumns: ColumnDef<QuizAttempt>[] = [
     cell: ({ row }) => {
       const pct = row.original.percentage;
       return (
-        <span className={`font-medium ${pct >= 50 ? 'text-emerald-600' : 'text-red-600'}`}>
+        <span className={`font-medium ${pct >= 50 ? 'text-emerald-600' : 'text-destructive'}`}>
           {pct}%
         </span>
       );
@@ -65,7 +66,7 @@ const resultColumns: ColumnDef<QuizAttempt>[] = [
           <CheckCircle2 className="mr-1 h-3 w-3" /> Passed
         </Badge>
       ) : (
-        <Badge variant="secondary" className="bg-red-100 text-red-800">
+        <Badge variant="secondary" className="bg-destructive/10 text-destructive">
           <XCircle className="mr-1 h-3 w-3" /> Failed
         </Badge>
       ),
@@ -73,7 +74,8 @@ const resultColumns: ColumnDef<QuizAttempt>[] = [
 ];
 
 export function QuizResultsView({ quizId }: QuizResultsViewProps) {
-  const { quizResults, quizResultsLoading, fetchQuizResults } = useLearningStore();
+  const { quizResults, quizResultsLoading } = useLearningStore();
+  const { fetchQuizResults } = useLearningApi();
 
   useEffect(() => {
     fetchQuizResults(quizId);

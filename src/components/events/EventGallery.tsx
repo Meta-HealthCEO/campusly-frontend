@@ -95,6 +95,7 @@ export function EventGallery({ images, loading, onUpload, onDelete }: EventGalle
                   size="icon-sm"
                   className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={(e) => { e.stopPropagation(); setDeleteId(img.id); }}
+                  aria-label="Delete photo"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
@@ -145,6 +146,7 @@ export function EventGallery({ images, loading, onUpload, onDelete }: EventGalle
                   size="icon-sm"
                   className="absolute top-2 right-2 bg-black/50 text-white hover:bg-black/70"
                   onClick={() => setLightboxImage(null)}
+                  aria-label="Close"
                 >
                   <X className="h-4 w-4" />
                 </Button>

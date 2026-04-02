@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapList } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { Grade, SchoolClass, Subject, Assessment, TimetableSlot, Student } from '@/types';
 
@@ -8,13 +9,6 @@ interface StaffMember {
   firstName: string;
   lastName: string;
   email: string;
-}
-
-function unwrapArray<T>(response: { data: unknown }): T[] {
-  const raw = (response.data as Record<string, unknown>).data ?? response.data;
-  if (Array.isArray(raw)) return raw as T[];
-  const inner = (raw as Record<string, unknown>)?.data;
-  return Array.isArray(inner) ? (inner as T[]) : [];
 }
 
 export function useGrades() {
@@ -26,7 +20,7 @@ export function useGrades() {
     try {
       setLoading(true);
       const res = await apiClient.get('/academic/grades');
-      setGrades(unwrapArray<Grade>(res));
+      setGrades(unwrapList<Grade>(res));
     } catch {
       console.error('Failed to load grades');
     } finally {
@@ -50,7 +44,7 @@ export function useClasses(gradeId?: string) {
       const params: Record<string, string> = {};
       if (gradeId) params.gradeId = gradeId;
       const res = await apiClient.get('/academic/classes', { params });
-      setClasses(unwrapArray<SchoolClass>(res));
+      setClasses(unwrapList<SchoolClass>(res));
     } catch {
       console.error('Failed to load classes');
     } finally {
@@ -72,7 +66,7 @@ export function useSubjects() {
     try {
       setLoading(true);
       const res = await apiClient.get('/academic/subjects');
-      setSubjects(unwrapArray<Subject>(res));
+      setSubjects(unwrapList<Subject>(res));
     } catch {
       console.error('Failed to load subjects');
     } finally {
@@ -93,7 +87,7 @@ export function useStaff() {
     async function fetch() {
       try {
         const res = await apiClient.get('/staff');
-        setStaff(unwrapArray<StaffMember>(res));
+        setStaff(unwrapList<StaffMember>(res));
       } catch {
         console.error('Failed to load staff');
       } finally {
@@ -125,7 +119,7 @@ export function useAssessments(filters?: {
       if (filters?.term) params.term = filters.term;
       if (filters?.academicYear) params.academicYear = filters.academicYear;
       const res = await apiClient.get('/academic/assessments', { params });
-      setAssessments(unwrapArray<Assessment>(res));
+      setAssessments(unwrapList<Assessment>(res));
     } catch {
       console.error('Failed to load assessments');
     } finally {
@@ -147,8 +141,7 @@ export function useTimetable(classId?: string) {
     try {
       setLoading(true);
       const res = await apiClient.get(`/academic/timetable/class/${classId}`);
-      const raw = (res.data as Record<string, unknown>).data ?? res.data;
-      setEntries(Array.isArray(raw) ? (raw as TimetableSlot[]) : []);
+      setEntries(unwrapList<TimetableSlot>(res));
     } catch {
       console.error('Failed to load timetable');
     } finally {

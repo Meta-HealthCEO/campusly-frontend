@@ -122,7 +122,7 @@ export default function DebtorsReportPage() {
             <Card>
               <CardContent className="p-6">
                 <p className="text-sm font-medium text-muted-foreground">Total Outstanding</p>
-                <p className="text-2xl font-bold text-red-600">{formatCurrency(totalOutstanding)}</p>
+                <p className="text-2xl font-bold text-destructive">{formatCurrency(totalOutstanding)}</p>
               </CardContent>
             </Card>
             <Card>
@@ -134,7 +134,7 @@ export default function DebtorsReportPage() {
             <Card>
               <CardContent className="p-6">
                 <p className="text-sm font-medium text-muted-foreground">90+ Days</p>
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-2xl font-bold text-destructive">
                   {bucketSummary['90+'].count} ({formatCurrency(bucketSummary['90+'].total)})
                 </p>
               </CardContent>

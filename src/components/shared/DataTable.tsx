@@ -50,7 +50,7 @@ export function DataTable<TData, TValue>({
   return (
     <div className="space-y-4">
       {searchKey && (
-        <div className="relative max-w-sm">
+        <div className="relative w-full sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={searchPlaceholder}
@@ -61,6 +61,7 @@ export function DataTable<TData, TValue>({
         </div>
       )}
       <div className="overflow-x-auto rounded-lg border">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -68,13 +69,14 @@ export function DataTable<TData, TValue>({
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder ? null : (
-                      <div
-                        className={header.column.getCanSort() ? 'flex cursor-pointer select-none items-center gap-1' : ''}
+                      <button
+                        type="button"
+                        className={header.column.getCanSort() ? 'flex cursor-pointer select-none items-center gap-1 focus-visible:ring-2 focus-visible:ring-ring rounded px-1' : ''}
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getCanSort() && <ArrowUpDown className="h-3 w-3" />}
-                      </div>
+                      </button>
                     )}
                   </TableHead>
                 ))}
@@ -105,6 +107,7 @@ export function DataTable<TData, TValue>({
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">

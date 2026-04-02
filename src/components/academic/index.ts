@@ -1,0 +1,9 @@
+export { AssessmentsTab } from './AssessmentsTab';
+export { ExamsTab } from './ExamsTab';
+export { GradeClassesTab } from './GradeClassesTab';
+export { PastPapersTab } from './PastPapersTab';
+export { PromotionTab } from './PromotionTab';
+export { RemedialsTab } from './RemedialsTab';
+export { SubjectsTab } from './SubjectsTab';
+export { TimetableTab } from './TimetableTab';
+export { WeightingsTab } from './WeightingsTab';

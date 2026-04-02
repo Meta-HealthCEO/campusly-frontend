@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { notificationsApi } from '@/lib/notifications-api';
+import { unwrapResponse } from '@/lib/api-helpers';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 
@@ -15,7 +16,7 @@ export function useNotificationPoller() {
   const fetchCount = useCallback(async () => {
     try {
       const res = await notificationsApi.getUnreadCount();
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const count = typeof raw === 'number' ? raw : (raw.count as number) ?? 0;
       setUnreadCount(count);
     } catch {

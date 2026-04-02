@@ -6,17 +6,18 @@ import { toast } from 'sonner';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { RegisterForm } from '@/components/auth/RegisterForm';
+import { useAuth } from '@/hooks/useAuth';
 import type { RegisterFormData } from '@/lib/validations';
-import apiClient from '@/lib/api-client';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { register } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     try {
-      await apiClient.post('/auth/register', {
+      await register({
         email: data.adminEmail,
         password: data.adminPassword,
         firstName: data.adminFirstName,

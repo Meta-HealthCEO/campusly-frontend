@@ -18,7 +18,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
-import apiClient from '@/lib/api-client';
+import {
+  useTuckShopStudents, useTuckShopMenu, useTuckShopOrders,
+} from '@/hooks/useTuckShop';
 import { AllergenWarningDialog } from './AllergenWarningDialog';
 import type { TuckshopItem, Student } from '@/types';
 
@@ -50,8 +52,9 @@ function getStudentName(s: Student): string {
 export function PlaceOrderDialog({
   open, onOpenChange, schoolId, onOrderPlaced,
 }: PlaceOrderDialogProps) {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [menuItems, setMenuItems] = useState<TuckshopItem[]>([]);
+  const { students, fetchStudents } = useTuckShopStudents();
+  const { menuItems, fetchMenu } = useTuckShopMenu();
+  const { placeOrder, extractAllergenInfo } = useTuckShopOrders();
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [cart, setCart] = useState<CartEntry[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('wallet');
@@ -64,28 +67,8 @@ export function PlaceOrderDialog({
   const [allergenError, setAllergenError] = useState('');
 
   const fetchData = useCallback(async () => {
-    try {
-      const [studentsRes, menuRes] = await Promise.all([
-        apiClient.get('/students'),
-        apiClient.get('/tuck-shop/menu'),
-      ]);
-      const sRaw = studentsRes.data.data ?? studentsRes.data;
-      const sList: Student[] = Array.isArray(sRaw)
-        ? sRaw : sRaw.students ?? sRaw.data ?? [];
-      setStudents(sList);
-
-      const mRaw = menuRes.data.data ?? menuRes.data;
-      const mList = Array.isArray(mRaw) ? mRaw : mRaw.items ?? mRaw.data ?? [];
-      setMenuItems(
-        mList.map((item: Record<string, unknown>) => ({
-          ...item,
-          id: (item._id as string) ?? (item.id as string),
-        })),
-      );
-    } catch {
-      console.error('Failed to load order data');
-    }
-  }, []);
+    await Promise.all([fetchStudents(), fetchMenu()]);
+  }, [fetchStudents, fetchMenu]);
 
   useEffect(() => {
     if (open) {
@@ -145,20 +128,18 @@ export function PlaceOrderDialog({
 
     setSubmitting(true);
     try {
-      await apiClient.post('/tuck-shop/orders', body);
+      await placeOrder(body);
       toast.success('Order placed successfully');
       setAllergenDialogOpen(false);
       onOrderPlaced();
       onOpenChange(false);
     } catch (err: unknown) {
-      const errData = (err as { response?: { data?: { message?: string }; status?: number } })?.response;
-      const msg = errData?.data?.message ?? 'Failed to place order';
-
-      if (errData?.status === 400 && msg.toLowerCase().includes('allerg') && !allergenOverride) {
-        setAllergenError(msg);
+      const { isAllergen, message } = extractAllergenInfo(err);
+      if (isAllergen && !allergenOverride) {
+        setAllergenError(message);
         setAllergenDialogOpen(true);
       } else {
-        toast.error(msg);
+        toast.error(message);
       }
     } finally {
       setSubmitting(false);
@@ -250,15 +231,15 @@ export function PlaceOrderDialog({
                       <div key={c.menuItemId} className="flex items-center justify-between text-sm">
                         <span className="flex-1 truncate">{c.name}</span>
                         <div className="flex items-center gap-2">
-                          <Button size="icon-xs" variant="outline" onClick={() => updateQty(c.menuItemId, -1)}>
+                          <Button size="icon-xs" variant="outline" onClick={() => updateQty(c.menuItemId, -1)} aria-label="Decrease quantity">
                             <Minus className="h-3 w-3" />
                           </Button>
                           <span className="w-6 text-center">{c.quantity}</span>
-                          <Button size="icon-xs" variant="outline" onClick={() => updateQty(c.menuItemId, 1)}>
+                          <Button size="icon-xs" variant="outline" onClick={() => updateQty(c.menuItemId, 1)} aria-label="Increase quantity">
                             <Plus className="h-3 w-3" />
                           </Button>
                           <span className="w-20 text-right font-medium">{formatCurrency(c.unitPrice * c.quantity)}</span>
-                          <Button size="icon-xs" variant="ghost" onClick={() => removeItem(c.menuItemId)}>
+                          <Button size="icon-xs" variant="ghost" onClick={() => removeItem(c.menuItemId)} aria-label="Remove item">
                             <Trash2 className="h-3 w-3 text-destructive" />
                           </Button>
                         </div>

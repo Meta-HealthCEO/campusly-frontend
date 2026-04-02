@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { ModuleToggleList } from './ModuleToggleList';
-import { useSchoolStore } from '@/stores/useSchoolStore';
+import { useSchoolData } from '@/hooks/useSchoolData';
 import type { SchoolDocument } from '@/types';
 
 interface SchoolModulesTabProps {
@@ -15,6 +15,7 @@ export function SchoolModulesTab({ school }: SchoolModulesTabProps) {
   const [optimisticModules, setOptimisticModules] = useState<string[]>(
     school.modulesEnabled,
   );
+  const { updateSchool } = useSchoolData();
 
   const handleToggle = async (moduleId: string, enabled: boolean) => {
     const newModules = enabled
@@ -24,7 +25,7 @@ export function SchoolModulesTab({ school }: SchoolModulesTabProps) {
     setOptimisticModules(newModules);
     setToggling(true);
     try {
-      await useSchoolStore.getState().updateSchool(school.id, {
+      await updateSchool(school.id, {
         modulesEnabled: newModules,
       });
       toast.success(`Module ${enabled ? 'enabled' : 'disabled'}`);

@@ -104,10 +104,10 @@ export function BooksTab({
       id: 'actions', header: 'Actions',
       cell: ({ row }) => (
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon-sm" onClick={() => { setEditBook(row.original); setDialogOpen(true); }}>
+          <Button variant="ghost" size="icon-sm" onClick={() => { setEditBook(row.original); setDialogOpen(true); }} aria-label="Edit book">
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(row.original)}>
+          <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(row.original)} aria-label="Delete book">
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         </div>

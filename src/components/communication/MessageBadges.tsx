@@ -5,19 +5,19 @@ import { Badge } from '@/components/ui/badge';
 const typeStyles: Record<string, string> = {
   message: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   announcement: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  alert: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  alert: 'bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive',
   fee_reminder: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
   absence: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
   general: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   event: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  emergency: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  emergency: 'bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive',
 };
 
 const priorityStyles: Record<string, string> = {
   low: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400',
   normal: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   high: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-  urgent: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  urgent: 'bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive',
 };
 
 const channelStyles: Record<string, string> = {
@@ -33,7 +33,7 @@ const statusStyles: Record<string, string> = {
   sending: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   sent: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
   delivered: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  failed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  failed: 'bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive',
   read: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
 };
 

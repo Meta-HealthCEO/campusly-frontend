@@ -99,7 +99,7 @@ export default function TeacherGradesPage() {
                     <th className="py-2 text-left text-sm font-medium text-muted-foreground">#</th>
                     <th className="py-2 text-left text-sm font-medium text-muted-foreground">Student Name</th>
                     <th className="py-2 text-left text-sm font-medium text-muted-foreground">Admission No.</th>
-                    <th className="py-2 text-left text-sm font-medium text-muted-foreground w-32">Marks (/{currentAssessment?.totalMarks ?? 100})</th>
+                    <th className="py-2 text-left text-sm font-medium text-muted-foreground w-32 whitespace-nowrap">Marks (/{currentAssessment?.totalMarks ?? 100})</th>
                     <th className="py-2 text-left text-sm font-medium text-muted-foreground w-20">%</th>
                   </tr>
                 </thead>
@@ -119,12 +119,12 @@ export default function TeacherGradesPage() {
                             type="number" min={0} max={currentAssessment?.totalMarks ?? 100}
                             value={entry.mark}
                             onChange={(e) => handleMarkChange(entry.studentId, e.target.value)}
-                            placeholder="Enter marks" className="w-28"
+                            placeholder="Enter marks" className="w-full sm:w-28"
                           />
                         </td>
                         <td className="py-3">
                           {percentage !== null && !isNaN(percentage) ? (
-                            <span className={`text-sm font-semibold ${percentage >= 80 ? 'text-emerald-600' : percentage >= 50 ? 'text-blue-600' : 'text-red-600'}`}>
+                            <span className={`text-sm font-semibold ${percentage >= 80 ? 'text-emerald-600' : percentage >= 50 ? 'text-blue-600' : 'text-destructive'}`}>
                               {percentage}%
                             </span>
                           ) : (

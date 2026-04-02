@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 
 /* ── Local types (NOT modifying src/types/index.ts) ── */
@@ -84,6 +85,13 @@ export interface TransportAlert {
   updatedAt: string;
 }
 
+export interface SimpleStudent {
+  id: string;
+  firstName: string;
+  lastName: string;
+  admissionNumber: string;
+}
+
 /* ── Mapping helpers ── */
 
 function mapId<T extends Record<string, unknown>>(item: T): T & { id: string } {
@@ -106,7 +114,7 @@ export function useTransport() {
   const fetchRoutes = useCallback(async () => {
     try {
       const res = await apiClient.get('/transport/routes', { params: { schoolId } });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = Array.isArray(raw) ? raw : raw.busRoutes ?? raw.data ?? [];
       setRoutes(arr.map(mapId));
     } catch (err: unknown) {
@@ -141,7 +149,7 @@ export function useTransport() {
       const params: Record<string, string> = { schoolId };
       if (busRouteId) params.busRouteId = busRouteId;
       const res = await apiClient.get('/transport/assignments', { params });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = Array.isArray(raw) ? raw : raw.assignments ?? raw.data ?? [];
       setAssignments(arr.map(mapId));
     } catch (err: unknown) {
@@ -191,7 +199,7 @@ export function useTransport() {
       if (filters?.studentId) params.studentId = filters.studentId;
       if (filters?.date) params.date = filters.date;
       const res = await apiClient.get('/transport/boarding', { params });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = Array.isArray(raw) ? raw : raw.boardingLogs ?? raw.data ?? [];
       setBoardingLogs(arr.map(mapId));
     } catch (err: unknown) {
@@ -230,7 +238,7 @@ export function useTransport() {
       const params: Record<string, string> = { schoolId };
       if (isResolved !== undefined) params.isResolved = String(isResolved);
       const res = await apiClient.get('/transport/alerts', { params });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = Array.isArray(raw) ? raw : raw.alerts ?? raw.data ?? [];
       setAlerts(arr.map(mapId));
     } catch (err: unknown) {
@@ -269,6 +277,30 @@ export function useTransport() {
     await fetchAlerts();
   };
 
+  /* ── Students (for assignment form) ── */
+  const [students, setStudents] = useState<SimpleStudent[]>([]);
+
+  const fetchStudents = useCallback(async () => {
+    try {
+      const res = await apiClient.get('/students', {
+        params: { schoolId },
+      });
+      const raw = unwrapResponse(res);
+      const arr = Array.isArray(raw) ? raw : raw.students ?? raw.data ?? [];
+      setStudents(arr.map((s: Record<string, unknown>) => {
+        const u = s.userId as Record<string, unknown> | undefined;
+        return {
+          id: (s._id as string) ?? (s.id as string),
+          firstName: (u?.firstName as string) ?? '',
+          lastName: (u?.lastName as string) ?? '',
+          admissionNumber: (s.admissionNumber as string) ?? '',
+        };
+      }));
+    } catch {
+      console.error('Failed to load students');
+    }
+  }, [schoolId]);
+
   /* ── Initial load ── */
   useEffect(() => {
     if (!schoolId) return;
@@ -283,6 +315,7 @@ export function useTransport() {
 
   return {
     routes, assignments, boardingLogs, alerts, loading,
+    students, fetchStudents,
     fetchRoutes, createRoute, updateRoute, deleteRoute,
     fetchAssignments, createAssignment, updateAssignment, deleteAssignment,
     fetchBoardingLogs, createBoardingLog, logAlight,

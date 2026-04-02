@@ -7,13 +7,15 @@ import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useLearningStore } from '@/stores/useLearningStore';
+import { useLearningApi } from '@/hooks/useLearningApi';
 
 interface StrugglingStudentsAlertProps {
   classId: string;
 }
 
 export function StrugglingStudentsAlert({ classId }: StrugglingStudentsAlertProps) {
-  const { strugglingStudents, strugglingLoading, fetchStrugglingStudents } = useLearningStore();
+  const { strugglingStudents, strugglingLoading } = useLearningStore();
+  const { fetchStrugglingStudents } = useLearningApi();
 
   useEffect(() => {
     if (classId) {
@@ -45,7 +47,7 @@ export function StrugglingStudentsAlert({ classId }: StrugglingStudentsAlertProp
         <div className="space-y-3">
           {strugglingStudents.map((s, i) => {
             const TrendIcon = s.trend === 'declining' ? TrendingDown : Minus;
-            const trendStyle = s.trend === 'declining' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800';
+            const trendStyle = s.trend === 'declining' ? 'bg-destructive/10 text-destructive' : 'bg-amber-100 text-amber-800';
 
             return (
               <div key={i} className="flex items-center justify-between rounded-lg border p-3">
@@ -54,7 +56,7 @@ export function StrugglingStudentsAlert({ classId }: StrugglingStudentsAlertProp
                   <p className="text-xs text-muted-foreground">Subject: {s.subjectId}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-sm font-bold ${s.averageMark < 50 ? 'text-red-600' : 'text-amber-600'}`}>
+                  <span className={`text-sm font-bold ${s.averageMark < 50 ? 'text-destructive' : 'text-amber-600'}`}>
                     {Math.round(s.averageMark)}%
                   </span>
                   <Badge variant="secondary" className={trendStyle}>

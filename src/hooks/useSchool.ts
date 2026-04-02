@@ -1,10 +1,14 @@
 import { useEffect } from 'react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSchoolStore } from '@/stores/useSchoolStore';
+import { useSchoolData } from './useSchoolData';
 
 export function useSchool() {
   const user = useAuthStore((s) => s.user);
-  const { school, schoolLoading, schoolError, fetchSchool } = useSchoolStore();
+  const school = useSchoolStore((s) => s.school);
+  const schoolLoading = useSchoolStore((s) => s.schoolLoading);
+  const schoolError = useSchoolStore((s) => s.schoolError);
+  const { fetchSchool } = useSchoolData();
 
   useEffect(() => {
     if (user?.schoolId && !school && !schoolLoading) {

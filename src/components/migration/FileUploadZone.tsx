@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Upload, FileText, X, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useMigrationStore } from '@/stores/useMigrationStore';
+import { useMigrationApi } from '@/hooks/useMigrationApi';
 import type { SourceSystem } from '@/types/migration';
 import { SOURCE_SYSTEM_LABELS } from '@/types/migration';
 
@@ -21,7 +21,7 @@ export function FileUploadZone({ sourceSystem, onBack }: FileUploadZoneProps) {
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const user = useAuthStore((s) => s.user);
-  const uploadFile = useMigrationStore((s) => s.uploadFile);
+  const { uploadFile } = useMigrationApi();
 
   const acceptTypes = sourceSystem === 'excel' ? '.xlsx,.xls' : '.csv';
 
@@ -114,7 +114,7 @@ export function FileUploadZone({ sourceSystem, onBack }: FileUploadZoneProps) {
               <p className="font-medium">{file.name}</p>
               <p className="text-xs text-muted-foreground">{formatSize(file.size)}</p>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => setFile(null)}>
+            <Button variant="ghost" size="icon" onClick={() => setFile(null)} aria-label="Remove file">
               <X className="h-4 w-4" />
             </Button>
           </div>

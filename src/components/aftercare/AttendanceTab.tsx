@@ -146,40 +146,42 @@ export function AttendanceTab({ attendance, students, onCheckIn, onCheckOut }: A
       />
 
       <Dialog open={checkInOpen} onOpenChange={setCheckInOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md flex flex-col max-h-[85vh]">
           <DialogHeader>
             <DialogTitle>Check In Student</DialogTitle>
             <DialogDescription>Record a student check-in for after care.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleCheckIn} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Student</Label>
-              <Select value={studentId} onValueChange={(v: unknown) => setStudentId(v as string)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select student" />
-                </SelectTrigger>
-                <SelectContent>
-                  {students.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name} {s.grade ? `(${s.grade})` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Check-In Time</Label>
-              <Input
-                type="time"
-                value={checkInTime}
-                onChange={(e) => setCheckInTime(e.target.value)}
-                placeholder={now()}
-              />
-              <p className="text-xs text-muted-foreground">Leave empty to use current time</p>
-            </div>
-            <div className="space-y-2">
-              <Label>Notes (optional)</Label>
-              <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any notes" />
+          <form onSubmit={handleCheckIn} className="flex flex-col flex-1 min-h-0">
+            <div className="flex-1 overflow-y-auto py-4 space-y-4">
+              <div className="space-y-2">
+                <Label>Student</Label>
+                <Select value={studentId} onValueChange={(v: unknown) => setStudentId(v as string)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select student" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {students.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name} {s.grade ? `(${s.grade})` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Check-In Time</Label>
+                <Input
+                  type="time"
+                  value={checkInTime}
+                  onChange={(e) => setCheckInTime(e.target.value)}
+                  placeholder={now()}
+                />
+                <p className="text-xs text-muted-foreground">Leave empty to use current time</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Notes (optional)</Label>
+                <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any notes" />
+              </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setCheckInOpen(false)}>Cancel</Button>

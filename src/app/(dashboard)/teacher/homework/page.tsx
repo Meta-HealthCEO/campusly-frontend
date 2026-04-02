@@ -48,17 +48,19 @@ export default function TeacherHomeworkPage() {
               </Button>
             }
           />
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-lg flex flex-col max-h-[85vh]">
             <DialogHeader>
               <DialogTitle>Create New Homework</DialogTitle>
             </DialogHeader>
-            <HomeworkForm
-              subjects={subjects}
-              classes={classOptions}
-              onSubmit={onSubmit}
-              onCancel={() => setOpen(false)}
-              submitLabel="Create Homework"
-            />
+            <div className="flex-1 overflow-y-auto py-4">
+              <HomeworkForm
+                subjects={subjects}
+                classes={classOptions}
+                onSubmit={onSubmit}
+                onCancel={() => setOpen(false)}
+                submitLabel="Create Homework"
+              />
+            </div>
           </DialogContent>
         </Dialog>
       </PageHeader>
@@ -127,6 +129,7 @@ export default function TeacherHomeworkPage() {
                           size="icon-sm"
                           onClick={(e) => deleteHomework(hw.id, e)}
                           disabled={deleting === hw.id}
+                          aria-label="Delete homework"
                         >
                           <Trash2 className="h-4 w-4 text-muted-foreground" />
                         </Button>

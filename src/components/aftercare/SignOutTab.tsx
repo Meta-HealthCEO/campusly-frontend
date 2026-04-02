@@ -147,7 +147,7 @@ export function SignOutTab({
             <CheckCircle2 className="mr-1 h-3 w-3" /> Yes
           </Badge>
         ) : (
-          <Badge variant="secondary" className="bg-red-100 text-red-800">
+          <Badge variant="secondary" className="bg-destructive/10 text-destructive">
             <AlertTriangle className="mr-1 h-3 w-3" /> Unauthorized
           </Badge>
         ),

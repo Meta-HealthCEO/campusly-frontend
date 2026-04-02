@@ -14,7 +14,7 @@ import {
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
-import apiClient from '@/lib/api-client';
+import { createFixture, updateFixture } from '@/hooks/useSportMutations';
 import type { SportFixture, SportTeam } from '@/types/sport';
 
 interface FixtureFormDialogProps {
@@ -68,7 +68,7 @@ export function FixtureFormDialog({
     try {
       const isoDate = new Date(date).toISOString();
       if (fixture) {
-        await apiClient.put(`/sport/fixtures/${fixture.id}`, {
+        await updateFixture(fixture.id, {
           opponent: opponent.trim(),
           date: isoDate,
           time: time.trim(),
@@ -78,7 +78,7 @@ export function FixtureFormDialog({
         });
         toast.success('Fixture updated successfully');
       } else {
-        await apiClient.post('/sport/fixtures', {
+        await createFixture({
           teamId,
           schoolId,
           opponent: opponent.trim(),

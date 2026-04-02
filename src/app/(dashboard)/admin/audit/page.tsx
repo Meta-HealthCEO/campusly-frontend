@@ -6,9 +6,11 @@ import { AuditFilterBar } from '@/components/audit/AuditFilterBar';
 import { AuditTable } from '@/components/audit/AuditTable';
 import { AuditExportButton } from '@/components/audit/AuditExportButton';
 import { useAuditStore } from '@/stores/useAuditStore';
+import { useAuditApi } from '@/hooks/useAuditApi';
 
 export default function AdminAuditPage() {
-  const { fetchLogs, resetFilters } = useAuditStore();
+  const { resetFilters } = useAuditStore();
+  const { fetchLogs } = useAuditApi();
 
   useEffect(() => {
     resetFilters();

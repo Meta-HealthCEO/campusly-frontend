@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { staffSchema, type StaffFormData } from '@/lib/validations';
-import apiClient from '@/lib/api-client';
+import { useStaff } from '@/hooks/useStaff';
 import type { Teacher } from '@/types';
 
 const columns: ColumnDef<Teacher>[] = [
@@ -42,7 +41,7 @@ const columns: ColumnDef<Teacher>[] = [
     id: 'subjects',
     header: 'Subjects',
     cell: ({ row }) => (
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-1 max-h-12 overflow-hidden">
         {row.original.subjects.map((subject) => (
           <Badge key={subject} variant="secondary">
             {subject}
@@ -59,7 +58,7 @@ const columns: ColumnDef<Teacher>[] = [
         className={
           row.original.user.isActive
             ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+            : 'bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive'
         }
       >
         {row.original.user.isActive ? 'Active' : 'Inactive'}
@@ -70,7 +69,7 @@ const columns: ColumnDef<Teacher>[] = [
 
 export default function StaffPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [staffList, setStaffList] = useState<Teacher[]>([]);
+  const { staffList, fetchStaff, createStaff } = useStaff();
   const {
     register,
     handleSubmit,
@@ -81,39 +80,11 @@ export default function StaffPage() {
   });
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await apiClient.get('/staff');
-        if (response.data) {
-          const data = response.data.data ?? response.data;
-          const arr = Array.isArray(data) ? data : data.staff ?? [];
-          setStaffList(arr);
-        }
-      } catch {
-        console.error('Failed to load staff');
-      }
-    }
-    fetchData();
-  }, []);
+    fetchStaff();
+  }, [fetchStaff]);
 
   const onSubmit = async (data: StaffFormData) => {
-    try {
-      await apiClient.post('/staff', data);
-      toast.success('Staff member added successfully!');
-      // Refresh the staff list
-      try {
-        const response = await apiClient.get('/staff');
-        if (response.data) {
-          const list = response.data.data ?? response.data;
-          const arr = Array.isArray(list) ? list : list.staff ?? [];
-          setStaffList(arr);
-        }
-      } catch {
-        console.error('Failed to refresh staff list');
-      }
-    } catch {
-      toast.error('Failed to add staff member');
-    }
+    await createStaff(data);
     reset();
     setDialogOpen(false);
   };
@@ -126,43 +97,45 @@ export default function StaffPage() {
             <Plus className="mr-2 h-4 w-4" />
             Add Staff
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md flex flex-col max-h-[85vh]">
             <DialogHeader>
               <DialogTitle>Add Staff Member</DialogTitle>
               <DialogDescription>Enter the details for the new staff member.</DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" {...register('firstName')} placeholder="First name" />
-                  {errors.firstName && <p className="text-xs text-destructive">{errors.firstName.message}</p>}
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+              <div className="flex-1 overflow-y-auto py-4 space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input id="firstName" {...register('firstName')} placeholder="First name" />
+                    {errors.firstName && <p className="text-xs text-destructive">{errors.firstName.message}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input id="lastName" {...register('lastName')} placeholder="Last name" />
+                    {errors.lastName && <p className="text-xs text-destructive">{errors.lastName.message}</p>}
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" {...register('lastName')} placeholder="Last name" />
-                  {errors.lastName && <p className="text-xs text-destructive">{errors.lastName.message}</p>}
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" {...register('email')} placeholder="Email address" />
+                  {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" {...register('email')} placeholder="Email address" />
-                {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" {...register('phone')} placeholder="Phone number" />
-                {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="department">Department</Label>
-                <Input id="department" {...register('department')} placeholder="Department" />
-                {errors.department && <p className="text-xs text-destructive">{errors.department.message}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="subjects">Subjects (comma-separated)</Label>
-                <Input id="subjects" {...register('subjects')} placeholder="e.g. Mathematics, Science" />
-                {errors.subjects && <p className="text-xs text-destructive">{errors.subjects.message}</p>}
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input id="phone" {...register('phone')} placeholder="Phone number" />
+                  {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="department">Department</Label>
+                  <Input id="department" {...register('department')} placeholder="Department" />
+                  {errors.department && <p className="text-xs text-destructive">{errors.department.message}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="subjects">Subjects (comma-separated)</Label>
+                  <Input id="subjects" {...register('subjects')} placeholder="e.g. Mathematics, Science" />
+                  {errors.subjects && <p className="text-xs text-destructive">{errors.subjects.message}</p>}
+                </div>
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>

@@ -117,7 +117,7 @@ export default function AttendanceReportPage() {
             <Card>
               <CardContent className="p-6">
                 <p className="text-sm font-medium text-muted-foreground">Absent Count</p>
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-2xl font-bold text-destructive">
                   {data.find((d) => d.status === 'absent')?.count ?? 0}
                 </p>
               </CardContent>

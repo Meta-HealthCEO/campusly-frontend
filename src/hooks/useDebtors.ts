@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { DebtorEntry } from '@/types';
 
@@ -95,7 +96,7 @@ export function useDebtors() {
         apiClient.get(`/fees/debtors/school/${schoolId}`),
         apiClient.get(`/fees/collections/school/${schoolId}`),
       ]);
-      const rawD = debtorsRes.data.data ?? debtorsRes.data;
+      const rawD = unwrapResponse(debtorsRes);
       const debtors: RawDebtor[] = Array.isArray(rawD)
         ? rawD
         : ((rawD as Record<string, unknown>).debtors ??
@@ -103,7 +104,7 @@ export function useDebtors() {
             []) as RawDebtor[];
       setData(debtors.map(mapDebtorEntry));
 
-      const rawA = actionsRes.data.data ?? actionsRes.data;
+      const rawA = unwrapResponse(actionsRes);
       const actionList: CollectionAction[] = Array.isArray(rawA)
         ? rawA
         : ((rawA as Record<string, unknown>).actions ??

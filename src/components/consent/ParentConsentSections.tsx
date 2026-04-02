@@ -86,7 +86,7 @@ export function PendingConsentSection({
                     <div className="flex gap-2 shrink-0">
                       <Button
                         variant="outline"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={() => onDecline(form, childId)}
                       >
                         <XCircle className="h-4 w-4 mr-1" />

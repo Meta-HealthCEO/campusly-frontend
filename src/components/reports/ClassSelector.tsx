@@ -2,12 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import apiClient from '@/lib/api-client';
-
-interface ClassOption {
-  id: string;
-  name: string;
-}
+import { useReports } from '@/hooks/useReports';
+import type { ClassOption } from '@/hooks/useReports';
 
 interface ClassSelectorProps {
   value: string;
@@ -16,25 +12,15 @@ interface ClassSelectorProps {
 
 export function ClassSelector({ value, onChange }: ClassSelectorProps) {
   const [classes, setClasses] = useState<ClassOption[]>([]);
+  const { fetchClasses } = useReports();
 
   useEffect(() => {
-    async function fetchClasses() {
-      try {
-        const response = await apiClient.get('/academic/classes');
-        const raw = response.data.data ?? response.data;
-        const arr = Array.isArray(raw) ? raw : raw.data ?? [];
-        setClasses(
-          arr.map((c: Record<string, unknown>) => ({
-            id: (c._id as string) ?? (c.id as string) ?? '',
-            name: (c.name as string) ?? 'Unknown',
-          }))
-        );
-      } catch {
-        console.error('Failed to load classes');
-      }
+    async function loadClasses() {
+      const result = await fetchClasses();
+      setClasses(result);
     }
-    fetchClasses();
-  }, []);
+    loadClasses();
+  }, [fetchClasses]);
 
   return (
     <div className="space-y-1">

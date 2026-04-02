@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import {
   Users, UserCheck, CheckCircle2, Clock,
   CalendarDays, ShieldCheck, DollarSign,
@@ -16,17 +15,11 @@ import { PickupAuthTab } from '@/components/aftercare/PickupAuthTab';
 import { SignOutTab } from '@/components/aftercare/SignOutTab';
 import { ActivitiesTab } from '@/components/aftercare/ActivitiesTab';
 import { BillingTab } from '@/components/aftercare/BillingTab';
-import apiClient from '@/lib/api-client';
-
-interface StaffOption {
-  id: string;
-  name: string;
-}
 
 export default function AfterCarePage() {
   const {
     registrations, attendance, pickupAuths, signOutLogs, activities, invoices,
-    students, loading,
+    students, staffOptions, loading,
     createRegistration, updateRegistration, deleteRegistration,
     checkIn, checkOut,
     createPickupAuth, updatePickupAuth, deletePickupAuth,
@@ -34,29 +27,6 @@ export default function AfterCarePage() {
     createActivity, updateActivity, deleteActivity,
     fetchInvoices, generateInvoices, markInvoicePaid,
   } = useAftercare();
-
-  const [staff, setStaff] = useState<StaffOption[]>([]);
-
-  const fetchStaff = useCallback(async () => {
-    try {
-      const res = await apiClient.get('/staff');
-      const raw = res.data.data ?? res.data;
-      const arr = Array.isArray(raw) ? raw : raw.staff ?? raw.data ?? [];
-      setStaff(
-        arr.map((s: Record<string, unknown>) => ({
-          id: (s._id as string) ?? (s.id as string),
-          name: `${(s.firstName as string) ?? ''} ${(s.lastName as string) ?? ''}`.trim()
-            || ((s.email as string) ?? ''),
-        })),
-      );
-    } catch {
-      console.error('Failed to load staff');
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchStaff();
-  }, [fetchStaff]);
 
   if (loading) {
     return <LoadingSpinner size="lg" />;
@@ -148,7 +118,7 @@ export default function AfterCarePage() {
           <ActivitiesTab
             activities={activities}
             students={students}
-            staff={staff}
+            staff={staffOptions}
             onCreate={createActivity}
             onUpdate={updateActivity}
             onDelete={deleteActivity}

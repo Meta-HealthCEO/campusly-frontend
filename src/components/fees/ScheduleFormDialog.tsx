@@ -14,7 +14,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import apiClient from '@/lib/api-client';
+import { useScheduleMutations, extractErrorMessage } from '@/hooks/useFeeMutations';
 import type { FeeType, Grade } from '@/types';
 import type { FeeSchedule } from './FeeScheduleSection';
 
@@ -38,6 +38,7 @@ export function ScheduleFormDialog({
   onSuccess,
 }: ScheduleFormDialogProps) {
   const isEdit = !!schedule;
+  const { createSchedule, updateSchedule } = useScheduleMutations();
   const [feeTypeId, setFeeTypeId] = useState('');
   const [academicYear, setAcademicYear] = useState(new Date().getFullYear());
   const [term, setTerm] = useState<number | undefined>(undefined);
@@ -83,25 +84,25 @@ export function ScheduleFormDialog({
     }
     setSubmitting(true);
     try {
-      const payload = {
-        feeTypeId,
-        schoolId,
-        academicYear,
-        term: term || undefined,
-        dueDate,
-        appliesTo: { type: scopeType, targetId: resolvedTargetId },
-      };
+      const appliesTo = { type: scopeType, targetId: resolvedTargetId };
       if (isEdit) {
         const schedId = schedule._id ?? schedule.id;
-        await apiClient.patch(`/fees/schedules/${schedId}`, {
+        await updateSchedule(schedId, {
           academicYear,
           term: term || undefined,
           dueDate,
-          appliesTo: { type: scopeType, targetId: resolvedTargetId },
+          appliesTo,
         });
         toast.success('Schedule updated successfully!');
       } else {
-        await apiClient.post('/fees/schedules', payload);
+        await createSchedule({
+          feeTypeId,
+          schoolId,
+          academicYear,
+          term: term || undefined,
+          dueDate,
+          appliesTo,
+        });
         toast.success('Schedule created successfully!');
       }
       onOpenChange(false);
@@ -109,10 +110,7 @@ export function ScheduleFormDialog({
       onSuccess();
     } catch (err: unknown) {
       const fallback = isEdit ? 'Failed to update schedule' : 'Failed to create schedule';
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? fallback;
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, fallback));
     } finally {
       setSubmitting(false);
     }

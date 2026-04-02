@@ -14,7 +14,7 @@ import {
   Dialog, DialogContent, DialogHeader,
   DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
-import apiClient from '@/lib/api-client';
+import { useConsentMutations } from '@/hooks/useConsent';
 import type { ApiConsentForm } from './types';
 
 interface EditConsentFormDialogProps {
@@ -49,6 +49,7 @@ export function EditConsentFormDialog({
   const [requiresBothParents, setRequiresBothParents] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const { updateForm } = useConsentMutations();
 
   useEffect(() => {
     if (form) {
@@ -78,16 +79,14 @@ export function EditConsentFormDialog({
     if (!form || !validate()) return;
     setSubmitting(true);
     try {
-      const payload: Record<string, unknown> = {
+      await updateForm(form.id, {
         title: title.trim(),
         type,
         description: description.trim() || undefined,
         requiresBothParents,
-      };
-      if (expiryDate) payload.expiryDate = new Date(expiryDate).toISOString();
-      if (attachmentUrl.trim()) payload.attachmentUrl = attachmentUrl.trim();
-
-      await apiClient.put(`/consent/forms/${form.id}`, payload);
+        expiryDate: expiryDate ? new Date(expiryDate).toISOString() : undefined,
+        attachmentUrl: attachmentUrl.trim() || undefined,
+      });
       toast.success('Consent form updated successfully!');
       onOpenChange(false);
       onSuccess();

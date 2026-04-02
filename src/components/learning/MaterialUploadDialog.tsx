@@ -91,85 +91,87 @@ export function MaterialUploadDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg flex flex-col max-h-[85vh]">
         <DialogHeader>
           <DialogTitle>Upload Study Material</DialogTitle>
           <DialogDescription>Add notes, videos, or past papers for students.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="matTitle">Title *</Label>
-            <Input id="matTitle" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Chapter 5 Notes" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="matDesc">Description</Label>
-            <Textarea id="matDesc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description..." rows={2} />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto py-4 space-y-4">
             <div className="space-y-2">
-              <Label>Subject *</Label>
-              <Select value={subjectId} onValueChange={(v: unknown) => setSubjectId(v as string)}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
-                <SelectContent>
-                  {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="matTitle">Title *</Label>
+              <Input id="matTitle" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Chapter 5 Notes" required />
             </div>
             <div className="space-y-2">
-              <Label>Grade *</Label>
-              <Select value={gradeId} onValueChange={(v: unknown) => setGradeId(v as string)}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
-                <SelectContent>
-                  {grades.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="matDesc">Description</Label>
+              <Textarea id="matDesc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Brief description..." rows={2} />
             </div>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Subject *</Label>
+                <Select value={subjectId} onValueChange={(v: unknown) => setSubjectId(v as string)}>
+                  <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Grade *</Label>
+                <Select value={gradeId} onValueChange={(v: unknown) => setGradeId(v as string)}>
+                  <SelectTrigger className="w-full"><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>
+                    {grades.map((g) => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Term *</Label>
+                <Select value={term} onValueChange={(v: unknown) => setTerm(v as string)}>
+                  <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4].map((t) => <SelectItem key={t} value={String(t)}>Term {t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Type *</Label>
+                <Select value={type} onValueChange={(v: unknown) => setType(v as CreateMaterialInput['type'])}>
+                  <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {materialTypes.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <div className="space-y-2">
-              <Label>Term *</Label>
-              <Select value={term} onValueChange={(v: unknown) => setTerm(v as string)}>
-                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4].map((t) => <SelectItem key={t} value={String(t)}>Term {t}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="matTopic">Topic *</Label>
+              <Input id="matTopic" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. Quadratic Equations" required />
             </div>
+            {(type === 'notes' || type === 'document' || type === 'past_paper') && (
+              <div className="space-y-2">
+                <Label htmlFor="matFileUrl">File URL</Label>
+                <Input id="matFileUrl" value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="https://..." />
+              </div>
+            )}
+            {type === 'video' && (
+              <div className="space-y-2">
+                <Label htmlFor="matVideoUrl">Video URL</Label>
+                <Input id="matVideoUrl" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://..." />
+              </div>
+            )}
+            {type === 'link' && (
+              <div className="space-y-2">
+                <Label htmlFor="matLinkUrl">External Link</Label>
+                <Input id="matLinkUrl" value={externalLink} onChange={(e) => setExternalLink(e.target.value)} placeholder="https://..." />
+              </div>
+            )}
             <div className="space-y-2">
-              <Label>Type *</Label>
-              <Select value={type} onValueChange={(v: unknown) => setType(v as CreateMaterialInput['type'])}>
-                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {materialTypes.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="matTags">Tags (comma-separated)</Label>
+              <Input id="matTags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="algebra, equations" />
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="matTopic">Topic *</Label>
-            <Input id="matTopic" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. Quadratic Equations" required />
-          </div>
-          {(type === 'notes' || type === 'document' || type === 'past_paper') && (
-            <div className="space-y-2">
-              <Label htmlFor="matFileUrl">File URL</Label>
-              <Input id="matFileUrl" value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="https://..." />
-            </div>
-          )}
-          {type === 'video' && (
-            <div className="space-y-2">
-              <Label htmlFor="matVideoUrl">Video URL</Label>
-              <Input id="matVideoUrl" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://..." />
-            </div>
-          )}
-          {type === 'link' && (
-            <div className="space-y-2">
-              <Label htmlFor="matLinkUrl">External Link</Label>
-              <Input id="matLinkUrl" value={externalLink} onChange={(e) => setExternalLink(e.target.value)} placeholder="https://..." />
-            </div>
-          )}
-          <div className="space-y-2">
-            <Label htmlFor="matTags">Tags (comma-separated)</Label>
-            <Input id="matTags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="algebra, equations" />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>

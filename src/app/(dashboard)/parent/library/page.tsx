@@ -18,7 +18,7 @@ import type { BookBorrowing } from '@/types';
 
 const statusStyles: Record<string, string> = {
   borrowed: 'bg-blue-100 text-blue-800',
-  overdue: 'bg-red-100 text-red-800',
+  overdue: 'bg-destructive/10 text-destructive',
   returned: 'bg-emerald-100 text-emerald-800',
 };
 
@@ -40,7 +40,7 @@ const borrowingColumns: ColumnDef<BookBorrowing, unknown>[] = [
   {
     accessorKey: 'dueDate', header: 'Due Date',
     cell: ({ row }) => (
-      <span className={row.original.status === 'overdue' ? 'text-red-600 font-medium' : ''}>
+      <span className={row.original.status === 'overdue' ? 'text-destructive font-medium' : ''}>
         {formatDate(row.original.dueDate)}
       </span>
     ),
@@ -77,13 +77,13 @@ export default function LibraryPage() {
       </div>
 
       {totalOverdue > 0 && (
-        <Card className="border-red-200 bg-red-50">
+        <Card className="border-red-200 bg-destructive/10">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-red-100 p-2.5"><AlertTriangle className="h-5 w-5 text-red-700" /></div>
+              <div className="rounded-xl bg-destructive/10 p-2.5"><AlertTriangle className="h-5 w-5 text-destructive" /></div>
               <div>
-                <p className="font-medium text-red-800">Overdue Books Alert</p>
-                <p className="text-sm text-red-700">
+                <p className="font-medium text-destructive">Overdue Books Alert</p>
+                <p className="text-sm text-destructive">
                   There {totalOverdue === 1 ? 'is' : 'are'} {totalOverdue} overdue book{totalOverdue !== 1 ? 's' : ''} that need{totalOverdue === 1 ? 's' : ''} to be returned immediately.
                 </p>
               </div>
@@ -109,17 +109,17 @@ export default function LibraryPage() {
                     <Card key={borrowing.id} className={borrowing.status === 'overdue' ? 'border-red-200' : ''}>
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-2">
-                          <BookOpen className={`h-8 w-8 ${borrowing.status === 'overdue' ? 'text-red-500' : 'text-primary'}`} />
+                          <BookOpen className={`h-8 w-8 ${borrowing.status === 'overdue' ? 'text-destructive' : 'text-primary'}`} />
                           <Badge variant="secondary" className={statusStyles[borrowing.status] ?? ''}>
                             {borrowing.status.charAt(0).toUpperCase() + borrowing.status.slice(1)}
                           </Badge>
                         </div>
-                        <h4 className="font-medium text-sm mb-1">{borrowing.book?.title ?? '-'}</h4>
-                        <p className="text-xs text-muted-foreground mb-3">by {borrowing.book?.author ?? '-'}</p>
+                        <h4 className="font-medium text-sm mb-1 truncate">{borrowing.book?.title ?? '-'}</h4>
+                        <p className="text-xs text-muted-foreground mb-3 truncate">by {borrowing.book?.author ?? '-'}</p>
                         <div className="space-y-1 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1"><Library className="h-3 w-3" /><span>{borrowing.book?.category ?? '-'}</span></div>
                           <div className="flex items-center gap-1"><Clock className="h-3 w-3" /><span>Borrowed: {formatDate(borrowing.borrowedDate)}</span></div>
-                          <div className={`flex items-center gap-1 ${borrowing.status === 'overdue' ? 'text-red-600 font-medium' : ''}`}>
+                          <div className={`flex items-center gap-1 ${borrowing.status === 'overdue' ? 'text-destructive font-medium' : ''}`}>
                             <Clock className="h-3 w-3" /><span>Due: {formatDate(borrowing.dueDate)}</span>
                           </div>
                         </div>

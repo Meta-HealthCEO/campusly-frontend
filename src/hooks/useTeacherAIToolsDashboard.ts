@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import type { GeneratedPaper, GradingJob } from '@/components/ai-tools/types';
 
 interface ActivityItem {
@@ -30,7 +31,7 @@ export function useTeacherAIToolsDashboard() {
         const papersRes = await apiClient.get('/ai-tools/papers', {
           params: { limit: 50 },
         });
-        const raw = papersRes.data.data ?? papersRes.data;
+        const raw = unwrapResponse(papersRes);
         const list = raw.papers ?? (Array.isArray(raw) ? raw : []);
         setPapers(list as GeneratedPaper[]);
       } catch {

@@ -14,6 +14,7 @@ import {
 import { ArrowLeft, ArrowRight, Eye } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useMigrationStore } from '@/stores/useMigrationStore';
+import { useMigrationApi } from '@/hooks/useMigrationApi';
 
 interface DataPreviewTableProps {
   jobId: string;
@@ -22,7 +23,8 @@ interface DataPreviewTableProps {
 }
 
 export function DataPreviewTable({ jobId, onBack, onContinue }: DataPreviewTableProps) {
-  const { preview, previewLoading, getPreview } = useMigrationStore();
+  const { preview, previewLoading } = useMigrationStore();
+  const { getPreview } = useMigrationApi();
 
   useEffect(() => {
     getPreview(jobId);

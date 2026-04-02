@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
-import apiClient from '@/lib/api-client';
+import { deleteTeam } from '@/hooks/useSportMutations';
 import { TeamFormDialog } from './TeamFormDialog';
 import type { SportTeam, SportCoach } from '@/types/sport';
 
@@ -42,7 +42,7 @@ export function TeamsTab({ teams, loading, schoolId, onRefresh }: TeamsTabProps)
   async function handleDelete(team: SportTeam) {
     if (!confirm(`Delete team "${team.name}"?`)) return;
     try {
-      await apiClient.delete(`/sport/teams/${team.id}`);
+      await deleteTeam(team.id);
       toast.success('Sport team deleted successfully');
       onRefresh();
     } catch (err: unknown) {
@@ -69,7 +69,7 @@ export function TeamsTab({ teams, loading, schoolId, onRefresh }: TeamsTabProps)
         <Badge className={
           row.original.isActive
             ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-            : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+            : 'bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive'
         }>
           {row.original.isActive ? 'Active' : 'Inactive'}
         </Badge>
@@ -77,10 +77,10 @@ export function TeamsTab({ teams, loading, schoolId, onRefresh }: TeamsTabProps)
     { id: 'actions', header: 'Actions', enableSorting: false,
       cell: ({ row }) => (
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }}>
+          <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }} aria-label="Edit team">
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); handleDelete(row.original); }}>
+          <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); handleDelete(row.original); }} aria-label="Delete team">
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         </div>

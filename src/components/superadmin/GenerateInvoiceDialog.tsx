@@ -98,12 +98,12 @@ export function GenerateInvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg flex flex-col max-h-[85vh]">
         <DialogHeader>
           <DialogTitle>Generate Invoice</DialogTitle>
           <DialogDescription>Create a new platform invoice for a tenant.</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto py-4 space-y-4">
           <div className="space-y-2">
             <Label>Tenant</Label>
             <Select value={tenantId} onValueChange={(v: unknown) => setTenantId((v as string) || '')}>
@@ -153,6 +153,7 @@ export function GenerateInvoiceDialog({
                   className="shrink-0"
                   onClick={() => removeLineItem(i)}
                   disabled={lineItems.length <= 1}
+                  aria-label="Remove line item"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

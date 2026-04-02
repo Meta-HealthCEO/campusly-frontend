@@ -11,7 +11,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
-import apiClient from '@/lib/api-client';
+import { deleteFixture } from '@/hooks/useSportMutations';
 import { FixtureFormDialog } from './FixtureFormDialog';
 import { FixtureDetailPanel } from './FixtureDetailPanel';
 import { FixtureCalendarView } from './FixtureCalendarView';
@@ -65,7 +65,7 @@ export function FixturesTab({ fixtures, teams, loading, schoolId, onRefresh }: F
   async function handleDelete(f: SportFixture) {
     if (!confirm(`Delete fixture vs "${f.opponent}"?`)) return;
     try {
-      await apiClient.delete(`/sport/fixtures/${f.id}`);
+      await deleteFixture(f.id);
       toast.success('Sport fixture deleted successfully');
       onRefresh();
     } catch (err: unknown) {
@@ -94,13 +94,13 @@ export function FixturesTab({ fixtures, teams, loading, schoolId, onRefresh }: F
     )},
     { id: 'actions', header: 'Actions', enableSorting: false, cell: ({ row }) => (
       <div className="flex gap-1">
-        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openDetail(row.original); }}>
+        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openDetail(row.original); }} aria-label="View fixture">
           <Eye className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }}>
+        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }} aria-label="Edit fixture">
           <Pencil className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); handleDelete(row.original); }}>
+        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); handleDelete(row.original); }} aria-label="Delete fixture">
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
       </div>

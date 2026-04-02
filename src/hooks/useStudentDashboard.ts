@@ -23,9 +23,10 @@ export function useStudentDashboard(): StudentDashboardResult {
   useEffect(() => {
     if (!student) return;
 
+    const currentStudent = student;
     async function fetchDashboardData() {
-      const sid = student!._id ?? student!.id;
-      const classId = student!.class?.id ?? student!.classId ?? '';
+      const sid = currentStudent._id ?? currentStudent.id;
+      const classId = currentStudent.class?.id ?? currentStudent.classId ?? '';
 
       const results = await Promise.allSettled([
         apiClient.get('/homework'),
@@ -42,7 +43,7 @@ export function useStudentDashboard(): StudentDashboardResult {
         setSubmissions(unwrapList<HomeworkSubmission>(results[1].value, 'submissions'));
       }
       if (results[2].status === 'fulfilled' && results[2].value) {
-        const raw = unwrapResponse<Record<string, unknown>>(results[2].value);
+        const raw = unwrapResponse(results[2].value);
         setWallet(raw as unknown as Wallet);
       }
       if (results[3].status === 'fulfilled' && results[3].value) {

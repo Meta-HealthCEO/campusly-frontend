@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/dialog';
 import { formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
 import type { FoundItem } from '@/types';
 
 const categoryLabels: Record<string, string> = {
@@ -24,12 +23,20 @@ const categoryStyles: Record<string, string> = {
   other: 'bg-gray-100 text-gray-800',
 };
 
-export function ClaimDialog({ item, onClaimed }: { item: FoundItem; onClaimed?: () => void }) {
+interface ClaimDialogProps {
+  item: FoundItem;
+  onClaimed?: () => void;
+  onClaimItem?: (itemId: string) => Promise<void>;
+}
+
+export function ClaimDialog({ item, onClaimed, onClaimItem }: ClaimDialogProps) {
   const [open, setOpen] = useState(false);
 
   const handleClaim = async () => {
     try {
-      await apiClient.post(`/lost-found/${item.id}/claim`);
+      if (onClaimItem) {
+        await onClaimItem(item.id);
+      }
       toast.success(`Claim submitted for "${item.name}". The school will contact you.`);
       onClaimed?.();
     } catch {
@@ -71,7 +78,13 @@ export function ClaimDialog({ item, onClaimed }: { item: FoundItem; onClaimed?: 
   );
 }
 
-export function FoundItemCard({ item, onClaimed }: { item: FoundItem; onClaimed?: () => void }) {
+interface FoundItemCardProps {
+  item: FoundItem;
+  onClaimed?: () => void;
+  onClaimItem?: (itemId: string) => Promise<void>;
+}
+
+export function FoundItemCard({ item, onClaimed, onClaimItem }: FoundItemCardProps) {
   return (
     <Card className="overflow-hidden">
       {item.photoUrl && (
@@ -93,7 +106,9 @@ export function FoundItemCard({ item, onClaimed }: { item: FoundItem; onClaimed?
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">{formatDate(item.dateFound)}</span>
-          {item.status === 'unclaimed' && <ClaimDialog item={item} onClaimed={onClaimed} />}
+          {item.status === 'unclaimed' && (
+            <ClaimDialog item={item} onClaimed={onClaimed} onClaimItem={onClaimItem} />
+          )}
           {item.status === 'claimed' && (
             <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">Claimed</Badge>
           )}

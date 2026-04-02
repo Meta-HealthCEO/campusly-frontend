@@ -38,14 +38,14 @@ const SEVERITY_STYLES: Record<string, string> = {
   minor: 'bg-slate-100 text-slate-700',
   moderate: 'bg-amber-100 text-amber-700',
   serious: 'bg-orange-100 text-orange-700',
-  critical: 'bg-red-100 text-red-700',
+  critical: 'bg-destructive/10 text-destructive',
 };
 
 const STATUS_STYLES: Record<string, string> = {
   reported: 'bg-blue-100 text-blue-700',
   investigating: 'bg-amber-100 text-amber-700',
   resolved: 'bg-emerald-100 text-emerald-700',
-  escalated: 'bg-red-100 text-red-700',
+  escalated: 'bg-destructive/10 text-destructive',
 };
 
 function getStudentName(record: DisciplineRecord): string {
@@ -107,7 +107,7 @@ function buildColumns(
       cell: ({ row }) => (
         <div className="flex gap-1">
           {onView && (
-            <Button size="icon" variant="ghost" onClick={() => onView(row.original._id)}>
+            <Button size="icon" variant="ghost" onClick={() => onView(row.original._id)} aria-label="View record">
               <Eye className="h-4 w-4" />
             </Button>
           )}
@@ -115,8 +115,9 @@ function buildColumns(
             <Button
               size="icon"
               variant="ghost"
-              className="text-red-500 hover:text-red-700"
+              className="text-destructive hover:text-destructive"
               onClick={() => onDelete(row.original._id)}
+              aria-label="Delete record"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

@@ -20,7 +20,7 @@ import type { Student } from '@/types';
 
 const statusStyles: Record<string, string> = {
   issued: 'bg-blue-100 text-blue-800',
-  overdue: 'bg-red-100 text-red-800',
+  overdue: 'bg-destructive/10 text-destructive',
   returned: 'bg-emerald-100 text-emerald-800',
   lost: 'bg-gray-100 text-gray-800',
 };
@@ -132,7 +132,7 @@ export function LoansTab({
         const isOverdue = row.original.status === 'overdue' ||
           (row.original.status === 'issued' && new Date(row.original.dueDate) < new Date());
         return (
-          <span className={isOverdue ? 'text-red-600 font-medium' : ''}>
+          <span className={isOverdue ? 'text-destructive font-medium' : ''}>
             {formatDate(row.original.dueDate)}
           </span>
         );

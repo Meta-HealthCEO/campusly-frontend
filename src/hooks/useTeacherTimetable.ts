@@ -11,10 +11,11 @@ export function useTeacherTimetable() {
 
   useEffect(() => {
     if (!user?.id) return;
+    const teacherId = user.id;
     async function fetchTimetable() {
       try {
         const res = await apiClient.get(
-          `/academic/timetable/teacher/${user!.id}`,
+          `/academic/timetable/teacher/${teacherId}`,
         );
         const arr = unwrapList<TimetableSlot>(res);
         setTimetable(arr);

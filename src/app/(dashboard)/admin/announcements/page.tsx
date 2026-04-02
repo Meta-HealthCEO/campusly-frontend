@@ -171,18 +171,20 @@ export default function AnnouncementsPage() {
           <DialogTrigger render={<Button />}>
             <Plus className="mr-2 h-4 w-4" /> New Announcement
           </DialogTrigger>
-          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-lg flex flex-col max-h-[85vh]">
             <DialogHeader>
               <DialogTitle>Create Announcement</DialogTitle>
               <DialogDescription>
                 Compose a new announcement for students, parents, or staff.
               </DialogDescription>
             </DialogHeader>
-            <AnnouncementForm
-              onSubmit={handleCreate}
-              isLoading={submitting}
-              mode="create"
-            />
+            <div className="flex-1 overflow-y-auto py-4">
+              <AnnouncementForm
+                onSubmit={handleCreate}
+                isLoading={submitting}
+                mode="create"
+              />
+            </div>
           </DialogContent>
         </Dialog>
       </PageHeader>
@@ -194,7 +196,7 @@ export default function AnnouncementsPage() {
         <StatCard title="Avg Reads" value={String(avgReadRate)} icon={Eye} description="Per published" />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <AnnouncementList
             announcements={announcements}
@@ -228,28 +230,30 @@ export default function AnnouncementsPage() {
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-lg flex flex-col max-h-[85vh]">
           <DialogHeader>
             <DialogTitle>Edit Announcement</DialogTitle>
             <DialogDescription>Update this announcement.</DialogDescription>
           </DialogHeader>
-          {selected && (
-            <AnnouncementForm
-              defaultValues={{
-                title: selected.title,
-                content: selected.content,
-                targetAudience: selected.targetAudience,
-                targetId: selected.targetId ?? undefined,
-                attachments: selected.attachments,
-                priority: selected.priority,
-                expiresAt: selected.expiresAt ?? undefined,
-                pinned: selected.pinned,
-              }}
-              onSubmit={handleEdit}
-              isLoading={submitting}
-              mode="edit"
-            />
-          )}
+          <div className="flex-1 overflow-y-auto py-4">
+            {selected && (
+              <AnnouncementForm
+                defaultValues={{
+                  title: selected.title,
+                  content: selected.content,
+                  targetAudience: selected.targetAudience,
+                  targetId: selected.targetId ?? undefined,
+                  attachments: selected.attachments,
+                  priority: selected.priority,
+                  expiresAt: selected.expiresAt ?? undefined,
+                  pinned: selected.pinned,
+                }}
+                onSubmit={handleEdit}
+                isLoading={submitting}
+                mode="edit"
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 

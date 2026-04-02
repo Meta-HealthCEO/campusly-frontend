@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useMigrationStore } from '@/stores/useMigrationStore';
+import { useMigrationApi } from '@/hooks/useMigrationApi';
 import type { FieldMapping, SourceSystem } from '@/types/migration';
 import { SOURCE_SYSTEM_LABELS } from '@/types/migration';
 import { FileText } from 'lucide-react';
@@ -29,7 +30,8 @@ export function TemplateSelector({
   sourceSystem,
   onApply,
 }: TemplateSelectorProps) {
-  const { templates, templatesLoading, fetchTemplates } = useMigrationStore();
+  const { templates, templatesLoading } = useMigrationStore();
+  const { fetchTemplates } = useMigrationApi();
 
   useEffect(() => {
     if (open) {

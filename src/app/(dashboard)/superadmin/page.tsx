@@ -8,11 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChartComponent } from '@/components/charts';
 import { RevenueChart } from '@/components/superadmin/RevenueChart';
 import { useSuperAdminStore } from '@/stores/useSuperAdminStore';
+import { useSuperAdmin } from '@/hooks/useSuperAdmin';
 import { formatCurrency } from '@/lib/utils';
 
 export default function SuperAdminDashboardPage() {
-  const { stats, statsLoading, fetchStats, revenue, revenueLoading, fetchRevenue, tenants, fetchTenants } =
+  const { stats, statsLoading, revenue, revenueLoading, tenants } =
     useSuperAdminStore();
+  const { fetchStats, fetchRevenue, fetchTenants } = useSuperAdmin();
 
   useEffect(() => {
     fetchStats();

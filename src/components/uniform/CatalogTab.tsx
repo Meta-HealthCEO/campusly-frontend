@@ -13,7 +13,7 @@ import {
 import { DataTable } from '@/components/shared/DataTable';
 import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import apiClient from '@/lib/api-client';
+import { useUniformItemMutations } from '@/hooks/useUniformMutations';
 import { getCatalogColumns } from './CatalogColumns';
 import { UniformItemForm } from './UniformItemForm';
 import { SizeGuideDialog } from './SizeGuideDialog';
@@ -34,11 +34,12 @@ const CATEGORIES: Array<{ value: string; label: string }> = [
 
 export function CatalogTab() {
   const { items, loading, fetchItems, schoolId } = useUniformItems();
+  const { deleteItem: deleteItemApi, toggleAvailability, extractErrorMessage } = useUniformItemMutations();
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<UniformItem | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteItem, setDeleteItem] = useState<UniformItem | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<UniformItem | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [sizeGuideItem, setSizeGuideItem] = useState<UniformItem | null>(null);
@@ -58,7 +59,7 @@ export function CatalogTab() {
   }, []);
 
   const handleDelete = useCallback((item: UniformItem) => {
-    setDeleteItem(item);
+    setItemToDelete(item);
     setDeleteDialogOpen(true);
   }, []);
 
@@ -69,32 +70,24 @@ export function CatalogTab() {
 
   const handleToggleAvailability = useCallback(async (item: UniformItem) => {
     try {
-      await apiClient.put(`/uniform/items/${item.id}`, {
-        isAvailable: !item.isAvailable,
-      });
+      await toggleAvailability(item);
       toast.success(`Item ${item.isAvailable ? 'disabled' : 'enabled'}`);
       fetchItems(categoryFilter);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to update availability';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to update availability'));
     }
-  }, [fetchItems, categoryFilter]);
+  }, [fetchItems, categoryFilter, toggleAvailability, extractErrorMessage]);
 
   const confirmDelete = async () => {
-    if (!deleteItem) return;
+    if (!itemToDelete) return;
     setDeleting(true);
     try {
-      await apiClient.delete(`/uniform/items/${deleteItem.id}`);
+      await deleteItemApi(itemToDelete.id);
       toast.success('Item deleted');
       setDeleteDialogOpen(false);
       fetchItems(categoryFilter);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to delete item';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to delete item'));
     } finally {
       setDeleting(false);
     }
@@ -150,7 +143,7 @@ export function CatalogTab() {
           <DialogHeader>
             <DialogTitle>Delete Item</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete <strong>{deleteItem?.name}</strong>?
+              Are you sure you want to delete <strong>{itemToDelete?.name}</strong>?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -36,7 +36,7 @@ export function useTeams() {
     if (!schoolId) return;
     try {
       setLoading(true);
-      const res = await apiClient.get('/sport/teams', { params: { schoolId } });
+      const res = await apiClient.get('/sports/teams', { params: { schoolId } });
       setTeams(unwrapArray<SportTeam>(res, 'teams'));
     } catch {
       console.error('Failed to load teams');
@@ -62,7 +62,7 @@ export function useFixtures(teamId?: string) {
       setLoading(true);
       const params: Record<string, string> = { schoolId };
       if (teamId) params.teamId = teamId;
-      const res = await apiClient.get('/sport/fixtures', { params });
+      const res = await apiClient.get('/sports/fixtures', { params });
       setFixtures(unwrapArray<SportFixture>(res, 'fixtures'));
     } catch {
       console.error('Failed to load fixtures');
@@ -86,7 +86,7 @@ export function useSeasons() {
     if (!schoolId) return;
     try {
       setLoading(true);
-      const res = await apiClient.get('/sport/seasons', { params: { schoolId } });
+      const res = await apiClient.get('/sports/seasons', { params: { schoolId } });
       setSeasons(unwrapArray<Season>(res, 'seasons'));
     } catch {
       console.error('Failed to load seasons');
@@ -110,7 +110,7 @@ export function useStandings(seasonId: string | null) {
       setLoading(true);
       const params: Record<string, string> = {};
       if (recalculate) params.recalculate = 'true';
-      const res = await apiClient.get(`/sport/seasons/${seasonId}/standings`, { params });
+      const res = await apiClient.get(`/sports/seasons/${seasonId}/standings`, { params });
       const raw = (res.data as Record<string, unknown>);
       const d = raw.data ?? raw;
       setStandings(Array.isArray(d) ? (d as SeasonStanding[]) : []);
@@ -134,7 +134,7 @@ export function useFixtureResult(fixtureId: string | null) {
     if (!fixtureId) { setResult(null); return; }
     try {
       setLoading(true);
-      const res = await apiClient.get(`/sport/fixtures/${fixtureId}/result`);
+      const res = await apiClient.get(`/sports/fixtures/${fixtureId}/result`);
       setResult(unwrapSingle<MatchResult>(res));
     } catch {
       setResult(null);
@@ -156,7 +156,7 @@ export function useAvailability(fixtureId: string | null) {
     if (!fixtureId) { setAvailability([]); return; }
     try {
       setLoading(true);
-      const res = await apiClient.get(`/sport/fixtures/${fixtureId}/availability`);
+      const res = await apiClient.get(`/sports/fixtures/${fixtureId}/availability`);
       const raw = (res.data as Record<string, unknown>);
       const d = raw.data ?? raw;
       setAvailability(Array.isArray(d) ? (d as PlayerAvailability[]) : []);
@@ -180,7 +180,7 @@ export function useMvpVotes(fixtureId: string | null) {
     if (!fixtureId) { setVotes([]); return; }
     try {
       setLoading(true);
-      const res = await apiClient.get(`/sport/fixtures/${fixtureId}/mvp`);
+      const res = await apiClient.get(`/sports/fixtures/${fixtureId}/mvp`);
       const raw = (res.data as Record<string, unknown>);
       const d = raw.data ?? raw;
       setVotes(Array.isArray(d) ? d as MvpTally[] : []);
@@ -276,7 +276,7 @@ export function useFixtureResults(fixtures: { id: string }[]) {
     const map = new Map<string, Record<string, unknown>>();
     const fetches = fixtures.map(async (f) => {
       try {
-        const res = await apiClient.get(`/sport/fixtures/${f.id}/result`);
+        const res = await apiClient.get(`/sports/fixtures/${f.id}/result`);
         const raw = res.data as Record<string, unknown>;
         const d = (raw.data ?? raw) as Record<string, unknown>;
         if (d && typeof d === 'object' && 'homeScore' in d) {

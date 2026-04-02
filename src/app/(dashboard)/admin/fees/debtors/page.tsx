@@ -26,7 +26,7 @@ export default function DebtorsPage() {
       id: 'totalOwed',
       header: 'Total Owed',
       cell: ({ row }) => (
-        <span className="font-semibold text-red-600 dark:text-red-400">
+        <span className="font-semibold text-destructive dark:text-destructive">
           {formatCurrency(row.original.totalOwed)}
         </span>
       ),

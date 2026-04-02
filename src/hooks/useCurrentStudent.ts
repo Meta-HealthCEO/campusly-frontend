@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { Student, User } from '@/types';
 
@@ -28,12 +29,14 @@ export function useCurrentStudent(): CurrentStudentResult {
       return;
     }
 
+    const userId = user.id;
+
     async function resolve() {
       try {
         const res = await apiClient.get('/students');
-        const raw = res.data.data ?? res.data;
+        const raw = unwrapResponse(res);
         const arr: Student[] = Array.isArray(raw) ? raw : raw.students ?? raw.data ?? [];
-        const match = arr.find((s) => matchUserId(s, user!.id));
+        const match = arr.find((s) => matchUserId(s, userId));
         if (match) {
           setStudent({ ...match, id: (match as unknown as { _id?: string })._id ?? match.id });
         }

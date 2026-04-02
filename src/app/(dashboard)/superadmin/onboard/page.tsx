@@ -8,8 +8,8 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { useSchoolStore } from '@/stores/useSchoolStore';
-import apiClient from '@/lib/api-client';
+import { useSchoolData } from '@/hooks/useSchoolData';
+import { useSuperAdmin } from '@/hooks/useSuperAdmin';
 import { OnboardStep1 } from '@/components/school/onboard/OnboardStep1';
 import { OnboardStep2 } from '@/components/school/onboard/OnboardStep2';
 import { OnboardStep3 } from '@/components/school/onboard/OnboardStep3';
@@ -31,7 +31,8 @@ const STEPS = [
 
 export default function SuperAdminOnboardPage() {
   const router = useRouter();
-  const { createSchool } = useSchoolStore();
+  const { createSchool } = useSchoolData();
+  const { registerAdmin } = useSuperAdmin();
 
   const [step, setStep] = useState(1);
   const [data, setData] = useState<WizardData>(DEFAULT_WIZARD_DATA);
@@ -98,7 +99,7 @@ export default function SuperAdminOnboardPage() {
         type: data.schoolType as SchoolType,
       });
 
-      await apiClient.post('/auth/register', {
+      await registerAdmin({
         firstName: data.adminFirstName,
         lastName: data.adminLastName,
         email: data.adminEmail,

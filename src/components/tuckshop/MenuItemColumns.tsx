@@ -106,7 +106,7 @@ export function getMenuItemColumns(actions: ColumnActions): ColumnDef<MenuItemWi
           className={
             row.original.isAvailable
               ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+              : 'bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive'
           }
         >
           {row.original.isAvailable ? 'Yes' : 'No'}
@@ -123,6 +123,7 @@ export function getMenuItemColumns(actions: ColumnActions): ColumnDef<MenuItemWi
             variant="ghost"
             onClick={(e) => { e.stopPropagation(); actions.onStock(row.original); }}
             title="Update stock"
+            aria-label="Update stock"
           >
             <Package className="h-3.5 w-3.5" />
           </Button>
@@ -131,6 +132,7 @@ export function getMenuItemColumns(actions: ColumnActions): ColumnDef<MenuItemWi
             variant="ghost"
             onClick={(e) => { e.stopPropagation(); actions.onEdit(row.original); }}
             title="Edit item"
+            aria-label="Edit item"
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
@@ -139,6 +141,7 @@ export function getMenuItemColumns(actions: ColumnActions): ColumnDef<MenuItemWi
             variant="ghost"
             onClick={(e) => { e.stopPropagation(); actions.onDelete(row.original); }}
             title="Delete item"
+            aria-label="Delete item"
           >
             <Trash2 className="h-3.5 w-3.5 text-destructive" />
           </Button>

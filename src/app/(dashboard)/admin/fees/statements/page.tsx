@@ -136,12 +136,12 @@ function StatementView({ studentName, statement }: { studentName: string; statem
         <CardTitle>Account Statement - {studentName}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {[
             { label: 'Total Invoiced', value: summary.totalInvoiced },
             { label: 'Total Paid', value: summary.totalPaid, className: 'text-emerald-600' },
             { label: 'Credits', value: summary.totalCredits },
-            { label: 'Outstanding', value: summary.outstanding, className: 'text-red-600' },
+            { label: 'Outstanding', value: summary.outstanding, className: 'text-destructive' },
           ].map((item) => (
             <div key={item.label} className="rounded-lg border p-4 text-center">
               <p className="text-sm text-muted-foreground">{item.label}</p>
@@ -169,7 +169,7 @@ function StatementView({ studentName, statement }: { studentName: string; statem
                     <p className="font-medium">{formatCurrency(inv.totalAmount)}</p>
                     <p className="text-sm text-emerald-600">Paid: {formatCurrency(inv.paidAmount)}</p>
                     {inv.balanceDue > 0 && (
-                      <p className="text-sm text-red-600">Balance: {formatCurrency(inv.balanceDue)}</p>
+                      <p className="text-sm text-destructive">Balance: {formatCurrency(inv.balanceDue)}</p>
                     )}
                   </div>
                 </div>

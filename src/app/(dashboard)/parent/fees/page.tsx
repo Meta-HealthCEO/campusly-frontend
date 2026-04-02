@@ -30,7 +30,7 @@ const statusStyles: Record<string, string> = {
   paid: 'bg-emerald-100 text-emerald-800',
   sent: 'bg-blue-100 text-blue-800',
   partial: 'bg-amber-100 text-amber-800',
-  overdue: 'bg-red-100 text-red-800',
+  overdue: 'bg-destructive/10 text-destructive',
   draft: 'bg-gray-100 text-gray-800',
   cancelled: 'bg-gray-100 text-gray-500',
 };
@@ -47,7 +47,7 @@ function PayDialog({ invoice, onPaid }: { invoice: Invoice; onPaid?: () => void 
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button size="sm" className="gap-1" />}>
+      <DialogTrigger render={<Button size="default" className="gap-1" />}>
         <CreditCard className="h-3.5 w-3.5" />
         Pay Now
       </DialogTrigger>
@@ -112,7 +112,7 @@ function PayDialog({ invoice, onPaid }: { invoice: Invoice; onPaid?: () => void 
               }
             }}
           >
-            Pay {payAmount ? formatCurrency(parseFloat(payAmount) * 100) : ''}
+            Pay {payAmount ? formatCurrency(parseFloat(payAmount) * 100) : 'Amount'}
           </Button>
         </div>
       </DialogContent>
@@ -153,7 +153,7 @@ function getInvoiceColumns(onRefresh?: () => void): ColumnDef<Invoice, unknown>[
     accessorKey: 'balanceDue',
     header: 'Balance',
     cell: ({ row }) => (
-      <span className={row.original.balanceDue > 0 ? 'text-red-600 font-medium' : 'text-emerald-600 font-medium'}>
+      <span className={row.original.balanceDue > 0 ? 'text-destructive font-medium' : 'text-emerald-600 font-medium'}>
         {formatCurrency(row.original.balanceDue)}
       </span>
     ),
@@ -204,7 +204,7 @@ const paymentColumns: ColumnDef<Payment, unknown>[] = [
       const styles: Record<string, string> = {
         completed: 'bg-emerald-100 text-emerald-800',
         pending: 'bg-amber-100 text-amber-800',
-        failed: 'bg-red-100 text-red-800',
+        failed: 'bg-destructive/10 text-destructive',
         refunded: 'bg-gray-100 text-gray-800',
       };
       return (

@@ -15,9 +15,9 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Plus, Trash2, Scale } from 'lucide-react';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { useSubjects, useGrades, useWeightings } from '@/hooks/useAcademics';
+import { useWeightingMutations } from '@/hooks/useAcademicMutationsExtended';
 import type { Weighting } from '@/hooks/useAcademics';
 
 const ASSESSMENT_TYPES = ['test', 'exam', 'assignment', 'practical', 'project'] as const;
@@ -25,7 +25,8 @@ const ASSESSMENT_TYPES = ['test', 'exam', 'assignment', 'practical', 'project'] 
 export function WeightingsTab() {
   const { subjects } = useSubjects();
   const { grades } = useGrades();
-  const { weightings, loading, refetch: fetchWeightings, schoolId } = useWeightings();
+  const { weightings, loading, refetch: fetchWeightings } = useWeightings();
+  const { createWeighting, deleteWeighting } = useWeightingMutations();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({
@@ -34,9 +35,8 @@ export function WeightingsTab() {
 
   async function handleSubmit() {
     try {
-      await apiClient.post('/academic/subject-weightings', {
+      await createWeighting({
         subjectId: form.subjectId,
-        schoolId,
         gradeId: form.gradeId,
         assessmentType: form.assessmentType,
         weightPercentage: Number(form.weightPercentage),
@@ -52,7 +52,7 @@ export function WeightingsTab() {
 
   async function handleDelete(id: string) {
     try {
-      await apiClient.delete(`/academic/subject-weightings/${id}`);
+      await deleteWeighting(id);
       toast.success('Weighting deleted');
       fetchWeightings();
     } catch (err: unknown) {
@@ -69,7 +69,7 @@ export function WeightingsTab() {
     {
       id: 'actions', header: '',
       cell: ({ row }) => (
-        <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(row.original.id)}>
+        <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(row.original.id)} aria-label="Delete weighting">
           <Trash2 className="h-3 w-3 text-destructive" />
         </Button>
       ),

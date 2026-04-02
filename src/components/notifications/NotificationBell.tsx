@@ -22,7 +22,7 @@ export function NotificationBell() {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         render={
-          <Button variant="ghost" size="icon" className="relative" />
+          <Button variant="ghost" size="icon" className="relative" aria-label="Notifications" />
         }
       >
         <Bell className="h-5 w-5" />

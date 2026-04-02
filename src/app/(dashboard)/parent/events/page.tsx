@@ -51,7 +51,7 @@ export default function EventsPage() {
         <div className="grid gap-4 md:grid-cols-2">
           {sortedEvents.map((event) => (
             <Card key={event.id} className="overflow-hidden">
-              <div className={`h-1.5 ${typeStyles[event.type]?.replace(/text-\S+/, '') ?? 'bg-gray-200'}`} />
+              <div className={`h-1.5 ${typeStyles[event.type]?.split(' ')[0] ?? 'bg-gray-200'}`} />
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>

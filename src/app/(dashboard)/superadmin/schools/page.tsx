@@ -20,13 +20,14 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { SuspendTenantDialog } from '@/components/superadmin/SuspendTenantDialog';
 import { useSuperAdminStore } from '@/stores/useSuperAdminStore';
+import { useSuperAdmin } from '@/hooks/useSuperAdmin';
 import { formatCurrency } from '@/lib/utils';
 import type { Tenant, TenantStatus } from '@/types';
 
 const STATUS_STYLES: Record<TenantStatus, string> = {
   active: 'bg-emerald-100 text-emerald-700',
   trial: 'bg-blue-100 text-blue-700',
-  suspended: 'bg-red-100 text-red-700',
+  suspended: 'bg-destructive/10 text-destructive',
   cancelled: 'bg-gray-100 text-gray-700',
 };
 
@@ -38,8 +39,8 @@ const TIER_STYLES: Record<string, string> = {
 
 export default function SuperAdminSchoolsPage() {
   const router = useRouter();
-  const { tenants, tenantsLoading, tenantsTotal, fetchTenants, suspendTenant, updateTenantStatus } =
-    useSuperAdminStore();
+  const { tenants, tenantsLoading, tenantsTotal } = useSuperAdminStore();
+  const { fetchTenants, suspendTenant, updateTenantStatus } = useSuperAdmin();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -200,7 +201,7 @@ export default function SuperAdminSchoolsPage() {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More options">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>

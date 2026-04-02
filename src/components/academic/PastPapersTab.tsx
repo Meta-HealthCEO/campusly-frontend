@@ -16,14 +16,15 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Plus, Trash2, FileText, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { useSubjects, useGrades, usePastPapers } from '@/hooks/useAcademics';
+import { usePastPaperMutations } from '@/hooks/useAcademicMutationsExtended';
 
 export function PastPapersTab() {
   const { subjects } = useSubjects();
   const { grades } = useGrades();
-  const { papers, loading, refetch: fetchPapers, schoolId } = usePastPapers();
+  const { papers, loading, refetch: fetchPapers } = usePastPapers();
+  const { createPastPaper, deletePastPaper } = usePastPaperMutations();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({
@@ -32,8 +33,7 @@ export function PastPapersTab() {
 
   async function handleSubmit() {
     try {
-      await apiClient.post('/academic/past-papers', {
-        schoolId,
+      await createPastPaper({
         subjectId: form.subjectId,
         gradeId: form.gradeId,
         year: Number(form.year),
@@ -50,7 +50,7 @@ export function PastPapersTab() {
 
   async function handleDelete(id: string) {
     try {
-      await apiClient.delete(`/academic/past-papers/${id}`);
+      await deletePastPaper(id);
       toast.success('Paper deleted');
       fetchPapers();
     } catch (err: unknown) {
@@ -119,6 +119,7 @@ export function PastPapersTab() {
                     variant="ghost"
                     size="icon-sm"
                     onClick={() => handleDelete(paper.id)}
+                    aria-label="Delete paper"
                   >
                     <Trash2 className="h-3 w-3 text-destructive" />
                   </Button>

@@ -19,7 +19,7 @@ import type { Attendance } from '@/types';
 
 const statusStyles: Record<string, string> = {
   present: 'bg-emerald-100 text-emerald-800',
-  absent: 'bg-red-100 text-red-800',
+  absent: 'bg-destructive/10 text-destructive',
   late: 'bg-amber-100 text-amber-800',
   excused: 'bg-blue-100 text-blue-800',
 };

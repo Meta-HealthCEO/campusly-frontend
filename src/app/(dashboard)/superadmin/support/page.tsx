@@ -9,14 +9,12 @@ import {
 import { SupportQueue } from '@/components/superadmin/SupportQueue';
 import { TicketThread } from '@/components/superadmin/TicketThread';
 import { useSuperAdminStore } from '@/stores/useSuperAdminStore';
+import { useSuperAdmin } from '@/hooks/useSuperAdmin';
 import type { SupportTicket } from '@/types';
 
 export default function SuperAdminSupportPage() {
-  const {
-    tickets, ticketsLoading, fetchTickets,
-    selectedTicket, setSelectedTicket,
-    fetchTicketDetail, replyToTicket, updateTicketStatus,
-  } = useSuperAdminStore();
+  const { tickets, ticketsLoading, selectedTicket, setSelectedTicket } = useSuperAdminStore();
+  const { fetchTickets, fetchTicketDetail, replyToTicket, updateTicketStatus } = useSuperAdmin();
 
   const [statusFilter, setStatusFilter] = useState('all');
 

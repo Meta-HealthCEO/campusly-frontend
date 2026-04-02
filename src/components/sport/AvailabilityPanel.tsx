@@ -10,7 +10,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import apiClient from '@/lib/api-client';
+import { setPlayerAvailability } from '@/hooks/useSportMutations';
 import type { PlayerAvailability, SportPlayer } from '@/types/sport';
 
 interface AvailabilityPanelProps {
@@ -26,7 +26,7 @@ type AvailStatus = 'available' | 'unavailable' | 'injured';
 
 const statusColors: Record<AvailStatus, string> = {
   available: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  unavailable: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  unavailable: 'bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive',
   injured: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
 };
 
@@ -53,7 +53,7 @@ export function AvailabilityPanel({
   async function setStatus(studentId: string, status: AvailStatus, parentConfirmed?: boolean, notes?: string) {
     setSaving(studentId);
     try {
-      await apiClient.post(`/sport/fixtures/${fixtureId}/availability`, {
+      await setPlayerAvailability(fixtureId, {
         studentId,
         schoolId,
         status,

@@ -17,7 +17,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import apiClient from '@/lib/api-client';
+import { useFeeTypeMutations, extractErrorMessage } from '@/hooks/useFeeMutations';
 import { feeTypeSchema, type FeeTypeFormData } from '@/lib/validations';
 
 interface CreateFeeTypeDialogProps {
@@ -28,6 +28,7 @@ interface CreateFeeTypeDialogProps {
 }
 
 export function CreateFeeTypeDialog({ open, onOpenChange, schoolId, onSuccess }: CreateFeeTypeDialogProps) {
+  const { createFeeType } = useFeeTypeMutations(schoolId);
   const {
     register,
     handleSubmit,
@@ -40,16 +41,13 @@ export function CreateFeeTypeDialog({ open, onOpenChange, schoolId, onSuccess }:
 
   const onSubmit = async (data: FeeTypeFormData) => {
     try {
-      await apiClient.post('/fees/types', { ...data, schoolId });
+      await createFeeType(data);
       toast.success('Fee type added successfully!');
       reset();
       onOpenChange(false);
       onSuccess();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to create fee type';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to create fee type'));
     }
   };
 

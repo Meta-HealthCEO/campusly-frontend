@@ -10,7 +10,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
-import apiClient from '@/lib/api-client';
+import { createSeason, updateSeason } from '@/hooks/useSportMutations';
 import type { Season } from '@/types/sport';
 
 interface SeasonFormDialogProps {
@@ -50,7 +50,7 @@ export function SeasonFormDialog({ open, onOpenChange, schoolId, season, onSucce
     setSubmitting(true);
     try {
       if (season) {
-        await apiClient.put(`/sport/seasons/${season.id}`, {
+        await updateSeason(season.id, {
           name: name.trim(),
           sport: sport.trim(),
           startDate: new Date(startDate).toISOString(),
@@ -59,7 +59,7 @@ export function SeasonFormDialog({ open, onOpenChange, schoolId, season, onSucce
         });
         toast.success('Season updated successfully');
       } else {
-        await apiClient.post('/sport/seasons', {
+        await createSeason({
           name: name.trim(),
           schoolId,
           sport: sport.trim(),

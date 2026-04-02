@@ -15,11 +15,9 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Plus, Trash2, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
 import { extractErrorMessage } from '@/lib/api-helpers';
-import { useAuthStore } from '@/stores/useAuthStore';
 import { useClasses, useSubjects, useStaff, useTimetable } from '@/hooks/useAcademics';
-import { cn } from '@/lib/utils';
+import { useTimetableMutations } from '@/hooks/useAcademicMutations';
 import type { TimetableSlot } from '@/types';
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as const;
@@ -33,11 +31,10 @@ interface SlotForm {
 }
 
 export function TimetableTab() {
-  const { user } = useAuthStore();
-  const schoolId = user?.schoolId ?? '';
   const { classes } = useClasses();
   const { subjects } = useSubjects();
   const { staff } = useStaff();
+  const { createSlot, deleteSlot } = useTimetableMutations();
 
   const [selectedClassId, setSelectedClassId] = useState('');
   const { entries, loading, refetch } = useTimetable(selectedClassId || undefined);
@@ -61,8 +58,7 @@ export function TimetableTab() {
   async function handleSubmit() {
     if (!selectedClassId) { toast.error('Select a class first'); return; }
     try {
-      await apiClient.post('/academic/timetable', {
-        schoolId,
+      await createSlot({
         classId: selectedClassId,
         day: form.day,
         period: Number(form.period),
@@ -82,7 +78,7 @@ export function TimetableTab() {
 
   async function handleDelete(id: string) {
     try {
-      await apiClient.delete(`/academic/timetable/${id}`);
+      await deleteSlot(id);
       toast.success('Slot deleted');
       refetch();
     } catch (err: unknown) {

@@ -14,8 +14,8 @@ import {
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
-import apiClient from '@/lib/api-client';
 import { useStudentsList, useStaffList } from '@/hooks/useSport';
+import { createTeam, updateTeam } from '@/hooks/useSportMutations';
 import type { SportTeam } from '@/types/sport';
 
 interface TeamFormDialogProps {
@@ -69,20 +69,19 @@ export function TeamFormDialog({ open, onOpenChange, schoolId, team, onSuccess }
     }
     setSubmitting(true);
     try {
-      const payload = {
+      const base = {
         name: name.trim(),
         sport: sport.trim(),
         ageGroup: ageGroup.trim() || undefined,
         coachId: coachId || undefined,
         playerIds: selectedPlayers,
         isActive,
-        ...(team ? {} : { schoolId }),
       };
       if (team) {
-        await apiClient.put(`/sport/teams/${team.id}`, payload);
+        await updateTeam(team.id, base);
         toast.success('Sport team updated successfully');
       } else {
-        await apiClient.post('/sport/teams', payload);
+        await createTeam({ ...base, schoolId });
         toast.success('Sport team created successfully');
       }
       onOpenChange(false);

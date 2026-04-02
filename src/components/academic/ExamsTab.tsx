@@ -17,10 +17,9 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Plus, Pencil, Trash2, BookOpen, Eye } from 'lucide-react';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
 import { extractErrorMessage } from '@/lib/api-helpers';
-import { useAuthStore } from '@/stores/useAuthStore';
 import { useGrades, useSubjects, useStaff, useExams, useExamSlots } from '@/hooks/useAcademics';
+import { useExamMutations, useExamSlotMutations } from '@/hooks/useAcademicMutationsExtended';
 import type { Exam, ExamSlot } from '@/hooks/useAcademics';
 import { formatDate } from '@/lib/utils';
 
@@ -29,11 +28,11 @@ const STATUS_COLORS: Record<string, 'default' | 'secondary' | 'outline'> = {
 };
 
 export function ExamsTab() {
-  const { user } = useAuthStore();
-  const schoolId = user?.schoolId ?? '';
   const { grades } = useGrades();
   const { subjects } = useSubjects();
   const { staff } = useStaff();
+  const { createExam, updateExam, deleteExam } = useExamMutations();
+  const { createExamSlot, deleteExamSlot } = useExamSlotMutations();
 
   const { exams, loading, refetch: fetchExams } = useExams();
   const [examDialogOpen, setExamDialogOpen] = useState(false);
@@ -52,15 +51,15 @@ export function ExamsTab() {
   async function handleExamSubmit() {
     try {
       const payload = {
-        schoolId, name: examForm.name, term: Number(examForm.term), year: Number(examForm.year),
+        name: examForm.name, term: Number(examForm.term), year: Number(examForm.year),
         startDate: new Date(examForm.startDate).toISOString(), endDate: new Date(examForm.endDate).toISOString(),
         status: examForm.status,
       };
       if (editingExam) {
-        await apiClient.put(`/academic/exams/${editingExam.id}`, payload);
+        await updateExam(editingExam.id, payload);
         toast.success('Exam updated');
       } else {
-        await apiClient.post('/academic/exams', payload);
+        await createExam(payload);
         toast.success('Exam created');
       }
       setExamDialogOpen(false);
@@ -71,7 +70,7 @@ export function ExamsTab() {
   }
 
   async function handleExamDelete(id: string) {
-    try { await apiClient.delete(`/academic/exams/${id}`); toast.success('Exam deleted'); fetchExams(); }
+    try { await deleteExam(id); toast.success('Exam deleted'); fetchExams(); }
     catch (err: unknown) {
       toast.error(extractErrorMessage(err, 'Failed to delete exam'));
     }
@@ -80,7 +79,7 @@ export function ExamsTab() {
   async function handleSlotSubmit() {
     if (!selectedExam) return;
     try {
-      await apiClient.post('/academic/exam-timetable', {
+      await createExamSlot({
         examId: selectedExam.id, subjectId: slotForm.subjectId, gradeId: slotForm.gradeId,
         date: new Date(slotForm.date).toISOString(), startTime: slotForm.startTime, endTime: slotForm.endTime,
         venue: slotForm.venue, invigilator: slotForm.invigilator, duration: Number(slotForm.duration),
@@ -95,7 +94,7 @@ export function ExamsTab() {
 
   async function handleSlotDelete(id: string) {
     if (!selectedExam) return;
-    try { await apiClient.delete(`/academic/exam-timetable/${id}`); toast.success('Slot deleted'); refetchSlots(); }
+    try { await deleteExamSlot(id); toast.success('Slot deleted'); refetchSlots(); }
     catch (err: unknown) {
       toast.error(extractErrorMessage(err, 'Failed to delete slot'));
     }
@@ -113,7 +112,7 @@ export function ExamsTab() {
       { accessorKey: 'invigilatorName', header: 'Invigilator' },
       { id: 'dur', header: 'Duration', accessorFn: (r) => `${r.duration} min` },
       { id: 'actions', header: '', cell: ({ row }) => (
-        <Button variant="ghost" size="icon-sm" onClick={() => handleSlotDelete(row.original.id)}><Trash2 className="h-3 w-3 text-destructive" /></Button>
+        <Button variant="ghost" size="icon-sm" onClick={() => handleSlotDelete(row.original.id)} aria-label="Delete slot"><Trash2 className="h-3 w-3 text-destructive" /></Button>
       )},
     ];
     return (
@@ -176,8 +175,8 @@ export function ExamsTab() {
                 </p>
                 <div className="flex gap-1 pt-1">
                   <Button variant="outline" size="sm" onClick={() => { setSelectedExam(exam); }}><Eye className="mr-1 h-3 w-3" /> Timetable</Button>
-                  <Button variant="ghost" size="icon-sm" onClick={() => { setEditingExam(exam); setExamForm({ name: exam.name, term: String(exam.term), year: String(exam.year), startDate: exam.startDate?.substring(0, 10) ?? '', endDate: exam.endDate?.substring(0, 10) ?? '', status: exam.status }); setExamDialogOpen(true); }}><Pencil className="h-3 w-3" /></Button>
-                  <Button variant="ghost" size="icon-sm" onClick={() => handleExamDelete(exam.id)}><Trash2 className="h-3 w-3 text-destructive" /></Button>
+                  <Button variant="ghost" size="icon-sm" onClick={() => { setEditingExam(exam); setExamForm({ name: exam.name, term: String(exam.term), year: String(exam.year), startDate: exam.startDate?.substring(0, 10) ?? '', endDate: exam.endDate?.substring(0, 10) ?? '', status: exam.status }); setExamDialogOpen(true); }} aria-label="Edit exam"><Pencil className="h-3 w-3" /></Button>
+                  <Button variant="ghost" size="icon-sm" onClick={() => handleExamDelete(exam.id)} aria-label="Delete exam"><Trash2 className="h-3 w-3 text-destructive" /></Button>
                 </div>
               </CardContent>
             </Card>

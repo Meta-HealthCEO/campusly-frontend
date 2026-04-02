@@ -6,7 +6,7 @@ import { Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import apiClient from '@/lib/api-client';
+import { castMvpVote } from '@/hooks/useSportMutations';
 import type { SportPlayer, MvpTally } from '@/types/sport';
 
 interface MvpVotePanelProps {
@@ -29,10 +29,7 @@ export function MvpVotePanel({
   async function castVote(studentId: string) {
     setVoting(true);
     try {
-      await apiClient.post(`/sport/fixtures/${fixtureId}/mvp`, {
-        studentId,
-        schoolId,
-      });
+      await castMvpVote(fixtureId, { studentId, schoolId });
       toast.success('MVP vote cast!');
       onRefresh();
     } catch (err: unknown) {

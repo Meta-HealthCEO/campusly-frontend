@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { formatDate } from '@/lib/utils';
 import type { LostReport } from '@/types';
-import { categoryLabels, categoryStyles, lostStatusStyles } from './shared-styles';
+import { categoryLabels, categoryStyles, lostStatusStyles } from '@/lib/lost-found-styles';
 import { MatchSuggestionsPanel } from './MatchSuggestionsPanel';
 import type { MatchSuggestion } from '@/hooks/useLostFound';
 

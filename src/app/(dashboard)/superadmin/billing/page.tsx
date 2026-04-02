@@ -16,23 +16,20 @@ import {
 import { RevenueChart } from '@/components/superadmin/RevenueChart';
 import { GenerateInvoiceDialog } from '@/components/superadmin/GenerateInvoiceDialog';
 import { useSuperAdminStore } from '@/stores/useSuperAdminStore';
+import { useSuperAdmin } from '@/hooks/useSuperAdmin';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { PlatformInvoice } from '@/types';
 
 const STATUS_STYLES: Record<PlatformInvoice['status'], string> = {
   paid: 'bg-emerald-100 text-emerald-700',
   sent: 'bg-blue-100 text-blue-700',
-  overdue: 'bg-red-100 text-red-700',
+  overdue: 'bg-destructive/10 text-destructive',
   draft: 'bg-gray-100 text-gray-700',
 };
 
 export default function SuperAdminBillingPage() {
-  const {
-    revenue, revenueLoading, fetchRevenue,
-    tenants, fetchTenants,
-    invoices, invoicesLoading, fetchInvoicesByTenant,
-    generateInvoice,
-  } = useSuperAdminStore();
+  const { revenue, revenueLoading, tenants, invoices, invoicesLoading } = useSuperAdminStore();
+  const { fetchRevenue, fetchTenants, fetchInvoicesByTenant, generateInvoice } = useSuperAdmin();
 
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');

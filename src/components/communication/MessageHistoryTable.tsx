@@ -62,7 +62,7 @@ export function MessageHistoryTable({
               <TableBody>
                 {messages.map((msg) => (
                   <TableRow key={msg.id}>
-                    <TableCell className="font-medium max-w-[200px] truncate">
+                    <TableCell className="font-medium max-w-[200px] truncate" title={msg.subject}>
                       {msg.subject}
                     </TableCell>
                     <TableCell><ChannelBadge channel={msg.channel} /></TableCell>

@@ -42,7 +42,7 @@ export function useFetchQuiz(): {
 } {
   const fetchFullQuiz = useCallback(async (quizId: string): Promise<Quiz> => {
     const res = await apiClient.get(`/learning/quizzes/${quizId}`);
-    const raw = unwrapResponse<Record<string, unknown>>(res);
+    const raw = unwrapResponse(res);
     return { ...raw, id: (raw._id as string) ?? (raw.id as string) } as unknown as Quiz;
   }, []);
 

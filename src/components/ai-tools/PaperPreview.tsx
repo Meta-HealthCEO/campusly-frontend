@@ -28,7 +28,7 @@ export function PaperPreview({
   const [showMemo, setShowMemo] = useState(false);
 
   return (
-    <div className="space-y-4">
+    <div className="max-w-4xl mx-auto space-y-4">
       <Card>
         <CardContent className="p-6">
           <div className="text-center space-y-1">

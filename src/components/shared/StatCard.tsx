@@ -20,10 +20,10 @@ export function StatCard({ title, value, icon: Icon, description, trend, classNa
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold">{value}</p>
+            <p className="text-2xl font-bold truncate">{value}</p>
             {description && <p className="text-xs text-muted-foreground">{description}</p>}
             {trend && (
-              <p className={cn('text-xs font-medium', trend.value >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+              <p className={cn('text-xs font-medium', trend.value >= 0 ? 'text-emerald-600' : 'text-destructive')}>
                 {trend.value >= 0 ? '↑' : '↓'} {Math.abs(trend.value)}% {trend.label}
               </p>
             )}

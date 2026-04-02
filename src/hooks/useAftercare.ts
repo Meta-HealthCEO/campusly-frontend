@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type {
   AfterCareRegistration, AfterCareAttendance, PickupAuthorization,
@@ -18,6 +19,11 @@ export type {
 } from './aftercare-types';
 export { getStudentName, getStudentGrade, getUserName } from './aftercare-types';
 
+export interface StaffOption {
+  id: string;
+  name: string;
+}
+
 export function useAftercare() {
   const { user } = useAuthStore();
   const schoolId = user?.schoolId ?? '';
@@ -29,13 +35,14 @@ export function useAftercare() {
   const [activities, setActivities] = useState<AfterCareActivity[]>([]);
   const [invoices, setInvoices] = useState<AfterCareInvoice[]>([]);
   const [students, setStudents] = useState<StudentOption[]>([]);
+  const [staffOptions, setStaffOptions] = useState<StaffOption[]>([]);
   const [loading, setLoading] = useState(true);
 
   /* ── Students (for selects) ── */
   const fetchStudents = useCallback(async () => {
     try {
       const res = await apiClient.get('/students');
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = Array.isArray(raw) ? raw : raw.students ?? raw.data ?? [];
       setStudents(
         arr.map((s: Record<string, unknown>) => {
@@ -54,11 +61,29 @@ export function useAftercare() {
     }
   }, []);
 
+  /* ── Staff (for activity supervisor selects) ── */
+  const fetchStaffOptions = useCallback(async () => {
+    try {
+      const res = await apiClient.get('/staff');
+      const raw = unwrapResponse(res);
+      const arr = Array.isArray(raw) ? raw : raw.staff ?? raw.data ?? [];
+      setStaffOptions(
+        arr.map((s: Record<string, unknown>) => ({
+          id: (s._id as string) ?? (s.id as string),
+          name: `${(s.firstName as string) ?? ''} ${(s.lastName as string) ?? ''}`.trim()
+            || ((s.email as string) ?? ''),
+        })),
+      );
+    } catch {
+      console.error('Failed to load staff');
+    }
+  }, []);
+
   /* ── Registrations ── */
   const fetchRegistrations = useCallback(async () => {
     try {
       const res = await apiClient.get('/after-care/registrations', { params: { schoolId } });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = Array.isArray(raw) ? raw : raw.registrations ?? raw.data ?? [];
       setRegistrations(arr.map(mapId));
     } catch (err: unknown) {
@@ -99,7 +124,7 @@ export function useAftercare() {
       const params: Record<string, string> = { schoolId };
       if (date) params.date = date;
       const res = await apiClient.get('/after-care/attendance', { params });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = Array.isArray(raw) ? raw : raw.attendance ?? raw.data ?? [];
       setAttendance(arr.map(mapId));
     } catch (err: unknown) {
@@ -132,7 +157,7 @@ export function useAftercare() {
       const params: Record<string, string> = { schoolId };
       if (studentId) params.studentId = studentId;
       const res = await apiClient.get('/after-care/pickup-auth', { params });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = Array.isArray(raw) ? raw : raw.authorizations ?? raw.data ?? [];
       setPickupAuths(arr.map(mapId));
     } catch (err: unknown) {
@@ -174,7 +199,7 @@ export function useAftercare() {
       const params: Record<string, string> = { schoolId };
       if (date) params.date = date;
       const res = await apiClient.get('/after-care/sign-out', { params });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = Array.isArray(raw) ? raw : raw.signOutLogs ?? raw.data ?? [];
       setSignOutLogs(arr.map(mapId));
     } catch (err: unknown) {
@@ -201,7 +226,7 @@ export function useAftercare() {
       const params: Record<string, string> = { schoolId };
       if (date) params.date = date;
       const res = await apiClient.get('/after-care/activities', { params });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = Array.isArray(raw) ? raw : raw.activities ?? raw.data ?? [];
       setActivities(arr.map(mapId));
     } catch (err: unknown) {
@@ -249,7 +274,7 @@ export function useAftercare() {
       if (filters?.status) params.status = filters.status;
       if (filters?.studentId) params.studentId = filters.studentId;
       const res = await apiClient.get('/after-care/invoices', { params });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = Array.isArray(raw) ? raw : raw.invoices ?? raw.data ?? [];
       setInvoices(arr.map(mapId));
     } catch (err: unknown) {
@@ -262,7 +287,7 @@ export function useAftercare() {
 
   const generateInvoices = async (month: number, year: number) => {
     const res = await apiClient.post('/after-care/invoices/generate', { schoolId, month, year });
-    const raw = res.data.data ?? res.data;
+    const raw = unwrapResponse(res);
     const count = Array.isArray(raw) ? raw.length : 0;
     toast.success(`Generated ${count} invoice(s)`);
     await fetchInvoices();
@@ -282,13 +307,15 @@ export function useAftercare() {
     Promise.all([
       fetchStudents(), fetchRegistrations(), fetchAttendance(today),
       fetchPickupAuths(), fetchSignOutLogs(), fetchActivities(), fetchInvoices(),
+      fetchStaffOptions(),
     ]).finally(() => setLoading(false));
   }, [schoolId, fetchStudents, fetchRegistrations, fetchAttendance,
-      fetchPickupAuths, fetchSignOutLogs, fetchActivities, fetchInvoices]);
+      fetchPickupAuths, fetchSignOutLogs, fetchActivities, fetchInvoices,
+      fetchStaffOptions]);
 
   return {
     registrations, attendance, pickupAuths, signOutLogs, activities, invoices,
-    students, loading,
+    students, staffOptions, loading,
     fetchRegistrations, createRegistration, updateRegistration, deleteRegistration,
     fetchAttendance, checkIn, checkOut,
     fetchPickupAuths, createPickupAuth, updatePickupAuth, deletePickupAuth,

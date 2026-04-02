@@ -11,7 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import apiClient from '@/lib/api-client';
+import { useFeeTypeMutations, extractErrorMessage } from '@/hooks/useFeeMutations';
 import type { FeeType } from '@/types';
 
 interface DeleteFeeTypeDialogProps {
@@ -23,21 +23,19 @@ interface DeleteFeeTypeDialogProps {
 
 export function DeleteFeeTypeDialog({ open, onOpenChange, feeType, onSuccess }: DeleteFeeTypeDialogProps) {
   const [deleting, setDeleting] = useState(false);
+  const { deleteFeeType } = useFeeTypeMutations('');
 
   const handleDelete = async () => {
     if (!feeType) return;
     const feeId = feeType._id ?? feeType.id;
     setDeleting(true);
     try {
-      await apiClient.delete(`/fees/types/${feeId}`);
+      await deleteFeeType(feeId);
       toast.success('Fee type deleted successfully!');
       onOpenChange(false);
       onSuccess();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to delete fee type';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to delete fee type'));
     } finally {
       setDeleting(false);
     }

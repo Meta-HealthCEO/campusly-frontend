@@ -13,6 +13,7 @@ import { AlertsTab } from '@/components/transport/AlertsTab';
 export default function AdminTransportPage() {
   const {
     routes, assignments, boardingLogs, alerts, loading,
+    students, fetchStudents,
     createRoute, updateRoute, deleteRoute,
     fetchAssignments, createAssignment, updateAssignment, deleteAssignment,
     fetchBoardingLogs, createBoardingLog, logAlight,
@@ -70,6 +71,8 @@ export default function AdminTransportPage() {
           <AssignmentsTab
             assignments={assignments}
             routes={routes}
+            students={students}
+            fetchStudents={fetchStudents}
             onCreateAssignment={createAssignment}
             onUpdateAssignment={updateAssignment}
             onDeleteAssignment={deleteAssignment}

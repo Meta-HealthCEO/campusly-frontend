@@ -26,7 +26,7 @@ interface SeatMapProps {
 const seatStatusStyles: Record<string, string> = {
   available: 'bg-emerald-100 text-emerald-700 border-emerald-300 hover:bg-emerald-200',
   reserved: 'bg-amber-100 text-amber-700 border-amber-300',
-  sold: 'bg-red-100 text-red-700 border-red-300',
+  sold: 'bg-destructive/10 text-destructive border-red-300',
 };
 
 export function SeatMap({ seats, loading, onCreateSeats, onReleaseSeat }: SeatMapProps) {

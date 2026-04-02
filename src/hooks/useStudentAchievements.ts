@@ -24,8 +24,9 @@ export function useStudentAchievements(): StudentAchievementsResult {
       return;
     }
 
+    const currentStudent = student;
     async function fetchData() {
-      const sid = student!._id ?? student!.id;
+      const sid = currentStudent._id ?? currentStudent.id;
       const results = await Promise.allSettled([
         apiClient.get('/achiever/achievements'),
         apiClient.get('/achiever/houses'),

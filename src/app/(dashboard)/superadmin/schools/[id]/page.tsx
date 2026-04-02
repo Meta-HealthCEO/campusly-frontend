@@ -15,19 +15,20 @@ import { SuspendTenantDialog } from '@/components/superadmin/SuspendTenantDialog
 import { MODULES } from '@/lib/constants';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useSuperAdminStore } from '@/stores/useSuperAdminStore';
+import { useSuperAdmin } from '@/hooks/useSuperAdmin';
 import type { Tenant, TenantStatus, PlatformInvoice } from '@/types';
 
 const STATUS_STYLES: Record<TenantStatus, string> = {
   active: 'bg-emerald-100 text-emerald-700',
   trial: 'bg-blue-100 text-blue-700',
-  suspended: 'bg-red-100 text-red-700',
+  suspended: 'bg-destructive/10 text-destructive',
   cancelled: 'bg-gray-100 text-gray-700',
 };
 
 const INV_STATUS_STYLES: Record<PlatformInvoice['status'], string> = {
   paid: 'bg-emerald-100 text-emerald-700',
   sent: 'bg-blue-100 text-blue-700',
-  overdue: 'bg-red-100 text-red-700',
+  overdue: 'bg-destructive/10 text-destructive',
   draft: 'bg-gray-100 text-gray-700',
 };
 
@@ -38,10 +39,11 @@ export default function TenantDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { invoices, invoicesLoading } = useSuperAdminStore();
   const {
     fetchTenantDetail, suspendTenant, updateTenantStatus,
-    updateTenantModules, invoices, invoicesLoading, fetchInvoicesByTenant,
-  } = useSuperAdminStore();
+    updateTenantModules, fetchInvoicesByTenant,
+  } = useSuperAdmin();
 
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
@@ -139,7 +141,7 @@ export default function TenantDetailPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => router.push('/superadmin/schools')}>
+        <Button variant="ghost" size="icon" onClick={() => router.push('/superadmin/schools')} aria-label="Go back">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <PageHeader

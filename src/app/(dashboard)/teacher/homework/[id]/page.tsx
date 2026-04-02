@@ -24,7 +24,7 @@ export default function TeacherHomeworkDetailPage() {
   const params = useParams();
   const homeworkId = params.id as string;
 
-  const { homework, submissions, loading, changeStatus, handleGraded } =
+  const { homework, submissions, loading, changeStatus, gradeSubmission, handleGraded } =
     useTeacherHomeworkDetail(homeworkId);
 
   if (loading) return <LoadingSpinner />;
@@ -156,6 +156,7 @@ export default function TeacherHomeworkDetailPage() {
                   submission={submission}
                   totalMarks={homework.totalMarks}
                   onGraded={handleGraded}
+                  onGradeSubmission={gradeSubmission}
                 />
               ))}
             </div>

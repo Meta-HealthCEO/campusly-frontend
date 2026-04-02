@@ -2,35 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Plus, Trash2, Calendar } from 'lucide-react';
-import { toast } from 'sonner';
-import { useAuthStore } from '@/stores/useAuthStore';
-import apiClient from '@/lib/api-client';
 import { formatDate } from '@/lib/utils';
 import { SubstituteForm } from '@/components/attendance/SubstituteForm';
-import type { SchoolClass } from '@/types';
-
-interface StaffMember {
-  id: string;
-  firstName: string;
-  lastName: string;
-}
-
-interface SubstituteRecord {
-  _id: string;
-  originalTeacherId: { _id: string; firstName?: string; lastName?: string } | string;
-  substituteTeacherId: { _id: string; firstName?: string; lastName?: string } | string;
-  date: string;
-  periods: number[];
-  reason: string;
-  classIds: ({ _id: string; name?: string } | string)[];
-  approvedBy?: { firstName?: string; lastName?: string } | string;
-  createdAt: string;
-}
+import {
+  useSubstitutes,
+  type SubstituteRecord,
+} from '@/hooks/useSubstitutes';
 
 function getTeacherName(teacher: SubstituteRecord['originalTeacherId']): string {
   if (typeof teacher === 'object' && teacher !== null) {
@@ -82,65 +63,24 @@ const columns: ColumnDef<SubstituteRecord, unknown>[] = [
 ];
 
 export default function AdminSubstitutesPage() {
-  const { user } = useAuthStore();
   const [open, setOpen] = useState(false);
-  const [records, setRecords] = useState<SubstituteRecord[]>([]);
-  const [staff, setStaff] = useState<StaffMember[]>([]);
-  const [classes, setClasses] = useState<SchoolClass[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dateFilter, setDateFilter] = useState('');
 
-  const fetchSubstitutes = async () => {
-    try {
-      const params: Record<string, string> = { schoolId: user?.schoolId ?? '' };
-      if (dateFilter) params.date = new Date(dateFilter).toISOString();
-      const res = await apiClient.get('/attendance/substitutes', { params });
-      const raw = res.data.data ?? res.data;
-      const arr = Array.isArray(raw) ? raw : raw.data ?? [];
-      setRecords(arr);
-    } catch {
-      console.error('Failed to load substitute assignments');
-    }
-  };
+  const {
+    records, staff, classes, loading,
+    fetchSubstitutes, initialize,
+    createSubstitute, deleteSubstitute,
+  } = useSubstitutes();
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const [, staffRes, classesRes] = await Promise.allSettled([
-          fetchSubstitutes(),
-          apiClient.get('/staff'),
-          apiClient.get('/academic/classes'),
-        ]);
-        if (staffRes.status === 'fulfilled') {
-          const d = staffRes.value.data.data ?? staffRes.value.data;
-          const arr = Array.isArray(d) ? d : d.data ?? [];
-          setStaff(arr.map((s: Record<string, unknown>) => {
-            const u = s.user as Record<string, unknown> | undefined;
-            return {
-              id: (s.id ?? s._id ?? s.userId) as string,
-              firstName: (u?.firstName ?? s.firstName ?? '') as string,
-              lastName: (u?.lastName ?? s.lastName ?? '') as string,
-            };
-          }));
-        }
-        if (classesRes.status === 'fulfilled') {
-          const d = classesRes.value.data.data ?? classesRes.value.data;
-          const arr = Array.isArray(d) ? d : d.data ?? [];
-          setClasses(arr.map((c: Record<string, unknown>) => ({ ...c, id: (c.id ?? c._id) as string })));
-        }
-      } catch {
-        console.error('Failed to load data');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, [user?.schoolId]);
+    initialize();
+  }, [initialize]);
 
   useEffect(() => {
     if (!loading) {
-      fetchSubstitutes();
+      fetchSubstitutes(dateFilter || undefined);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateFilter]);
 
   const handleSubmit = async (data: {
@@ -151,27 +91,8 @@ export default function AdminSubstitutesPage() {
     periods: number[];
     classIds: string[];
   }) => {
-    try {
-      await apiClient.post('/attendance/substitutes', {
-        ...data,
-        schoolId: user?.schoolId,
-      });
-      toast.success('Substitute assigned');
-      setOpen(false);
-      await fetchSubstitutes();
-    } catch {
-      toast.error('Failed to assign substitute');
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await apiClient.delete(`/attendance/substitutes/${id}`);
-      toast.success('Substitute assignment deleted');
-      await fetchSubstitutes();
-    } catch {
-      toast.error('Failed to delete assignment');
-    }
+    await createSubstitute(data);
+    setOpen(false);
   };
 
   const actionColumns: ColumnDef<SubstituteRecord, unknown>[] = [
@@ -183,8 +104,9 @@ export default function AdminSubstitutesPage() {
         <Button
           size="icon"
           variant="ghost"
-          className="text-red-500 hover:text-red-700"
-          onClick={() => handleDelete(row.original._id)}
+          className="text-destructive hover:text-destructive"
+          onClick={() => deleteSubstitute(row.original._id)}
+          aria-label="Delete substitute"
         >
           <Trash2 className="h-4 w-4" />
         </Button>

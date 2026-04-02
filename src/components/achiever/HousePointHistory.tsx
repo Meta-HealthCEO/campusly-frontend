@@ -70,7 +70,7 @@ export function HousePointHistory({ logs, total, page, onPageChange, loading, li
                         <Badge className={cn(
                           log.points >= 0
                             ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400'
-                            : 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400'
+                            : 'bg-destructive/10 text-destructive dark:bg-red-950 dark:text-destructive'
                         )}>
                           {log.points >= 0 ? '+' : ''}{log.points}
                         </Badge>

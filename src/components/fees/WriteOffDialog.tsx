@@ -14,7 +14,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import apiClient from '@/lib/api-client';
+import { useDebtMutations, extractErrorMessage } from '@/hooks/useFeeMutations';
 
 interface WriteOffDialogProps {
   open: boolean;
@@ -34,6 +34,7 @@ export function WriteOffDialog({
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { writeOff } = useDebtMutations();
 
   const handleSubmit = async () => {
     if (!amount || !reason) {
@@ -47,21 +48,14 @@ export function WriteOffDialog({
     }
     setSubmitting(true);
     try {
-      await apiClient.post('/fees/write-off', {
-        invoiceId,
-        amount: amountCents,
-        reason,
-      });
+      await writeOff({ invoiceId, amount: amountCents, reason });
       toast.success('Debt written off successfully');
       setAmount('');
       setReason('');
       onOpenChange(false);
       onSuccess();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to write off debt';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to write off debt'));
     } finally {
       setSubmitting(false);
     }

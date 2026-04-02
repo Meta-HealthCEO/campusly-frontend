@@ -232,6 +232,7 @@ function StopEditor({ stops, onAdd, onRemove, onUpdate, onMove }: {
               disabled={i === 0}
               onClick={() => onMove(i, i - 1)}
               title="Move up"
+              aria-label="Move stop up"
             >
               &#9650;
             </Button>
@@ -240,6 +241,7 @@ function StopEditor({ stops, onAdd, onRemove, onUpdate, onMove }: {
               disabled={i === stops.length - 1}
               onClick={() => onMove(i, i + 1)}
               title="Move down"
+              aria-label="Move stop down"
             >
               &#9660;
             </Button>
@@ -249,6 +251,7 @@ function StopEditor({ stops, onAdd, onRemove, onUpdate, onMove }: {
             onClick={() => onRemove(i)}
             disabled={stops.length <= 1}
             className="text-destructive"
+            aria-label="Remove stop"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>

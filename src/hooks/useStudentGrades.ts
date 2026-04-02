@@ -22,9 +22,10 @@ export function useStudentGrades(): StudentGradesResult {
       return;
     }
 
+    const currentStudent = student;
     async function fetchData() {
       try {
-        const sid = student!._id ?? student!.id;
+        const sid = currentStudent._id ?? currentStudent.id;
         const [marksRes, subjectsRes] = await Promise.allSettled([
           apiClient.get(`/academic/marks/student/${sid}`),
           apiClient.get('/academic/subjects'),

@@ -16,10 +16,9 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Plus, Pencil, Trash2, GraduationCap, ChevronDown, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
 import { extractErrorMessage } from '@/lib/api-helpers';
-import { useAuthStore } from '@/stores/useAuthStore';
 import { useGrades, useClasses, useStaff } from '@/hooks/useAcademics';
+import { useGradeMutations, useClassMutations } from '@/hooks/useAcademicMutations';
 import type { Grade, SchoolClass } from '@/types';
 import type { StaffMember } from '@/hooks/useAcademics';
 
@@ -27,11 +26,11 @@ interface GradeForm { name: string; orderIndex: string }
 interface ClassForm { name: string; teacherId: string; capacity: string }
 
 export function GradeClassesTab() {
-  const { user } = useAuthStore();
-  const schoolId = user?.schoolId ?? '';
   const { grades, loading: gradesLoading, refetch: refetchGrades } = useGrades();
   const { classes, loading: classesLoading, refetch: refetchClasses } = useClasses();
   const { staff } = useStaff();
+  const { createGrade, updateGrade, deleteGrade } = useGradeMutations();
+  const { createClass, updateClass, deleteClass } = useClassMutations();
 
   const [expandedGrade, setExpandedGrade] = useState<string | null>(null);
   const [gradeDialogOpen, setGradeDialogOpen] = useState(false);
@@ -74,12 +73,12 @@ export function GradeClassesTab() {
 
   async function handleGradeSubmit() {
     try {
-      const payload = { name: gradeForm.name, orderIndex: Number(gradeForm.orderIndex), schoolId };
+      const payload = { name: gradeForm.name, orderIndex: Number(gradeForm.orderIndex) };
       if (editingGrade) {
-        await apiClient.put(`/academic/grades/${editingGrade.id}`, payload);
+        await updateGrade(editingGrade.id, payload);
         toast.success('Grade updated');
       } else {
-        await apiClient.post('/academic/grades', payload);
+        await createGrade(payload);
         toast.success('Grade created');
       }
       setGradeDialogOpen(false);
@@ -91,7 +90,7 @@ export function GradeClassesTab() {
 
   async function handleGradeDelete(id: string) {
     try {
-      await apiClient.delete(`/academic/grades/${id}`);
+      await deleteGrade(id);
       toast.success('Grade deleted');
       refetchGrades();
     } catch (err: unknown) {
@@ -104,15 +103,14 @@ export function GradeClassesTab() {
       const payload = {
         name: classForm.name,
         gradeId: classGradeId,
-        schoolId,
         teacherId: classForm.teacherId,
         capacity: Number(classForm.capacity),
       };
       if (editingClass) {
-        await apiClient.put(`/academic/classes/${editingClass.id}`, payload);
+        await updateClass(editingClass.id, payload);
         toast.success('Class updated');
       } else {
-        await apiClient.post('/academic/classes', payload);
+        await createClass(payload);
         toast.success('Class created');
       }
       setClassDialogOpen(false);
@@ -124,7 +122,7 @@ export function GradeClassesTab() {
 
   async function handleClassDelete(id: string) {
     try {
-      await apiClient.delete(`/academic/classes/${id}`);
+      await deleteClass(id);
       toast.success('Class deleted');
       refetchClasses();
     } catch (err: unknown) {
@@ -136,7 +134,6 @@ export function GradeClassesTab() {
     const t = cls.teacher ?? cls.teacherId;
     if (typeof t === 'object' && t !== null) {
       const u = t as unknown as Record<string, unknown>;
-      // teacherId refs User directly, so firstName/lastName are on the object
       return `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim();
     }
     return '';
@@ -266,8 +263,8 @@ function GradeCardItem({ grade, gradeClasses, isExpanded, onToggle, onEditGrade,
             <Badge variant="secondary">{gradeClasses.length} classes</Badge>
           </div>
           <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-            <Button variant="ghost" size="icon-sm" onClick={onEditGrade}><Pencil className="h-3 w-3" /></Button>
-            <Button variant="ghost" size="icon-sm" onClick={onDeleteGrade}><Trash2 className="h-3 w-3 text-destructive" /></Button>
+            <Button variant="ghost" size="icon-sm" onClick={onEditGrade} aria-label="Edit grade"><Pencil className="h-3 w-3" /></Button>
+            <Button variant="ghost" size="icon-sm" onClick={onDeleteGrade} aria-label="Delete grade"><Trash2 className="h-3 w-3 text-destructive" /></Button>
           </div>
         </CardTitle>
       </CardHeader>
@@ -288,8 +285,8 @@ function GradeCardItem({ grade, gradeClasses, isExpanded, onToggle, onEditGrade,
                   </div>
                   <p className="text-xs text-muted-foreground">{getTeacherName(cls) || 'No teacher assigned'}</p>
                   <div className="flex gap-1 pt-1">
-                    <Button variant="ghost" size="icon-sm" onClick={() => onEditClass(cls)}><Pencil className="h-3 w-3" /></Button>
-                    <Button variant="ghost" size="icon-sm" onClick={() => onDeleteClass(cls.id)}><Trash2 className="h-3 w-3 text-destructive" /></Button>
+                    <Button variant="ghost" size="icon-sm" onClick={() => onEditClass(cls)} aria-label="Edit class"><Pencil className="h-3 w-3" /></Button>
+                    <Button variant="ghost" size="icon-sm" onClick={() => onDeleteClass(cls.id)} aria-label="Delete class"><Trash2 className="h-3 w-3 text-destructive" /></Button>
                   </div>
                 </div>
               ))}

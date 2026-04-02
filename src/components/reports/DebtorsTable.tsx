@@ -55,7 +55,7 @@ export function DebtorsTable({ data }: DebtorsTableProps) {
               <TableCell className="text-muted-foreground">{d.invoiceNumber}</TableCell>
               <TableCell className="text-right">{formatCurrency(d.totalAmount)}</TableCell>
               <TableCell className="text-right">{formatCurrency(d.paidAmount)}</TableCell>
-              <TableCell className="text-right font-semibold text-red-600">
+              <TableCell className="text-right font-semibold text-destructive">
                 {formatCurrency(d.outstanding)}
               </TableCell>
               <TableCell className="text-right">{d.ageDays}d</TableCell>

@@ -13,10 +13,9 @@ import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
 import { extractErrorMessage } from '@/lib/api-helpers';
-import { useAuthStore } from '@/stores/useAuthStore';
 import { useSubjects, useGrades } from '@/hooks/useAcademics';
+import { useSubjectMutations } from '@/hooks/useAcademicMutations';
 import type { Subject, Grade } from '@/types';
 
 interface SubjectRow {
@@ -45,10 +44,9 @@ function toSubjectRow(s: Subject): SubjectRow {
 }
 
 export function SubjectsTab() {
-  const { user } = useAuthStore();
-  const schoolId = user?.schoolId ?? '';
   const { subjects, loading, refetch } = useSubjects();
   const { grades } = useGrades();
+  const { createSubject, updateSubject, deleteSubject } = useSubjectMutations();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<SubjectRow | null>(null);
@@ -73,14 +71,13 @@ export function SubjectsTab() {
       const payload = {
         name: form.name,
         code: form.code,
-        schoolId,
         gradeIds: form.selectedGrades,
       };
       if (editing) {
-        await apiClient.put(`/academic/subjects/${editing.id}`, payload);
+        await updateSubject(editing.id, payload);
         toast.success('Subject updated');
       } else {
-        await apiClient.post('/academic/subjects', payload);
+        await createSubject(payload);
         toast.success('Subject created');
       }
       setDialogOpen(false);
@@ -92,7 +89,7 @@ export function SubjectsTab() {
 
   async function handleDelete(id: string) {
     try {
-      await apiClient.delete(`/academic/subjects/${id}`);
+      await deleteSubject(id);
       toast.success('Subject deleted');
       refetch();
     } catch (err: unknown) {
@@ -126,10 +123,10 @@ export function SubjectsTab() {
       header: '',
       cell: ({ row }) => (
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon-sm" onClick={() => openEdit(row.original)}>
+          <Button variant="ghost" size="icon-sm" onClick={() => openEdit(row.original)} aria-label="Edit subject">
             <Pencil className="h-3 w-3" />
           </Button>
-          <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(row.original.id)}>
+          <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(row.original.id)} aria-label="Delete subject">
             <Trash2 className="h-3 w-3 text-destructive" />
           </Button>
         </div>

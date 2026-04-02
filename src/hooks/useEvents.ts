@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import {
   mapEvent, mapRsvp, mapTicket, mapSeat, mapCheckIn, mapGalleryImage, extractArray,
@@ -15,6 +16,7 @@ import type {
   CreateEventInput,
   UpdateEventInput,
   EventType,
+  UserRef,
 } from '@/components/events/types';
 
 // ============== useEvents (list) ==============
@@ -28,7 +30,7 @@ export function useEvents(filterType?: EventType) {
       const params: Record<string, string> = {};
       if (filterType) params.eventType = filterType;
       const res = await apiClient.get('/events', { params });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       if (Array.isArray(raw)) {
         setEvents(raw.map((e: Record<string, unknown>) => mapEvent(e)));
       } else {
@@ -57,7 +59,7 @@ export function useEventDetail(eventId: string) {
     async function load() {
       try {
         const res = await apiClient.get(`/events/${eventId}`);
-        const raw = res.data.data ?? res.data;
+        const raw = unwrapResponse(res);
         setEvent(mapEvent(raw as Record<string, unknown>));
       } catch {
         console.error('Failed to load event');
@@ -78,13 +80,13 @@ export function useEventCrud() {
 
   const createEvent = async (data: Omit<CreateEventInput, 'schoolId'>) => {
     const res = await apiClient.post('/events', { ...data, schoolId });
-    const raw = res.data.data ?? res.data;
+    const raw = unwrapResponse(res);
     return mapEvent(raw as Record<string, unknown>);
   };
 
   const updateEvent = async (id: string, data: UpdateEventInput) => {
     const res = await apiClient.put(`/events/${id}`, data);
-    const raw = res.data.data ?? res.data;
+    const raw = unwrapResponse(res);
     return mapEvent(raw as Record<string, unknown>);
   };
 
@@ -105,7 +107,7 @@ export function useEventRsvps(eventId: string) {
     try {
       setLoading(true);
       const res = await apiClient.get(`/events/${eventId}/rsvps`);
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       setRsvps(extractArray(raw, 'rsvps', mapRsvp));
     } catch {
       console.error('Failed to load RSVPs');
@@ -128,7 +130,7 @@ export function useEventTickets(eventId: string) {
     try {
       setLoading(true);
       const res = await apiClient.get(`/events/${eventId}/tickets`);
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       setTickets(extractArray(raw, 'tickets', mapTicket));
     } catch {
       console.error('Failed to load tickets');
@@ -156,7 +158,7 @@ export function useEventSeats(eventId: string) {
     try {
       setLoading(true);
       const res = await apiClient.get(`/events/${eventId}/seats`);
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       setSeats(extractArray(raw, 'seats', mapSeat));
     } catch {
       console.error('Failed to load seats');
@@ -195,7 +197,7 @@ export function useEventCheckIns(eventId: string) {
     try {
       setLoading(true);
       const res = await apiClient.get(`/events/${eventId}/check-ins`);
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       setCheckIns(extractArray(raw, 'checkIns', mapCheckIn));
     } catch {
       console.error('Failed to load check-ins');
@@ -208,7 +210,7 @@ export function useEventCheckIns(eventId: string) {
     if (!eventId) return;
     try {
       const res = await apiClient.get(`/events/${eventId}/check-in/stats`);
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       setStats(raw as CheckInStats);
     } catch {
       console.error('Failed to load check-in stats');
@@ -217,7 +219,7 @@ export function useEventCheckIns(eventId: string) {
 
   const checkIn = async (qrCode: string) => {
     const res = await apiClient.post(`/events/${eventId}/check-in`, { qrCode });
-    const raw = res.data.data ?? res.data;
+    const raw = unwrapResponse(res);
     const result = mapCheckIn(raw as Record<string, unknown>);
     await fetchCheckIns();
     await fetchStats();
@@ -240,7 +242,7 @@ export function useEventGallery(eventId: string) {
     try {
       setLoading(true);
       const res = await apiClient.get(`/events/${eventId}/gallery`);
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       setImages(extractArray(raw, 'images', mapGalleryImage));
     } catch {
       console.error('Failed to load gallery');
@@ -261,4 +263,36 @@ export function useEventGallery(eventId: string) {
 
   useEffect(() => { fetchGallery(); }, [fetchGallery]);
   return { images, loading, refetch: fetchGallery, uploadImage, deleteImage };
+}
+
+// ============== useQrTicketLookup ==============
+export interface QrTicketResult {
+  id: string;
+  eventId: { _id: string; title: string; date: string; venue?: string } | string;
+  userId: UserRef | string;
+  ticketType: string;
+  price: number;
+  qrCode: string;
+  status: string;
+  purchasedAt: string;
+}
+
+export function useQrTicketLookup() {
+  const lookupQrTicket = useCallback(async (qrCode: string): Promise<QrTicketResult> => {
+    const res = await apiClient.get(`/events/tickets/qr/${qrCode.trim()}`);
+    const raw = unwrapResponse(res);
+    const r = raw as Record<string, unknown>;
+    return {
+      id: (r._id as string) ?? (r.id as string) ?? '',
+      eventId: r.eventId as QrTicketResult['eventId'],
+      userId: r.userId as UserRef | string,
+      ticketType: (r.ticketType as string) ?? 'standard',
+      price: (r.price as number) ?? 0,
+      qrCode: (r.qrCode as string) ?? '',
+      status: (r.status as string) ?? '',
+      purchasedAt: (r.purchasedAt as string) ?? '',
+    };
+  }, []);
+
+  return { lookupQrTicket };
 }

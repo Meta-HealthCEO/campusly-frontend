@@ -13,6 +13,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
 import { useLearningStore } from '@/stores/useLearningStore';
+import { useLearningApi } from '@/hooks/useLearningApi';
 import { getPopulatedName, getTeacherName } from '@/components/learning/types';
 import { useAcademicFilters } from '@/hooks/useStudentMaterials';
 import type { StudyMaterial } from '@/components/learning/types';
@@ -30,7 +31,8 @@ const typeLabels: Record<string, string> = {
 };
 
 export default function StudentMaterialsPage() {
-  const { materials, materialsLoading, fetchMaterials, recordDownload } = useLearningStore();
+  const { materials, materialsLoading } = useLearningStore();
+  const { fetchMaterials, recordDownload } = useLearningApi();
   const { subjects } = useAcademicFilters();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -62,15 +64,15 @@ export default function StudentMaterialsPage() {
     <div className="space-y-6">
       <PageHeader title="Study Materials" description="Browse study materials uploaded by your teachers." />
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <Input
-          className="w-64"
+          className="w-full sm:w-64"
           placeholder="Search materials..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <Select value={typeFilter} onValueChange={(v: unknown) => setTypeFilter(v as string)}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="All types" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="All types" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All types</SelectItem>
             <SelectItem value="notes">Notes</SelectItem>
@@ -81,7 +83,7 @@ export default function StudentMaterialsPage() {
           </SelectContent>
         </Select>
         <Select value={subjectFilter} onValueChange={(v: unknown) => setSubjectFilter(v as string)}>
-          <SelectTrigger className="w-44"><SelectValue placeholder="All subjects" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="All subjects" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All subjects</SelectItem>
             {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}

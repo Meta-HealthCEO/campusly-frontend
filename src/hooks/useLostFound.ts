@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { FoundItem, LostReport } from '@/types';
 
@@ -138,7 +139,7 @@ export function useLostFound() {
     if (!schoolId) return;
     try {
       const res = await apiClient.get('/lost-found', { params: { schoolId } });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const items: RawItem[] = Array.isArray(raw) ? raw : (raw.items ?? []);
 
       const found: FoundItem[] = [];
@@ -162,7 +163,7 @@ export function useLostFound() {
     if (!schoolId) return;
     try {
       const res = await apiClient.get('/lost-found/stats', { params: { schoolId } });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       setStats({
         totalFound: raw.totalFound ?? 0,
         totalClaimed: raw.totalClaimed ?? 0,
@@ -233,7 +234,7 @@ export function useLostFound() {
   const fetchSuggestions = async (itemId: string): Promise<MatchSuggestion[]> => {
     try {
       const res = await apiClient.get(`/lost-found/${itemId}/suggestions`);
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr: RawItem[] = Array.isArray(raw) ? raw : [];
       return arr.map((s) => ({
         id: s._id ?? s.id ?? '',
@@ -254,7 +255,7 @@ export function useLostFound() {
   /* ── Archive old items ────────────────────────────────────── */
   const archiveOldItems = async () => {
     const res = await apiClient.post('/lost-found/archive', { schoolId });
-    const raw = res.data.data ?? res.data;
+    const raw = unwrapResponse(res);
     const count = raw.archivedCount ?? 0;
     toast.success(`${count} item${count !== 1 ? 's' : ''} archived.`);
     await Promise.all([fetchItems(), fetchStats()]);

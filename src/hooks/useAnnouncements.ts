@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { toast } from 'sonner';
 
@@ -111,7 +112,7 @@ export function useAnnouncements() {
       const res = await apiClient.get('/announcements', {
         params: { schoolId, limit: 100, sort: '-createdAt' },
       });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const items = extractAnnouncements(raw);
       setAnnouncements(items);
       setTotal(
@@ -145,7 +146,7 @@ export function useActiveAnnouncements(limit = 5) {
       const res = await apiClient.get('/announcements/active', {
         params: { limit },
       });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const items = extractAnnouncements(raw);
       // Sort pinned first, then by publishedAt descending
       items.sort((a, b) => {
@@ -179,7 +180,7 @@ export function useAnnouncementCrud() {
     data: Omit<CreateAnnouncementInput, 'schoolId'>
   ): Promise<Announcement> => {
     const res = await apiClient.post('/announcements', { ...data, schoolId });
-    const raw = res.data.data ?? res.data;
+    const raw = unwrapResponse(res);
     return mapAnnouncement(raw as Record<string, unknown>);
   };
 
@@ -188,7 +189,7 @@ export function useAnnouncementCrud() {
     data: UpdateAnnouncementInput
   ): Promise<Announcement> => {
     const res = await apiClient.put(`/announcements/${id}`, data);
-    const raw = res.data.data ?? res.data;
+    const raw = unwrapResponse(res);
     return mapAnnouncement(raw as Record<string, unknown>);
   };
 
@@ -198,13 +199,13 @@ export function useAnnouncementCrud() {
 
   const publishAnnouncement = async (id: string): Promise<Announcement> => {
     const res = await apiClient.patch(`/announcements/${id}/publish`);
-    const raw = res.data.data ?? res.data;
+    const raw = unwrapResponse(res);
     return mapAnnouncement(raw as Record<string, unknown>);
   };
 
   const unpublishAnnouncement = async (id: string): Promise<Announcement> => {
     const res = await apiClient.patch(`/announcements/${id}/unpublish`);
-    const raw = res.data.data ?? res.data;
+    const raw = unwrapResponse(res);
     return mapAnnouncement(raw as Record<string, unknown>);
   };
 

@@ -34,7 +34,7 @@ export function SubscriptionBadge({ tier, expiresAt }: SubscriptionBadgeProps) {
 
   if (isExpired) {
     return (
-      <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+      <Badge className="bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive">
         Expired
       </Badge>
     );

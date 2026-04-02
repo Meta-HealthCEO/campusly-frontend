@@ -26,7 +26,7 @@ const PRIORITY_STYLES: Record<SupportTicket['priority'], string> = {
   low: 'text-gray-500',
   normal: 'text-blue-500',
   high: 'text-amber-500',
-  urgent: 'text-red-500',
+  urgent: 'text-destructive',
 };
 
 interface TicketThreadProps {

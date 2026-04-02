@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import {
   mapTemplate, mapBulkMessage, mapDeliveryStat, mapMessageLog, mapId, extractArray,
@@ -30,7 +31,7 @@ export function useTemplates() {
       const res = await apiClient.get('/communication/templates', {
         params: { schoolId },
       });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       setTemplates(extractArray(raw).map(mapTemplate));
     } catch {
       console.error('Failed to load templates');
@@ -43,7 +44,7 @@ export function useTemplates() {
 
   const createTemplate = async (data: Omit<CreateTemplateInput, 'schoolId'>) => {
     const res = await apiClient.post('/communication/templates', { ...data, schoolId });
-    const mapped = mapTemplate((res.data.data ?? res.data) as Record<string, unknown>);
+    const mapped = mapTemplate(unwrapResponse(res));
     setTemplates((prev) => [mapped, ...prev]);
     return mapped;
   };
@@ -53,7 +54,7 @@ export function useTemplates() {
     data: Partial<Omit<CreateTemplateInput, 'schoolId'>>
   ) => {
     const res = await apiClient.put(`/communication/templates/${id}`, data);
-    const mapped = mapTemplate((res.data.data ?? res.data) as Record<string, unknown>);
+    const mapped = mapTemplate(unwrapResponse(res));
     setTemplates((prev) => prev.map((t) => (t.id === id ? mapped : t)));
     return mapped;
   };
@@ -83,7 +84,7 @@ export function useBulkMessages() {
       const res = await apiClient.get('/communication/messages', {
         params: { schoolId, page: p },
       });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = extractArray(raw);
       setMessages(arr.map(mapBulkMessage));
       if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
@@ -103,7 +104,7 @@ export function useBulkMessages() {
 
   const sendMessage = async (data: Omit<SendBulkMessageInput, 'schoolId'>) => {
     const res = await apiClient.post('/communication/send', { ...data, schoolId });
-    const mapped = mapBulkMessage((res.data.data ?? res.data) as Record<string, unknown>);
+    const mapped = mapBulkMessage(unwrapResponse(res));
     setMessages((prev) => [mapped, ...prev]);
     return mapped;
   };
@@ -129,8 +130,8 @@ export function useMessageDetail(messageId: string) {
         apiClient.get(`/communication/messages/${messageId}`),
         apiClient.get(`/communication/messages/${messageId}/stats`),
       ]);
-      setMessage(mapBulkMessage((msgRes.data.data ?? msgRes.data) as Record<string, unknown>));
-      const statsRaw = statsRes.data.data ?? statsRes.data;
+      setMessage(mapBulkMessage(unwrapResponse(msgRes)));
+      const statsRaw = unwrapResponse(statsRes);
       const statsArr = Array.isArray(statsRaw) ? statsRaw : [];
       setStats(statsArr.map((s: Record<string, unknown>) => mapDeliveryStat(s)));
     } catch {
@@ -147,7 +148,7 @@ export function useMessageDetail(messageId: string) {
         `/communication/messages/${messageId}/logs`,
         { params: { page: p } }
       );
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = extractArray(raw);
       setLogs(arr.map(mapMessageLog));
       if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
@@ -182,10 +183,10 @@ export function useGradesAndClasses() {
           apiClient.get('/academic/grades'),
           apiClient.get('/academic/classes'),
         ]);
-        const gradesArr = extractArray(gradesRes.data.data ?? gradesRes.data);
+        const gradesArr = extractArray(unwrapResponse(gradesRes));
         setGrades(gradesArr.map((g) => ({ id: mapId(g), name: (g.name as string) ?? '' })));
 
-        const classesArr = extractArray(classesRes.data.data ?? classesRes.data);
+        const classesArr = extractArray(unwrapResponse(classesRes));
         setClasses(classesArr.map((c) => ({
           id: mapId(c),
           name: (c.name as string) ?? '',
@@ -212,7 +213,7 @@ export function useParentsList() {
     async function load() {
       try {
         const res = await apiClient.get('/parents');
-        const arr = extractArray(res.data.data ?? res.data);
+        const arr = extractArray(unwrapResponse(res));
         setParents(arr.map((p) => {
           const userRaw = p.user as Record<string, unknown> | undefined;
           return {

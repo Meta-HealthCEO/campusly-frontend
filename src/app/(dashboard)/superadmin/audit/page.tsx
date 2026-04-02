@@ -7,9 +7,11 @@ import { AuditTable } from '@/components/audit/AuditTable';
 import { AuditExportButton } from '@/components/audit/AuditExportButton';
 import { AuditSchoolSelector } from '@/components/audit/AuditSchoolSelector';
 import { useAuditStore } from '@/stores/useAuditStore';
+import { useAuditApi } from '@/hooks/useAuditApi';
 
 export default function SuperAdminAuditPage() {
-  const { fetchLogs, resetFilters } = useAuditStore();
+  const { resetFilters } = useAuditStore();
+  const { fetchLogs } = useAuditApi();
 
   useEffect(() => {
     resetFilters();

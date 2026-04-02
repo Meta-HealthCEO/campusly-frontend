@@ -18,7 +18,16 @@ interface LineChartProps extends ChartProps {
   lines: { key: string; color?: string; name?: string }[];
 }
 
+function NoDataMessage({ height = 300 }: { height?: number }) {
+  return (
+    <div className="flex items-center justify-center text-sm text-muted-foreground" style={{ height }}>
+      No data available
+    </div>
+  );
+}
+
 export function LineChartComponent({ data, xKey, lines, height = 300 }: LineChartProps) {
+  if (data.length === 0) return <NoDataMessage height={height} />;
   return (
     <ResponsiveContainer width="100%" height={height}>
       <RechartsLineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
@@ -41,6 +50,7 @@ interface BarChartProps extends ChartProps {
 }
 
 export function BarChartComponent({ data, xKey, bars, height = 300 }: BarChartProps) {
+  if (data.length === 0) return <NoDataMessage height={height} />;
   return (
     <ResponsiveContainer width="100%" height={height}>
       <RechartsBarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
@@ -63,6 +73,7 @@ interface PieChartProps {
 }
 
 export function PieChartComponent({ data, height = 300 }: PieChartProps) {
+  if (data.length === 0) return <NoDataMessage height={height} />;
   return (
     <ResponsiveContainer width="100%" height={height}>
       <RechartsPieChart>
@@ -83,6 +94,7 @@ interface AreaChartProps extends ChartProps {
 }
 
 export function AreaChartComponent({ data, xKey, areas, height = 300 }: AreaChartProps) {
+  if (data.length === 0) return <NoDataMessage height={height} />;
   return (
     <ResponsiveContainer width="100%" height={height}>
       <RechartsAreaChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>

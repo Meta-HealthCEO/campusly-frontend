@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from 'react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSchoolStore } from '@/stores/useSchoolStore';
+import { useSchoolData } from '@/hooks/useSchoolData';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { BottomNav } from '@/components/layout/BottomNav';
@@ -40,7 +41,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = useAuthStore((state) => state.user);
-  const { school, fetchSchool } = useSchoolStore();
+  const school = useSchoolStore((s) => s.school);
+  const { fetchSchool } = useSchoolData();
 
   // Poll for unread notification count
   useNotificationPoller();

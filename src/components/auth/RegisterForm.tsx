@@ -49,7 +49,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="schoolName">School Name</Label>
+            <Label htmlFor="schoolName">School Name <span className="text-destructive">*</span></Label>
             <Input
               id="schoolName"
               placeholder="e.g. Greenfield Primary School"
@@ -62,7 +62,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
+            <Label htmlFor="phone">Phone Number <span className="text-destructive">*</span></Label>
             <Input
               id="phone"
               type="tel"
@@ -76,7 +76,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="schoolType">School Type</Label>
+            <Label htmlFor="schoolType">School Type <span className="text-destructive">*</span></Label>
             <select
               id="schoolType"
               {...register('schoolType')}
@@ -101,7 +101,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="adminFirstName">First Name</Label>
+            <Label htmlFor="adminFirstName">First Name <span className="text-destructive">*</span></Label>
             <Input
               id="adminFirstName"
               placeholder="First name"
@@ -114,7 +114,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="adminLastName">Last Name</Label>
+            <Label htmlFor="adminLastName">Last Name <span className="text-destructive">*</span></Label>
             <Input
               id="adminLastName"
               placeholder="Last name"
@@ -127,7 +127,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
             )}
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="adminEmail">Email Address</Label>
+            <Label htmlFor="adminEmail">Email Address <span className="text-destructive">*</span></Label>
             <Input
               id="adminEmail"
               type="email"
@@ -141,7 +141,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="adminPassword">Password</Label>
+            <Label htmlFor="adminPassword">Password <span className="text-destructive">*</span></Label>
             <PasswordInput
               id="adminPassword"
               placeholder="Min. 8 characters"
@@ -150,7 +150,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Label htmlFor="confirmPassword">Confirm Password <span className="text-destructive">*</span></Label>
             <PasswordInput
               id="confirmPassword"
               placeholder="Re-enter password"
@@ -169,7 +169,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="address">Street Address</Label>
+            <Label htmlFor="address">Street Address <span className="text-destructive">*</span></Label>
             <Input
               id="address"
               placeholder="123 Main Road"
@@ -182,7 +182,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="city">City / Town</Label>
+            <Label htmlFor="city">City / Town <span className="text-destructive">*</span></Label>
             <Input
               id="city"
               placeholder="e.g. Johannesburg"
@@ -195,7 +195,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="province">Province</Label>
+            <Label htmlFor="province">Province <span className="text-destructive">*</span></Label>
             <select
               id="province"
               {...register('province')}
@@ -213,7 +213,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="postalCode">Postal Code</Label>
+            <Label htmlFor="postalCode">Postal Code <span className="text-destructive">*</span></Label>
             <Input
               id="postalCode"
               placeholder="2000"

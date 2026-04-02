@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import type { Student, StudentGrade, Invoice, Attendance } from '@/types';
 
 interface StudentProfile {
@@ -29,7 +30,7 @@ export function useStudentProfile(id: string): StudentProfile {
     setError(null);
     try {
       const res = await apiClient.get(`/students/${id}`);
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const s = normalize(raw) as unknown as Student;
       setStudent(s);
 
@@ -41,13 +42,13 @@ export function useStudentProfile(id: string): StudentProfile {
       ]);
 
       if (gradesRes.status === 'fulfilled') {
-        const gRaw = gradesRes.value.data.data ?? gradesRes.value.data;
+        const gRaw = unwrapResponse(gradesRes.value);
         const arr = Array.isArray(gRaw) ? gRaw : gRaw.marks ?? gRaw.data ?? [];
         setGrades(arr.map((g: Record<string, unknown>) => normalize(g) as unknown as StudentGrade));
       }
 
       if (invoicesRes.status === 'fulfilled') {
-        const iRaw = invoicesRes.value.data.data ?? invoicesRes.value.data;
+        const iRaw = unwrapResponse(invoicesRes.value);
         const allInvoices = Array.isArray(iRaw) ? iRaw : iRaw.invoices ?? iRaw.data ?? [];
         const studentInvoices = allInvoices.filter(
           (inv: Record<string, unknown>) => (inv.studentId as string) === id
@@ -56,7 +57,7 @@ export function useStudentProfile(id: string): StudentProfile {
       }
 
       if (attendanceRes.status === 'fulfilled') {
-        const aRaw = attendanceRes.value.data.data ?? attendanceRes.value.data;
+        const aRaw = unwrapResponse(attendanceRes.value);
         const arr = Array.isArray(aRaw) ? aRaw : aRaw.attendance ?? aRaw.data ?? [];
         setAttendance(arr.map((a: Record<string, unknown>) => normalize(a) as unknown as Attendance));
       }

@@ -41,7 +41,7 @@ const reports: ReportCard[] = [
     title: 'Debtor Analysis',
     description: 'Outstanding invoice ageing analysis with bucket classification and student details.',
     icon: AlertCircle,
-    color: 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/30',
+    color: 'text-destructive bg-destructive/10 dark:text-destructive dark:bg-red-900/30',
     href: '/admin/reports/debtors',
   },
   {

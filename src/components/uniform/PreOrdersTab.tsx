@@ -13,9 +13,9 @@ import {
 import { DataTable } from '@/components/shared/DataTable';
 import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import apiClient from '@/lib/api-client';
 import { formatDate } from '@/lib/utils';
 import { usePreOrders } from '@/hooks/useUniform';
+import { usePreOrderMutations } from '@/hooks/useUniformMutations';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { PreOrder, PreOrderStatus, PopulatedStudent, PopulatedUser, UniformItem } from './types';
 
@@ -52,6 +52,7 @@ function getItemName(item: string | UniformItem): string {
 
 export function PreOrdersTab() {
   const { preOrders, loading, fetchPreOrders } = usePreOrders();
+  const { updatePreOrderStatus, deletePreOrder, extractErrorMessage } = usePreOrderMutations();
   const [statusFilter, setStatusFilter] = useState('all');
   const [deleteDialog, setDeleteDialog] = useState<PreOrder | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -62,30 +63,24 @@ export function PreOrdersTab() {
 
   const handleStatusUpdate = useCallback(async (preOrderId: string, newStatus: PreOrderStatus) => {
     try {
-      await apiClient.patch(`/uniform/pre-orders/${preOrderId}/status`, { status: newStatus });
+      await updatePreOrderStatus(preOrderId, newStatus);
       toast.success(`Pre-order status updated to ${newStatus.replace('_', ' ')}`);
       fetchPreOrders(statusFilter);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to update pre-order status';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to update pre-order status'));
     }
-  }, [fetchPreOrders, statusFilter]);
+  }, [fetchPreOrders, statusFilter, updatePreOrderStatus, extractErrorMessage]);
 
   const confirmDelete = async () => {
     if (!deleteDialog) return;
     setDeleting(true);
     try {
-      await apiClient.delete(`/uniform/pre-orders/${deleteDialog.id}`);
+      await deletePreOrder(deleteDialog.id);
       toast.success('Pre-order deleted');
       setDeleteDialog(null);
       fetchPreOrders(statusFilter);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to delete pre-order';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to delete pre-order'));
     } finally {
       setDeleting(false);
     }

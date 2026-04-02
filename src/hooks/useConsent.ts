@@ -1,8 +1,48 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
-import type { ApiConsentForm } from '@/components/consent/types';
-import { normalizeConsentForm } from '@/components/consent/types';
+import type { ApiConsentForm, ApiConsentResponse } from '@/components/consent/types';
+import { normalizeConsentForm, normalizeConsentResponse } from '@/components/consent/types';
+
+/* ── Payload types ── */
+
+export interface CreateConsentFormPayload {
+  schoolId: string;
+  title: string;
+  type: string;
+  createdBy: string;
+  description?: string;
+  expiryDate?: string;
+  attachmentUrl?: string;
+  requiresBothParents?: boolean;
+}
+
+export interface UpdateConsentFormPayload {
+  title: string;
+  type: string;
+  description?: string;
+  requiresBothParents: boolean;
+  expiryDate?: string;
+  attachmentUrl?: string;
+}
+
+export interface SubmitConsentResponsePayload {
+  formId: string;
+  studentId: string;
+  parentId: string;
+  response: 'granted' | 'denied';
+  signature?: string;
+  notes?: string;
+}
+
+export interface ConsentResponsesResult {
+  responses: ApiConsentResponse[];
+  total: number;
+  totalPages: number;
+}
+
+/* ── Forms hook ── */
 
 export function useConsentForms(typeFilter: string) {
   const { user } = useAuthStore();
@@ -17,7 +57,7 @@ export function useConsentForms(typeFilter: string) {
       const params: Record<string, string> = { schoolId };
       if (typeFilter && typeFilter !== 'all') params.type = typeFilter;
       const res = await apiClient.get('/consent/forms', { params });
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const arr = Array.isArray(raw)
         ? raw
         : ((raw as Record<string, unknown>).forms ??
@@ -38,4 +78,47 @@ export function useConsentForms(typeFilter: string) {
   }, [fetchForms]);
 
   return { forms, loading, refetch: fetchForms, schoolId, userId };
+}
+
+/* ── Mutations hook ── */
+
+export function useConsentMutations() {
+  const createForm = async (payload: CreateConsentFormPayload): Promise<void> => {
+    await apiClient.post('/consent/forms', payload);
+  };
+
+  const updateForm = async (formId: string, payload: UpdateConsentFormPayload): Promise<void> => {
+    await apiClient.put(`/consent/forms/${formId}`, payload);
+  };
+
+  const deleteForm = async (formId: string): Promise<void> => {
+    await apiClient.delete(`/consent/forms/${formId}`);
+  };
+
+  const submitResponse = async (payload: SubmitConsentResponsePayload): Promise<void> => {
+    await apiClient.post('/consent/responses', payload);
+  };
+
+  const fetchResponses = async (
+    formId: string,
+    page: number,
+    limit: number,
+  ): Promise<ConsentResponsesResult> => {
+    const res = await apiClient.get(
+      `/consent/responses/form/${formId}`,
+      { params: { page, limit } },
+    );
+    const raw = unwrapResponse(res);
+    const arr = Array.isArray(raw)
+      ? raw
+      : (raw.responses ?? raw.data ?? []);
+    const items = (arr as Record<string, unknown>[]).map(normalizeConsentResponse);
+    return {
+      responses: items,
+      total: typeof raw.total === 'number' ? raw.total : items.length,
+      totalPages: typeof raw.totalPages === 'number' ? raw.totalPages : 1,
+    };
+  };
+
+  return { createForm, updateForm, deleteForm, submitResponse, fetchResponses };
 }

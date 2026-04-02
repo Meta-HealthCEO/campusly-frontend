@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,8 +15,10 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/utils';
-import apiClient from '@/lib/api-client';
-import type { FeeType, Student } from '@/types';
+import { useInvoiceDialogData } from '@/hooks/useFeeDialogData';
+import { useInvoiceMutations, extractErrorMessage } from '@/hooks/useFeeMutations';
+import type { FeeType } from '@/types';
+import type { FeeScheduleOption } from '@/hooks/useFeeDialogData';
 
 interface CreateInvoiceDialogProps {
   open: boolean;
@@ -25,34 +27,9 @@ interface CreateInvoiceDialogProps {
   onSuccess: () => void;
 }
 
-interface FeeScheduleOption {
-  id: string;
-  _id?: string;
-  feeTypeId: FeeType | string;
-  academicYear: number;
-  term?: number;
-  dueDate: string;
-}
-
-function extractStudents(res: { data: unknown }): Student[] {
-  const raw = (res.data as Record<string, unknown>).data ?? res.data;
-  if (Array.isArray(raw)) return raw as Student[];
-  const d = raw as Record<string, unknown>;
-  const arr = d.students ?? d.data;
-  return Array.isArray(arr) ? (arr as Student[]) : [];
-}
-
-function extractSchedules(res: { data: unknown }): FeeScheduleOption[] {
-  const raw = (res.data as Record<string, unknown>).data ?? res.data;
-  if (Array.isArray(raw)) return raw as FeeScheduleOption[];
-  const d = raw as Record<string, unknown>;
-  const arr = d.schedules ?? d.data;
-  return Array.isArray(arr) ? (arr as FeeScheduleOption[]) : [];
-}
-
 export function CreateInvoiceDialog({ open, onOpenChange, schoolId, onSuccess }: CreateInvoiceDialogProps) {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [schedules, setSchedules] = useState<FeeScheduleOption[]>([]);
+  const { students, schedules } = useInvoiceDialogData(schoolId, open && !!schoolId);
+  const { createInvoice } = useInvoiceMutations();
   const [studentId, setStudentId] = useState('');
   const [feeScheduleId, setFeeScheduleId] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -60,23 +37,6 @@ export function CreateInvoiceDialog({ open, onOpenChange, schoolId, onSuccess }:
     { description: '', amount: 0 },
   ]);
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!open || !schoolId) return;
-    async function fetchData() {
-      try {
-        const [studRes, schedRes] = await Promise.all([
-          apiClient.get('/students'),
-          apiClient.get(`/fees/schedules/school/${schoolId}`),
-        ]);
-        setStudents(extractStudents(studRes));
-        setSchedules(extractSchedules(schedRes));
-      } catch {
-        console.error('Failed to load students or schedules');
-      }
-    }
-    fetchData();
-  }, [open, schoolId]);
 
   const handleScheduleSelect = (schedId: string) => {
     setFeeScheduleId(schedId);
@@ -118,23 +78,19 @@ export function CreateInvoiceDialog({ open, onOpenChange, schoolId, onSuccess }:
     }
     setSubmitting(true);
     try {
-      const payload: Record<string, unknown> = {
+      await createInvoice({
         studentId,
         schoolId,
         feeScheduleId,
         items,
         dueDate,
-      };
-      await apiClient.post('/fees/invoices', payload);
+      });
       toast.success('Invoice created successfully!');
       resetForm();
       onOpenChange(false);
       onSuccess();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to create invoice';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to create invoice'));
     } finally {
       setSubmitting(false);
     }

@@ -11,7 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import apiClient from '@/lib/api-client';
+import { useScheduleMutations, extractErrorMessage } from '@/hooks/useFeeMutations';
 import type { FeeSchedule } from './FeeScheduleSection';
 
 interface DeleteScheduleDialogProps {
@@ -23,21 +23,19 @@ interface DeleteScheduleDialogProps {
 
 export function DeleteScheduleDialog({ open, onOpenChange, schedule, onSuccess }: DeleteScheduleDialogProps) {
   const [deleting, setDeleting] = useState(false);
+  const { deleteSchedule } = useScheduleMutations();
 
   const handleDelete = async () => {
     if (!schedule) return;
     const schedId = schedule._id ?? schedule.id;
     setDeleting(true);
     try {
-      await apiClient.delete(`/fees/schedules/${schedId}`);
+      await deleteSchedule(schedId);
       toast.success('Schedule deleted successfully!');
       onOpenChange(false);
       onSuccess();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to delete schedule';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to delete schedule'));
     } finally {
       setDeleting(false);
     }

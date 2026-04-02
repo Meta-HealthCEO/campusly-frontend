@@ -15,7 +15,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
+import { useUniformItemMutations } from '@/hooks/useUniformMutations';
 import type { UniformItem, UniformCategory } from './types';
 
 const CATEGORIES: UniformCategory[] = [
@@ -44,6 +44,7 @@ interface UniformItemFormProps {
 export function UniformItemForm({
   open, onOpenChange, editItem, schoolId, onSaved,
 }: UniformItemFormProps) {
+  const { createItem, updateItem, extractErrorMessage } = useUniformItemMutations();
   const [submitting, setSubmitting] = useState(false);
   const [category, setCategory] = useState<UniformCategory>('shirt');
   const [isAvailable, setIsAvailable] = useState(true);
@@ -106,18 +107,16 @@ export function UniformItemForm({
     setSubmitting(true);
     try {
       if (editItem) {
-        await apiClient.put(`/uniform/items/${editItem.id}`, body);
+        await updateItem(editItem.id, body);
         toast.success('Uniform item updated');
       } else {
-        await apiClient.post('/uniform/items', body);
+        await createItem(body);
         toast.success('Uniform item created');
       }
       onSaved();
       onOpenChange(false);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })
-        ?.response?.data?.message ?? 'Failed to save uniform item';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to save uniform item'));
     } finally {
       setSubmitting(false);
     }

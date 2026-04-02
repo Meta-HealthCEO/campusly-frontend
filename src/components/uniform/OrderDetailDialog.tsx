@@ -22,7 +22,7 @@ const STATUS_COLORS: Record<string, string> = {
   confirmed: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
   ready: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
   collected: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400',
-  cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  cancelled: 'bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive',
 };
 
 interface OrderDetailDialogProps {

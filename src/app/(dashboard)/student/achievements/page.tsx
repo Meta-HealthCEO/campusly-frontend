@@ -47,7 +47,7 @@ export default function StudentAchievementsPage() {
             </div>
 
             {sortedHouses.length > 0 && (
-              <div className="mt-6 grid grid-cols-4 gap-3">
+              <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {sortedHouses.map((house, i) => (
                   <div key={house.id} className={cn('rounded-lg border p-3 text-center', house.id === currentHouse.id && 'ring-2 ring-primary')}>
                     <div className="flex items-center justify-center gap-1 mb-1">

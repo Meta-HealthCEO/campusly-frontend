@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { Student, User } from '@/types';
 
@@ -38,12 +39,12 @@ export function useCurrentParent(): CurrentParentResult {
     async function resolve() {
       try {
         const res = await apiClient.get('/parents/me');
-        const raw = res.data.data ?? res.data;
+        const raw = unwrapResponse(res);
 
-        const me: ParentRecord = {
-          ...raw,
-          id: raw._id ?? raw.id,
-        };
+        const me = {
+          ...(raw as Record<string, unknown>),
+          id: (raw._id as string) ?? (raw.id as string),
+        } as unknown as ParentRecord;
         setParent(me);
 
         // childrenIds is populated with Student records by the backend

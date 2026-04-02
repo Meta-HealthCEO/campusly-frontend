@@ -13,9 +13,9 @@ import {
 import { DataTable } from '@/components/shared/DataTable';
 import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import apiClient from '@/lib/api-client';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useUniformOrders } from '@/hooks/useUniform';
+import { useUniformOrderMutations } from '@/hooks/useUniformMutations';
 import { OrderDetailDialog } from './OrderDetailDialog';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { UniformOrder, UniformOrderStatus, PopulatedStudent, PopulatedUser } from './types';
@@ -36,7 +36,7 @@ const STATUS_COLORS: Record<string, string> = {
   confirmed: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
   ready: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
   collected: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400',
-  cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  cancelled: 'bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive',
 };
 
 function getStudentName(studentId: string | PopulatedStudent): string {
@@ -55,11 +55,12 @@ function getOrderedByName(orderedBy: string | PopulatedUser): string {
 
 export function OrdersTab() {
   const { orders, loading, fetchOrders } = useUniformOrders();
+  const { updateOrderStatus, deleteOrder, extractErrorMessage } = useUniformOrderMutations();
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<UniformOrder | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteOrder, setDeleteOrder] = useState<UniformOrder | null>(null);
+  const [orderToDelete, setOrderToDelete] = useState<UniformOrder | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -68,16 +69,13 @@ export function OrdersTab() {
 
   const handleStatusUpdate = useCallback(async (orderId: string, newStatus: UniformOrderStatus) => {
     try {
-      await apiClient.patch(`/uniform/orders/${orderId}/status`, { status: newStatus });
+      await updateOrderStatus(orderId, newStatus);
       toast.success(`Order status updated to ${newStatus}`);
       fetchOrders(statusFilter);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to update order status';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to update order status'));
     }
-  }, [fetchOrders, statusFilter]);
+  }, [fetchOrders, statusFilter, updateOrderStatus, extractErrorMessage]);
 
   const handleView = useCallback((order: UniformOrder) => {
     setSelectedOrder(order);
@@ -85,23 +83,20 @@ export function OrdersTab() {
   }, []);
 
   const handleDeleteClick = useCallback((order: UniformOrder) => {
-    setDeleteOrder(order);
+    setOrderToDelete(order);
     setDeleteDialogOpen(true);
   }, []);
 
   const confirmDelete = async () => {
-    if (!deleteOrder) return;
+    if (!orderToDelete) return;
     setDeleting(true);
     try {
-      await apiClient.delete(`/uniform/orders/${deleteOrder.id}`);
+      await deleteOrder(orderToDelete.id);
       toast.success('Order deleted');
       setDeleteDialogOpen(false);
       fetchOrders(statusFilter);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to delete order';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to delete order'));
     } finally {
       setDeleting(false);
     }

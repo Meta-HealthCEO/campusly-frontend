@@ -69,13 +69,13 @@ export function FixtureCalendarView({ fixtures, onFixtureClick }: FixtureCalenda
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Button variant="outline" size="icon-sm" onClick={prevMonth}>
+        <Button variant="outline" size="icon-sm" onClick={prevMonth} aria-label="Previous month">
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <h3 className="text-sm font-semibold">
           {MONTH_NAMES[month]} {year}
         </h3>
-        <Button variant="outline" size="icon-sm" onClick={nextMonth}>
+        <Button variant="outline" size="icon-sm" onClick={nextMonth} aria-label="Next month">
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>

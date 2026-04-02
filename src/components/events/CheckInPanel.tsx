@@ -94,7 +94,7 @@ export function CheckInPanel({ checkIns, stats, loading, onCheckIn }: CheckInPan
             </Button>
           </div>
           {lastResult && (
-            <div className={`mt-3 flex items-center gap-2 rounded-lg p-3 text-sm ${lastResult.success ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+            <div className={`mt-3 flex items-center gap-2 rounded-lg p-3 text-sm ${lastResult.success ? 'bg-emerald-50 text-emerald-700' : 'bg-destructive/10 text-destructive'}`}>
               {lastResult.success ? <CheckCircle className="h-4 w-4" /> : lastResult.message.includes('already') ? <AlertTriangle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
               {lastResult.message}
             </div>

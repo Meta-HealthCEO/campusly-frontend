@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { formatDate } from '@/lib/utils';
 import type { FoundItem } from '@/types';
-import { categoryLabels, categoryStyles, foundStatusStyles } from './shared-styles';
+import { categoryLabels, categoryStyles, foundStatusStyles } from '@/lib/lost-found-styles';
 
 interface AdminFoundItemsTableProps {
   items: FoundItem[];

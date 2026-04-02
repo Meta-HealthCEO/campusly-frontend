@@ -89,7 +89,7 @@ export function AuditChangesExpander({ changes }: AuditChangesExpanderProps) {
                   <TableCell className="text-xs font-medium">
                     {change.field}
                   </TableCell>
-                  <TableCell className="text-xs text-red-600 dark:text-red-400">
+                  <TableCell className="text-xs text-destructive dark:text-destructive">
                     {formatValue(change.oldValue)}
                   </TableCell>
                   <TableCell className="text-xs text-emerald-600 dark:text-emerald-400">

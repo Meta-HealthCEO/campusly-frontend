@@ -14,7 +14,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import apiClient from '@/lib/api-client';
+import { useInvoiceMutations, extractErrorMessage } from '@/hooks/useFeeMutations';
 
 interface ApplyDiscountDialogProps {
   open: boolean;
@@ -34,6 +34,7 @@ export function ApplyDiscountDialog({
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { applyDiscount } = useInvoiceMutations();
 
   const handleSubmit = async () => {
     if (!amount || !reason) {
@@ -47,21 +48,14 @@ export function ApplyDiscountDialog({
     }
     setSubmitting(true);
     try {
-      await apiClient.post('/fees/discount', {
-        invoiceId,
-        amount: amountCents,
-        reason,
-      });
+      await applyDiscount(invoiceId, amountCents, reason);
       toast.success('Discount applied successfully');
       setAmount('');
       setReason('');
       onOpenChange(false);
       onSuccess();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to apply discount';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to apply discount'));
     } finally {
       setSubmitting(false);
     }

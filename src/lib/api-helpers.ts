@@ -9,8 +9,15 @@ export function mapId<T extends Record<string, unknown>>(item: T): T & { id: str
   return { ...item, id: (item._id as string) ?? (item.id as string) ?? '' };
 }
 
+/**
+ * Loose record type for unwrapped responses where properties are accessed
+ * dynamically and may be arrays, objects, or primitives.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ApiRecord = Record<string, any>;
+
 /** Unwrap a single-object response from the backend envelope. */
-export function unwrapResponse<T>(response: { data: { data?: unknown } }): T {
+export function unwrapResponse<T = ApiRecord>(response: { data: { data?: unknown } }): T {
   const raw = response.data.data ?? response.data;
   return raw as T;
 }

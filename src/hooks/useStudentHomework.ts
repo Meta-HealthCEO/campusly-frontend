@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import apiClient from '@/lib/api-client';
-import { unwrapList, extractErrorMessage } from '@/lib/api-helpers';
+import { unwrapList, unwrapResponse, extractErrorMessage } from '@/lib/api-helpers';
 import { useCurrentStudent } from './useCurrentStudent';
-import { normalizeHomework, normalizeSubmission } from '@/components/homework/helpers';
+import { normalizeHomework, normalizeSubmission } from '@/lib/homework-helpers';
 import type { Homework, HomeworkSubmission } from '@/types';
 
 interface StudentHomeworkListResult {
@@ -23,9 +23,10 @@ export function useStudentHomeworkList(): StudentHomeworkListResult {
       return;
     }
 
+    const currentStudent = student;
     async function fetchData() {
       try {
-        const sid = student!._id ?? student!.id;
+        const sid = currentStudent._id ?? currentStudent.id;
         const [hwRes, subRes] = await Promise.allSettled([
           apiClient.get('/homework'),
           apiClient.get(`/homework/student/${sid}/submissions`),
@@ -77,8 +78,8 @@ export function useStudentHomeworkDetail(homeworkId: string): StudentHomeworkDet
     async function fetchData() {
       try {
         const hwRes = await apiClient.get(`/homework/${homeworkId}`);
-        const hwRaw = hwRes.data.data ?? hwRes.data;
-        setHomework({ ...hwRaw, id: hwRaw._id ?? hwRaw.id });
+        const hwRaw = unwrapResponse(hwRes);
+        setHomework({ ...(hwRaw as Record<string, unknown>), id: (hwRaw._id as string) ?? (hwRaw.id as string) } as unknown as Homework);
 
         if (student) {
           const sid = student._id ?? student.id;

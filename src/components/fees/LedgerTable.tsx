@@ -1,26 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { StudentSelector } from '@/components/fees/StudentSelector';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import apiClient from '@/lib/api-client';
-
-interface LedgerEntry {
-  _id: string;
-  type: string;
-  amount: number;
-  runningBalance: number;
-  reference: string;
-  description: string;
-  relatedInvoiceId?: string;
-  createdAt: string;
-}
+import { useLedgerEntries } from '@/hooks/useFeeDialogData';
+import type { LedgerEntry } from '@/hooks/useFeeDialogData';
 
 const typeStyles: Record<string, string> = {
-  debit: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  debit: 'bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive',
   credit: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
   payment: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
   refund: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
@@ -67,7 +57,7 @@ const columns: ColumnDef<LedgerEntry>[] = [
       const t = row.original.type;
       const isCredit = ['credit', 'payment', 'refund', 'discount', 'write_off'].includes(t);
       return (
-        <span className={isCredit ? 'text-emerald-600' : 'text-red-600'}>
+        <span className={isCredit ? 'text-emerald-600' : 'text-destructive'}>
           {isCredit ? '-' : '+'}{formatCurrency(row.original.amount)}
         </span>
       );
@@ -84,31 +74,7 @@ const columns: ColumnDef<LedgerEntry>[] = [
 
 export function LedgerTable({ schoolId }: LedgerTableProps) {
   const [studentId, setStudentId] = useState('');
-  const [entries, setEntries] = useState<LedgerEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!studentId || !schoolId) {
-      setEntries([]);
-      return;
-    }
-    async function fetchLedger() {
-      setLoading(true);
-      try {
-        const response = await apiClient.get(
-          `/fees/ledger/student/${studentId}/school/${schoolId}`
-        );
-        const raw = response.data.data ?? response.data;
-        const list: LedgerEntry[] = Array.isArray(raw) ? raw : raw.entries ?? raw.data ?? [];
-        setEntries(list);
-      } catch {
-        console.error('Failed to load ledger');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchLedger();
-  }, [studentId, schoolId]);
+  const { entries, loading } = useLedgerEntries(studentId, schoolId);
 
   return (
     <div className="space-y-4">

@@ -60,7 +60,7 @@ export default function TeacherReportsPage() {
           <CardTitle>Report Card Generator</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap items-end gap-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 items-end">
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">Class</label>
               <Select

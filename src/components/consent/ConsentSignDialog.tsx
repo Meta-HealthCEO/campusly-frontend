@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { ConsentTypeBadge } from './ConsentTypeBadge';
 import { ExternalLink } from 'lucide-react';
-import apiClient from '@/lib/api-client';
+import { useConsentMutations } from '@/hooks/useConsent';
 import type { ApiConsentForm } from './types';
 
 interface ConsentSignDialogProps {
@@ -30,12 +30,13 @@ export function ConsentSignDialog({
   const [signature, setSignature] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { submitResponse } = useConsentMutations();
 
   async function handleSign() {
     if (!form) return;
     setSubmitting(true);
     try {
-      await apiClient.post('/consent/responses', {
+      await submitResponse({
         formId: form.id,
         studentId,
         parentId,

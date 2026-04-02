@@ -15,7 +15,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { StudentSelector } from '@/components/fees/StudentSelector';
-import apiClient from '@/lib/api-client';
+import { useArrangementMutations, extractErrorMessage } from '@/hooks/useFeeMutations';
 
 interface CreateArrangementDialogProps {
   open: boolean;
@@ -30,6 +30,7 @@ export function CreateArrangementDialog({
   schoolId,
   onSuccess,
 }: CreateArrangementDialogProps) {
+  const { createArrangement } = useArrangementMutations();
   const [studentId, setStudentId] = useState('');
   const [totalOutstanding, setTotalOutstanding] = useState('');
   const [numberOfInstalments, setNumberOfInstalments] = useState('');
@@ -64,7 +65,7 @@ export function CreateArrangementDialog({
 
     setSubmitting(true);
     try {
-      await apiClient.post('/fees/payment-arrangements', {
+      await createArrangement({
         studentId,
         schoolId,
         totalOutstanding: totalCents,
@@ -78,10 +79,7 @@ export function CreateArrangementDialog({
       onOpenChange(false);
       onSuccess();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to create payment arrangement';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to create payment arrangement'));
     } finally {
       setSubmitting(false);
     }

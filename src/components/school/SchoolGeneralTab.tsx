@@ -3,7 +3,7 @@
 import { toast } from 'sonner';
 import { SchoolProfileCard } from './SchoolProfileCard';
 import { SchoolSettingsForm } from './SchoolSettingsForm';
-import { useSchoolStore } from '@/stores/useSchoolStore';
+import { useSchoolData } from '@/hooks/useSchoolData';
 import type { SchoolDocument, UpdateSettingsInput } from '@/types';
 
 interface SchoolGeneralTabProps {
@@ -11,9 +11,11 @@ interface SchoolGeneralTabProps {
 }
 
 export function SchoolGeneralTab({ school }: SchoolGeneralTabProps) {
+  const { updateSettings } = useSchoolData();
+
   const handleSave = async (data: UpdateSettingsInput) => {
     try {
-      await useSchoolStore.getState().updateSettings(school.id, data);
+      await updateSettings(school.id, data);
       toast.success('Settings saved');
     } catch {
       toast.error('Failed to save settings');

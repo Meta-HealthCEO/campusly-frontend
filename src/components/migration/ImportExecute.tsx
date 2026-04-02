@@ -14,6 +14,7 @@ import {
 import { ArrowLeft, Play, Loader2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMigrationStore } from '@/stores/useMigrationStore';
+import { useMigrationApi } from '@/hooks/useMigrationApi';
 import { ImportProgress } from './ImportProgress';
 import { ImportResultsPanel } from './ImportResultsPanel';
 import { SOURCE_SYSTEM_LABELS } from '@/types/migration';
@@ -29,7 +30,8 @@ const MAX_POLL_MINUTES = 10;
 
 export function ImportExecute({ jobId, onBack, onNewImport }: ImportExecuteProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const { activeJob, activeJobLoading, executeImport, pollStatus } = useMigrationStore();
+  const { activeJob, activeJobLoading } = useMigrationStore();
+  const { executeImport, pollStatus } = useMigrationApi();
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollStartRef = useRef<number>(0);
 

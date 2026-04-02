@@ -70,7 +70,7 @@ export default function TuckshopPage() {
                 {co.allergens.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {co.allergens.map((allergen) => (
-                      <Badge key={allergen} variant="secondary" className="bg-red-100 text-red-800 px-3 py-1">
+                      <Badge key={allergen} variant="secondary" className="bg-destructive/10 text-destructive px-3 py-1">
                         <AlertTriangle className="h-3 w-3 mr-1" />{allergen.charAt(0).toUpperCase() + allergen.slice(1)}
                       </Badge>
                     ))}
@@ -101,27 +101,7 @@ export default function TuckshopPage() {
               </CardHeader>
               <CardContent>
                 {co.orders.length > 0 ? (
-                  <>
-                    <div className="space-y-3 mb-6">
-                      {co.orders.map((order) => (
-                        <div key={order.id} className="rounded-lg border p-4 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium">{formatDate(order.createdAt, 'EEEE, dd MMM yyyy')}</p>
-                            <span className="font-semibold">{formatCurrency(order.totalAmount)}</span>
-                          </div>
-                          <div className="space-y-1">
-                            {order.items?.map((item, idx) => (
-                              <div key={item.id ?? idx} className="flex items-center justify-between text-sm text-muted-foreground">
-                                <span>{item.item?.name ?? 'Item'} x{item.quantity}</span>
-                                <span>{formatCurrency(item.price * item.quantity)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <DataTable columns={orderColumns} data={co.orders} searchKey="createdAt" searchPlaceholder="Search orders..." />
-                  </>
+                  <DataTable columns={orderColumns} data={co.orders} searchKey="createdAt" searchPlaceholder="Search orders..." />
                 ) : (
                   <EmptyState icon={ShoppingBag} title="No orders yet" description={`${co.firstName} has not made any tuckshop purchases yet.`} />
                 )}

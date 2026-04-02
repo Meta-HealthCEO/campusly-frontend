@@ -5,11 +5,13 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ProgressDashboard } from '@/components/learning/ProgressDashboard';
 import { useLearningStore } from '@/stores/useLearningStore';
+import { useLearningApi } from '@/hooks/useLearningApi';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 
 export default function StudentProgressPage() {
   const { student, loading: studentLoading } = useCurrentStudent();
-  const { studentProgress, progressLoading, fetchStudentProgress } = useLearningStore();
+  const { studentProgress, progressLoading } = useLearningStore();
+  const { fetchStudentProgress } = useLearningApi();
 
   useEffect(() => {
     if (!student) return;

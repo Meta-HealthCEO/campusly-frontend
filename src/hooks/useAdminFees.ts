@@ -268,14 +268,7 @@ export function useFeeSchedules(schoolId: string) {
     if (!schoolId) return;
     try {
       const res = await apiClient.get(`/fees/schedules/school/${schoolId}`);
-      const raw = (res.data as Record<string, unknown>).data ?? res.data;
-      if (Array.isArray(raw)) {
-        setSchedules(raw as FeeScheduleData[]);
-      } else {
-        const d = raw as Record<string, unknown>;
-        const arr = d.schedules ?? d.data;
-        setSchedules(Array.isArray(arr) ? (arr as FeeScheduleData[]) : []);
-      }
+      setSchedules(unwrapList<FeeScheduleData>(res, 'schedules'));
     } catch {
       console.error('Failed to load fee schedules');
     } finally {
@@ -291,14 +284,7 @@ export function useFeeSchedules(schoolId: string) {
           fetchSchedules(),
           apiClient.get('/academic/grades'),
         ]);
-        const raw = (gradeRes.data as Record<string, unknown>).data ?? gradeRes.data;
-        if (Array.isArray(raw)) {
-          setGrades(raw as Grade[]);
-        } else {
-          const d = raw as Record<string, unknown>;
-          const arr = d.grades ?? d.data;
-          setGrades(Array.isArray(arr) ? (arr as Grade[]) : []);
-        }
+        setGrades(unwrapList<Grade>(gradeRes, 'grades'));
       } catch {
         console.error('Failed to load grades');
       }

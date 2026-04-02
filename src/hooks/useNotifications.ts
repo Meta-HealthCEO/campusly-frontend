@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { notificationsApi } from '@/lib/notifications-api';
+import { unwrapResponse } from '@/lib/api-helpers';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import type {
   AppNotification,
@@ -47,7 +48,7 @@ export function useNotifications() {
   const fetchUnreadCount = useCallback(async () => {
     try {
       const res = await notificationsApi.getUnreadCount();
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const count = typeof raw === 'number' ? raw : (raw.count as number) ?? 0;
       store.setUnreadCount(count);
     } catch {
@@ -60,7 +61,7 @@ export function useNotifications() {
       store.setLoading(true);
       try {
         const res = await notificationsApi.list(params);
-        const raw = res.data.data ?? res.data;
+        const raw = unwrapResponse(res);
         const notifArray = raw.notifications ?? raw;
         const notifications: AppNotification[] = Array.isArray(notifArray)
           ? notifArray.map((n: Record<string, unknown>) => mapNotification(n))
@@ -121,7 +122,7 @@ export function useNotifications() {
     store.setPreferencesLoading(true);
     try {
       const res = await notificationsApi.getPreferences();
-      const raw = res.data.data ?? res.data;
+      const raw = unwrapResponse(res);
       const prefs = mapPreference(raw as Record<string, unknown>);
       store.setPreferences(prefs);
       return prefs;
@@ -144,7 +145,7 @@ export function useNotifications() {
       }
       try {
         const res = await notificationsApi.updatePreferences({ [field]: value });
-        const raw = res.data.data ?? res.data;
+        const raw = unwrapResponse(res);
         const prefs = mapPreference(raw as Record<string, unknown>);
         store.setPreferences(prefs);
         toast.success('Preference updated');

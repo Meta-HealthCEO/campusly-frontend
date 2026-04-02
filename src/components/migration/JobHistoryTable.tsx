@@ -15,6 +15,7 @@ import {
 import { Filter } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useMigrationStore } from '@/stores/useMigrationStore';
+import { useMigrationApi } from '@/hooks/useMigrationApi';
 import { JobDetailDialog } from './JobDetailDialog';
 import type { MigrationJob, MigrationStatus, PerformedByUser } from '@/types/migration';
 import { SOURCE_SYSTEM_LABELS, STATUS_COLORS } from '@/types/migration';
@@ -101,8 +102,8 @@ export function JobHistoryTable() {
     jobsLoading,
     jobsStatusFilter,
     setJobsStatusFilter,
-    fetchHistory,
   } = useMigrationStore();
+  const { fetchHistory } = useMigrationApi();
   const [selectedJob, setSelectedJob] = useState<MigrationJob | null>(null);
 
   useEffect(() => {

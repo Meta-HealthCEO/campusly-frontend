@@ -84,7 +84,7 @@ export function getCatalogColumns(actions: CatalogColumnActions): ColumnDef<Unif
           className={
             row.original.isAvailable
               ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+              : 'bg-destructive/10 text-destructive dark:bg-red-900/30 dark:text-destructive'
           }
         >
           {row.original.isAvailable ? 'Yes' : 'No'}
@@ -101,6 +101,7 @@ export function getCatalogColumns(actions: CatalogColumnActions): ColumnDef<Unif
             variant="ghost"
             onClick={(e) => { e.stopPropagation(); actions.onSizeGuide(row.original); }}
             title="Size guide"
+            aria-label="Size guide"
           >
             <Ruler className="h-3.5 w-3.5" />
           </Button>
@@ -109,6 +110,7 @@ export function getCatalogColumns(actions: CatalogColumnActions): ColumnDef<Unif
             variant="ghost"
             onClick={(e) => { e.stopPropagation(); actions.onToggleAvailability(row.original); }}
             title="Toggle availability"
+            aria-label="Toggle availability"
           >
             {row.original.isAvailable
               ? <ToggleRight className="h-3.5 w-3.5 text-emerald-600" />
@@ -120,6 +122,7 @@ export function getCatalogColumns(actions: CatalogColumnActions): ColumnDef<Unif
             variant="ghost"
             onClick={(e) => { e.stopPropagation(); actions.onEdit(row.original); }}
             title="Edit item"
+            aria-label="Edit item"
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
@@ -128,6 +131,7 @@ export function getCatalogColumns(actions: CatalogColumnActions): ColumnDef<Unif
             variant="ghost"
             onClick={(e) => { e.stopPropagation(); actions.onDelete(row.original); }}
             title="Delete item"
+            aria-label="Delete item"
           >
             <Trash2 className="h-3.5 w-3.5 text-destructive" />
           </Button>

@@ -49,7 +49,7 @@ export function useTeacherHomeworkDetail(homeworkId: string) {
         ]);
 
         if (hwRes.status === 'fulfilled') {
-          const raw = unwrapResponse<Record<string, unknown>>(hwRes.value);
+          const raw = unwrapResponse(hwRes.value);
           const subjectObj =
             typeof raw.subjectId === 'object' ? raw.subjectId as Record<string, unknown> : null;
           const classObj =
@@ -105,13 +105,28 @@ export function useTeacherHomeworkDetail(homeworkId: string) {
     [homeworkId],
   );
 
+  const gradeSubmission = useCallback(
+    async (submissionId: string, body: { mark: number; feedback?: string }): Promise<SubmissionItem> => {
+      const res = await apiClient.patch(
+        `/homework/submissions/${submissionId}/grade`,
+        body,
+      );
+      const updated = unwrapResponse(res);
+      return {
+        ...updated,
+        id: (updated._id as string) ?? (updated.id as string) ?? submissionId,
+      } as unknown as SubmissionItem;
+    },
+    [],
+  );
+
   const handleGraded = useCallback((updated: SubmissionItem) => {
     setSubmissions((prev) =>
       prev.map((s) => (s.id === updated.id ? { ...s, ...updated } : s)),
     );
   }, []);
 
-  return { homework, submissions, loading, changeStatus, handleGraded };
+  return { homework, submissions, loading, changeStatus, gradeSubmission, handleGraded };
 }
 
 export type { HomeworkDetail, SubmissionItem };

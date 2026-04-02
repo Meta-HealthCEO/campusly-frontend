@@ -8,19 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Ticket } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
+import { useQrTicketLookup } from '@/hooks/useEvents';
+import type { QrTicketResult } from '@/hooks/useEvents';
 import type { UserRef } from './types';
-
-interface QrTicketResult {
-  id: string;
-  eventId: { _id: string; title: string; date: string; venue?: string } | string;
-  userId: UserRef | string;
-  ticketType: string;
-  price: number;
-  qrCode: string;
-  status: string;
-  purchasedAt: string;
-}
 
 function getUserName(u: UserRef | string): string {
   if (typeof u === 'string') return u;
@@ -31,6 +21,7 @@ export function QrLookupPanel() {
   const [qrCode, setQrCode] = useState('');
   const [result, setResult] = useState<QrTicketResult | null>(null);
   const [searching, setSearching] = useState(false);
+  const { lookupQrTicket } = useQrTicketLookup();
 
   const handleSearch = async () => {
     if (!qrCode.trim()) {
@@ -40,19 +31,8 @@ export function QrLookupPanel() {
     setSearching(true);
     setResult(null);
     try {
-      const res = await apiClient.get(`/events/tickets/qr/${qrCode.trim()}`);
-      const raw = res.data.data ?? res.data;
-      const r = raw as Record<string, unknown>;
-      setResult({
-        id: (r._id as string) ?? (r.id as string) ?? '',
-        eventId: r.eventId as QrTicketResult['eventId'],
-        userId: r.userId as UserRef | string,
-        ticketType: (r.ticketType as string) ?? 'standard',
-        price: (r.price as number) ?? 0,
-        qrCode: (r.qrCode as string) ?? '',
-        status: (r.status as string) ?? '',
-        purchasedAt: (r.purchasedAt as string) ?? '',
-      });
+      const ticket = await lookupQrTicket(qrCode);
+      setResult(ticket);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
         ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
@@ -70,7 +50,7 @@ export function QrLookupPanel() {
   const statusStyles: Record<string, string> = {
     active: 'bg-emerald-100 text-emerald-700',
     used: 'bg-blue-100 text-blue-700',
-    cancelled: 'bg-red-100 text-red-700',
+    cancelled: 'bg-destructive/10 text-destructive',
   };
 
   return (

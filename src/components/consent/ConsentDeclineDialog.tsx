@@ -9,7 +9,7 @@ import {
   Dialog, DialogContent, DialogHeader,
   DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
-import apiClient from '@/lib/api-client';
+import { useConsentMutations } from '@/hooks/useConsent';
 import type { ApiConsentForm } from './types';
 
 interface ConsentDeclineDialogProps {
@@ -26,12 +26,13 @@ export function ConsentDeclineDialog({
 }: ConsentDeclineDialogProps) {
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { submitResponse } = useConsentMutations();
 
   async function handleDecline() {
     if (!form) return;
     setSubmitting(true);
     try {
-      await apiClient.post('/consent/responses', {
+      await submitResponse({
         formId: form.id,
         studentId,
         parentId,

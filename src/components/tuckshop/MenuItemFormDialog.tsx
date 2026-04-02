@@ -16,7 +16,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
+import { useTuckShopMenuMutations } from '@/hooks/useTuckShop';
 import type { TuckshopItem } from '@/types';
 
 const CATEGORIES = ['snack', 'drink', 'meal', 'stationery', 'other'] as const;
@@ -53,6 +53,7 @@ interface MenuItemFormDialogProps {
 export function MenuItemFormDialog({
   open, onOpenChange, editItem, schoolId, onSaved,
 }: MenuItemFormDialogProps) {
+  const { createMenuItem, updateMenuItem, extractErrorMessage } = useTuckShopMenuMutations();
   const [submitting, setSubmitting] = useState(false);
   const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
   const [category, setCategory] = useState('snack');
@@ -156,18 +157,16 @@ export function MenuItemFormDialog({
     setSubmitting(true);
     try {
       if (editItem) {
-        await apiClient.put(`/tuck-shop/menu/${editItem.id}`, body);
+        await updateMenuItem(editItem.id, body);
         toast.success('Menu item updated');
       } else {
-        await apiClient.post('/tuck-shop/menu', body);
+        await createMenuItem(body);
         toast.success('Menu item created');
       }
       onSaved();
       onOpenChange(false);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })
-        ?.response?.data?.message ?? 'Failed to save menu item';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to save menu item'));
     } finally {
       setSubmitting(false);
     }

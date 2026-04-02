@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/useAuthStore';
-import apiClient from '@/lib/api-client';
+import { useTuckShopMenu, useTuckShopMenuMutations } from '@/hooks/useTuckShop';
 import type { TuckshopItem } from '@/types';
 import { getMenuItemColumns } from '@/components/tuckshop/MenuItemColumns';
 import { MenuItemFormDialog } from '@/components/tuckshop/MenuItemFormDialog';
@@ -24,7 +24,8 @@ import { DailySalesReport } from '@/components/tuckshop/DailySalesReport';
 export default function TuckshopPage() {
   const { user } = useAuthStore();
   const schoolId = user?.schoolId ?? '';
-  const [menuItems, setMenuItems] = useState<TuckshopItem[]>([]);
+  const { menuItems, fetchMenu } = useTuckShopMenu();
+  const { deleteMenuItem, extractErrorMessage } = useTuckShopMenuMutations();
   const [loading, setLoading] = useState(true);
 
   // Dialog states
@@ -39,23 +40,9 @@ export default function TuckshopPage() {
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
 
   const fetchMenuItems = useCallback(async () => {
-    try {
-      const response = await apiClient.get('/tuck-shop/menu');
-      const raw = response.data.data ?? response.data;
-      const list = Array.isArray(raw) ? raw : raw.items ?? raw.data ?? [];
-      setMenuItems(
-        list.map((item: Record<string, unknown>) => ({
-          ...item,
-          id: (item._id as string) ?? (item.id as string),
-          stockCount: item.stock as number ?? 0,
-        })),
-      );
-    } catch {
-      console.error('Failed to load menu items');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    await fetchMenu();
+    setLoading(false);
+  }, [fetchMenu]);
 
   useEffect(() => {
     fetchMenuItems();
@@ -75,14 +62,12 @@ export default function TuckshopPage() {
     if (!deleteItem) return;
     setDeleting(true);
     try {
-      await apiClient.delete(`/tuck-shop/menu/${deleteItem.id}`);
+      await deleteMenuItem(deleteItem.id);
       toast.success('Menu item deleted');
       setDeleteDialogOpen(false);
       fetchMenuItems();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })
-        ?.response?.data?.message ?? 'Failed to delete item';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to delete item'));
     } finally {
       setDeleting(false);
     }

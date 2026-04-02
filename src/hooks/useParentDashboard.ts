@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import apiClient from '@/lib/api-client';
-import { unwrapList } from '@/lib/api-helpers';
+import { unwrapList, unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useCurrentParent } from './useCurrentParent';
 import type { Invoice, Notification, Wallet, StudentGrade } from '@/types';
@@ -68,8 +68,10 @@ export function useParentDashboard(): ParentDashboardResult {
         // Build per-child data
         const data: ChildDashboardData[] = children.map((child, i) => {
           // Wallet
-          const walletRaw = walletResults[i]?.data?.data ?? walletResults[i]?.data;
-          const wallet: Wallet | null = walletRaw?.wallet ?? walletRaw ?? null;
+          const walletRaw = walletResults[i]
+            ? unwrapResponse(walletResults[i] as { data: { data?: unknown } })
+            : null;
+          const wallet: Wallet | null = (walletRaw as Record<string, unknown>)?.wallet as Wallet ?? walletRaw as Wallet ?? null;
 
           // Unpaid invoice
           const unpaid = allInvoices.find(

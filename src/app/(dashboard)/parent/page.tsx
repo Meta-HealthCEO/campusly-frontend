@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCard } from '@/components/shared/StatCard';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { EmptyState } from '@/components/shared/EmptyState';
 import {
   Users, Wallet, GraduationCap, CreditCard, Bell,
   ArrowRight, BookOpen, TrendingUp, Calendar,
@@ -30,7 +31,7 @@ export default function ParentDashboard() {
     info: 'bg-blue-100 text-blue-800',
     success: 'bg-emerald-100 text-emerald-800',
     warning: 'bg-amber-100 text-amber-800',
-    error: 'bg-red-100 text-red-800',
+    error: 'bg-destructive/10 text-destructive',
   };
 
   if (loading) return <LoadingSpinner />;
@@ -61,6 +62,9 @@ export default function ParentDashboard() {
 
       <div>
         <h2 className="text-lg font-semibold mb-4">My Children</h2>
+        {childData.length === 0 ? (
+          <EmptyState icon={Users} title="No children linked" description="No children are linked to your account yet. Please contact the school to link your children." />
+        ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {childData.map((cd) => (
             <Card key={cd.childId}>
@@ -110,6 +114,7 @@ export default function ParentDashboard() {
             </Card>
           ))}
         </div>
+        )}
       </div>
 
       <AnnouncementBanner limit={3} />

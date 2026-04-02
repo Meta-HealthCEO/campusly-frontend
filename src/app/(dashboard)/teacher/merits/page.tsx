@@ -62,7 +62,7 @@ const meritColumns: ColumnDef<MeritRecord, unknown>[] = [
     accessorKey: 'points',
     header: 'Points',
     cell: ({ row }) => (
-      <span className={`font-semibold ${row.original.type === 'merit' ? 'text-emerald-600' : 'text-red-600'}`}>
+      <span className={`font-semibold ${row.original.type === 'merit' ? 'text-emerald-600' : 'text-destructive'}`}>
         {row.original.type === 'merit' ? '+' : '-'}{row.original.points}
       </span>
     ),
@@ -116,7 +116,7 @@ export default function TeacherMeritsPage() {
 
       <div className="flex flex-wrap gap-3">
         <Select value={typeFilter} onValueChange={(val) => setTypeFilter(val === 'all' ? '' : val as string)}>
-          <SelectTrigger className="w-36">
+          <SelectTrigger className="w-full sm:w-36">
             <SelectValue placeholder="Filter type" />
           </SelectTrigger>
           <SelectContent>
@@ -126,7 +126,7 @@ export default function TeacherMeritsPage() {
           </SelectContent>
         </Select>
         <Select value={categoryFilter} onValueChange={(val) => setCategoryFilter(val === 'all' ? '' : val as string)}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-full sm:w-40">
             <SelectValue placeholder="Filter category" />
           </SelectTrigger>
           <SelectContent>

@@ -13,9 +13,9 @@ import {
 import { DataTable } from '@/components/shared/DataTable';
 import { toast } from 'sonner';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import apiClient from '@/lib/api-client';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useSecondHand } from '@/hooks/useUniform';
+import { useSecondHandMutations } from '@/hooks/useUniformMutations';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { SecondHandListing, SecondHandCondition, PopulatedUser } from './types';
 
@@ -48,6 +48,7 @@ function getParentName(parentId: string | PopulatedUser): string {
 
 export function SecondHandTab() {
   const { listings, loading, fetchListings } = useSecondHand();
+  const { markSold: markListingSold, extractErrorMessage } = useSecondHandMutations();
   const [statusFilter, setStatusFilter] = useState('all');
   const [soldDialog, setSoldDialog] = useState<SecondHandListing | null>(null);
 
@@ -57,17 +58,14 @@ export function SecondHandTab() {
 
   const markSold = useCallback(async (listing: SecondHandListing) => {
     try {
-      await apiClient.patch(`/uniform/second-hand/${listing.id}/sold`);
+      await markListingSold(listing.id);
       toast.success('Listing marked as sold');
       fetchListings(statusFilter);
       setSoldDialog(null);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to mark as sold';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to mark as sold'));
     }
-  }, [fetchListings, statusFilter]);
+  }, [fetchListings, statusFilter, markListingSold, extractErrorMessage]);
 
   const columns: ColumnDef<SecondHandListing, unknown>[] = useMemo(() => [
     {

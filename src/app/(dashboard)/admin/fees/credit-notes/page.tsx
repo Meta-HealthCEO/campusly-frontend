@@ -75,7 +75,7 @@ export default function CreditNotesPage() {
             <Button
               size="sm"
               variant="outline"
-              className="text-red-600"
+              className="text-destructive"
               onClick={() => approveRejectCreditNote(row.original._id, 'rejected')}
             >
               Reject
