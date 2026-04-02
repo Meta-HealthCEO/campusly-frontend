@@ -32,3 +32,4 @@ export * from './ai-sports';
 export * from './notice-board';
 export * from './digest';
 export * from './accounting';
+export * from './student-360';

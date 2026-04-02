@@ -28,3 +28,34 @@ export interface DisciplineRecord {
   reportedBy: User;
   date: string;
 }
+
+// ─── Chronic Absence Types ─────────────────────────────────────────────────
+
+export interface ChronicAbsentee {
+  studentId: string;
+  studentName: string;
+  gradeName: string;
+  className: string;
+  totalDays: number;
+  presentDays: number;
+  absentDays: number;
+  lateDays: number;
+  excusedDays: number;
+  percentage: number;
+  trend: 'improving' | 'declining' | 'stable';
+}
+
+export interface AttendancePattern {
+  mostMissedDay: string | null;
+  mostMissedPeriod: number | null;
+  longestAbsenceStreak: number;
+  currentStreak: number;
+  monthlyBreakdown: Array<{
+    month: string;
+    present: number;
+    absent: number;
+    late: number;
+    total: number;
+    percentage: number;
+  }>;
+}

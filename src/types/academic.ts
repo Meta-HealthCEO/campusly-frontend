@@ -60,6 +60,25 @@ export interface Assessment {
   term: number;
 }
 
+// ─── Timetable Clash Types ──────────────────────────────────────────────────
+
+export interface TimetableClashEntry {
+  className: string;
+  subject: string;
+  classId: string;
+}
+
+export interface TimetableClash {
+  type: 'teacher' | 'class';
+  teacherName?: string;
+  teacherId?: string;
+  className?: string;
+  classId?: string;
+  day: string;
+  period: number;
+  conflictingEntries: TimetableClashEntry[];
+}
+
 export interface StudentGrade {
   id: string;
   studentId: string;

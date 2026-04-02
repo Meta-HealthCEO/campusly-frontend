@@ -13,7 +13,7 @@ import { PrintableReportCard } from '@/components/reports/PrintableReportCard';
 import { useReports } from '@/hooks/useReports';
 import type { ReportCardData } from '@/hooks/useReports';
 
-export default function StudentReportCardPage() {
+export default function ParentReportCardPage() {
   const params = useParams();
   const router = useRouter();
   const studentId = params.studentId as string;
@@ -47,8 +47,8 @@ export default function StudentReportCardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Student Report Card"
-        description={`Student ID: ${studentId}`}
+        title="Report Card"
+        description="View and download your child's report card."
       >
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
@@ -98,7 +98,7 @@ export default function StudentReportCardPage() {
       {!loading && hasSearched && !reportCard && (
         <Card>
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            Failed to load report card. Please check the student ID and try again.
+            Failed to load report card. Please try again.
           </CardContent>
         </Card>
       )}

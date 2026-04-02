@@ -9,7 +9,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import {
   Users, Wallet, GraduationCap, CreditCard, Bell,
-  ArrowRight, BookOpen, TrendingUp, Calendar,
+  ArrowRight, BookOpen, TrendingUp, Calendar, User,
 } from 'lucide-react';
 import { formatCurrency, formatDate, formatRelativeDate } from '@/lib/utils';
 import { useCurrentParent } from '@/hooks/useCurrentParent';
@@ -110,6 +110,13 @@ export default function ParentDashboard() {
                     <p className="text-xs text-muted-foreground">Grade Avg</p>
                   </div>
                 </div>
+                <Link href={`/parent/child/${cd.childId}`} className="mt-3 block">
+                  <Button variant="outline" size="sm" className="w-full gap-2">
+                    <User className="h-4 w-4" />
+                    View Full Profile
+                    <ArrowRight className="ml-auto h-4 w-4" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ))}

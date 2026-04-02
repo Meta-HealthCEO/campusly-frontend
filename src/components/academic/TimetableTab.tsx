@@ -18,6 +18,8 @@ import { toast } from 'sonner';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { useClasses, useSubjects, useStaff, useTimetable } from '@/hooks/useAcademics';
 import { useTimetableMutations } from '@/hooks/useAcademicMutations';
+import { useTimetableClashes } from '@/hooks/useTimetableClashes';
+import { ClashDetector } from '@/components/academic/ClashDetector';
 import type { TimetableSlot } from '@/types';
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as const;
@@ -35,6 +37,7 @@ export function TimetableTab() {
   const { subjects } = useSubjects();
   const { staff } = useStaff();
   const { createSlot, deleteSlot } = useTimetableMutations();
+  const { clashes, loading: clashLoading, hasChecked, checkClashes } = useTimetableClashes();
 
   const [selectedClassId, setSelectedClassId] = useState('');
   const { entries, loading, refetch } = useTimetable(selectedClassId || undefined);
@@ -120,6 +123,13 @@ export function TimetableTab() {
           </Button>
         )}
       </div>
+
+      <ClashDetector
+        clashes={clashes}
+        loading={clashLoading}
+        hasChecked={hasChecked}
+        onCheck={checkClashes}
+      />
 
       {!selectedClassId ? (
         <EmptyState icon={Calendar} title="Select a class" description="Choose a class to view or edit its timetable." />
