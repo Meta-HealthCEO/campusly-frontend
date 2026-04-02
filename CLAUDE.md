@@ -360,4 +360,195 @@ Before considering ANY file done, verify:
 - Catch blocks should `console.error`, not fall back to mock data.
 
 ## Scope Documents
-Implementation specs are in `scopes/` (00 through 29). Execute sequentially. After each module, verify against the acceptance criteria in the scope doc.
+Implementation specs are in `scopes/` (00 through 30). Execute sequentially. After each module, verify against the acceptance criteria in the scope doc.
+
+---
+
+## Known Pitfalls — DO NOT REPEAT THESE
+
+These are bugs and anti-patterns that have been caught in past audits. Every one cost hours to find and fix. Read these BEFORE writing code.
+
+### Backend: Multi-Tenancy (CRITICAL)
+
+**Every single database query MUST filter by `schoolId`.** Not just list queries — single-entity lookups too.
+
+```typescript
+// WRONG — any authenticated user can read/modify any school's data
+const question = await Question.findOne({ _id: id, isDeleted: false });
+
+// CORRECT — scoped to the user's school
+const question = await Question.findOne({ _id: id, schoolId, isDeleted: false });
+```
+
+This applies to: `findOne`, `findOneAndUpdate`, `findOneAndDelete`, `deleteOne`, `updateOne`. The ONLY exception is when the query already uses a field that is inherently school-scoped (e.g., a `teacherId` that belongs to only one school).
+
+**Why this matters:** Without `schoolId` in single-entity queries, any teacher who knows (or guesses) a MongoDB ObjectId can read, modify, or delete records from other schools. This is a data breach.
+
+### Backend: Soft Delete Consistency
+
+**If a model has `isDeleted`, it must be used everywhere:**
+- Every `find`/`findOne` query MUST include `isDeleted: false`
+- Every delete operation MUST set `isDeleted: true` (never hard delete)
+- If you add `isDeleted` to the Mongoose schema, also add it to the TypeScript interface
+- If a parent record is soft-deleted, cascade to children (soft-delete them too)
+
+```typescript
+// WRONG — schema has isDeleted but query doesn't filter it
+const topics = await CurriculumTopic.find({ schoolId });
+
+// CORRECT
+const topics = await CurriculumTopic.find({ schoolId, isDeleted: false });
+```
+
+### Backend: ObjectId Casting in Aggregation Pipelines
+
+**MongoDB aggregation `$match` does NOT auto-cast strings to ObjectIds.** Unlike `find()`, which auto-casts, aggregation requires explicit casting:
+
+```typescript
+// WRONG — will return empty results because schoolId is a string
+{ $match: { schoolId: schoolId } }
+
+// CORRECT
+import mongoose from 'mongoose';
+{ $match: { schoolId: new mongoose.Types.ObjectId(schoolId) } }
+```
+
+This applies to every `$match` stage that filters on an ObjectId field (schoolId, teacherId, classId, etc.).
+
+### Backend: Unique Index + Create = Crash on Duplicate
+
+**If a model has a unique index, `Model.create()` will throw a duplicate key error with no user-friendly message.** Always use `findOneAndUpdate` with `upsert: true` for records that may be re-created, or check for existing records first.
+
+```typescript
+// WRONG — crashes with MongoError 11000 if called twice for same paperId
+await PaperModeration.create({ paperId, ... });
+
+// CORRECT — upserts gracefully
+await PaperModeration.findOneAndUpdate(
+  { paperId },
+  { $set: { status: 'pending', submittedAt: new Date(), ... } },
+  { upsert: true, new: true },
+);
+```
+
+### Backend: Mongoose Schema Must Match TypeScript Interface
+
+**If a field exists in the TypeScript interface, it must exist in the Mongoose schema (and vice versa).** Mongoose strict mode silently drops fields that aren't in the schema. This means:
+- You write `{ weight: 50 }` to the database
+- Mongoose silently strips `weight` because it's not in the schema
+- You read the document back and `weight` is `undefined`
+- No error is thrown — the data just disappears
+
+Always verify: interface field count === schema field count.
+
+### Backend: Populate Requires `ref`
+
+**`.populate('fieldName')` silently does nothing if the schema field lacks a `ref`.** Mongoose won't throw an error — it just returns the raw ObjectId instead of the populated document.
+
+```typescript
+// WRONG — paperId has no ref, populate returns the ObjectId string
+paperId: { type: Schema.Types.ObjectId, required: true }
+
+// CORRECT
+paperId: { type: Schema.Types.ObjectId, ref: 'GeneratedPaper', required: true }
+```
+
+### Frontend: XSS via `dangerouslySetInnerHTML`
+
+**Never inject user-authored content via `dangerouslySetInnerHTML` without escaping.** Even when using a rendering library (KaTeX, markdown, etc.), the non-rendered portions of the text must be HTML-escaped.
+
+```typescript
+// WRONG — user text is injected raw alongside KaTeX output
+return `${userText} ${katexHtml}`;
+
+// CORRECT — escape non-library output
+return `${escapeHtml(userText)} ${katexHtml}`;
+```
+
+### Frontend: `toISOString()` Returns UTC, Not Local Time
+
+**`new Date().toISOString().slice(0, 10)` can return yesterday's date** if the user is in a positive UTC offset timezone (like South Africa, UTC+2) and it's before 2 AM local time.
+
+```typescript
+// WRONG — uses UTC, can be wrong date near midnight
+function toISODate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+// CORRECT — uses local timezone
+function toISODate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+```
+
+### Frontend: `truncate` and `line-clamp-*` Conflict
+
+**Never apply both `truncate` and `line-clamp-2` to the same element.** `truncate` sets `white-space: nowrap` which overrides `line-clamp`'s multi-line behavior, making it single-line only.
+
+```tsx
+// WRONG — truncate kills line-clamp
+<p className="line-clamp-2 truncate">{text}</p>
+
+// CORRECT — use one or the other
+<p className="line-clamp-2">{text}</p>     // Multi-line truncation
+<p className="truncate">{text}</p>          // Single-line truncation
+```
+
+### Frontend: `localStorage` in Next.js (SSR)
+
+**`localStorage` is not available during server-side rendering.** Always guard with `typeof window !== 'undefined'`:
+
+```typescript
+// WRONG — crashes during SSR
+localStorage.setItem('key', value);
+
+// CORRECT
+if (typeof window !== 'undefined') {
+  localStorage.setItem('key', value);
+}
+```
+
+### Frontend: `useMemo` for Derived Computations
+
+**Computed values derived from state should be wrapped in `useMemo`.** Otherwise they recompute on every render, even when the source data hasn't changed.
+
+```typescript
+// WRONG — recomputes on every render
+const overdueCount = items.filter(i => i.dueDate < today).length;
+
+// CORRECT — only recomputes when items changes
+const overdueCount = useMemo(
+  () => items.filter(i => i.dueDate < today).length,
+  [items],
+);
+```
+
+### Frontend: `useEffect` Reset Dependencies for Dialogs
+
+**When a `useEffect` resets a form inside a dialog, include `open` in the dependency array.** Otherwise the form won't reset when the dialog is reopened with the same initial data.
+
+```typescript
+// WRONG — form doesn't reset when dialog reopens with same data
+useEffect(() => { reset(initialData); }, [initialData, reset]);
+
+// CORRECT — resets every time dialog opens
+useEffect(() => {
+  if (open) reset(initialData ?? defaults);
+}, [open, initialData, reset]);
+```
+
+### Frontend: Select `value=""` Does Not Work Reliably
+
+**Some Select implementations (Radix, base-ui) don't handle empty string as a value.** Use a sentinel like `"all"` instead:
+
+```tsx
+// WRONG — may not render correctly
+<SelectItem value="">All items</SelectItem>
+
+// CORRECT
+<SelectItem value="all">All items</SelectItem>
+// Then in handler: setValue(v === 'all' ? '' : v)
+```
