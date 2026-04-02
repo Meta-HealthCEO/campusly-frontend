@@ -35,3 +35,24 @@ export interface HomeworkSubmission {
   gradedAt?: string;
   status: 'submitted' | 'graded' | 'late' | 'missing';
 }
+
+// ─── Homework Templates ─────────────────────────────────────────────────────
+
+export interface TemplateAttachment {
+  url: string;
+  name: string;
+}
+
+export interface HomeworkTemplate {
+  id: string;
+  schoolId: string;
+  teacherId: string;
+  title: string;
+  description?: string;
+  subjectId: string;
+  subject?: Subject;
+  totalMarks: number;
+  rubric?: string;
+  attachments: TemplateAttachment[];
+  createdAt: string;
+}

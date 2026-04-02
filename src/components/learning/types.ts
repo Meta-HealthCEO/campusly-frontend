@@ -27,8 +27,11 @@ export interface Quiz {
   questions: QuizQuestion[];
   totalPoints: number;
   timeLimit?: number;
+  showInstantFeedback: boolean;
+  allowRetry: boolean;
   attempts: number;
   shuffleQuestions: boolean;
+  shuffleOptions: boolean;
   dueDate?: string;
   status: 'draft' | 'published' | 'closed';
   isDeleted?: boolean;
@@ -54,7 +57,17 @@ export interface QuizAttempt {
   percentage: number;
   startedAt: string;
   completedAt?: string;
+  timeSpent?: number;
   attempt: number;
+}
+
+export interface QuizLeaderboardEntry {
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  bestScore: number;
+  bestPercentage: number;
+  attempts: number;
 }
 
 export interface QuizResultsResponse {
@@ -216,8 +229,11 @@ export interface CreateQuizInput {
   questions: QuizQuestion[];
   totalPoints: number;
   timeLimit?: number;
+  showInstantFeedback?: boolean;
+  allowRetry?: boolean;
   attempts?: number;
   shuffleQuestions?: boolean;
+  shuffleOptions?: boolean;
   dueDate?: string;
 }
 

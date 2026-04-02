@@ -5,7 +5,7 @@ import { unwrapResponse } from '@/lib/api-helpers';
 import { unwrapList, mapId, extractTotal, extractErrorMessage } from '@/lib/learningHelpers';
 import { useLearningStore } from '@/stores/useLearningStore';
 import type {
-  Quiz, StudyMaterial, Rubric, QuizAttempt,
+  Quiz, StudyMaterial, Rubric, QuizAttempt, QuizLeaderboardEntry,
   AssignmentSubmission, StudentProgress, StrugglingStudent,
   CreateQuizInput, CreateMaterialInput, CreateRubricInput, GradeSubmissionInput,
   QuizAnswer,
@@ -160,20 +160,46 @@ export function useLearningApi() {
     }
   }, [setQuizResults, setQuizResultsLoading]);
 
-  const submitQuizAttempt = useCallback(
-    async (quizId: string, answers: QuizAnswer[], startedAt: string): Promise<QuizAttempt> => {
-      try {
-        const res = await apiClient.post(`/learning/quizzes/${quizId}/attempt`, { answers, startedAt });
-        const raw = unwrapResponse(res);
-        toast.success('Quiz submitted!');
-        return mapId(raw as QuizAttempt);
-      } catch (err: unknown) {
-        const msg = extractErrorMessage(err, 'Failed to submit quiz');
-        toast.error(msg);
-        throw new Error(msg);
-      }
-    }, [],
-  );
+  const startQuizAttempt = useCallback(async (quizId: string): Promise<{ quiz: Quiz; attemptNumber: number }> => {
+    try {
+      const res = await apiClient.post(`/learning/quizzes/${quizId}/start`);
+      const raw = unwrapResponse(res);
+      const quiz = raw.quiz as Record<string, unknown>;
+      return {
+        quiz: { ...quiz, id: (quiz._id as string) ?? (quiz.id as string) } as unknown as Quiz,
+        attemptNumber: Number(raw.attemptNumber ?? 1),
+      };
+    } catch (err: unknown) {
+      const msg = extractErrorMessage(err, 'Failed to start quiz');
+      toast.error(msg);
+      throw new Error(msg);
+    }
+  }, []);
+
+  const submitQuizAttempt = useCallback(async (
+    quizId: string, answers: QuizAnswer[], startedAt: string, timeSpent?: number,
+  ): Promise<QuizAttempt> => {
+    try {
+      const res = await apiClient.post(`/learning/quizzes/${quizId}/attempt`, { answers, startedAt, timeSpent });
+      toast.success('Quiz submitted!');
+      return mapId(unwrapResponse(res) as QuizAttempt);
+    } catch (err: unknown) {
+      const msg = extractErrorMessage(err, 'Failed to submit quiz');
+      toast.error(msg);
+      throw new Error(msg);
+    }
+  }, []);
+
+  const fetchQuizLeaderboard = useCallback(async (quizId: string): Promise<QuizLeaderboardEntry[]> => {
+    try {
+      const res = await apiClient.get(`/learning/quizzes/${quizId}/leaderboard`);
+      const raw = unwrapResponse(res);
+      return Array.isArray(raw) ? raw as QuizLeaderboardEntry[] : [];
+    } catch {
+      console.error('Failed to fetch quiz leaderboard');
+      return [];
+    }
+  }, []);
 
   // --- Rubrics ---
 
@@ -238,57 +264,33 @@ export function useLearningApi() {
   }, [setSubmissions, setSubmissionsLoading]);
 
   const saveDraft = useCallback(async (homeworkId: string, files: string[]) => {
-    try {
-      await apiClient.post(`/learning/assignments/${homeworkId}/draft`, { files });
-      toast.success('Draft saved');
-    } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to save draft'));
-    }
+    try { await apiClient.post(`/learning/assignments/${homeworkId}/draft`, { files }); toast.success('Draft saved'); }
+    catch (err: unknown) { toast.error(extractErrorMessage(err, 'Failed to save draft')); }
   }, []);
 
   const submitFinal = useCallback(async (homeworkId: string, files: string[]) => {
-    try {
-      await apiClient.post(`/learning/assignments/${homeworkId}/submit`, { files });
-      toast.success('Assignment submitted');
-    } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to submit assignment'));
-    }
+    try { await apiClient.post(`/learning/assignments/${homeworkId}/submit`, { files }); toast.success('Assignment submitted'); }
+    catch (err: unknown) { toast.error(extractErrorMessage(err, 'Failed to submit assignment')); }
   }, []);
 
   const gradeSubmission = useCallback(async (id: string, data: GradeSubmissionInput) => {
-    try {
-      await apiClient.post(`/learning/submissions/${id}/grade`, data);
-      toast.success('Submission graded');
-    } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to grade submission'));
-    }
+    try { await apiClient.post(`/learning/submissions/${id}/grade`, data); toast.success('Submission graded'); }
+    catch (err: unknown) { toast.error(extractErrorMessage(err, 'Failed to grade submission')); }
   }, []);
 
   const requestRevision = useCallback(async (id: string) => {
-    try {
-      await apiClient.post(`/learning/submissions/${id}/request-revision`);
-      toast.success('Revision requested');
-    } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to request revision'));
-    }
+    try { await apiClient.post(`/learning/submissions/${id}/request-revision`); toast.success('Revision requested'); }
+    catch (err: unknown) { toast.error(extractErrorMessage(err, 'Failed to request revision')); }
   }, []);
 
   const enablePeerReview = useCallback(async (homeworkId: string) => {
-    try {
-      await apiClient.post(`/learning/assignments/${homeworkId}/peer-review`);
-      toast.success('Peer review enabled');
-    } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to enable peer review'));
-    }
+    try { await apiClient.post(`/learning/assignments/${homeworkId}/peer-review`); toast.success('Peer review enabled'); }
+    catch (err: unknown) { toast.error(extractErrorMessage(err, 'Failed to enable peer review')); }
   }, []);
 
   const submitPeerReview = useCallback(async (id: string, rating: number, comments: string) => {
-    try {
-      await apiClient.post(`/learning/submissions/${id}/peer-review`, { rating, comments });
-      toast.success('Peer review submitted');
-    } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to submit peer review'));
-    }
+    try { await apiClient.post(`/learning/submissions/${id}/peer-review`, { rating, comments }); toast.success('Peer review submitted'); }
+    catch (err: unknown) { toast.error(extractErrorMessage(err, 'Failed to submit peer review')); }
   }, []);
 
   // --- Progress ---
@@ -337,7 +339,7 @@ export function useLearningApi() {
   return {
     fetchMaterials, uploadMaterial, updateMaterial, deleteMaterial, recordDownload,
     fetchQuizzes, createQuiz, updateQuiz, publishQuiz, deleteQuiz,
-    fetchQuizResults, submitQuizAttempt,
+    fetchQuizResults, startQuizAttempt, submitQuizAttempt, fetchQuizLeaderboard,
     fetchRubrics, createRubric, updateRubric, deleteRubric,
     fetchSubmissions, saveDraft, submitFinal,
     gradeSubmission, requestRevision, enablePeerReview, submitPeerReview,

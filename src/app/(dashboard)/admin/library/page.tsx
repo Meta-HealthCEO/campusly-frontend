@@ -4,17 +4,21 @@ import { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCard } from '@/components/shared/StatCard';
-import { BookOpen, BookCopy, AlertTriangle, Trophy } from 'lucide-react';
+import { BookOpen, BookCopy, AlertTriangle, Trophy, Banknote } from 'lucide-react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLibrary } from '@/hooks/useLibrary';
+import { useLibraryFines } from '@/hooks/useLibraryFines';
 import { BooksTab } from '@/components/library/BooksTab';
 import { LoansTab } from '@/components/library/LoansTab';
 import { ChallengesTab } from '@/components/library/ChallengesTab';
+import { OverdueFinesTable } from '@/components/library/OverdueFinesTable';
+import { FineConfigForm } from '@/components/library/FineConfigForm';
 
 export default function AdminLibraryPage() {
   const { user } = useAuthStore();
   const schoolId = user?.schoolId ?? '';
   const lib = useLibrary(schoolId);
+  const finesHook = useLibraryFines();
 
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -35,6 +39,8 @@ export default function AdminLibraryPage() {
           lib.fetchOverdueLoans(),
           lib.fetchChallenges(),
           lib.fetchStudents(),
+          finesHook.fetchFines(),
+          finesHook.fetchConfig(),
         ]);
       } catch {
         console.error('Failed to initialise library data');
@@ -45,7 +51,6 @@ export default function AdminLibraryPage() {
     if (schoolId) init();
   }, [schoolId]);
 
-  // Re-fetch books when search or category changes
   useEffect(() => {
     if (!loading && schoolId) {
       loadBooks();
@@ -64,6 +69,11 @@ export default function AdminLibraryPage() {
     await refreshBooks();
   };
 
+  const handleGenerateInvoices = async () => {
+    await finesHook.generateInvoices();
+    await finesHook.fetchFines();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -74,9 +84,9 @@ export default function AdminLibraryPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Library Management" description="Manage books, loans, and reading challenges" />
+      <PageHeader title="Library Management" description="Manage books, loans, fines, and reading challenges" />
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
         <StatCard title="Total Books" value={String(lib.booksTotal)} icon={BookCopy} description="In catalogue" />
         <StatCard
           title="Available"
@@ -91,6 +101,12 @@ export default function AdminLibraryPage() {
           description={lib.overdueLoans.length > 0 ? 'Need attention' : 'None overdue'}
         />
         <StatCard
+          title="Overdue Fines"
+          value={`R${(finesHook.totalFineAmountCents / 100).toFixed(0)}`}
+          icon={Banknote}
+          description={`${finesHook.uninvoicedFines.length} uninvoiced`}
+        />
+        <StatCard
           title="Challenges"
           value={String(lib.challenges.length)}
           icon={Trophy}
@@ -99,10 +115,13 @@ export default function AdminLibraryPage() {
       </div>
 
       <Tabs defaultValue="books">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="books">Books ({lib.booksTotal})</TabsTrigger>
           <TabsTrigger value="loans">
             Overdue Loans ({lib.overdueLoans.length})
+          </TabsTrigger>
+          <TabsTrigger value="fines">
+            Fines ({finesHook.fines.length})
           </TabsTrigger>
           <TabsTrigger value="challenges">Challenges ({lib.challenges.length})</TabsTrigger>
         </TabsList>
@@ -133,6 +152,25 @@ export default function AdminLibraryPage() {
             onMarkLost={lib.markLost}
             onRefresh={refreshLoans}
           />
+        </TabsContent>
+
+        <TabsContent value="fines">
+          <div className="space-y-6">
+            <OverdueFinesTable
+              fines={finesHook.fines}
+              loading={finesHook.finesLoading}
+              uninvoicedCount={finesHook.uninvoicedFines.length}
+              totalAmountCents={finesHook.totalFineAmountCents}
+              generating={finesHook.generating}
+              onGenerateInvoices={handleGenerateInvoices}
+              onRefresh={finesHook.fetchFines}
+            />
+            <FineConfigForm
+              config={finesHook.config}
+              loading={finesHook.configLoading}
+              onSave={finesHook.updateConfig}
+            />
+          </div>
         </TabsContent>
 
         <TabsContent value="challenges">

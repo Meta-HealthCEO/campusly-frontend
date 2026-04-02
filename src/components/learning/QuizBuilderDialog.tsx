@@ -45,6 +45,9 @@ export function QuizBuilderDialog({
   const [maxAttempts, setMaxAttempts] = useState('1');
   const [dueDate, setDueDate] = useState('');
   const [shuffleQuestions, setShuffleQuestions] = useState(false);
+  const [shuffleOptions, setShuffleOptions] = useState(false);
+  const [showInstantFeedback, setShowInstantFeedback] = useState(false);
+  const [allowRetry, setAllowRetry] = useState(false);
   const [questions, setQuestions] = useState<QuizQuestion[]>([emptyQuestion()]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -53,7 +56,8 @@ export function QuizBuilderDialog({
   const resetForm = () => {
     setStep(1); setTitle(''); setDescription(''); setSubjectId(''); setClassId('');
     setQuizType('mcq'); setTimeLimit(''); setMaxAttempts('1'); setDueDate('');
-    setShuffleQuestions(false); setQuestions([emptyQuestion()]);
+    setShuffleQuestions(false); setShuffleOptions(false);
+    setShowInstantFeedback(false); setAllowRetry(false); setQuestions([emptyQuestion()]);
   };
 
   const updateQuestion = (idx: number, patch: Partial<QuizQuestion>) => {
@@ -83,7 +87,9 @@ export function QuizBuilderDialog({
         schoolId, subjectId, classId, title, description: description || undefined,
         type: quizType, questions, totalPoints,
         timeLimit: timeLimit ? Number(timeLimit) : undefined,
-        attempts: Number(maxAttempts) || 1, shuffleQuestions, dueDate: dueDate || undefined,
+        showInstantFeedback, allowRetry,
+        attempts: Number(maxAttempts) || 1, shuffleQuestions, shuffleOptions,
+        dueDate: dueDate || undefined,
       });
       resetForm(); onOpenChange(false);
     } finally { setSubmitting(false); }
@@ -117,9 +123,12 @@ export function QuizBuilderDialog({
                 <div className="space-y-2"><Label>Time Limit (min)</Label><Input type="number" value={timeLimit} onChange={(e) => setTimeLimit(e.target.value)} placeholder="20" /></div>
                 <div className="space-y-2"><Label>Max Attempts</Label><Input type="number" value={maxAttempts} onChange={(e) => setMaxAttempts(e.target.value)} placeholder="1" /></div>
               </div>
+              <div className="space-y-2"><Label>Due Date</Label><Input type="datetime-local" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2"><Label>Due Date</Label><Input type="datetime-local" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></div>
-                <div className="flex items-center gap-2 pt-6"><Checkbox id="shuffle" checked={shuffleQuestions} onCheckedChange={(c) => setShuffleQuestions(c === true)} /><Label htmlFor="shuffle">Shuffle questions</Label></div>
+                <div className="flex items-center gap-2"><Checkbox id="shuffle" checked={shuffleQuestions} onCheckedChange={(c) => setShuffleQuestions(c === true)} /><Label htmlFor="shuffle">Shuffle questions</Label></div>
+                <div className="flex items-center gap-2"><Checkbox id="shuffleOpts" checked={shuffleOptions} onCheckedChange={(c) => setShuffleOptions(c === true)} /><Label htmlFor="shuffleOpts">Shuffle options</Label></div>
+                <div className="flex items-center gap-2"><Checkbox id="feedback" checked={showInstantFeedback} onCheckedChange={(c) => setShowInstantFeedback(c === true)} /><Label htmlFor="feedback">Instant feedback</Label></div>
+                <div className="flex items-center gap-2"><Checkbox id="retry" checked={allowRetry} onCheckedChange={(c) => setAllowRetry(c === true)} /><Label htmlFor="retry">Allow retry</Label></div>
               </div>
             </div>
           )}

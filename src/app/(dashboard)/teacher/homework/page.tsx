@@ -15,12 +15,17 @@ import {
 import { Plus, BookOpen, Users, Calendar, FileText, Trash2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { HomeworkForm } from '@/components/homework/HomeworkForm';
+import { TemplateSelector } from '@/components/homework/TemplateSelector';
+import { SaveAsTemplateButton } from '@/components/homework/SaveAsTemplateButton';
 import type { HomeworkFormValues } from '@/components/homework/HomeworkForm';
+import type { HomeworkTemplate } from '@/types';
 import { useTeacherHomework } from '@/hooks/useTeacherHomework';
+import { useHomeworkTemplates } from '@/hooks/useHomeworkTemplates';
 import Link from 'next/link';
 
 export default function TeacherHomeworkPage() {
   const [open, setOpen] = useState(false);
+  const [formDefaults, setFormDefaults] = useState<Partial<HomeworkFormValues> | undefined>();
   const {
     teacherHomework,
     subjects,
@@ -30,39 +35,66 @@ export default function TeacherHomeworkPage() {
     createHomework,
     deleteHomework,
   } = useTeacherHomework();
+  const {
+    templates,
+    deleteTemplate,
+    saveAsTemplate,
+  } = useHomeworkTemplates();
 
   const onSubmit = async (data: HomeworkFormValues) => {
     const success = await createHomework(data);
-    if (success) setOpen(false);
+    if (success) {
+      setOpen(false);
+      setFormDefaults(undefined);
+    }
+  };
+
+  const onSelectTemplate = (template: HomeworkTemplate) => {
+    setFormDefaults({
+      title: template.title,
+      description: template.description ?? '',
+      subjectId: template.subjectId,
+      totalMarks: String(template.totalMarks),
+    });
+    setOpen(true);
   };
 
   return (
     <div className="space-y-6">
       <PageHeader title="Homework" description="Create and manage homework assignments">
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger
-            render={
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Homework
-              </Button>
-            }
+        <div className="flex items-center gap-2">
+          <TemplateSelector
+            templates={templates}
+            onSelect={onSelectTemplate}
+            onDelete={deleteTemplate}
           />
-          <DialogContent className="sm:max-w-lg flex flex-col max-h-[85vh]">
-            <DialogHeader>
-              <DialogTitle>Create New Homework</DialogTitle>
-            </DialogHeader>
-            <div className="flex-1 overflow-y-auto py-4">
-              <HomeworkForm
-                subjects={subjects}
-                classes={classOptions}
-                onSubmit={onSubmit}
-                onCancel={() => setOpen(false)}
-                submitLabel="Create Homework"
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
+          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setFormDefaults(undefined); }}>
+            <DialogTrigger
+              render={
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Homework
+                </Button>
+              }
+            />
+            <DialogContent className="sm:max-w-lg flex flex-col max-h-[85vh]">
+              <DialogHeader>
+                <DialogTitle>Create New Homework</DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 overflow-y-auto py-4">
+                <HomeworkForm
+                  key={formDefaults?.title ?? 'empty'}
+                  defaultValues={formDefaults}
+                  subjects={subjects}
+                  classes={classOptions}
+                  onSubmit={onSubmit}
+                  onCancel={() => { setOpen(false); setFormDefaults(undefined); }}
+                  submitLabel="Create Homework"
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </PageHeader>
 
       {teacherHomework.length === 0 ? (
@@ -124,6 +156,9 @@ export default function TeacherHomeworkPage() {
                             {counts.graded}/{counts.total} graded
                           </Badge>
                         )}
+                        <SaveAsTemplateButton
+                          onSave={() => saveAsTemplate(hw.id)}
+                        />
                         <Button
                           variant="ghost"
                           size="icon-sm"

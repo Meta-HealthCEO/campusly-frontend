@@ -5,20 +5,28 @@ import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { Trophy, Star, Medal, Crown, Award } from 'lucide-react';
+import { Trophy, Star, Crown, Award } from 'lucide-react';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { useStudentAchievements } from '@/hooks/useStudentAchievements';
+import { useGamification } from '@/hooks/useGamification';
+import { LevelProgressBar } from '@/components/achiever/LevelProgressBar';
+import { BadgeGrid } from '@/components/achiever/BadgeGrid';
+import { StreakIndicator } from '@/components/achiever/StreakIndicator';
+import { XPLeaderboard } from '@/components/achiever/XPLeaderboard';
 import { formatDate, cn } from '@/lib/utils';
-
-const categoryIcons: Record<string, typeof Trophy> = {
-  academic: Star, sports: Medal, leadership: Crown, service: Award, special: Trophy,
-};
 
 export default function StudentAchievementsPage() {
   const { student } = useCurrentStudent();
   const { achievements, earned, houses, loading } = useStudentAchievements();
+  const studentId = student?._id ?? student?.id ?? '';
+  const {
+    level,
+    leaderboard,
+    badgeDefinitions,
+    loading: gamLoading,
+  } = useGamification({ studentId: studentId || undefined });
 
-  if (loading) return <LoadingSpinner />;
+  if (loading && gamLoading) return <LoadingSpinner />;
 
   const currentHouse = student?.house ?? houses.find((h) => h.id === student?.houseId);
   const sortedHouses = [...houses].sort((a, b) => (b.points ?? 0) - (a.points ?? 0));
@@ -27,6 +35,29 @@ export default function StudentAchievementsPage() {
     <div className="space-y-6">
       <PageHeader title="Achievements" description="Your badges, house points, and rankings" />
 
+      {/* Gamification Level + Streak */}
+      {level && (
+        <div className="space-y-3">
+          <LevelProgressBar xp={level.xp} level={level.level} />
+          <div className="px-1">
+            <StreakIndicator
+              currentStreak={level.currentStreak}
+              longestStreak={level.longestStreak}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Badge Collection */}
+      <BadgeGrid
+        badgeDefinitions={badgeDefinitions}
+        earnedBadges={level?.badges ?? []}
+      />
+
+      {/* XP Leaderboard */}
+      <XPLeaderboard entries={leaderboard} currentStudentId={studentId} />
+
+      {/* House Section */}
       {currentHouse && (
         <Card>
           <CardContent className="p-6">
@@ -64,12 +95,13 @@ export default function StudentAchievementsPage() {
         </Card>
       )}
 
+      {/* Earned Achievements (legacy section) */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle className="text-lg">Earned Badges</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-lg">Earned Awards</CardTitle></CardHeader>
           <CardContent>
             {earned.length === 0 ? (
-              <EmptyState icon={Award} title="No Badges Yet" description="Complete challenges to earn badges and house points!" />
+              <EmptyState icon={Award} title="No Awards Yet" description="Complete challenges to earn awards and house points!" />
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
                 {earned.map((sa) => {
@@ -78,9 +110,9 @@ export default function StudentAchievementsPage() {
                   return (
                     <div key={sa.id} className="flex items-center gap-3 rounded-lg border p-3">
                       <span className="text-3xl">{ach.icon}</span>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold">{ach.name}</p>
-                        <p className="text-xs text-muted-foreground">{ach.description}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate">{ach.name}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{ach.description}</p>
                         <div className="mt-1 flex items-center gap-2">
                           <Badge variant="secondary"><Star className="mr-1 h-3 w-3" />{ach.points} pts</Badge>
                           <span className="text-xs text-muted-foreground">{formatDate(sa.awardedDate)}</span>
@@ -89,23 +121,6 @@ export default function StudentAchievementsPage() {
                     </div>
                   );
                 })}
-              </div>
-            )}
-
-            {achievements.filter((a) => !earned.find((ea) => ea.achievementId === a.id)).length > 0 && (
-              <div className="mt-4">
-                <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Available to Earn</p>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {achievements.filter((a) => !earned.find((ea) => ea.achievementId === a.id)).map((achievement) => (
-                    <div key={achievement.id} className="flex items-center gap-3 rounded-lg border border-dashed p-3 opacity-60">
-                      <span className="text-2xl grayscale">{achievement.icon}</span>
-                      <div>
-                        <p className="text-sm font-medium">{achievement.name}</p>
-                        <p className="text-xs text-muted-foreground">{achievement.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
           </CardContent>
