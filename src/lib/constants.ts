@@ -77,6 +77,7 @@ export const ROUTES = {
   PARENT_NOTICE_BOARD: '/parent/notice-board',
   PARENT_DIGEST: '/parent/digest',
   PARENT_HOMEWORK: '/parent/homework',
+  PARENT_SPORTS: '/parent/sports',
   PARENT_SETTINGS: '/parent/settings',
 
   // Student
@@ -250,6 +251,7 @@ export const PARENT_NAV: NavItem[] = [
   { label: 'Transport', href: ROUTES.PARENT_TRANSPORT, icon: Bus, module: 'transport' },
   { label: 'Lost & Found', href: ROUTES.PARENT_LOST_FOUND, icon: PackageSearch },
   { label: 'Library', href: ROUTES.PARENT_LIBRARY, icon: BookMarked, module: 'library' },
+  { label: 'Sports', href: ROUTES.PARENT_SPORTS, icon: Trophy, module: 'sports' },
   { label: 'Meetings', href: ROUTES.PARENT_MEETINGS, icon: CalendarCheck },
   { label: 'Settings', href: ROUTES.PARENT_SETTINGS, icon: Bell },
   { label: 'AI Assistant', href: ROUTES.PARENT_AI_ASSISTANT, icon: Sparkles, module: 'ai_tools' },

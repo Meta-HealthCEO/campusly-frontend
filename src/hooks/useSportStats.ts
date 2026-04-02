@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import type {
   SportCodeConfig, MatchStats, PlayerCard, PersonalBest,
   RecordMatchStatsPayload, RecordPersonalBestPayload,
+  CareerStats, StudentMatchEntry, ParentSportsReport,
 } from '@/types/sport';
 
 function unwrap<T>(res: { data: unknown }): T {
@@ -130,10 +131,63 @@ export function useSportStats() {
     return unwrap<PlayerCard>(res);
   }, []);
 
+  const loadPlayerCardsByStudent = useCallback(async (studentId: string, sportCode?: string) => {
+    try {
+      setLoading(true);
+      const params: Record<string, string> = {};
+      if (sportCode) params.sportCode = sportCode;
+      const res = await apiClient.get(`/sports/players/${studentId}/card`, { params });
+      const data = unwrap<PlayerCard | PlayerCard[]>(res);
+      const cards = Array.isArray(data) ? data : [data];
+      setPlayerCards(cards);
+      return cards;
+    } catch (err: unknown) {
+      console.error('Failed to load player cards for student', err);
+      setPlayerCards([]);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getPlayerCareerStats = useCallback(async (studentId: string, sportCode: string): Promise<CareerStats | null> => {
+    try {
+      const res = await apiClient.get(`/sports/players/${studentId}/stats`, { params: { sportCode } });
+      return unwrap<CareerStats>(res);
+    } catch (err: unknown) {
+      console.error('Failed to load career stats', err);
+      return null;
+    }
+  }, []);
+
+  const getStudentMatchHistory = useCallback(async (studentId: string, sportCode: string): Promise<StudentMatchEntry[]> => {
+    try {
+      const res = await apiClient.get(`/sports/players/${studentId}/stats`, {
+        params: { sportCode, include: 'matches' },
+      });
+      const data = unwrap<{ matches?: StudentMatchEntry[] }>(res);
+      return data.matches ?? [];
+    } catch (err: unknown) {
+      console.error('Failed to load match history', err);
+      return [];
+    }
+  }, []);
+
+  const getParentSportsReport = useCallback(async (studentId: string): Promise<ParentSportsReport | null> => {
+    try {
+      const res = await apiClient.get(`/sports/ai/player/${studentId}/parent-report`);
+      return unwrap<ParentSportsReport>(res);
+    } catch (err: unknown) {
+      console.error('Failed to load parent sports report', err);
+      return null;
+    }
+  }, []);
+
   return {
     sportConfigs, matchStats, playerCard, playerCards, personalBests, loading,
     loadSportConfigs, getSportConfig, recordMatchStats, getMatchStats,
-    loadPlayerCard, loadPlayerCards, loadPersonalBests, recordPersonalBest,
-    recalculateCard,
+    loadPlayerCard, loadPlayerCards, loadPlayerCardsByStudent,
+    loadPersonalBests, recordPersonalBest, recalculateCard,
+    getPlayerCareerStats, getStudentMatchHistory, getParentSportsReport,
   };
 }

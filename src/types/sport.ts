@@ -284,3 +284,45 @@ export interface RecordPersonalBestPayload {
   date: string;
   fixtureId?: string;
 }
+
+// Career stats types
+export interface SeasonStats {
+  seasonId: string;
+  seasonName: string;
+  appearances: number;
+  stats: Record<string, number>;
+  highlights: string[];
+}
+
+export interface CareerStats {
+  studentId: string;
+  sportCode: string;
+  totalAppearances: number;
+  totalStats: Record<string, number>;
+  seasons: SeasonStats[];
+  bestMatch?: {
+    fixtureId: string;
+    opponent: string;
+    date: string;
+    summary: string;
+  };
+}
+
+// Match history for a student
+export interface StudentMatchEntry {
+  fixtureId: string;
+  date: string;
+  opponent: string;
+  venue: string;
+  isHome: boolean;
+  result?: string | null;
+  playerStats: Record<string, number | string | boolean>;
+  rating?: number;
+}
+
+// AI parent sports report
+export interface ParentSportsReport {
+  studentId: string;
+  report: string;
+  generatedAt: string;
+}
