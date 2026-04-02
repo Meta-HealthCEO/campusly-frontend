@@ -79,19 +79,16 @@ export function BursaryCard({ bursary, matched, onSave }: BursaryCardProps) {
 
           <div className="flex gap-2">
             {bursary.applicationUrl && (
-              <Button
-                size="sm"
-                asChild
+              <a
+                href={bursary.applicationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                <a
-                  href={bursary.applicationUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <Button size="sm">
                   <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
                   Apply
-                </a>
-              </Button>
+                </Button>
+              </a>
             )}
             {onSave && (
               <Button

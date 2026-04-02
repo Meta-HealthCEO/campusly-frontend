@@ -27,6 +27,7 @@ export default function ApplicationsPage() {
     createApplication,
     updateApplication,
     uploadDocument,
+    getPrefill,
   } = useApplications(studentId);
 
   const { matchResult, loading: matchLoading } = useProgrammeMatcher(studentId);

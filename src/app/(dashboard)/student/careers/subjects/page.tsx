@@ -59,9 +59,9 @@ export default function SubjectChoiceAdvisorPage() {
                 Take the Aptitude Test first to get personalized recommendations
               </p>
             </div>
-            <Button asChild>
-              <Link href="/student/careers/aptitude">Take Aptitude Test</Link>
-            </Button>
+            <Link href="/student/careers/aptitude">
+              <Button>Take Aptitude Test</Button>
+            </Link>
           </CardContent>
         </Card>
       ) : (
