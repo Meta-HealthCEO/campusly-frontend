@@ -6,7 +6,7 @@ import {
   Home, CreditCard, Receipt, Megaphone, Ticket,
   Building2, HeadphonesIcon, PlusCircle, PackageSearch,
   Heart, Upload, Shirt, Trophy, Sparkles,
-  Compass, Target,
+  Compass, Target, Clipboard, Newspaper,
   Wrench, Database, FileEdit, CheckCircle, ClipboardCheck,
   CalendarCheck,
   type LucideIcon
@@ -54,6 +54,7 @@ export const ROUTES = {
   ADMIN_CONSENT: '/admin/consent',
   ADMIN_LIBRARY: '/admin/library',
   ADMIN_ONLINE_PAYMENTS: '/admin/fees/online-payments',
+  ADMIN_ACCOUNTING: '/admin/fees/accounting',
   ADMIN_PAYMENT_SETTINGS: '/admin/settings/payments',
   ADMIN_MEETINGS: '/admin/meetings',
 
@@ -72,6 +73,8 @@ export const ROUTES = {
   PARENT_LOST_FOUND: '/parent/lost-found',
   PARENT_LIBRARY: '/parent/library',
   PARENT_MEETINGS: '/parent/meetings',
+  PARENT_NOTICE_BOARD: '/parent/notice-board',
+  PARENT_DIGEST: '/parent/digest',
   PARENT_SETTINGS: '/parent/settings',
 
   // Student
@@ -121,6 +124,7 @@ export const ROUTES = {
   TEACHER_DISCIPLINE: '/teacher/discipline',
   TEACHER_CLASSES: '/teacher/classes',
   TEACHER_TIMETABLE: '/teacher/timetable',
+  TEACHER_NOTICE_BOARD: '/teacher/notice-board',
   TEACHER_COMMUNICATION: '/teacher/communication',
   TEACHER_MESSAGES: '/teacher/messages',
   TEACHER_MEETINGS: '/teacher/meetings',
@@ -171,6 +175,7 @@ export const ADMIN_NAV: NavItem[] = [
       { label: 'Debtors', href: ROUTES.ADMIN_DEBTORS, icon: FileText },
       { label: 'Statements', href: ROUTES.ADMIN_STATEMENTS, icon: FileText },
       { label: 'Online Payments', href: ROUTES.ADMIN_ONLINE_PAYMENTS, icon: CreditCard },
+      { label: 'Accounting', href: ROUTES.ADMIN_ACCOUNTING, icon: BarChart3 },
     ],
   },
   { label: 'Wallet', href: ROUTES.ADMIN_WALLET, icon: Wallet, module: 'wallet' },
@@ -232,6 +237,8 @@ export const PARENT_NAV: NavItem[] = [
   { label: 'Academics', href: ROUTES.PARENT_ACADEMICS, icon: BookOpen },
   { label: 'Attendance', href: ROUTES.PARENT_ATTENDANCE, icon: UserCheck },
   { label: 'Messages', href: ROUTES.PARENT_MESSAGES, icon: MessageSquare },
+  { label: 'Notice Board', href: ROUTES.PARENT_NOTICE_BOARD, icon: Clipboard },
+  { label: 'Daily Digest', href: ROUTES.PARENT_DIGEST, icon: Newspaper },
   { label: 'Communication', href: ROUTES.PARENT_COMMUNICATION, icon: Megaphone, module: 'communication' },
   { label: 'Events', href: ROUTES.PARENT_EVENTS, icon: Ticket, module: 'events' },
   { label: 'Consent', href: ROUTES.PARENT_CONSENT, icon: Shield },
@@ -301,6 +308,7 @@ export const TEACHER_NAV: NavItem[] = [
   { label: 'Classes', href: ROUTES.TEACHER_CLASSES, icon: Users },
   { label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
   { label: 'Messages', href: ROUTES.TEACHER_MESSAGES, icon: MessageSquare },
+  { label: 'Notice Board', href: ROUTES.TEACHER_NOTICE_BOARD, icon: Clipboard },
   { label: 'Communication', href: ROUTES.TEACHER_COMMUNICATION, icon: Megaphone, module: 'communication' },
   { label: 'Meetings', href: ROUTES.TEACHER_MEETINGS, icon: CalendarCheck },
   { label: 'Reports', href: ROUTES.TEACHER_REPORTS, icon: BarChart3 },

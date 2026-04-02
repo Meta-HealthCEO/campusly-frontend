@@ -29,3 +29,6 @@ export * from './messaging';
 export * from './meetings';
 export * from './whatsapp';
 export * from './ai-sports';
+export * from './notice-board';
+export * from './digest';
+export * from './accounting';
