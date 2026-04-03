@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { ClipboardList, Plus, FileText } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ClipboardList, Plus, FileText, Sparkles } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -19,6 +20,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { PaperGenerateDialog } from '@/components/questions';
 import { useQuestionBank } from '@/hooks/useQuestionBank';
 import { useSubjects, useGrades } from '@/hooks/useAcademics';
 import { extractErrorMessage } from '@/lib/api-helpers';
@@ -29,9 +31,8 @@ import type {
   PaperStatus,
   PaperFilters,
   CreatePaperPayload,
+  GeneratePaperPayload,
 } from '@/types/question-bank';
-
-// ─── Constants ─────────────────────────────────────────────────────────────
 
 const PAPER_TYPES: { value: PaperType; label: string }[] = [
   { value: 'class_test', label: 'Class Test' },
@@ -47,25 +48,17 @@ const PAPER_TYPE_LABELS: Record<PaperType, string> = Object.fromEntries(
 ) as Record<PaperType, string>;
 
 const STATUS_BADGE_VARIANT: Record<PaperStatus, 'secondary' | 'default' | 'outline'> = {
-  draft: 'secondary',
-  finalised: 'default',
-  archived: 'outline',
+  draft: 'secondary', finalised: 'default', archived: 'outline',
 };
-
 const STATUS_LABELS: Record<PaperStatus, string> = {
-  draft: 'Draft',
-  finalised: 'Finalised',
-  archived: 'Archived',
+  draft: 'Draft', finalised: 'Finalised', archived: 'Archived',
 };
-
 const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: 'all', label: 'All Statuses' },
   { value: 'draft', label: 'Draft' },
   { value: 'finalised', label: 'Finalised' },
   { value: 'archived', label: 'Archived' },
 ];
-
-// ─── Create Paper Form ────────────────────────────────────────────────────
 
 interface PaperFormValues {
   title: string;
@@ -79,17 +72,9 @@ interface PaperFormValues {
 }
 
 const FORM_DEFAULTS: PaperFormValues = {
-  title: '',
-  subjectId: '',
-  gradeId: '',
-  term: 1,
-  year: new Date().getFullYear(),
-  paperType: 'class_test',
-  duration: 60,
-  instructions: '',
+  title: '', subjectId: '', gradeId: '', term: 1,
+  year: new Date().getFullYear(), paperType: 'class_test', duration: 60, instructions: '',
 };
-
-// ─── Helpers ──────────────────────────────────────────────────────────────
 
 function getSubjectName(subjectId: AssessmentPaperItem['subjectId']): string {
   return typeof subjectId === 'string' ? subjectId : subjectId.name;
@@ -103,18 +88,18 @@ function questionCount(paper: AssessmentPaperItem): number {
   return paper.sections.reduce((sum, s) => sum + s.questions.length, 0);
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────
-
 export default function TeacherAssessmentsPage() {
+  const router = useRouter();
   const {
     papers, papersTotal, papersLoading,
-    fetchPapers, createPaper,
+    fetchPapers, createPaper, generatePaper,
   } = useQuestionBank();
   const { subjects } = useSubjects();
   const { grades } = useGrades();
 
   const [statusFilter, setStatusFilter] = useState('all');
   const [createOpen, setCreateOpen] = useState(false);
+  const [generateOpen, setGenerateOpen] = useState(false);
 
   const filters = useMemo((): PaperFilters => {
     const f: PaperFilters = {};
@@ -126,7 +111,6 @@ export default function TeacherAssessmentsPage() {
     fetchPapers(filters);
   }, [filters, fetchPapers]);
 
-  // ─── Create paper form ─────────────────────────────────────────────────
   const { register, handleSubmit, setValue, watch, reset, formState: { isSubmitting } } =
     useForm<PaperFormValues>({ defaultValues: FORM_DEFAULTS });
 
@@ -155,20 +139,37 @@ export default function TeacherAssessmentsPage() {
   }, [createPaper, fetchPapers, filters]);
 
   const handlePaperClick = useCallback((paper: AssessmentPaperItem) => {
-    // Phase 3b will add the full paper builder
-    console.log('Open paper builder for:', paper.id);
-  }, []);
+    router.push(`/teacher/curriculum/assessments/${paper.id}`);
+  }, [router]);
+
+  const handleGenerate = useCallback(async (payload: GeneratePaperPayload) => {
+    try {
+      const paper = await generatePaper(payload);
+      setGenerateOpen(false);
+      router.push(`/teacher/curriculum/assessments/${paper.id}`);
+      return paper;
+    } catch (err: unknown) {
+      toast.error(extractErrorMessage(err, 'Failed to generate paper'));
+      return null;
+    }
+  }, [generatePaper, router]);
 
   return (
     <div className="space-y-6">
       <PageHeader title="Assessments" description="Create and manage assessment papers">
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="mr-2 size-4" />
-          Create Paper
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setGenerateOpen(true)}>
+            <Sparkles className="mr-2 size-4" />
+            Generate Paper
+          </Button>
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="mr-2 size-4" />
+            Create Paper
+          </Button>
+        </div>
       </PageHeader>
 
-      {/* ─── Status filter ────────────────────────────────────────────── */}
+      {/* Status filter */}
       <div className="flex items-center gap-3">
         <Select value={statusFilter} onValueChange={(v: unknown) => setStatusFilter(v as string)}>
           <SelectTrigger className="w-full sm:w-40">
@@ -187,7 +188,7 @@ export default function TeacherAssessmentsPage() {
         )}
       </div>
 
-      {/* ─── Content ──────────────────────────────────────────────────── */}
+      {/* Content */}
       {papersLoading ? (
         <LoadingSpinner />
       ) : papers.length === 0 ? (
@@ -242,7 +243,7 @@ export default function TeacherAssessmentsPage() {
         </div>
       )}
 
-      {/* ─── Create Paper Dialog ──────────────────────────────────────── */}
+      {/* Create Paper Dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="flex flex-col max-h-[85vh] sm:max-w-lg">
           <DialogHeader>
@@ -335,6 +336,15 @@ export default function TeacherAssessmentsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Generate Paper Dialog */}
+      <PaperGenerateDialog
+        open={generateOpen}
+        onOpenChange={setGenerateOpen}
+        subjects={subjects}
+        grades={grades}
+        onGenerate={handleGenerate}
+      />
     </div>
   );
 }
