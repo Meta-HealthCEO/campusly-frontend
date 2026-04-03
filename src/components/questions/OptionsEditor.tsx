@@ -37,7 +37,7 @@ export function OptionsEditor({
         </Button>
       </div>
       {fields.map((field: QuestionOption, idx: number) => (
-        <div key={idx} className="flex items-center gap-2">
+        <div key={field.label || `opt-${idx}`} className="flex items-center gap-2">
           <Input
             className="w-12 shrink-0"
             placeholder="A"

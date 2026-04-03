@@ -28,11 +28,7 @@ function computeBars(
   dist: CapsComplianceReport['cognitiveDistribution'],
   target: CapsComplianceReport['targetDistribution'],
 ): BarData[] {
-  const total =
-    dist.knowledge + dist.routine + dist.complex + dist.problemSolving;
-  const targetTotal =
-    target.knowledge + target.routine + target.complex + target.problemSolving;
-
+  // Backend already returns values as percentages — use them directly
   const distMap: Record<CapsLevel, number> = {
     knowledge: dist.knowledge,
     routine: dist.routine,
@@ -47,17 +43,10 @@ function computeBars(
   };
 
   return CAPS_ORDER.map((level) => {
-    const actualPct = total > 0 ? (distMap[level] / total) * 100 : 0;
-    const targetPct = targetTotal > 0 ? (targetMap[level] / targetTotal) * 100 : 0;
-    // 5% tolerance
-    const outOfRange = Math.abs(actualPct - targetPct) > 5;
-    return {
-      level,
-      label: CAPS_BAR_LABELS[level],
-      actual: Math.round(actualPct),
-      target: Math.round(targetPct),
-      outOfRange,
-    };
+    const actual = distMap[level];
+    const targetPct = targetMap[level];
+    const outOfRange = Math.abs(actual - targetPct) > 5;
+    return { level, label: CAPS_BAR_LABELS[level], actual, target: targetPct, outOfRange };
   });
 }
 
