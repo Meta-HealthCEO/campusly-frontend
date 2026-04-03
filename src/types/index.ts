@@ -49,3 +49,4 @@ export * from './payroll';
 export * from './sgb';
 export * from './assets';
 export * from './governance';
+export * from './curriculum';
