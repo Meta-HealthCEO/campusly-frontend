@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
-import { apiClient } from '@/lib/api-client';
+import apiClient from '@/lib/api-client';
 import type {
   VirtualSession,
   CreateClassroomSessionPayload,
-  SessionFilters,
+  ClassroomSessionFilters,
 } from '@/types';
 
-export function useClassroomSessions(initialFilters?: SessionFilters) {
+export function useClassroomSessions(initialFilters?: ClassroomSessionFilters) {
   const [sessions, setSessions] = useState<VirtualSession[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchSessions = async (filters?: SessionFilters) => {
+  const fetchSessions = async (filters?: ClassroomSessionFilters) => {
     setLoading(true);
     try {
       const params = filters ?? initialFilters ?? {};

@@ -61,8 +61,8 @@ export function VideoFilter({ filters, onChange }: VideoFilterProps) {
         <Label className="text-xs text-muted-foreground">Type</Label>
         <Select
           value={filters.videoType ?? 'all'}
-          onValueChange={(val) =>
-            set({ videoType: val === 'all' ? undefined : val })
+          onValueChange={(val: unknown) =>
+            set({ videoType: (val as string) === 'all' ? undefined : (val as string) })
           }
         >
           <SelectTrigger className="w-full">
@@ -90,10 +90,10 @@ export function VideoFilter({ filters, onChange }: VideoFilterProps) {
               ? 'yes'
               : 'no'
           }
-          onValueChange={(val) =>
+          onValueChange={(val: unknown) =>
             set({
               isPublished:
-                val === 'all' ? undefined : val === 'yes' ? true : false,
+                (val as string) === 'all' ? undefined : (val as string) === 'yes' ? true : false,
             })
           }
         >

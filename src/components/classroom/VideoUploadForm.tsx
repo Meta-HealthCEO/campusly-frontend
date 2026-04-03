@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import type { CreateVideoPayload, VideoLesson, VideoType } from '@/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -19,20 +17,18 @@ import {
 } from '@/components/ui/select';
 import { Plus, Pencil } from 'lucide-react';
 
-const schema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
-  videoUrl: z.string().url('Must be a valid URL'),
-  videoType: z.enum(['upload', 'youtube', 'vimeo', 'recording']),
-  subjectId: z.string().optional(),
-  gradeId: z.string().optional(),
-  thumbnailUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
-  durationSeconds: z.coerce.number().min(0).optional(),
-  tags: z.string().optional(),
-  isPublished: z.boolean().optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
+interface FormValues {
+  title: string;
+  description: string;
+  videoUrl: string;
+  videoType: VideoType;
+  subjectId: string;
+  gradeId: string;
+  thumbnailUrl: string;
+  durationSeconds: number;
+  tags: string;
+  isPublished: boolean;
+}
 
 interface VideoUploadFormProps {
   onSubmit: (data: CreateVideoPayload) => Promise<void>;
@@ -58,8 +54,11 @@ export function VideoUploadForm({ onSubmit, video }: VideoUploadFormProps) {
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { videoType: 'upload', isPublished: false },
+    defaultValues: {
+      title: '', description: '', videoUrl: '', videoType: 'upload',
+      subjectId: '', gradeId: '', thumbnailUrl: '', durationSeconds: 0,
+      tags: '', isPublished: false,
+    },
   });
 
   useEffect(() => {

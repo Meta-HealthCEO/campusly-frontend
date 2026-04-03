@@ -128,7 +128,7 @@ export interface ClassEngagementStats {
   videoWatchRate: number;
 }
 
-export interface SessionFilters {
+export interface ClassroomSessionFilters {
   classId?: string;
   subjectId?: string;
   status?: string;

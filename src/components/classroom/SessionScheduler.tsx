@@ -2,8 +2,6 @@
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { PlusIcon, MinusIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,22 +11,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import type { CreateClassroomSessionPayload } from '@/types';
 
-const schema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
-  subjectId: z.string().min(1, 'Subject ID is required'),
-  classId: z.string().min(1, 'Class ID is required'),
-  scheduledStart: z.string().min(1, 'Start time is required'),
-  scheduledEnd: z.string().min(1, 'End time is required'),
-  isRecorded: z.boolean().optional(),
-  studentVideoEnabled: z.boolean().optional(),
-  studentAudioEnabled: z.boolean().optional(),
-  chatEnabled: z.boolean().optional(),
-  maxParticipants: z.coerce.number().min(1).optional(),
-  recurringRule: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
+interface FormValues {
+  title: string;
+  description: string;
+  subjectId: string;
+  classId: string;
+  scheduledStart: string;
+  scheduledEnd: string;
+  isRecorded: boolean;
+  studentVideoEnabled: boolean;
+  studentAudioEnabled: boolean;
+  chatEnabled: boolean;
+  maxParticipants: number;
+  recurringRule: string;
+}
 
 interface SessionSchedulerProps {
   onSubmit: (data: CreateClassroomSessionPayload) => Promise<void>;
@@ -38,8 +34,9 @@ export function SessionScheduler({ onSubmit }: SessionSchedulerProps) {
   const [submitting, setSubmitting] = useState(false);
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema),
     defaultValues: {
+      title: '', description: '', subjectId: '', classId: '',
+      scheduledStart: '', scheduledEnd: '', recurringRule: '',
       isRecorded: false,
       studentVideoEnabled: true,
       studentAudioEnabled: true,

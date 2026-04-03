@@ -94,7 +94,7 @@ export function VideoPlayer({ video, progress, onProgress }: VideoPlayerProps) {
       {!isEmbed && (
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Speed:</span>
-          <Select value={speed} onValueChange={setSpeed}>
+          <Select value={speed} onValueChange={(v: unknown) => setSpeed(v as string)}>
             <SelectTrigger className="w-full sm:w-24 h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
