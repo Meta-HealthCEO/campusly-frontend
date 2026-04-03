@@ -45,7 +45,6 @@ export function QuestionSearchPanel({
   const [typeFilter, setTypeFilter] = useState('all');
   const [capsFilter, setCapsFilter] = useState('all');
   const [difficultyFilter, setDifficultyFilter] = useState('all');
-  const [marksFilter, setMarksFilter] = useState('');
 
   const excludedCount = useMemo(
     () => questions.filter((q: QuestionItem) => excludeQuestionIds.has(q.id)).length,
@@ -126,15 +125,6 @@ export function QuestionSearchPanel({
             ))}
           </SelectContent>
         </Select>
-
-        <Input
-          value={marksFilter}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMarksFilter(e.target.value)}
-          placeholder="Marks"
-          type="number"
-          min={1}
-          className="w-full sm:w-20"
-        />
       </div>
 
       {/* Excluded count */}
