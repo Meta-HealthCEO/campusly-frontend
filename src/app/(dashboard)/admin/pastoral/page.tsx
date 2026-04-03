@@ -42,8 +42,8 @@ export default function AdminPastoralPage() {
 
           {report ? (
             <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-              <ReferralReasonChart data={report.referralsByReason} />
-              <OutcomeChart data={report.outcomeBreakdown} />
+              <ReferralReasonChart report={report} />
+              <OutcomeChart report={report} />
             </div>
           ) : (
             <EmptyState

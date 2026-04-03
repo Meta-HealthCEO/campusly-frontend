@@ -17,7 +17,7 @@ export default function TeacherReferralPage() {
   const [createOpen, setCreateOpen] = useState(false);
 
   const myReferrals = referrals.filter(
-    (r: PastoralReferral) => r.submittedById === user?.id,
+    (r: PastoralReferral) => r.referredBy.id === user?.id,
   );
 
   const load = useCallback(async () => {
@@ -51,12 +51,12 @@ export default function TeacherReferralPage() {
           description="You have not submitted any referrals yet. Use the button above to get started."
         />
       ) : (
-        <ReferralInbox referrals={myReferrals} readOnly />
+        <ReferralInbox referrals={myReferrals} onView={() => undefined} />
       )}
 
       <ReferralCreateDialog
         open={createOpen}
-        onClose={() => setCreateOpen(false)}
+        onOpenChange={setCreateOpen}
         onSubmit={handleCreate}
       />
     </div>

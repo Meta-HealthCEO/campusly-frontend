@@ -60,7 +60,7 @@ export default function StudentWellbeingProfilePage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={wellbeingProfile.studentName ?? 'Student Wellbeing Profile'}
+        title={`${wellbeingProfile.student.firstName} ${wellbeingProfile.student.lastName}`}
         description="Counselor view — referral history, sessions, and risk flags"
       >
         <Button onClick={() => setSessionCreateOpen(true)}>
@@ -72,9 +72,8 @@ export default function StudentWellbeingProfilePage() {
 
       <SessionCreateDialog
         open={sessionCreateOpen}
-        onClose={() => setSessionCreateOpen(false)}
+        onOpenChange={setSessionCreateOpen}
         onSubmit={handleCreateSession}
-        defaultStudentId={studentId}
       />
     </div>
   );

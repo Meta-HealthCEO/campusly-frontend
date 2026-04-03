@@ -43,10 +43,9 @@ function isReasonDataItem(item: unknown): item is ReasonDataItem {
 export function ReferralReasonChart({ report }: ReferralReasonChartProps) {
   const data = useMemo<ReasonDataItem[]>(() => {
     if (!report) return [];
-    return report.data
-      .filter(isReasonDataItem)
-      .map((item) => ({
-        name: item.name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    return (report.data.filter(isReasonDataItem) as unknown as ReasonDataItem[])
+      .map((item: ReasonDataItem): ReasonDataItem => ({
+        name: item.name.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
         value: item.value,
       }));
   }, [report]);
@@ -71,16 +70,13 @@ export function ReferralReasonChart({ report }: ReferralReasonChartProps) {
           cx="50%"
           cy="50%"
           outerRadius={90}
-          label={({ name, percent }: { name: string; percent: number }) =>
-            `${name} (${(percent * 100).toFixed(0)}%)`
-          }
-          labelLine={false}
+          label={false}
         >
           {data.map((_, i) => (
             <Cell key={i} fill={COLORS[i % COLORS.length]} />
           ))}
         </Pie>
-        <Tooltip formatter={(value: number) => [value, 'Referrals']} />
+        <Tooltip formatter={(value) => [value, 'Referrals']} />
         <Legend />
       </PieChart>
     </ResponsiveContainer>

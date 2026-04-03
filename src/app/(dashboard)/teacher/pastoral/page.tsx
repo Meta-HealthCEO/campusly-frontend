@@ -58,9 +58,8 @@ export default function CounselorDashboardPage() {
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
-  const handleResolve = async (data: ResolveReferralPayload) => {
-    if (!resolveTarget) return;
-    await resolveReferral(resolveTarget.id, data);
+  const handleResolve = async (id: string, data: ResolveReferralPayload) => {
+    await resolveReferral(id, data);
     setResolveTarget(null);
     setSelectedReferral(null);
   };
@@ -71,7 +70,7 @@ export default function CounselorDashboardPage() {
   };
 
   const handleFetchReport = async () => {
-    await fetchReport({ from: reportFrom, to: reportTo });
+    await fetchReport({ startDate: reportFrom, endDate: reportTo });
   };
 
   if (!isCounselor) {
@@ -93,9 +92,9 @@ export default function CounselorDashboardPage() {
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="referrals">
             Referrals
-            {referrals.filter((r) => r.status === 'pending').length > 0 && (
+            {referrals.filter((r) => r.status === 'referred').length > 0 && (
               <Badge variant="destructive" className="ml-1.5 text-xs">
-                {referrals.filter((r) => r.status === 'pending').length}
+                {referrals.filter((r) => r.status === 'referred').length}
               </Badge>
             )}
           </TabsTrigger>
@@ -111,18 +110,18 @@ export default function CounselorDashboardPage() {
           ) : (
             <>
               <CaseloadDashboard caseload={caseload} />
-              {caseload && caseload.overdueFollowUps > 0 && (
-                <OverdueFollowUpAlert count={caseload.overdueFollowUps} />
+              {caseload && caseload.overdueList && caseload.overdueList.length > 0 && (
+                <OverdueFollowUpAlert overdueList={caseload.overdueList} />
               )}
               <div className="space-y-2">
-                {(caseload?.activeCaseList ?? []).length === 0 ? (
+                {(caseload?.cases ?? []).length === 0 ? (
                   <EmptyState icon={ShieldAlert} title="No active cases" description="No open referrals at this time." />
                 ) : (
-                  (caseload?.activeCaseList ?? []).map((c) => (
+                  (caseload?.cases ?? []).map((c) => (
                     <StudentCaseRow
-                      key={c.studentId}
-                      studentCase={c}
-                      onClick={() => router.push(`/teacher/pastoral/students/${c.studentId}`)}
+                      key={c.studentId.id}
+                      caseItem={c}
+                      onClick={() => router.push(`/teacher/pastoral/students/${c.studentId.id}`)}
                     />
                   ))
                 )}
@@ -138,21 +137,21 @@ export default function CounselorDashboardPage() {
           ) : (
             <ReferralInbox
               referrals={referrals}
-              onSelect={setSelectedReferral}
-              onResolve={setResolveTarget}
-              onUpdate={updateReferral}
+              onView={setSelectedReferral}
             />
           )}
           <ReferralDetailDrawer
             referral={selectedReferral}
-            onClose={() => setSelectedReferral(null)}
-            onResolve={(r) => { setResolveTarget(r); setSelectedReferral(null); }}
-            onUpdate={updateReferral}
+            onResolve={(id) => {
+              const r = referrals.find((x) => x.id === id) ?? null;
+              setResolveTarget(r);
+              setSelectedReferral(null);
+            }}
           />
           <ResolutionDialog
             referral={resolveTarget}
             open={resolveTarget !== null}
-            onClose={() => setResolveTarget(null)}
+            onOpenChange={(open) => { if (!open) setResolveTarget(null); }}
             onSubmit={handleResolve}
           />
         </TabsContent>
@@ -169,14 +168,14 @@ export default function CounselorDashboardPage() {
           ) : sessions.length === 0 ? (
             <EmptyState icon={ShieldAlert} title="No sessions logged" description="Use the button above to log a counseling session." />
           ) : (
-            <SessionLogList sessions={sessions} onSelect={setSelectedSession} />
+            <SessionLogList sessions={sessions} onView={setSelectedSession} />
           )}
           {selectedSession && (
-            <SessionDetailCard session={selectedSession} onClose={() => setSelectedSession(null)} />
+            <SessionDetailCard session={selectedSession} />
           )}
           <SessionCreateDialog
             open={sessionCreateOpen}
-            onClose={() => setSessionCreateOpen(false)}
+            onOpenChange={setSessionCreateOpen}
             onSubmit={handleCreateSession}
           />
         </TabsContent>
@@ -188,21 +187,21 @@ export default function CounselorDashboardPage() {
             onChange={setStudentSearch}
             placeholder="Search students by name or grade…"
           />
-          {(caseload?.activeCaseList ?? [])
+          {(caseload?.cases ?? [])
             .filter((c) =>
               studentSearch.trim() === '' ||
-              c.studentName.toLowerCase().includes(studentSearch.toLowerCase()),
+              `${c.studentId.firstName} ${c.studentId.lastName}`.toLowerCase().includes(studentSearch.toLowerCase()),
             )
             .map((c) => (
               <StudentCaseRow
-                key={c.studentId}
-                studentCase={c}
-                onClick={() => router.push(`/teacher/pastoral/students/${c.studentId}`)}
+                key={c.studentId.id}
+                caseItem={c}
+                onClick={() => router.push(`/teacher/pastoral/students/${c.studentId.id}`)}
               />
             ))}
-          {(caseload?.activeCaseList ?? []).filter((c) =>
+          {(caseload?.cases ?? []).filter((c) =>
             studentSearch.trim() === '' ||
-            c.studentName.toLowerCase().includes(studentSearch.toLowerCase()),
+            `${c.studentId.firstName} ${c.studentId.lastName}`.toLowerCase().includes(studentSearch.toLowerCase()),
           ).length === 0 && (
             <EmptyState
               icon={ShieldAlert}
@@ -243,9 +242,9 @@ export default function CounselorDashboardPage() {
           </Card>
           {report ? (
             <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
-              <ReferralReasonChart data={report.referralsByReason} />
-              <SessionsPerMonthChart data={report.sessionsPerMonth} />
-              <OutcomeChart data={report.outcomeBreakdown} />
+              <ReferralReasonChart report={report} />
+              <SessionsPerMonthChart report={report} />
+              <OutcomeChart report={report} />
             </div>
           ) : (
             <EmptyState

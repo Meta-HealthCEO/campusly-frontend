@@ -32,7 +32,7 @@ function isMonthDataItem(item: unknown): item is MonthDataItem {
 export function SessionsPerMonthChart({ report }: SessionsPerMonthChartProps) {
   const data = useMemo<MonthDataItem[]>(() => {
     if (!report) return [];
-    return report.data.filter(isMonthDataItem);
+    return report.data.filter(isMonthDataItem) as unknown as MonthDataItem[];
   }, [report]);
 
   if (!report || data.length === 0) {
@@ -51,7 +51,7 @@ export function SessionsPerMonthChart({ report }: SessionsPerMonthChartProps) {
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="month" fontSize={12} />
         <YAxis fontSize={12} allowDecimals={false} />
-        <Tooltip formatter={(value: number) => [value, 'Sessions']} />
+        <Tooltip formatter={(value) => [value, 'Sessions']} />
         <Bar dataKey="count" name="Sessions" fill="#2563eb" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>

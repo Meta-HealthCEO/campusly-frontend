@@ -39,10 +39,9 @@ function isOutcomeDataItem(item: unknown): item is OutcomeDataItem {
 export function OutcomeChart({ report }: OutcomeChartProps) {
   const data = useMemo<OutcomeDataItem[]>(() => {
     if (!report) return [];
-    return report.data
-      .filter(isOutcomeDataItem)
-      .map((item) => ({
-        name: item.name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    return (report.data.filter(isOutcomeDataItem) as unknown as OutcomeDataItem[])
+      .map((item: OutcomeDataItem): OutcomeDataItem => ({
+        name: item.name.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
         value: item.value,
       }));
   }, [report]);
@@ -74,7 +73,7 @@ export function OutcomeChart({ report }: OutcomeChartProps) {
             <Cell key={i} fill={COLORS[i % COLORS.length]} />
           ))}
         </Pie>
-        <Tooltip formatter={(value: number) => [value, 'Referrals']} />
+        <Tooltip formatter={(value) => [value, 'Referrals']} />
         <Legend />
       </PieChart>
     </ResponsiveContainer>
