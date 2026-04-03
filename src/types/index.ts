@@ -54,3 +54,4 @@ export * from './pastoral';
 export * from './classroom';
 export * from './curriculum-structure';
 export * from './content-library';
+export * from './student-learning';
