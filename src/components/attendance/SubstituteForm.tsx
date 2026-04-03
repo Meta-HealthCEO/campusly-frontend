@@ -107,7 +107,7 @@ export function SubstituteForm({
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label>Original Teacher</Label>
-            <Select onValueChange={(val) => setValue('originalTeacherId', val as string)}>
+            <Select onValueChange={(val: unknown) => setValue('originalTeacherId', val as string)}>
               <SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger>
               <SelectContent>
                 {staff.map((s) => (
@@ -124,7 +124,7 @@ export function SubstituteForm({
 
           <div className="space-y-2">
             <Label>Substitute Teacher</Label>
-            <Select onValueChange={(val) => setValue('substituteTeacherId', val as string)}>
+            <Select onValueChange={(val: unknown) => setValue('substituteTeacherId', val as string)}>
               <SelectTrigger><SelectValue placeholder="Select substitute" /></SelectTrigger>
               <SelectContent>
                 {staff.map((s) => (

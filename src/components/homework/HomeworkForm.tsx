@@ -92,7 +92,7 @@ export function HomeworkForm({
           <Label>Subject</Label>
           <Select
             defaultValue={defaultValues?.subjectId}
-            onValueChange={(val) => setValue('subjectId', val as string)}
+            onValueChange={(val: unknown) => setValue('subjectId', val as string)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select subject" />
@@ -117,7 +117,7 @@ export function HomeworkForm({
           <Label>Class</Label>
           <Select
             defaultValue={defaultValues?.classId}
-            onValueChange={(val) => setValue('classId', val as string)}
+            onValueChange={(val: unknown) => setValue('classId', val as string)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select class" />

@@ -90,7 +90,7 @@ export function IncidentReportDialog({
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
             <div className="space-y-1">
               <Label>Type <span className="text-destructive">*</span></Label>
-              <Select value={type} onValueChange={(v: string | null) => { if (v) setType(v as IncidentType); }}>
+              <Select value={type} onValueChange={(v: unknown) => { if (v) setType(v as IncidentType); }}>
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {INCIDENT_TYPES.map((t) => (
@@ -101,7 +101,7 @@ export function IncidentReportDialog({
             </div>
             <div className="space-y-1">
               <Label>Severity <span className="text-destructive">*</span></Label>
-              <Select value={severity} onValueChange={(v: string | null) => { if (v) setSeverity(v as SeverityLevel); }}>
+              <Select value={severity} onValueChange={(v: unknown) => { if (v) setSeverity(v as SeverityLevel); }}>
                 <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {SEVERITY_LEVELS.map((s) => (

@@ -115,7 +115,7 @@ export function InterventionDialog({
             </Label>
             <Select
               value={status}
-              onValueChange={(val) => setStatus(val as InterventionStatus)}
+              onValueChange={(val: unknown) => setStatus(val as InterventionStatus)}
             >
               <SelectTrigger id="intervention-status" className="w-full">
                 <SelectValue />

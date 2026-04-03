@@ -65,7 +65,7 @@ export default function AdminDisciplinePage() {
       </PageHeader>
 
       <div className="flex flex-wrap gap-3">
-        <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val === 'all' ? '' : val as string)}>
+        <Select value={statusFilter} onValueChange={(val: unknown) => setStatusFilter((val as string) === 'all' ? '' : val as string)}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
@@ -77,7 +77,7 @@ export default function AdminDisciplinePage() {
             <SelectItem value="escalated">Escalated</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={typeFilter} onValueChange={(val) => setTypeFilter(val === 'all' ? '' : val as string)}>
+        <Select value={typeFilter} onValueChange={(val: unknown) => setTypeFilter((val as string) === 'all' ? '' : val as string)}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Filter by type" />
           </SelectTrigger>

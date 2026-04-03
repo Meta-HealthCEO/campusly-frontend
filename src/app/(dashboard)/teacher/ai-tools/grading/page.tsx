@@ -156,7 +156,7 @@ export default function GradingPage() {
               <Loader2 className="h-4 w-4 animate-spin" /> Loading assignments...
             </div>
           ) : (
-            <Select value={selectedAssignment} onValueChange={(v) => v && setSelectedAssignment(v)}>
+            <Select value={selectedAssignment} onValueChange={(v: unknown) => v && setSelectedAssignment(v as string)}>
               <SelectTrigger>
                 <SelectValue placeholder="Choose assignment..." />
               </SelectTrigger>

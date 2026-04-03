@@ -35,7 +35,7 @@ export function QuestionEditor({ question, onChange }: QuestionEditorProps) {
           <Label className="text-xs">Type</Label>
           <Select
             value={question.type}
-            onValueChange={(v: string | null) => onChange({ ...question, type: (v ?? 'scale') as WellbeingQuestionType })}
+            onValueChange={(v: unknown) => onChange({ ...question, type: ((v as string) ?? 'scale') as WellbeingQuestionType })}
           >
             <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
             <SelectContent>

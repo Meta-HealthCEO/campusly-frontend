@@ -100,7 +100,7 @@ export default function AdminAdmissionsPage() {
             className="pl-9 w-full"
           />
         </div>
-        <Select value={statusFilter} onValueChange={(val: string | null) => setStatusFilter(val ?? 'all')}>
+        <Select value={statusFilter} onValueChange={(val: unknown) => setStatusFilter((val as string) ?? 'all')}>
           <SelectTrigger className="w-full sm:w-44">
             <SelectValue />
           </SelectTrigger>

@@ -102,7 +102,7 @@ export function InterviewScheduleDialog({
             <Label>Type</Label>
             <Select
               value={form.interviewType}
-              onValueChange={(val: string | null) => {
+              onValueChange={(val: unknown) => {
                 if (val) setForm((prev: InterviewFormData) => ({ ...prev, interviewType: val as InterviewType }));
               }}
             >

@@ -52,7 +52,7 @@ export default function TeacherAttendancePage() {
               <span className="text-sm text-muted-foreground">Class:</span>
               <Select
                 value={selectedClass}
-                onValueChange={(val) => changeClass(val as string)}
+                onValueChange={(val: unknown) => changeClass(val as string)}
               >
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Select class" />
@@ -70,7 +70,7 @@ export default function TeacherAttendancePage() {
               <span className="text-sm text-muted-foreground">Period:</span>
               <Select
                 value={selectedPeriod}
-                onValueChange={(val) => changePeriod(val as string)}
+                onValueChange={(val: unknown) => changePeriod(val as string)}
               >
                 <SelectTrigger className="w-28">
                   <SelectValue placeholder="Period" />

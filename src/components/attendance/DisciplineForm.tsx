@@ -63,7 +63,7 @@ export function DisciplineForm({ open, onOpenChange, students, onSubmit }: Disci
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label>Student</Label>
-            <Select onValueChange={(val) => setValue('studentId', val as string)}>
+            <Select onValueChange={(val: unknown) => setValue('studentId', val as string)}>
               <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
               <SelectContent>
                 {students.map((s) => (
@@ -79,7 +79,7 @@ export function DisciplineForm({ open, onOpenChange, students, onSubmit }: Disci
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Type</Label>
-              <Select onValueChange={(val) => setValue('type', val as DisciplineFormValues['type'])}>
+              <Select onValueChange={(val: unknown) => setValue('type', val as DisciplineFormValues['type'])}>
                 <SelectTrigger><SelectValue placeholder="Incident type" /></SelectTrigger>
                 <SelectContent>
                   {INCIDENT_TYPES.map((t) => (
@@ -91,7 +91,7 @@ export function DisciplineForm({ open, onOpenChange, students, onSubmit }: Disci
             </div>
             <div className="space-y-2">
               <Label>Severity</Label>
-              <Select onValueChange={(val) => setValue('severity', val as DisciplineFormValues['severity'])}>
+              <Select onValueChange={(val: unknown) => setValue('severity', val as DisciplineFormValues['severity'])}>
                 <SelectTrigger><SelectValue placeholder="Severity" /></SelectTrigger>
                 <SelectContent>
                   {SEVERITIES.map((s) => (
@@ -116,7 +116,7 @@ export function DisciplineForm({ open, onOpenChange, students, onSubmit }: Disci
 
           <div className="space-y-2">
             <Label>Outcome</Label>
-            <Select onValueChange={(val) => setValue('outcome', val as DisciplineFormValues['outcome'])}>
+            <Select onValueChange={(val: unknown) => setValue('outcome', val as DisciplineFormValues['outcome'])}>
               <SelectTrigger><SelectValue placeholder="Select outcome (optional)" /></SelectTrigger>
               <SelectContent>
                 {OUTCOMES.map((o) => (

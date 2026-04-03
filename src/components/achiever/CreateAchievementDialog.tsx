@@ -85,7 +85,7 @@ export function CreateAchievementDialog({ open, onOpenChange, onSubmit }: Props)
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-3">
           <StudentSelector
             value={studentId}
-            onValueChange={(v) => { setStudentId(v); setValue('studentId', v); }}
+            onValueChange={(v: unknown) => { setStudentId(v as string); setValue('studentId', v as string); }}
           />
           {errors.studentId && <p className="text-xs text-destructive">{errors.studentId.message}</p>}
 

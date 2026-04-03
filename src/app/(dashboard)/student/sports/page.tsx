@@ -82,8 +82,8 @@ export default function StudentSportsPage() {
     if (tab === 'history') loadMatchHistory(selectedSport);
   }, [selectedSport, loadCareerStats, loadMatchHistory]);
 
-  const handleSportChange = useCallback((v: string | null) => {
-    setSelectedSport(v ?? 'all');
+  const handleSportChange = useCallback((v: unknown) => {
+    setSelectedSport((v as string) ?? 'all');
     setCareerStats(null);
     setMatches([]);
   }, []);

@@ -76,7 +76,7 @@ export default function PapersLibraryPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
-        <Select value={filterSubject} onValueChange={(v) => setFilterSubject(v === 'all' ? '' : (v ?? ''))}>
+        <Select value={filterSubject} onValueChange={(v: unknown) => setFilterSubject((v as string) === 'all' ? '' : ((v as string) ?? ''))}>
           <SelectTrigger className="w-44">
             <SelectValue placeholder="All Subjects" />
           </SelectTrigger>
@@ -87,7 +87,7 @@ export default function PapersLibraryPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={filterGrade} onValueChange={(v) => setFilterGrade(v === 'all' ? '' : (v ?? ''))}>
+        <Select value={filterGrade} onValueChange={(v: unknown) => setFilterGrade((v as string) === 'all' ? '' : ((v as string) ?? ''))}>
           <SelectTrigger className="w-36">
             <SelectValue placeholder="All Grades" />
           </SelectTrigger>
@@ -98,7 +98,7 @@ export default function PapersLibraryPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v === 'all' ? '' : (v ?? ''))}>
+        <Select value={filterStatus} onValueChange={(v: unknown) => setFilterStatus((v as string) === 'all' ? '' : ((v as string) ?? ''))}>
           <SelectTrigger className="w-36">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>

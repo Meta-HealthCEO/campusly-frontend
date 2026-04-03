@@ -46,13 +46,15 @@ export function QuestionBankBrowser({
   filters,
   onFiltersChange,
 }: QuestionBankBrowserProps) {
-  function handleDifficulty(val: string | null) {
-    const next = !val || val === 'all' ? undefined : (val as Difficulty);
+  function handleDifficulty(val: unknown) {
+    const str = val as string | null;
+    const next = !str || str === 'all' ? undefined : (str as Difficulty);
     onFiltersChange({ ...filters, difficulty: next });
   }
 
-  function handleCognitive(val: string | null) {
-    const next = !val || val === 'all' ? undefined : (val as CognitiveLevel);
+  function handleCognitive(val: unknown) {
+    const str = val as string | null;
+    const next = !str || str === 'all' ? undefined : (str as CognitiveLevel);
     onFiltersChange({ ...filters, cognitiveLevel: next });
   }
 

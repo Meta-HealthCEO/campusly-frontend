@@ -53,7 +53,7 @@ export default function AISportsAnalyticsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="AI Sports Analytics" description="AI-powered talent identification and performance analysis">
-        <Select value={selectedSport} onValueChange={(v: string | null) => { if (v) setSelectedSport(v); }}>
+        <Select value={selectedSport} onValueChange={(v: unknown) => { if (v) setSelectedSport(v as string); }}>
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="All sports" />
           </SelectTrigger>

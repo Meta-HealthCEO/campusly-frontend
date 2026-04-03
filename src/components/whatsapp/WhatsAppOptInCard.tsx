@@ -89,7 +89,7 @@ export function WhatsAppOptInCard({ status, loading, onOptIn, onOptOut }: WhatsA
             </div>
             <div className="space-y-2">
               <Label htmlFor="wa-lang">Preferred Language</Label>
-              <Select value={language} onValueChange={(v: string | null) => { if (v) setLanguage(v); }}>
+              <Select value={language} onValueChange={(v: unknown) => { if (v) setLanguage(v as string); }}>
                 <SelectTrigger className="w-full sm:w-48" id="wa-lang">
                   <SelectValue />
                 </SelectTrigger>

@@ -60,7 +60,7 @@ export function MeritForm({ open, onOpenChange, students, onSubmit }: MeritFormP
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label>Student</Label>
-            <Select onValueChange={(val) => setValue('studentId', val as string)}>
+            <Select onValueChange={(val: unknown) => setValue('studentId', val as string)}>
               <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
               <SelectContent>
                 {students.map((s) => (
@@ -76,7 +76,7 @@ export function MeritForm({ open, onOpenChange, students, onSubmit }: MeritFormP
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Type</Label>
-              <Select value={selectedType} onValueChange={(val) => setValue('type', val as 'merit' | 'demerit')}>
+              <Select value={selectedType} onValueChange={(val: unknown) => setValue('type', val as 'merit' | 'demerit')}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="merit">Merit</SelectItem>
@@ -93,7 +93,7 @@ export function MeritForm({ open, onOpenChange, students, onSubmit }: MeritFormP
 
           <div className="space-y-2">
             <Label>Category</Label>
-            <Select onValueChange={(val) => setValue('category', val as MeritFormValues['category'])}>
+            <Select onValueChange={(val: unknown) => setValue('category', val as MeritFormValues['category'])}>
               <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
               <SelectContent>
                 {MERIT_CATEGORIES.map((c) => (

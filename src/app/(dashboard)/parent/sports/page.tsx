@@ -106,7 +106,7 @@ export default function ParentSportsPage() {
       />
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <Select value={selectedChildId} onValueChange={(v: string | null) => setSelectedChildId(v ?? '')}>
+        <Select value={selectedChildId} onValueChange={(v: unknown) => setSelectedChildId((v as string) ?? '')}>
           <SelectTrigger className="w-full sm:w-52">
             <SelectValue placeholder="Select child" />
           </SelectTrigger>
@@ -119,7 +119,7 @@ export default function ParentSportsPage() {
           </SelectContent>
         </Select>
 
-        <Select value={selectedSport} onValueChange={(v: string | null) => setSelectedSport(v ?? 'all')}>
+        <Select value={selectedSport} onValueChange={(v: unknown) => setSelectedSport((v as string) ?? 'all')}>
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Filter by sport" />
           </SelectTrigger>

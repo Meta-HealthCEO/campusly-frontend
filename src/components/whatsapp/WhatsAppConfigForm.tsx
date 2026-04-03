@@ -82,7 +82,7 @@ export function WhatsAppConfigForm({ config, loading, onSave }: WhatsAppConfigFo
 
         <div className="space-y-2">
           <Label htmlFor="provider">Provider <span className="text-destructive">*</span></Label>
-          <Select value={provider} onValueChange={(v: string | null) => { if (v) setProvider(v as WhatsAppProvider); }}>
+          <Select value={provider} onValueChange={(v: unknown) => { if (v) setProvider(v as WhatsAppProvider); }}>
             <SelectTrigger className="w-full sm:w-60" id="provider">
               <SelectValue />
             </SelectTrigger>

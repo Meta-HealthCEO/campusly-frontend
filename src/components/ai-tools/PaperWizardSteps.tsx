@@ -56,7 +56,7 @@ export function StepBasicInfo({ subject, setSubject, grade, setGrade, term, setT
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label>Subject</Label>
-            <Select value={subject} onValueChange={(v) => v && setSubject(v)}>
+            <Select value={subject} onValueChange={(v: unknown) => v && setSubject(v as string)}>
               <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
               <SelectContent>
                 {subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -65,7 +65,7 @@ export function StepBasicInfo({ subject, setSubject, grade, setGrade, term, setT
           </div>
           <div className="space-y-2">
             <Label>Grade</Label>
-            <Select value={grade} onValueChange={(v) => v && setGrade(v)}>
+            <Select value={grade} onValueChange={(v: unknown) => v && setGrade(v as string)}>
               <SelectTrigger><SelectValue placeholder="Select grade" /></SelectTrigger>
               <SelectContent>
                 {Array.from({ length: 12 }, (_, i) => (
@@ -76,7 +76,7 @@ export function StepBasicInfo({ subject, setSubject, grade, setGrade, term, setT
           </div>
           <div className="space-y-2">
             <Label>Term</Label>
-            <Select value={term} onValueChange={(v) => v && setTerm(v)}>
+            <Select value={term} onValueChange={(v: unknown) => v && setTerm(v as string)}>
               <SelectTrigger><SelectValue placeholder="Select term" /></SelectTrigger>
               <SelectContent>
                 {[1, 2, 3, 4].map(t => <SelectItem key={t} value={String(t)}>Term {t}</SelectItem>)}
@@ -111,7 +111,7 @@ export function StepConfig({ duration, setDuration, totalMarks, setTotalMarks, d
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label>Duration (minutes)</Label>
-            <Select value={duration} onValueChange={(v) => v && setDuration(v)}>
+            <Select value={duration} onValueChange={(v: unknown) => v && setDuration(v as string)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {durations.map(d => <SelectItem key={d} value={d}>{d} minutes</SelectItem>)}
@@ -165,7 +165,7 @@ export function StepSections({ sections, totalMarks, sectionMarksTotal, addSecti
             <div className="grid flex-1 gap-3 sm:grid-cols-3">
               <div className="space-y-1">
                 <Label className="text-xs">Type</Label>
-                <Select value={section.type} onValueChange={(v) => v && updateSection(section.id, 'type', v)}>
+                <Select value={section.type} onValueChange={(v: unknown) => v && updateSection(section.id, 'type', v as string)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {sectionTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}

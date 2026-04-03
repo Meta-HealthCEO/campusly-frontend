@@ -92,13 +92,9 @@ export interface SimpleStudent {
   admissionNumber: string;
 }
 
-/* ── Mapping helpers ── */
-
 function mapId<T extends Record<string, unknown>>(item: T): T & { id: string } {
   return { ...item, id: (item._id as string) ?? (item.id as string) };
 }
-
-/* ── Hook ── */
 
 export interface RouteCapacityStat {
   routeId: string;

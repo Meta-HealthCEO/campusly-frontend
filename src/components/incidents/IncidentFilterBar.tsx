@@ -64,7 +64,7 @@ export function IncidentFilterBar({
           className="pl-9 w-full"
         />
       </div>
-      <Select value={status} onValueChange={(v: string | null) => onStatusChange(v ?? 'all')}>
+      <Select value={status} onValueChange={(v: unknown) => onStatusChange((v as string) ?? 'all')}>
         <SelectTrigger className="w-full sm:w-40"><SelectValue /></SelectTrigger>
         <SelectContent>
           {STATUS_OPTIONS.map((o) => (
@@ -72,7 +72,7 @@ export function IncidentFilterBar({
           ))}
         </SelectContent>
       </Select>
-      <Select value={type} onValueChange={(v: string | null) => onTypeChange(v ?? 'all')}>
+      <Select value={type} onValueChange={(v: unknown) => onTypeChange((v as string) ?? 'all')}>
         <SelectTrigger className="w-full sm:w-40"><SelectValue /></SelectTrigger>
         <SelectContent>
           {TYPE_OPTIONS.map((o) => (
@@ -80,7 +80,7 @@ export function IncidentFilterBar({
           ))}
         </SelectContent>
       </Select>
-      <Select value={severity} onValueChange={(v: string | null) => onSeverityChange(v ?? 'all')}>
+      <Select value={severity} onValueChange={(v: unknown) => onSeverityChange((v as string) ?? 'all')}>
         <SelectTrigger className="w-full sm:w-40"><SelectValue /></SelectTrigger>
         <SelectContent>
           {SEVERITY_OPTIONS.map((o) => (

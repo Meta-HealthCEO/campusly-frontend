@@ -57,8 +57,8 @@ export function NewThreadDialog({
     setRecipientId('');
   }, [studentId]);
 
-  const handleStudentChange = (val: string | null) => {
-    const v = val ?? '';
+  const handleStudentChange = (val: unknown) => {
+    const v = (val as string) ?? '';
     setStudentId(v);
     if (v) onStudentSelect(v);
   };
@@ -105,7 +105,7 @@ export function NewThreadDialog({
           <div className="space-y-2">
             <Label>{recipientLabel} <span className="text-destructive">*</span></Label>
             <Select
-              onValueChange={(val: string | null) => setRecipientId(val ?? '')}
+              onValueChange={(val: unknown) => setRecipientId((val as string) ?? '')}
               value={recipientId}
               disabled={!studentId || loadingRecipients}
             >

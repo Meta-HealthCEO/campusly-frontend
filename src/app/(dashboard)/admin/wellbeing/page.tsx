@@ -71,7 +71,7 @@ export default function AdminWellbeingPage() {
 
         <TabsContent value="dashboard" className="space-y-6 mt-4">
           <div className="flex items-center gap-3">
-            <Select value={period} onValueChange={(v: string | null) => setPeriod(v ?? 'month')}>
+            <Select value={period} onValueChange={(v: unknown) => setPeriod((v as string) ?? 'month')}>
               <SelectTrigger className="w-full sm:w-40"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="week">This Week</SelectItem>

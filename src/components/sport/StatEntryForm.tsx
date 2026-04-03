@@ -103,7 +103,7 @@ export function StatEntryForm({ sportConfig, players, onSubmit, loading }: StatE
                     <td className="py-2 pr-3">
                       <Select
                         value={playerStats[idx]?.position ?? ''}
-                        onValueChange={(val: string | null) => updatePlayerPosition(idx, val ?? '')}
+                        onValueChange={(val: unknown) => updatePlayerPosition(idx, (val as string) ?? '')}
                       >
                         <SelectTrigger className="w-full sm:w-28">
                           <SelectValue placeholder="Pos" />
@@ -184,7 +184,7 @@ function StatFieldInput({ field, value, onChange }: StatFieldInputProps) {
       return (
         <Select
           value={value !== undefined ? String(value) : ''}
-          onValueChange={(val: string | null) => onChange(val ?? '')}
+          onValueChange={(val: unknown) => onChange((val as string) ?? '')}
         >
           <SelectTrigger className="w-full sm:w-28">
             <SelectValue placeholder="Select" />

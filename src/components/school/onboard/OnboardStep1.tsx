@@ -40,8 +40,8 @@ export function OnboardStep1({ data, update }: Props) {
         <Label>Province</Label>
         <Select
           value={data.province}
-          onValueChange={(v) => {
-            if (v) update({ province: v });
+          onValueChange={(v: unknown) => {
+            if (v) update({ province: v as string });
           }}
         >
           <SelectTrigger>
@@ -68,8 +68,8 @@ export function OnboardStep1({ data, update }: Props) {
         <Label>School Type</Label>
         <Select
           value={data.schoolType || 'combined'}
-          onValueChange={(v) => {
-            if (v) update({ schoolType: v });
+          onValueChange={(v: unknown) => {
+            if (v) update({ schoolType: v as string });
           }}
         >
           <SelectTrigger>

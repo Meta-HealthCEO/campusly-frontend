@@ -115,7 +115,7 @@ export default function TeacherMeritsPage() {
       </PageHeader>
 
       <div className="flex flex-wrap gap-3">
-        <Select value={typeFilter} onValueChange={(val) => setTypeFilter(val === 'all' ? '' : val as string)}>
+        <Select value={typeFilter} onValueChange={(val: unknown) => setTypeFilter((val as string) === 'all' ? '' : val as string)}>
           <SelectTrigger className="w-full sm:w-36">
             <SelectValue placeholder="Filter type" />
           </SelectTrigger>
@@ -125,7 +125,7 @@ export default function TeacherMeritsPage() {
             <SelectItem value="demerit">Demerits</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={categoryFilter} onValueChange={(val) => setCategoryFilter(val === 'all' ? '' : val as string)}>
+        <Select value={categoryFilter} onValueChange={(val: unknown) => setCategoryFilter((val as string) === 'all' ? '' : val as string)}>
           <SelectTrigger className="w-full sm:w-40">
             <SelectValue placeholder="Filter category" />
           </SelectTrigger>

@@ -66,7 +66,7 @@ export function ChildDetailsStep({ form, onChange }: StepProps) {
         </div>
         <div className="space-y-2">
           <Label>Gender</Label>
-          <Select value={form.gender} onValueChange={(val: string | null) => { if (val) onChange('gender', val); }}>
+          <Select value={form.gender} onValueChange={(val: unknown) => { if (val) onChange('gender', val as string); }}>
             <SelectTrigger className="w-full"><SelectValue placeholder="Select..." /></SelectTrigger>
             <SelectContent>
               <SelectItem value="male">Male</SelectItem>
@@ -78,7 +78,7 @@ export function ChildDetailsStep({ form, onChange }: StepProps) {
         <div className="space-y-2">
           <Label>Grade Applying For <span className="text-destructive">*</span></Label>
           <Select value={form.gradeApplyingFor}
-            onValueChange={(val: string | null) => { if (val) onChange('gradeApplyingFor', val); }}>
+            onValueChange={(val: unknown) => { if (val) onChange('gradeApplyingFor', val as string); }}>
             <SelectTrigger className="w-full"><SelectValue placeholder="Select grade..." /></SelectTrigger>
             <SelectContent>
               <SelectItem value="0">Grade R</SelectItem>
@@ -91,7 +91,7 @@ export function ChildDetailsStep({ form, onChange }: StepProps) {
         <div className="space-y-2">
           <Label>Year <span className="text-destructive">*</span></Label>
           <Select value={form.yearApplyingFor}
-            onValueChange={(val: string | null) => { if (val) onChange('yearApplyingFor', val); }}>
+            onValueChange={(val: unknown) => { if (val) onChange('yearApplyingFor', val as string); }}>
             <SelectTrigger className="w-full"><SelectValue placeholder="Select year..." /></SelectTrigger>
             <SelectContent>
               {[2026, 2027, 2028].map((y: number) => (
@@ -145,7 +145,7 @@ export function ParentDetailsStep({ form, onChange }: StepProps) {
         <div className="space-y-2">
           <Label>Relationship</Label>
           <Select value={form.parentRelationship}
-            onValueChange={(val: string | null) => { if (val) onChange('parentRelationship', val); }}>
+            onValueChange={(val: unknown) => { if (val) onChange('parentRelationship', val as string); }}>
             <SelectTrigger className="w-full"><SelectValue placeholder="Select..." /></SelectTrigger>
             <SelectContent>
               <SelectItem value="mother">Mother</SelectItem>

@@ -36,7 +36,7 @@ export function PlayerCardGrid({ cards, onSelect, sportCodes = [] }: PlayerCardG
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row">
-        <Select value={sportFilter} onValueChange={(v: string | null) => setSportFilter(v ?? 'all')}>
+        <Select value={sportFilter} onValueChange={(v: unknown) => setSportFilter((v as string) ?? 'all')}>
           <SelectTrigger className="w-full sm:w-40">
             <SelectValue placeholder="Sport" />
           </SelectTrigger>
@@ -47,7 +47,7 @@ export function PlayerCardGrid({ cards, onSelect, sportCodes = [] }: PlayerCardG
             ))}
           </SelectContent>
         </Select>
-        <Select value={sortBy} onValueChange={(v: string | null) => setSortBy((v ?? 'rating') as 'rating' | 'name')}>
+        <Select value={sortBy} onValueChange={(v: unknown) => setSortBy(((v as string) ?? 'rating') as 'rating' | 'name')}>
           <SelectTrigger className="w-full sm:w-40">
             <SelectValue placeholder="Sort" />
           </SelectTrigger>
