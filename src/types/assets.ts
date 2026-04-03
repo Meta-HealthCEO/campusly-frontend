@@ -7,8 +7,8 @@ export type AssignmentType = 'user' | 'department' | 'location' | 'class';
 export type CheckOutStatus = 'checked_out' | 'returned' | 'overdue';
 export type MaintenanceType = 'repair' | 'service' | 'upgrade' | 'inspection';
 export type MaintenanceStatus = 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
-export type IncidentType = 'damage' | 'loss' | 'theft' | 'vandalism';
-export type IncidentStatus = 'reported' | 'investigating' | 'resolved';
+export type AssetIncidentType = 'damage' | 'loss' | 'theft' | 'vandalism';
+export type AssetIncidentStatus = 'reported' | 'investigating' | 'resolved';
 export type PremiumFrequency = 'monthly' | 'quarterly' | 'annual';
 
 // ─── Asset Category ───────────────────────────────────────────────────────────
@@ -213,7 +213,7 @@ export interface AssetIncident {
   id: string;
   assetId: string | { id: string; name: string; assetTag: string };
   schoolId: string;
-  type: IncidentType;
+  type: AssetIncidentType;
   description: string;
   date: string;
   reportedBy: string | { id: string; firstName: string; lastName: string };
@@ -221,13 +221,13 @@ export interface AssetIncident {
   estimatedCost?: number;
   actualCost?: number;
   images?: string[];
-  status: IncidentStatus;
+  status: AssetIncidentStatus;
   resolution?: string;
   createdAt: string;
 }
 
-export interface CreateIncidentPayload {
-  type: IncidentType;
+export interface CreateAssetIncidentPayload {
+  type: AssetIncidentType;
   description: string;
   date: string;
   responsiblePartyId?: string;

@@ -3,7 +3,8 @@
     "allow": [
       "Bash(grep -E \"\\(page|layout\\).tsx$\")",
       "Bash(docker run:*)",
-      "Bash(xargs wc:*)"
+      "Bash(xargs wc:*)",
+      "Bash(npx tsx:*)"
     ]
   }
 }

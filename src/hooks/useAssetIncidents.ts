@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapList, extractErrorMessage } from '@/lib/api-helpers';
-import type { AssetIncident, CreateIncidentPayload } from '@/types';
+import type { AssetIncident, CreateAssetIncidentPayload } from '@/types';
 
 interface IncidentFilters {
   assetId?: string;
@@ -33,7 +33,7 @@ export function useAssetIncidents() {
 
   const createIncident = useCallback(async (
     assetId: string,
-    data: CreateIncidentPayload,
+    data: CreateAssetIncidentPayload,
   ): Promise<AssetIncident> => {
     const res = await apiClient.post(`/assets/${assetId}/incidents`, data);
     toast.success('Incident reported');
@@ -43,7 +43,7 @@ export function useAssetIncidents() {
 
   const updateIncident = useCallback(async (
     id: string,
-    data: Partial<CreateIncidentPayload> & { status?: string; resolution?: string; actualCost?: number },
+    data: Partial<CreateAssetIncidentPayload> & { status?: string; resolution?: string; actualCost?: number },
   ): Promise<void> => {
     await apiClient.put(`/assets/incidents/${id}`, data);
     toast.success('Incident updated');

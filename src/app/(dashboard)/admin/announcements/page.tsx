@@ -35,6 +35,8 @@ export default function AnnouncementsPage() {
     deleteAnnouncement,
     publishAnnouncement,
     unpublishAnnouncement,
+    schedulePublish,
+    getReadAnalytics,
   } = useAnnouncementCrud();
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -214,6 +216,12 @@ export default function AnnouncementsPage() {
               onDelete={() => { setDeleteTarget(selected.id); setDeleteOpen(true); }}
               onPublish={() => handlePublish(selected.id)}
               onUnpublish={() => handleUnpublish(selected.id)}
+              onSchedulePublish={async (publishAt: string) => {
+                await schedulePublish(selected.id, publishAt);
+                toast.success('Publish scheduled!');
+                await refetch();
+              }}
+              getReadAnalytics={getReadAnalytics}
             />
           ) : (
             <Card>

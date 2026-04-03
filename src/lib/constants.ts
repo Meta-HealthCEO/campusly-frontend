@@ -8,9 +8,11 @@ import {
   Heart, Upload, Shirt, Trophy, Sparkles,
   Compass, Target, Clipboard, Newspaper,
   Wrench, Database, FileEdit, CheckCircle, ClipboardCheck,
-  CalendarCheck, CalendarCog,
+  CalendarCheck, CalendarCog, Crown, DoorOpen, UserPlus,
+  AlertTriangle, Calculator,
   type LucideIcon
 } from 'lucide-react';
+import type { PermissionFlag } from '@/types';
 
 export const ROUTES = {
   // Public
@@ -59,6 +61,37 @@ export const ROUTES = {
   ADMIN_MEETINGS: '/admin/meetings',
   ADMIN_SCHOOL_NEWS: '/admin/school-news',
   ADMIN_TIMETABLE_BUILDER: '/admin/timetable-builder',
+  ADMIN_PRINCIPAL: '/admin/principal',
+  ADMIN_BURSAR: '/admin/bursar',
+  ADMIN_RECEPTION: '/admin/reception',
+  ADMIN_PERMISSIONS: '/admin/settings/permissions',
+  ADMIN_LEAVE: '/admin/leave',
+  ADMIN_CONFERENCES: '/admin/conferences',
+  ADMIN_COMM_CONFIG: '/admin/settings/communication',
+  ADMIN_COMM_TEMPLATES: '/admin/settings/communication/templates',
+  ADMIN_COMM_DASHBOARD: '/admin/communication/dashboard',
+  ADMIN_COMM_LOG: '/admin/communication/log',
+
+  // Admin — Admissions
+  ADMIN_ADMISSIONS: '/admin/admissions',
+  ADMIN_ADMISSIONS_CAPACITY: '/admin/admissions/capacity',
+  ADMIN_ADMISSIONS_REPORTS: '/admin/admissions/reports',
+
+  // Admin — Budget
+  ADMIN_BUDGET: '/admin/budget',
+
+  // Admin — Incidents & Wellbeing
+  ADMIN_INCIDENTS: '/admin/incidents',
+  ADMIN_WELLBEING: '/admin/wellbeing',
+
+  // Teacher — Incidents
+  TEACHER_INCIDENTS: '/teacher/incidents',
+
+  // Student — Wellbeing
+  STUDENT_WELLBEING: '/student/wellbeing',
+
+  // Parent — Admissions
+  PARENT_ADMISSIONS: '/parent/admissions',
 
   // Parent
   PARENT_DASHBOARD: '/parent',
@@ -79,6 +112,7 @@ export const ROUTES = {
   PARENT_DIGEST: '/parent/digest',
   PARENT_HOMEWORK: '/parent/homework',
   PARENT_SPORTS: '/parent/sports',
+  PARENT_CONFERENCES: '/parent/conferences',
   PARENT_SETTINGS: '/parent/settings',
 
   // Student
@@ -138,6 +172,12 @@ export const ROUTES = {
   TEACHER_AI_GRADING: '/teacher/ai-tools/grading',
   TEACHER_AI_PAPERS: '/teacher/ai-tools/papers',
 
+  // Teacher — Permission-gated
+  TEACHER_HOD: '/teacher/hod',
+  TEACHER_PASTORAL: '/teacher/pastoral',
+  TEACHER_LEAVE: '/teacher/leave',
+  TEACHER_CONFERENCES: '/teacher/conferences',
+
   // Teacher Workbench
   TEACHER_WORKBENCH: '/teacher/workbench',
   TEACHER_WORKBENCH_CURRICULUM: '/teacher/workbench/curriculum',
@@ -164,6 +204,7 @@ export interface NavItem {
   icon: LucideIcon;
   module?: string;
   badge?: string;
+  permission?: PermissionFlag;
   children?: NavItem[];
 }
 
@@ -189,7 +230,14 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Attendance', href: ROUTES.ADMIN_ATTENDANCE, icon: ClipboardList },
   { label: 'Events', href: ROUTES.ADMIN_EVENTS, icon: CalendarDays, module: 'events' },
   { label: 'Transport', href: ROUTES.ADMIN_TRANSPORT, icon: Bus, module: 'transport' },
-  { label: 'Communication', href: ROUTES.ADMIN_COMMUNICATION, icon: MessageSquare, module: 'communication' },
+  {
+    label: 'Communication', href: ROUTES.ADMIN_COMMUNICATION, icon: MessageSquare, module: 'communication',
+    children: [
+      { label: 'Messages', href: ROUTES.ADMIN_COMMUNICATION, icon: MessageSquare },
+      { label: 'Delivery Dashboard', href: ROUTES.ADMIN_COMM_DASHBOARD, icon: BarChart3 },
+      { label: 'Delivery Log', href: ROUTES.ADMIN_COMM_LOG, icon: FileText },
+    ],
+  },
   { label: 'Lost & Found', href: ROUTES.ADMIN_LOST_FOUND, icon: PackageSearch },
   { label: 'Library', href: ROUTES.ADMIN_LIBRARY, icon: BookMarked, module: 'library' },
   { label: 'After Care', href: ROUTES.ADMIN_AFTERCARE, icon: Clock },
@@ -215,8 +263,13 @@ export const ADMIN_NAV: NavItem[] = [
       { label: 'Awards', href: ROUTES.ADMIN_ACHIEVER_AWARDS, icon: Award },
     ],
   },
+  { label: 'Budget', href: ROUTES.ADMIN_BUDGET, icon: Calculator, module: 'budget' },
+  { label: 'Incidents', href: ROUTES.ADMIN_INCIDENTS, icon: AlertTriangle, module: 'incident_wellbeing' },
+  { label: 'Wellbeing', href: ROUTES.ADMIN_WELLBEING, icon: Heart, module: 'incident_wellbeing' },
   { label: 'Consent', href: ROUTES.ADMIN_CONSENT, icon: Shield, module: 'consent' },
   { label: 'Meetings', href: ROUTES.ADMIN_MEETINGS, icon: CalendarCheck },
+  { label: 'Staff Leave', href: ROUTES.ADMIN_LEAVE, icon: CalendarDays, module: 'staff_leave' },
+  { label: 'Conferences', href: ROUTES.ADMIN_CONFERENCES, icon: Users, module: 'conference_booking' },
   {
     label: 'Career Guidance', href: ROUTES.ADMIN_CAREERS_UNIVERSITIES, icon: Compass, module: 'careers',
     children: [
@@ -225,13 +278,28 @@ export const ADMIN_NAV: NavItem[] = [
       { label: 'Bursaries', href: ROUTES.ADMIN_CAREERS_BURSARIES, icon: DollarSign },
     ],
   },
+  {
+    label: 'Admissions', href: ROUTES.ADMIN_ADMISSIONS, icon: UserPlus, module: 'admissions',
+    children: [
+      { label: 'Pipeline', href: ROUTES.ADMIN_ADMISSIONS, icon: UserPlus },
+      { label: 'Capacity', href: ROUTES.ADMIN_ADMISSIONS_CAPACITY, icon: Users },
+      { label: 'Reports', href: ROUTES.ADMIN_ADMISSIONS_REPORTS, icon: BarChart3 },
+    ],
+  },
   { label: 'Reports', href: ROUTES.ADMIN_REPORTS, icon: BarChart3 },
+  // ─── Permission-gated (Special Roles) ──────────────────────────────
+  { label: 'Principal Dashboard', href: ROUTES.ADMIN_PRINCIPAL, icon: Crown, permission: 'isSchoolPrincipal' },
+  { label: 'Financial Management', href: ROUTES.ADMIN_BURSAR, icon: Wallet, permission: 'isBursar' },
+  { label: 'Visitor Management', href: ROUTES.ADMIN_RECEPTION, icon: DoorOpen, permission: 'isReceptionist' },
   {
     label: 'Settings', href: ROUTES.ADMIN_SETTINGS, icon: Settings,
     children: [
       { label: 'General', href: ROUTES.ADMIN_SETTINGS, icon: Settings },
       { label: 'Payments', href: ROUTES.ADMIN_PAYMENT_SETTINGS, icon: CreditCard },
+      { label: 'Messaging', href: ROUTES.ADMIN_COMM_CONFIG, icon: MessageSquare },
+      { label: 'Templates', href: ROUTES.ADMIN_COMM_TEMPLATES, icon: FileText },
       { label: 'WhatsApp', href: ROUTES.ADMIN_WHATSAPP_SETTINGS, icon: MessageSquare },
+      { label: 'Permissions', href: ROUTES.ADMIN_PERMISSIONS, icon: Shield },
     ],
   },
 ];
@@ -254,7 +322,9 @@ export const PARENT_NAV: NavItem[] = [
   { label: 'Lost & Found', href: ROUTES.PARENT_LOST_FOUND, icon: PackageSearch },
   { label: 'Library', href: ROUTES.PARENT_LIBRARY, icon: BookMarked, module: 'library' },
   { label: 'Sports', href: ROUTES.PARENT_SPORTS, icon: Trophy, module: 'sports' },
+  { label: 'Admissions', href: ROUTES.PARENT_ADMISSIONS, icon: UserPlus, module: 'admissions' },
   { label: 'Meetings', href: ROUTES.PARENT_MEETINGS, icon: CalendarCheck },
+  { label: 'Conferences', href: ROUTES.PARENT_CONFERENCES, icon: Users, module: 'conference_booking' },
   { label: 'Settings', href: ROUTES.PARENT_SETTINGS, icon: Bell },
   { label: 'AI Assistant', href: ROUTES.PARENT_AI_ASSISTANT, icon: Sparkles, module: 'ai_tools' },
   {
@@ -275,6 +345,7 @@ export const STUDENT_NAV: NavItem[] = [
   { label: 'Achievements', href: ROUTES.STUDENT_ACHIEVEMENTS, icon: Award },
   { label: 'Wallet', href: ROUTES.STUDENT_WALLET, icon: Wallet, module: 'wallet' },
   { label: 'My Sports', href: ROUTES.STUDENT_SPORTS, icon: Trophy, module: 'sports' },
+  { label: 'Wellbeing', href: ROUTES.STUDENT_WELLBEING, icon: Heart, module: 'incident_wellbeing' },
   { label: 'AI Tutor', href: ROUTES.STUDENT_AI_TUTOR, icon: Sparkles, module: 'ai_tools' },
   {
     label: 'Career Guidance', href: ROUTES.STUDENT_CAREERS, icon: Compass, module: 'careers',
@@ -312,6 +383,7 @@ export const TEACHER_NAV: NavItem[] = [
       { label: 'Report Comments', href: ROUTES.TEACHER_AI_REPORT_COMMENTS, icon: FileText },
     ],
   },
+  { label: 'Incidents', href: ROUTES.TEACHER_INCIDENTS, icon: AlertTriangle, module: 'incident_wellbeing' },
   { label: 'Discipline', href: ROUTES.TEACHER_DISCIPLINE, icon: Shield },
   { label: 'Classes', href: ROUTES.TEACHER_CLASSES, icon: Users },
   { label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
@@ -319,7 +391,12 @@ export const TEACHER_NAV: NavItem[] = [
   { label: 'Notice Board', href: ROUTES.TEACHER_NOTICE_BOARD, icon: Clipboard },
   { label: 'Communication', href: ROUTES.TEACHER_COMMUNICATION, icon: Megaphone, module: 'communication' },
   { label: 'Meetings', href: ROUTES.TEACHER_MEETINGS, icon: CalendarCheck },
+  { label: 'My Leave', href: ROUTES.TEACHER_LEAVE, icon: CalendarDays, module: 'staff_leave' },
+  { label: 'Conferences', href: ROUTES.TEACHER_CONFERENCES, icon: Users, module: 'conference_booking' },
   { label: 'Reports', href: ROUTES.TEACHER_REPORTS, icon: BarChart3 },
+  // ─── Permission-gated (Special Roles) ──────────────────────────────
+  { label: 'HOD Oversight', href: ROUTES.TEACHER_HOD, icon: Users, permission: 'isHOD' },
+  { label: 'Pastoral Care', href: ROUTES.TEACHER_PASTORAL, icon: Heart, permission: 'isCounselor' },
   {
     label: 'Workbench',
     href: ROUTES.TEACHER_WORKBENCH,
@@ -348,6 +425,7 @@ export const MODULES = [
   { id: 'library', name: 'Library', description: 'Book lending and reading challenges' },
   { id: 'discipline', name: 'Discipline', description: 'Merit/demerit tracking' },
   { id: 'careers', name: 'Career Guidance', description: 'University guidance, APS calculator, and career planning' },
+  { id: 'incident_wellbeing', name: 'Incidents & Wellbeing', description: 'Incident reporting, wellbeing surveys, mood tracking' },
 ] as const;
 
 export const SA_PROVINCES = [

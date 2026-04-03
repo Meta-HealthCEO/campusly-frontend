@@ -8,7 +8,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { useAssetLocations } from '@/hooks/useAssetLocations';
 import { LocationList, LocationFormDialog } from '@/components/assets';
-import type { AssetLocation, CreateAssetLocationPayload } from '@/types';
+import type { AssetLocation, CreateLocationPayload } from '@/types';
 
 export default function AssetLocationsPage() {
   const {
@@ -35,7 +35,7 @@ export default function AssetLocationsPage() {
     setDialogOpen(true);
   }, []);
 
-  const handleSubmit = useCallback(async (data: CreateAssetLocationPayload) => {
+  const handleSubmit = useCallback(async (data: CreateLocationPayload) => {
     if (editingLocation) {
       await updateLocation(editingLocation.id, data);
     } else {

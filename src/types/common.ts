@@ -6,7 +6,7 @@ import type { Wallet } from './wallet';
 import type { House } from './achiever';
 import type { Grade, SchoolClass } from './academic';
 
-export type UserRole = 'admin' | 'teacher' | 'parent' | 'student' | 'tuckshop' | 'super_admin';
+export type UserRole = 'admin' | 'teacher' | 'parent' | 'student' | 'tuckshop' | 'super_admin' | 'sgb_member';
 
 export interface User {
   id: string;

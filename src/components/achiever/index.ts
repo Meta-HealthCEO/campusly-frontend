@@ -12,3 +12,7 @@ export { HousePointHistory } from './HousePointHistory';
 export { TermYearFilter } from './TermYearFilter';
 export { TopMarksList } from './TopMarksList';
 export { WallOfFame } from './WallOfFame';
+export { LevelProgressBar } from './LevelProgressBar';
+export { BadgeGrid } from './BadgeGrid';
+export { StreakIndicator } from './StreakIndicator';
+export { XPLeaderboard } from './XPLeaderboard';

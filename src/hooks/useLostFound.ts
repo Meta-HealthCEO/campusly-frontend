@@ -268,6 +268,24 @@ export function useLostFound() {
     await Promise.all([fetchItems(), fetchStats()]);
   };
 
+  /* ── Hotspot report ─────────────────────────────────────────── */
+  const fetchHotspotReport = async (dateRange?: { startDate?: string; endDate?: string }) => {
+    try {
+      const res = await apiClient.get('/lost-found/hotspot-report', {
+        params: { schoolId, ...dateRange },
+      });
+      const raw = unwrapResponse(res);
+      return {
+        byLocation: (raw.byLocation ?? []) as Array<{ location: string; count: number }>,
+        byCategory: (raw.byCategory ?? []) as Array<{ category: string; count: number }>,
+        byMonth: (raw.byMonth ?? []) as Array<{ _id: { year: number; month: number }; count: number }>,
+      };
+    } catch {
+      console.error('Failed to load hotspot report');
+      return { byLocation: [], byCategory: [], byMonth: [] };
+    }
+  };
+
   return {
     foundItems,
     lostReports,
@@ -280,6 +298,7 @@ export function useLostFound() {
     fetchSuggestions,
     archiveOldItems,
     softDelete,
+    fetchHotspotReport,
     refresh: () => Promise.all([fetchItems(), fetchStats()]),
   };
 }

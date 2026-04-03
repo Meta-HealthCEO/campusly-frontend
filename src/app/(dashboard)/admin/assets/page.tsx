@@ -79,7 +79,7 @@ export default function AssetDashboardPage() {
         {maintenanceLoading ? (
           <LoadingSpinner />
         ) : (
-          <MaintenanceList records={upcoming} compact />
+          <MaintenanceList records={upcoming} />
         )}
       </div>
     </div>

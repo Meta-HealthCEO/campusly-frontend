@@ -62,15 +62,15 @@ export default function AssetRegisterPage() {
     setDialogOpen(false);
   }, [createAsset, fetchAssets]);
 
-  const handleUpdate = useCallback(async (id: string, data: Partial<CreateAssetPayload>) => {
+  const handleUpdate = useCallback(async (id: string, data: Partial<Asset>) => {
     await updateAsset(id, data);
     await fetchAssets();
     setDialogOpen(false);
     setEditingAsset(null);
   }, [updateAsset, fetchAssets]);
 
-  const handleView = useCallback((asset: Asset) => {
-    router.push(`/admin/assets/register/${asset.id}`);
+  const handleView = useCallback((id: string) => {
+    router.push(`/admin/assets/register/${id}`);
   }, [router]);
 
   const handleEdit = useCallback((asset: Asset) => {
@@ -93,7 +93,7 @@ export default function AssetRegisterPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full sm:w-56"
         />
-        <Select value={categoryId} onValueChange={setCategoryId}>
+        <Select value={categoryId} onValueChange={(v: unknown) => setCategoryId(v as string)}>
           <SelectTrigger className="w-full sm:w-44">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
@@ -104,7 +104,7 @@ export default function AssetRegisterPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={locationId} onValueChange={setLocationId}>
+        <Select value={locationId} onValueChange={(v: unknown) => setLocationId(v as string)}>
           <SelectTrigger className="w-full sm:w-44">
             <SelectValue placeholder="Location" />
           </SelectTrigger>
@@ -115,7 +115,7 @@ export default function AssetRegisterPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={status} onValueChange={setStatus}>
+        <Select value={status} onValueChange={(v: unknown) => setStatus(v as string)}>
           <SelectTrigger className="w-full sm:w-40">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -126,7 +126,7 @@ export default function AssetRegisterPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={condition} onValueChange={setCondition}>
+        <Select value={condition} onValueChange={(v: unknown) => setCondition(v as string)}>
           <SelectTrigger className="w-full sm:w-40">
             <SelectValue placeholder="Condition" />
           </SelectTrigger>
@@ -148,7 +148,7 @@ export default function AssetRegisterPage() {
           description="Add your first asset or adjust the filters."
         />
       ) : (
-        <AssetList assets={assets} onView={handleView} onEdit={handleEdit} />
+        <AssetList assets={assets} onView={handleView} />
       )}
 
       <AssetFormDialog
@@ -157,7 +157,7 @@ export default function AssetRegisterPage() {
         asset={editingAsset}
         categories={flatCategories}
         locations={locations}
-        onCreate={handleCreate}
+        onSubmit={handleCreate}
         onUpdate={handleUpdate}
       />
     </div>

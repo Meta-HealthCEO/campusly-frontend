@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { useAssetMaintenance } from '@/hooks/useAssetMaintenance';
 import { MaintenanceList, MaintenanceFormDialog } from '@/components/assets';
-import type { AssetMaintenanceRecord, MaintenanceStatus, UpdateMaintenancePayload } from '@/types';
+import type { AssetMaintenance, MaintenanceStatus, CreateMaintenancePayload } from '@/types';
 
 type StatusFilter = 'all' | MaintenanceStatus;
 
@@ -22,36 +22,32 @@ export default function AssetMaintenancePage() {
   const {
     records,
     loading,
-    fetchAll,
+    fetchUpcoming,
     updateMaintenance,
   } = useAssetMaintenance();
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [editingRecord, setEditingRecord] = useState<AssetMaintenanceRecord | null>(null);
+  const [editingRecord, setEditingRecord] = useState<AssetMaintenance | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => { fetchUpcoming(); }, [fetchUpcoming]);
 
   const filtered = statusFilter === 'all'
     ? records
     : records.filter((r) => r.status === statusFilter);
 
-  const handleEdit = useCallback((record: AssetMaintenanceRecord) => {
+  const handleEdit = useCallback((record: AssetMaintenance) => {
     setEditingRecord(record);
     setDialogOpen(true);
   }, []);
 
-  const handleSubmit = useCallback(async (data: UpdateMaintenancePayload) => {
+  const handleSubmit = useCallback(async (data: CreateMaintenancePayload) => {
     if (!editingRecord) return;
     await updateMaintenance(editingRecord.id, data);
-    await fetchAll();
+    await fetchUpcoming();
     setDialogOpen(false);
     setEditingRecord(null);
-  }, [editingRecord, updateMaintenance, fetchAll]);
-
-  const handleStatusChange = useCallback((value: string) => {
-    setStatusFilter(value as StatusFilter);
-  }, []);
+  }, [editingRecord, updateMaintenance, fetchUpcoming]);
 
   if (loading) return <LoadingSpinner />;
 
@@ -63,7 +59,7 @@ export default function AssetMaintenancePage() {
       />
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <Select value={statusFilter} onValueChange={handleStatusChange}>
+        <Select value={statusFilter} onValueChange={(v: unknown) => setStatusFilter(v as StatusFilter)}>
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>

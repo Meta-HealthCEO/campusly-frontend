@@ -23,7 +23,7 @@ export default function AdminCommunicationPage() {
 
   const {
     messages, loading: messagesLoading,
-    page, totalPages, fetchMessages, sendMessage,
+    page, totalPages, fetchMessages, sendMessage, scheduleMessage,
   } = useBulkMessages();
 
   const handleViewDetail = (msg: BulkMessage) => {
@@ -93,6 +93,9 @@ export default function AdminCommunicationPage() {
         templates={templates}
         onSend={async (data) => {
           await sendMessage(data);
+        }}
+        onSchedule={async (data) => {
+          await scheduleMessage(data);
         }}
       />
     </div>

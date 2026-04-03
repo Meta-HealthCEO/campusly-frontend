@@ -150,7 +150,9 @@ function RouteCard({ route, onEdit, onDelete }: {
           <p className="text-sm text-muted-foreground">
             Vehicle: <span className="font-mono font-semibold">{route.vehicleRegistration}</span>
           </p>
-          <p className="text-sm text-muted-foreground">Capacity: {route.capacity}</p>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            Capacity: {route.capacity}
+          </div>
         </div>
 
         <div>

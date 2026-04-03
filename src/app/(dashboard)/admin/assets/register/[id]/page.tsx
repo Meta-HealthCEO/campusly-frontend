@@ -29,7 +29,7 @@ import type {
   CheckOutPayload,
   CheckInPayload,
   CreateMaintenancePayload,
-  CreateIncidentPayload,
+  CreateAssetIncidentPayload,
 } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 
@@ -47,8 +47,8 @@ function InfoGrid({ asset }: { asset: Asset }) {
     ['Purchase Date', asset.purchaseDate ? new Date(asset.purchaseDate).toLocaleDateString() : '—'],
     ['Warranty Expiry', asset.warrantyExpiry ? new Date(asset.warrantyExpiry).toLocaleDateString() : '—'],
     ['Vendor', asset.vendor],
-    ['Useful Life (yrs)', asset.usefulLifeYears],
-    ['Assigned To', asset.assignedTo ?? '—'],
+    ['Portable', asset.isPortable ? 'Yes' : 'No'],
+    ['Assigned To', asset.assignedTo ? (typeof asset.assignedTo === 'object' ? `${asset.assignedTo.firstName} ${asset.assignedTo.lastName}` : asset.assignedTo) : '—'],
   ];
 
   return (
@@ -126,7 +126,7 @@ export default function AssetDetailPage() {
     await fetchByAsset(id);
   }, [createMaintenance, id, fetchByAsset]);
 
-  const handleIncident = useCallback(async (data: CreateIncidentPayload) => {
+  const handleIncident = useCallback(async (data: CreateAssetIncidentPayload) => {
     await createIncident(id, data);
     setIncidentOpen(false);
     await fetchIncidents({ assetId: id });
@@ -185,7 +185,7 @@ export default function AssetDetailPage() {
             </CardHeader>
             <CardContent>
               {asset.assignedTo ? (
-                <p className="text-sm">Currently assigned to: <strong>{asset.assignedTo}</strong></p>
+                <p className="text-sm">Currently assigned to: <strong>{typeof asset.assignedTo === 'object' ? `${asset.assignedTo.firstName} ${asset.assignedTo.lastName}` : asset.assignedTo}</strong></p>
               ) : (
                 <p className="text-sm text-muted-foreground">Not currently assigned.</p>
               )}
@@ -194,6 +194,7 @@ export default function AssetDetailPage() {
           <AssignmentDialog
             open={assignOpen}
             onOpenChange={setAssignOpen}
+            assetName={asset.name}
             onSubmit={handleAssign}
           />
         </TabsContent>
@@ -208,8 +209,8 @@ export default function AssetDetailPage() {
             </Button>
           </div>
           {checkOutLoading ? <LoadingSpinner /> : <CheckOutList checkOuts={checkOuts} />}
-          <CheckOutDialog open={checkOutOpen} onOpenChange={setCheckOutOpen} onSubmit={handleCheckOut} />
-          <CheckInDialog open={checkInOpen} onOpenChange={setCheckInOpen} onSubmit={handleCheckIn} />
+          <CheckOutDialog open={checkOutOpen} onOpenChange={setCheckOutOpen} assetName={asset.name} onSubmit={handleCheckOut} />
+          <CheckInDialog open={checkInOpen} onOpenChange={setCheckInOpen} assetName={asset.name} onSubmit={handleCheckIn} />
         </TabsContent>
 
         <TabsContent value="maintenance" className="mt-4">
@@ -222,6 +223,7 @@ export default function AssetDetailPage() {
           <MaintenanceFormDialog
             open={maintOpen}
             onOpenChange={setMaintOpen}
+            record={null}
             onSubmit={handleMaintenance}
           />
         </TabsContent>
@@ -236,6 +238,7 @@ export default function AssetDetailPage() {
           <IncidentFormDialog
             open={incidentOpen}
             onOpenChange={setIncidentOpen}
+            incident={null}
             onSubmit={handleIncident}
           />
         </TabsContent>

@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAssetCheckOuts } from '@/hooks/useAssetCheckOuts';
+import type { CheckInPayload } from '@/types';
 import { CheckOutList, CheckInDialog } from '@/components/assets';
 import type { AssetCheckOut, CheckOutStatus } from '@/types';
 
@@ -36,21 +37,20 @@ export default function AssetCheckOutsPage() {
     ? checkOuts
     : checkOuts.filter((c) => c.status === statusFilter);
 
-  const handleCheckInClick = useCallback((checkOut: AssetCheckOut) => {
-    setCheckInTarget(checkOut);
-    setCheckInOpen(true);
-  }, []);
+  const handleCheckInClick = useCallback((assetId: string) => {
+    const co = checkOuts.find((c) => {
+      const aid = typeof c.assetId === 'object' ? c.assetId.id : c.assetId;
+      return aid === assetId && c.status === 'checked_out';
+    });
+    if (co) { setCheckInTarget(co); setCheckInOpen(true); }
+  }, [checkOuts]);
 
-  const handleCheckIn = useCallback(async (id: string, notes?: string) => {
-    await checkIn(id, notes);
+  const handleCheckIn = useCallback(async (id: string, data?: CheckInPayload) => {
+    await checkIn(id, data ?? {});
     await fetchCheckOuts();
     setCheckInOpen(false);
     setCheckInTarget(null);
   }, [checkIn, fetchCheckOuts]);
-
-  const handleStatusChange = useCallback((value: string) => {
-    setStatusFilter(value as StatusFilter);
-  }, []);
 
   if (loading) return <LoadingSpinner />;
 
@@ -62,7 +62,7 @@ export default function AssetCheckOutsPage() {
       />
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <Select value={statusFilter} onValueChange={handleStatusChange}>
+        <Select value={statusFilter} onValueChange={(v: unknown) => setStatusFilter(v as StatusFilter)}>
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
@@ -92,12 +92,17 @@ export default function AssetCheckOutsPage() {
         />
       )}
 
-      <CheckInDialog
-        open={checkInOpen}
-        onOpenChange={setCheckInOpen}
-        checkOut={checkInTarget}
-        onSubmit={handleCheckIn}
-      />
+      {checkInTarget && (
+        <CheckInDialog
+          open={checkInOpen}
+          onOpenChange={setCheckInOpen}
+          assetName={typeof checkInTarget.assetId === 'object' ? checkInTarget.assetId.name : ''}
+          onSubmit={async (data) => {
+            const assetId = typeof checkInTarget.assetId === 'object' ? checkInTarget.assetId.id : checkInTarget.assetId;
+            await handleCheckIn(assetId, data);
+          }}
+        />
+      )}
     </div>
   );
 }

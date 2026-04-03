@@ -218,6 +218,47 @@ export function useSuperAdmin() {
     await apiClient.post('/auth/register', data);
   }, []);
 
+  const fetchPlatformAnalytics = useCallback(async () => {
+    try {
+      const res = await apiClient.get('/superadmin/analytics');
+      return unwrapResponse(res) as {
+        mrr: number; arr: number; growthRate: number; churnCount: number;
+        activeSchools: number; totalSchools: number; activeUsers: number;
+      };
+    } catch {
+      console.error('Failed to fetch platform analytics');
+      return null;
+    }
+  }, []);
+
+  const fetchTenantHealth = useCallback(async (schoolId: string) => {
+    try {
+      const res = await apiClient.get(`/superadmin/tenants/${schoolId}/health`);
+      return unwrapResponse(res) as {
+        score: number;
+        components: Array<{ label: string; value: number; weight: number }>;
+        risk: 'healthy' | 'at_risk' | 'critical';
+      };
+    } catch {
+      console.error('Failed to fetch tenant health');
+      return null;
+    }
+  }, []);
+
+  const fetchHealthOverview = useCallback(async () => {
+    try {
+      const res = await apiClient.get('/superadmin/health-overview');
+      const raw = unwrapResponse(res);
+      return (Array.isArray(raw) ? raw : []) as Array<{
+        tenantId: string; schoolId: string; schoolName: string;
+        status: string; score: number; risk: 'healthy' | 'at_risk' | 'critical'; tier: string;
+      }>;
+    } catch {
+      console.error('Failed to fetch health overview');
+      return [];
+    }
+  }, []);
+
   return {
     fetchStats,
     fetchTenants,
@@ -234,5 +275,8 @@ export function useSuperAdmin() {
     assignTicket,
     updateTicketStatus,
     registerAdmin,
+    fetchPlatformAnalytics,
+    fetchTenantHealth,
+    fetchHealthOverview,
   };
 }

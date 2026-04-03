@@ -14,10 +14,10 @@ import {
 } from '@/components/ui/select';
 import { useAssetIncidents } from '@/hooks/useAssetIncidents';
 import { IncidentList, IncidentFormDialog } from '@/components/assets';
-import type { AssetIncident, IncidentType, IncidentStatus, UpdateIncidentPayload } from '@/types';
+import type { AssetIncident, AssetIncidentType, AssetIncidentStatus } from '@/types';
 
-type TypeFilter = 'all' | IncidentType;
-type StatusFilter = 'all' | IncidentStatus;
+type TypeFilter = 'all' | AssetIncidentType;
+type StatusFilter = 'all' | AssetIncidentStatus;
 
 export default function AssetIncidentsPage() {
   const {
@@ -45,21 +45,13 @@ export default function AssetIncidentsPage() {
     setDialogOpen(true);
   }, []);
 
-  const handleSubmit = useCallback(async (data: UpdateIncidentPayload) => {
+  const handleSubmit = useCallback(async (data: Partial<AssetIncident>) => {
     if (!editingIncident) return;
     await updateIncident(editingIncident.id, data);
     await fetchIncidents();
     setDialogOpen(false);
     setEditingIncident(null);
   }, [editingIncident, updateIncident, fetchIncidents]);
-
-  const handleTypeChange = useCallback((value: string) => {
-    setTypeFilter(value as TypeFilter);
-  }, []);
-
-  const handleStatusChange = useCallback((value: string) => {
-    setStatusFilter(value as StatusFilter);
-  }, []);
 
   if (loading) return <LoadingSpinner />;
 
@@ -71,7 +63,7 @@ export default function AssetIncidentsPage() {
       />
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <Select value={typeFilter} onValueChange={handleTypeChange}>
+        <Select value={typeFilter} onValueChange={(v: unknown) => setTypeFilter(v as TypeFilter)}>
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Filter by type" />
           </SelectTrigger>
@@ -84,7 +76,7 @@ export default function AssetIncidentsPage() {
           </SelectContent>
         </Select>
 
-        <Select value={statusFilter} onValueChange={handleStatusChange}>
+        <Select value={statusFilter} onValueChange={(v: unknown) => setStatusFilter(v as StatusFilter)}>
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>

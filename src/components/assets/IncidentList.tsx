@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/shared/DataTable';
 import { formatCurrency } from '@/lib/utils';
-import type { AssetIncident, IncidentType, IncidentStatus } from '@/types';
+import type { AssetIncident, AssetIncidentType, AssetIncidentStatus } from '@/types';
 
 interface IncidentListProps {
   incidents: AssetIncident[];
@@ -13,7 +13,7 @@ interface IncidentListProps {
 }
 
 const typeVariants: Record<
-  IncidentType,
+  AssetIncidentType,
   'secondary' | 'destructive' | 'outline'
 > = {
   damage: 'secondary',
@@ -22,20 +22,20 @@ const typeVariants: Record<
   vandalism: 'outline',
 };
 
-const typeLabels: Record<IncidentType, string> = {
+const typeLabels: Record<AssetIncidentType, string> = {
   damage: 'Damage',
   loss: 'Loss',
   theft: 'Theft',
   vandalism: 'Vandalism',
 };
 
-const statusLabels: Record<IncidentStatus, string> = {
+const statusLabels: Record<AssetIncidentStatus, string> = {
   reported: 'Reported',
   investigating: 'Investigating',
   resolved: 'Resolved',
 };
 
-const statusVariants: Record<IncidentStatus, 'secondary' | 'outline' | 'default'> = {
+const statusVariants: Record<AssetIncidentStatus, 'secondary' | 'outline' | 'default'> = {
   reported: 'secondary',
   investigating: 'outline',
   resolved: 'default',
@@ -72,7 +72,7 @@ export function IncidentList({ incidents, onEdit }: IncidentListProps) {
       accessorKey: 'type',
       header: 'Type',
       cell: ({ getValue }) => {
-        const type = getValue() as IncidentType;
+        const type = getValue() as AssetIncidentType;
         return (
           <Badge variant={typeVariants[type]}>
             {typeLabels[type]}
@@ -106,7 +106,7 @@ export function IncidentList({ incidents, onEdit }: IncidentListProps) {
       accessorKey: 'status',
       header: 'Status',
       cell: ({ getValue }) => {
-        const status = getValue() as IncidentStatus;
+        const status = getValue() as AssetIncidentStatus;
         return (
           <Badge variant={statusVariants[status]}>
             {statusLabels[status]}

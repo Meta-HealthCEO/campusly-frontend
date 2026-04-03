@@ -24,19 +24,19 @@ import {
 import { formatCurrency } from '@/lib/utils';
 import type {
   AssetIncident,
-  CreateIncidentPayload,
-  IncidentType,
+  CreateAssetIncidentPayload,
+  AssetIncidentType,
 } from '@/types';
 
 interface IncidentFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   incident: AssetIncident | null;
-  onSubmit: (data: CreateIncidentPayload) => Promise<void>;
+  onSubmit: (data: CreateAssetIncidentPayload) => Promise<void>;
   onUpdate?: (id: string, data: Partial<AssetIncident>) => Promise<void>;
 }
 
-const incidentTypes: { value: IncidentType; label: string }[] = [
+const incidentTypes: { value: AssetIncidentType; label: string }[] = [
   { value: 'damage', label: 'Damage' },
   { value: 'loss', label: 'Loss' },
   { value: 'theft', label: 'Theft' },
@@ -44,7 +44,7 @@ const incidentTypes: { value: IncidentType; label: string }[] = [
 ];
 
 interface FormState {
-  type: IncidentType | '';
+  type: AssetIncidentType | '';
   description: string;
   date: string;
   responsiblePartyId: string;
@@ -109,7 +109,7 @@ export function IncidentFormDialog({
     if (!form.description.trim()) { toast.error('Description is required'); return; }
     if (!form.date) { toast.error('Date is required'); return; }
 
-    const payload: CreateIncidentPayload = {
+    const payload: CreateAssetIncidentPayload = {
       type: form.type,
       description: form.description.trim(),
       date: form.date,

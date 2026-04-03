@@ -50,7 +50,7 @@ export function useAssets() {
     return unwrapResponse<Asset>(res);
   }, []);
 
-  const updateAsset = useCallback(async (id: string, data: Partial<CreateAssetPayload>): Promise<void> => {
+  const updateAsset = useCallback(async (id: string, data: Partial<Asset>): Promise<void> => {
     await apiClient.put(`/assets/${id}`, data);
     toast.success('Asset updated');
   }, []);
