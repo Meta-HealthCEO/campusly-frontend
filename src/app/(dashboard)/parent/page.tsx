@@ -84,7 +84,7 @@ export default function ParentDashboard() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                   <div className="space-y-1">
                     <div className="flex items-center justify-center">
                       <Wallet className="h-4 w-4 text-muted-foreground mr-1" />

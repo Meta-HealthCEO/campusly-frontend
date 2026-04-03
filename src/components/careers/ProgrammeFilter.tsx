@@ -41,8 +41,9 @@ export function ProgrammeFilter({ onFilterChange, universities }: ProgrammeFilte
 
   const updateFilter = useCallback(
     (key: keyof ProgrammeFilterValues, value: string) => {
+      const resolved = value === 'all' ? '' : value;
       setFilters((prev) => {
-        const next = { ...prev, [key]: value };
+        const next = { ...prev, [key]: resolved };
         onFilterChange(next);
         return next;
       });
@@ -75,7 +76,7 @@ export function ProgrammeFilter({ onFilterChange, universities }: ProgrammeFilte
               <SelectValue placeholder="Match status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All</SelectItem>
+              <SelectItem value="all">All</SelectItem>
               <SelectItem value="eligible">Eligible</SelectItem>
               <SelectItem value="close">Close Match</SelectItem>
             </SelectContent>
@@ -92,7 +93,7 @@ export function ProgrammeFilter({ onFilterChange, universities }: ProgrammeFilte
               <SelectValue placeholder="University" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Universities</SelectItem>
+              <SelectItem value="all">All Universities</SelectItem>
               {universities.map((uni) => (
                 <SelectItem key={uni.id} value={uni.id}>
                   {uni.name}
@@ -109,7 +110,7 @@ export function ProgrammeFilter({ onFilterChange, universities }: ProgrammeFilte
               <SelectValue placeholder="Province" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Provinces</SelectItem>
+              <SelectItem value="all">All Provinces</SelectItem>
               {SA_PROVINCES.map((p) => (
                 <SelectItem key={p} value={p}>
                   {p}
@@ -126,7 +127,7 @@ export function ProgrammeFilter({ onFilterChange, universities }: ProgrammeFilte
               <SelectValue placeholder="Qualification" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Types</SelectItem>
+              <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="bachelor">Bachelor</SelectItem>
               <SelectItem value="diploma">Diploma</SelectItem>
               <SelectItem value="higher_certificate">Higher Certificate</SelectItem>

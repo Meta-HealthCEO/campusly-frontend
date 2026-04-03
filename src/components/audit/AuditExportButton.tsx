@@ -11,6 +11,13 @@ interface AuditExportButtonProps {
   filename?: string;
 }
 
+function toISODate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function formatDate(iso: string): string {
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -67,7 +74,7 @@ export function AuditExportButton({ filename }: AuditExportButtonProps) {
   const handleExport = async () => {
     try {
       const logs = await exportLogs();
-      const today = new Date().toISOString().slice(0, 10);
+      const today = toISODate(new Date());
       const csvFilename = filename ?? `audit-log-${today}.csv`;
       const csvContent = buildCsvContent(logs);
       triggerDownload(csvContent, csvFilename);

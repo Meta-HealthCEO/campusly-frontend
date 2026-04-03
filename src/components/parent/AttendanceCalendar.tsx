@@ -17,14 +17,14 @@ const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const STATUS_CELL_STYLES: Record<AttendanceStatus, string> = {
   present: 'bg-emerald-200 text-emerald-900 border-emerald-300',
-  absent: 'bg-red-200 text-destructive border-red-300',
+  absent: 'bg-destructive/10 text-destructive border-destructive/20',
   late: 'bg-amber-200 text-amber-900 border-amber-300',
   excused: 'bg-blue-200 text-blue-900 border-blue-300',
 };
 
 const STATUS_LEGEND: { status: AttendanceStatus; code: string; label: string; color: string }[] = [
   { status: 'present', code: 'P', label: 'Present', color: 'bg-emerald-200 text-emerald-900' },
-  { status: 'absent', code: 'A', label: 'Absent', color: 'bg-red-200 text-destructive' },
+  { status: 'absent', code: 'A', label: 'Absent', color: 'bg-destructive/10 text-destructive' },
   { status: 'late', code: 'L', label: 'Late', color: 'bg-amber-200 text-amber-900' },
   { status: 'excused', code: 'E', label: 'Excused', color: 'bg-blue-200 text-blue-900' },
 ];

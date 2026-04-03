@@ -75,7 +75,7 @@ export function PayslipCard({ payslip }: PayslipCardProps) {
         <Separator />
 
         {/* Totals */}
-        <div className="grid grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
           <div>
             <p className="text-xs text-muted-foreground mb-0.5">Gross Pay</p>
             <p className="font-semibold text-sm">{formatCurrency(grossPay)}</p>

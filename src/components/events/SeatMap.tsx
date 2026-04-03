@@ -99,7 +99,7 @@ export function SeatMap({ seats, loading, onCreateSeats, onReleaseSeat }: SeatMa
             Reserved
           </div>
           <div className="flex items-center gap-1">
-            <span className="inline-block h-3 w-3 rounded bg-red-200 border border-red-300" />
+            <span className="inline-block h-3 w-3 rounded bg-destructive/10 border border-destructive/20" />
             Sold
           </div>
         </div>

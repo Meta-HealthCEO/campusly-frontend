@@ -109,7 +109,7 @@ export function WellbeingProfileView({ profile }: WellbeingProfileViewProps) {
         <TabsContent value="referrals" className="mt-3">
           <Card>
             <CardContent className="pt-4 space-y-3">
-              <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
                 <div>
                   <p className="text-2xl font-bold">{referrals.total}</p>
                   <p className="text-xs text-muted-foreground">Total</p>

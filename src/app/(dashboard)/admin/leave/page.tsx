@@ -63,8 +63,14 @@ export default function AdminLeavePage() {
 
   useEffect(() => {
     if (!schoolId || activeTab !== 'calendar') return;
-    const start = new Date(calYear, calMonth, 1).toISOString().slice(0, 10);
-    const end = new Date(calYear, calMonth + 1, 0).toISOString().slice(0, 10);
+    const toISODate = (date: Date) => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    };
+    const start = toISODate(new Date(calYear, calMonth, 1));
+    const end = toISODate(new Date(calYear, calMonth + 1, 0));
     fetchCalendar(schoolId, start, end);
   }, [schoolId, activeTab, calMonth, calYear, fetchCalendar]);
 

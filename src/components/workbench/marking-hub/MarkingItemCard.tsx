@@ -32,8 +32,15 @@ function typeLabel(type: MarkingItemType): string {
   }
 }
 
+function toISODate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function dueDateClass(dueDate: string): string {
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = toISODate(new Date());
   if (dueDate < todayStr) return 'text-destructive';
   if (dueDate === todayStr) return 'text-amber-600';
   return 'text-muted-foreground';
