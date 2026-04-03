@@ -39,6 +39,7 @@ export function getRoleLabel(role: UserRole): string {
     student: 'Student',
     tuckshop: 'Tuck Shop',
     super_admin: 'Super Admin',
+    sgb_member: 'SGB Member',
   };
   return labels[role];
 }

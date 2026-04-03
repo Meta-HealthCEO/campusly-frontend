@@ -40,7 +40,7 @@ export function MonthlyReportChart({ report }: MonthlyReportChartProps) {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis tickFormatter={(v: number) => `R${(v / 1000).toFixed(0)}k`} />
-            <Tooltip formatter={(v: number) => formatCurrency(v * 100)} />
+            <Tooltip formatter={(v) => formatCurrency(Number(v) * 100)} />
             <Legend />
             <Bar dataKey="income" name="Income" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
             <Bar dataKey="expenditure" name="Expenditure" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />

@@ -17,7 +17,7 @@ import {
 } from '@/lib/constants';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { useNotificationPoller } from '@/hooks/useNotificationPoller';
-import type { UserRole } from '@/types';
+import type { UserRole, PermissionFlag } from '@/types';
 
 const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
   admin: ADMIN_NAV,
@@ -26,6 +26,7 @@ const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
   teacher: TEACHER_NAV,
   tuckshop: ADMIN_NAV,
   super_admin: SUPERADMIN_NAV,
+  sgb_member: [],
 };
 
 function filterByModule(items: NavItem[], enabledModules: string[]): NavItem[] {
@@ -35,12 +36,23 @@ function filterByModule(items: NavItem[], enabledModules: string[]): NavItem[] {
   });
 }
 
+function filterByPermission(
+  items: NavItem[],
+  hasPermission: (flag: PermissionFlag) => boolean,
+): NavItem[] {
+  return items.filter((item) => {
+    if (!item.permission) return true;
+    return hasPermission(item.permission);
+  });
+}
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const user = useAuthStore((state) => state.user);
+  const hasPermission = useAuthStore((state) => state.hasPermission);
   const school = useSchoolStore((s) => s.school);
   const { fetchSchool } = useSchoolData();
 
@@ -57,9 +69,9 @@ export default function DashboardLayout({
   const navItems = useMemo(() => {
     if (!user) return ADMIN_NAV;
     const roleNav = NAV_BY_ROLE[user.role] ?? ADMIN_NAV;
-    if (!school) return roleNav;
-    return filterByModule(roleNav, school.modulesEnabled);
-  }, [user, school]);
+    const moduleFiltered = school ? filterByModule(roleNav, school.modulesEnabled) : roleNav;
+    return filterByPermission(moduleFiltered, hasPermission);
+  }, [user, school, hasPermission]);
 
   return (
     <AuthGuard>

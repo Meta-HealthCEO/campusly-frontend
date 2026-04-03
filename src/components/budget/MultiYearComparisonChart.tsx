@@ -43,7 +43,7 @@ export function MultiYearComparisonChart({ report }: MultiYearComparisonChartPro
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="year" />
             <YAxis tickFormatter={(v: number) => `R${(v / 1000).toFixed(0)}k`} />
-            <Tooltip formatter={(v: number) => formatCurrency(v * 100)} />
+            <Tooltip formatter={(v) => formatCurrency(Number(v) * 100)} />
             <Legend />
             <Bar dataKey="budgeted" name="Budgeted" fill={YEAR_COLORS[0]} radius={[4, 4, 0, 0]} />
             <Bar dataKey="actual" name="Actual" fill={YEAR_COLORS[1]} radius={[4, 4, 0, 0]} />
