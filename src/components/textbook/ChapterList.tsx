@@ -224,7 +224,7 @@ export function ChapterList({
   const sorted = chapters.slice().sort((a: ChapterItem, b: ChapterItem) => a.order - b.order);
 
   const move = (index: number, direction: -1 | 1) => {
-    const ids = sorted.map((c: ChapterItem) => c._id);
+    const ids = sorted.map((c: ChapterItem) => c.id);
     const target = index + direction;
     if (target < 0 || target >= ids.length) return;
     [ids[index], ids[target]] = [ids[target], ids[index]];
@@ -252,16 +252,16 @@ export function ChapterList({
     <div className="space-y-2">
       {sorted.map((chapter: ChapterItem, idx: number) => (
         <ChapterRow
-          key={chapter._id}
+          key={chapter.id}
           chapter={chapter}
           index={idx}
           total={sorted.length}
           onEdit={() => onEditChapter(chapter)}
-          onRemove={() => onRemoveChapter(chapter._id)}
+          onRemove={() => onRemoveChapter(chapter.id)}
           onMoveUp={() => move(idx, -1)}
           onMoveDown={() => move(idx, 1)}
-          onAddResource={() => onAddResource(chapter._id)}
-          onRemoveResource={(rid: string) => onRemoveResource(chapter._id, rid)}
+          onAddResource={() => onAddResource(chapter.id)}
+          onRemoveResource={(rid: string) => onRemoveResource(chapter.id, rid)}
         />
       ))}
 

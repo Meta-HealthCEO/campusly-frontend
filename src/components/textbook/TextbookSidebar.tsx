@@ -55,7 +55,7 @@ export function TextbookSidebar({
             </SelectTrigger>
             <SelectContent>
               {chapters.map((ch: ChapterItem, idx: number) => (
-                <SelectItem key={ch._id} value={String(idx)}>
+                <SelectItem key={ch.id} value={String(idx)}>
                   {idx + 1}. {ch.title}
                 </SelectItem>
               ))}
@@ -70,7 +70,7 @@ export function TextbookSidebar({
           </p>
           {chapters.map((ch: ChapterItem, idx: number) => (
             <button
-              key={ch._id}
+              key={ch.id}
               type="button"
               onClick={() => onSelectChapter(idx)}
               className={`w-full text-left text-sm px-2 py-1.5 rounded-md truncate transition-colors ${

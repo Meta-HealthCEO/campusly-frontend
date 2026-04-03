@@ -16,7 +16,7 @@ export interface ChapterResourceItem {
 // ─── Chapter ─────────────────────────────────────────────────────────────────
 
 export interface ChapterItem {
-  _id: string;
+  id: string;
   title: string;
   description: string;
   curriculumNodeId: string | { id: string; title: string; code: string; type: string } | null;
@@ -57,6 +57,7 @@ export interface UpdateTextbookPayload {
   title?: string;
   description?: string;
   coverImageUrl?: string;
+  status?: TextbookStatus;
 }
 
 export interface AddChapterPayload {

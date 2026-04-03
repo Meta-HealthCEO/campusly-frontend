@@ -124,7 +124,7 @@ export default function AdminTextbooksPage() {
     async (data: AddChapterPayload | UpdateChapterPayload) => {
       if (!selected) return;
       if (editingChapter) {
-        await updateChapter(selected.id, editingChapter._id, data as UpdateChapterPayload);
+        await updateChapter(selected.id, editingChapter.id, data as UpdateChapterPayload);
       } else {
         await addChapter(selected.id, data as AddChapterPayload);
       }
@@ -153,7 +153,7 @@ export default function AdminTextbooksPage() {
 
   const existingResourceIds = useMemo(() => {
     if (!selected || !targetChapterId) return new Set<string>();
-    const ch = selected.chapters.find((c: ChapterItem) => c._id === targetChapterId);
+    const ch = selected.chapters.find((c: ChapterItem) => c.id === targetChapterId);
     if (!ch) return new Set<string>();
     return new Set(ch.resources.map((r) => {
       return typeof r.resourceId === 'object' ? r.resourceId.id : r.resourceId;
@@ -175,7 +175,7 @@ export default function AdminTextbooksPage() {
   const handleAddResource = useCallback(
     async (resource: ContentResourceItem) => {
       if (!selected || !targetChapterId) return;
-      const ch = selected.chapters.find((c: ChapterItem) => c._id === targetChapterId);
+      const ch = selected.chapters.find((c: ChapterItem) => c.id === targetChapterId);
       const nextOrder = ch ? ch.resources.length : 0;
       await addResourceToChapter(selected.id, targetChapterId, {
         resourceId: resource.id,
