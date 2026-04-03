@@ -116,6 +116,37 @@ export function useCurriculumStructure() {
     return result;
   }, []);
 
+  /** Fetch child nodes for a given parent — returns the array directly (for NodeTree). */
+  const fetchChildNodes = useCallback(async (parentId: string | null, fwId?: string) => {
+    const params: Record<string, string | number> = {
+      frameworkId: fwId ?? selectedFramework,
+      parentId: parentId === null ? 'null' : parentId,
+      limit: 200,
+    };
+    const response = await apiClient.get('/curriculum-structure/nodes', { params });
+    const result = unwrapResponse<{ nodes: CurriculumNodeItem[] }>(response);
+    return result.nodes;
+  }, [selectedFramework]);
+
+  /** Search nodes by text — returns the array directly (for NodePicker). */
+  const searchNodes = useCallback(async (fwId: string, search: string, filterType?: string) => {
+    const params: Record<string, string | number> = {
+      frameworkId: fwId,
+      search,
+      limit: 20,
+    };
+    if (filterType) params.type = filterType;
+    const response = await apiClient.get('/curriculum-structure/nodes', { params });
+    const result = unwrapResponse<{ nodes: CurriculumNodeItem[] }>(response);
+    return result.nodes;
+  }, []);
+
+  /** Load a single node by ID (for NodePicker initial value). */
+  const loadNode = useCallback(async (id: string) => {
+    const response = await apiClient.get(`/curriculum-structure/nodes/${id}`);
+    return unwrapResponse<CurriculumNodeItem>(response);
+  }, []);
+
   // ─── Init ────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -138,5 +169,8 @@ export function useCurriculumStructure() {
     updateNode,
     deleteNode,
     bulkImport,
+    fetchChildNodes,
+    searchNodes,
+    loadNode,
   };
 }

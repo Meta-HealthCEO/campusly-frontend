@@ -10,13 +10,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { apiClient } from '@/lib/api-client';
 import type { CurriculumNodeItem } from '@/types';
 
 interface NodePickerProps {
   frameworkId: string;
   value: string | null;
   onChange: (nodeId: string | null, node: CurriculumNodeItem | null) => void;
+  onSearch: (frameworkId: string, search: string, filterType?: string) => Promise<CurriculumNodeItem[]>;
+  onLoadNode: (id: string) => Promise<CurriculumNodeItem>;
   filterTypes?: string[];
   placeholder?: string;
   disabled?: boolean;
@@ -26,6 +27,8 @@ export function NodePicker({
   frameworkId,
   value,
   onChange,
+  onSearch,
+  onLoadNode,
   filterTypes,
   placeholder = 'Select curriculum node...',
   disabled = false,
@@ -38,17 +41,15 @@ export function NodePicker({
 
   useEffect(() => {
     if (value && !selectedNode) {
-      apiClient
-        .get(`/curriculum-structure/nodes/${value}`)
-        .then((res) => {
-          const node = res.data?.data ?? res.data;
-          setSelectedNode(node as CurriculumNodeItem);
+      onLoadNode(value)
+        .then((node: CurriculumNodeItem) => {
+          setSelectedNode(node);
         })
         .catch(() => {
           /* node may not exist */
         });
     }
-  }, [value, selectedNode]);
+  }, [value, selectedNode, onLoadNode]);
 
   const handleSearch = useCallback(
     async (term: string) => {
@@ -59,25 +60,16 @@ export function NodePicker({
       }
       setLoading(true);
       try {
-        const params: Record<string, string | number> = {
-          frameworkId,
-          search: term,
-          limit: 20,
-        };
-        if (filterTypes && filterTypes.length > 0) {
-          params.type = filterTypes[0];
-        }
-        const response = await apiClient.get('/curriculum-structure/nodes', { params });
-        const data = response.data?.data ?? response.data;
-        const nodeData = data?.nodes ?? (Array.isArray(data) ? data : []);
-        setResults(nodeData as CurriculumNodeItem[]);
+        const filterType = filterTypes && filterTypes.length > 0 ? filterTypes[0] : undefined;
+        const nodes = await onSearch(frameworkId, term, filterType);
+        setResults(nodes);
       } catch {
         setResults([]);
       } finally {
         setLoading(false);
       }
     },
-    [frameworkId, filterTypes],
+    [frameworkId, filterTypes, onSearch],
   );
 
   const handleSelect = (node: CurriculumNodeItem) => {

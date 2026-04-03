@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useCurriculumPacing } from '@/hooks/useCurriculumPacing';
 import { useCurriculumBenchmarks } from '@/hooks/useCurriculumBenchmarks';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -21,8 +22,9 @@ import {
   InterventionList,
   InterventionDialog,
 } from '@/components/curriculum';
-import { LayoutDashboard, Target, Lightbulb } from 'lucide-react';
+import { LayoutDashboard, Target, Lightbulb, TreePine } from 'lucide-react';
 import { toast } from 'sonner';
+import Link from 'next/link';
 import type { BenchmarkComparison, CurriculumIntervention, InterventionStatus } from '@/types';
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -96,10 +98,18 @@ export default function AdminCurriculumPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Curriculum Pacing"
-        description="Monitor pacing progress, benchmarks, and interventions"
-      />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <PageHeader
+          title="Curriculum Pacing"
+          description="Monitor pacing progress, benchmarks, and interventions"
+        />
+        <Link href="/admin/curriculum/structure">
+          <Button variant="outline">
+            <TreePine className="mr-2 h-4 w-4" />
+            Manage Structure
+          </Button>
+        </Link>
+      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex-wrap">

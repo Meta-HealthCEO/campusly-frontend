@@ -2,12 +2,12 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { Loader2, TreePine } from 'lucide-react';
-import { apiClient } from '@/lib/api-client';
 import { NodeTreeItem } from './NodeTreeItem';
 import type { CurriculumNodeItem } from '@/types';
 
 interface NodeTreeProps {
   frameworkId: string;
+  fetchChildren: (parentId: string | null) => Promise<CurriculumNodeItem[]>;
   onEdit: (node: CurriculumNodeItem) => void;
   onDelete: (node: CurriculumNodeItem) => void;
   onAddChild: (parentNode: CurriculumNodeItem) => void;
@@ -17,6 +17,7 @@ interface NodeTreeProps {
 
 export function NodeTree({
   frameworkId,
+  fetchChildren,
   onEdit,
   onDelete,
   onAddChild,
@@ -26,21 +27,6 @@ export function NodeTree({
   const [nodesByParent, setNodesByParent] = useState<Map<string, CurriculumNodeItem[]>>(new Map());
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-
-  const fetchChildren = useCallback(async (parentId: string | null) => {
-    const params: Record<string, string | number> = {
-      frameworkId,
-      limit: 200,
-    };
-    params.parentId = parentId === null ? 'null' : parentId;
-
-    const response = await apiClient.get('/curriculum-structure/nodes', { params });
-    const result = response.data?.data ?? response.data;
-    const nodes: CurriculumNodeItem[] = Array.isArray(result)
-      ? result
-      : (result?.nodes ?? []);
-    return nodes;
-  }, [frameworkId]);
 
   useEffect(() => {
     if (!frameworkId) return;
