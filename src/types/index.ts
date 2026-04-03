@@ -56,3 +56,4 @@ export * from './curriculum-structure';
 export * from './content-library';
 export * from './student-learning';
 export * from './question-bank';
+export * from './textbook';
