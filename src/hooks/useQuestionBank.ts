@@ -1,183 +1,232 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
-import { unwrapList, unwrapResponse, extractErrorMessage } from '@/lib/api-helpers';
+import { unwrapResponse, extractErrorMessage } from '@/lib/api-helpers';
 import { toast } from 'sonner';
-import { useAuthStore } from '@/stores/useAuthStore';
 import type {
-  BankQuestion,
+  QuestionItem,
+  AssessmentPaperItem,
+  CapsComplianceReport,
   QuestionFilters,
-  CurriculumFramework,
-  CurriculumTopic,
-  Subject,
+  PaperFilters,
+  CreateQuestionPayload,
+  UpdateQuestionPayload,
+  ReviewQuestionPayload,
+  GenerateQuestionsPayload,
+  CreatePaperPayload,
+  UpdatePaperPayload,
+  AddQuestionToPaperPayload,
 } from '@/types';
 
+const BASE = '/question-bank';
+
+interface QuestionsListResponse {
+  questions: QuestionItem[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+interface PapersListResponse {
+  papers: AssessmentPaperItem[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export function useQuestionBank() {
-  const { user } = useAuthStore();
-  const schoolId = user?.schoolId ?? '';
+  // ─── Questions state ────────────────────────────────────────────────────
+  const [questions, setQuestions] = useState<QuestionItem[]>([]);
+  const [questionsTotal, setQuestionsTotal] = useState(0);
+  const [questionsLoading, setQuestionsLoading] = useState(false);
 
-  const [questions, setQuestions] = useState<BankQuestion[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [totalCount, setTotalCount] = useState(0);
-  const [filters, setFilters] = useState<QuestionFilters>({});
-  const [frameworks, setFrameworks] = useState<CurriculumFramework[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [topics, setTopics] = useState<CurriculumTopic[]>([]);
+  // ─── Papers state ───────────────────────────────────────────────────────
+  const [papers, setPapers] = useState<AssessmentPaperItem[]>([]);
+  const [papersTotal, setPapersTotal] = useState(0);
+  const [papersLoading, setPapersLoading] = useState(false);
 
-  const fetchQuestions = useCallback(async () => {
-    if (!schoolId) return;
-    setLoading(true);
+  // ─── Questions CRUD ─────────────────────────────────────────────────────
+
+  const fetchQuestions = useCallback(async (filters?: QuestionFilters) => {
+    setQuestionsLoading(true);
     try {
-      const params: Record<string, unknown> = { schoolId, ...filters };
-      const response = await apiClient.get('/teacher-workbench/questions', { params });
-      const raw = response.data.data ?? response.data;
-      if (Array.isArray(raw)) {
-        setQuestions(raw as BankQuestion[]);
-        setTotalCount(raw.length);
-      } else if (typeof raw === 'object' && raw !== null) {
-        const obj = raw as Record<string, unknown>;
-        const arr = Array.isArray(obj.questions)
-          ? (obj.questions as BankQuestion[])
-          : unwrapList<BankQuestion>(response);
-        setQuestions(arr);
-        setTotalCount(typeof obj.total === 'number' ? obj.total : arr.length);
-      }
+      const res = await apiClient.get(`${BASE}/questions`, { params: filters });
+      const data = unwrapResponse<QuestionsListResponse>(res);
+      setQuestions(data.questions ?? []);
+      setQuestionsTotal(data.total ?? 0);
     } catch (err: unknown) {
-      console.error('Failed to load questions:', extractErrorMessage(err));
+      toast.error(extractErrorMessage(err, 'Failed to load questions'));
     } finally {
-      setLoading(false);
+      setQuestionsLoading(false);
     }
-  }, [schoolId, filters]);
+  }, []);
 
-  useEffect(() => {
-    async function fetchMeta() {
-      try {
-        const [fwRes, subRes] = await Promise.allSettled([
-          apiClient.get('/teacher-workbench/curriculum/frameworks', { params: { schoolId } }),
-          apiClient.get('/academic/subjects'),
-        ]);
-        if (fwRes.status === 'fulfilled') {
-          setFrameworks(unwrapList<CurriculumFramework>(fwRes.value));
-        }
-        if (subRes.status === 'fulfilled') {
-          setSubjects(unwrapList<Subject>(subRes.value));
-        }
-      } catch (err: unknown) {
-        console.error('Failed to load question bank metadata', err);
-      }
+  const getQuestion = useCallback(async (id: string): Promise<QuestionItem | null> => {
+    try {
+      const res = await apiClient.get(`${BASE}/questions/${id}`);
+      return unwrapResponse<QuestionItem>(res);
+    } catch (err: unknown) {
+      toast.error(extractErrorMessage(err, 'Failed to load question'));
+      return null;
     }
-    if (schoolId) fetchMeta();
-  }, [schoolId]);
+  }, []);
 
-  useEffect(() => {
-    const subjectId = filters.subjectId;
-    const gradeId = filters.gradeId;
-    if (!subjectId && !gradeId) {
-      setTopics([]);
-      return;
+  const createQuestion = useCallback(async (data: CreateQuestionPayload) => {
+    const res = await apiClient.post(`${BASE}/questions`, data);
+    const question = unwrapResponse<QuestionItem>(res);
+    toast.success('Question created');
+    return question;
+  }, []);
+
+  const updateQuestion = useCallback(async (id: string, data: UpdateQuestionPayload) => {
+    const res = await apiClient.put(`${BASE}/questions/${id}`, data);
+    const question = unwrapResponse<QuestionItem>(res);
+    toast.success('Question updated');
+    return question;
+  }, []);
+
+  const deleteQuestion = useCallback(async (id: string) => {
+    await apiClient.delete(`${BASE}/questions/${id}`);
+    toast.success('Question deleted');
+  }, []);
+
+  const submitQuestionForReview = useCallback(async (id: string) => {
+    const res = await apiClient.patch(`${BASE}/questions/${id}/submit`);
+    const question = unwrapResponse<QuestionItem>(res);
+    toast.success('Question submitted for review');
+    return question;
+  }, []);
+
+  const reviewQuestion = useCallback(async (id: string, data: ReviewQuestionPayload) => {
+    const res = await apiClient.patch(`${BASE}/questions/${id}/review`, data);
+    const question = unwrapResponse<QuestionItem>(res);
+    toast.success(`Question ${data.action === 'approve' ? 'approved' : 'rejected'}`);
+    return question;
+  }, []);
+
+  const generateQuestions = useCallback(async (data: GenerateQuestionsPayload) => {
+    const res = await apiClient.post(`${BASE}/questions/generate`, data);
+    const generated = unwrapResponse<QuestionItem[]>(res);
+    const count = Array.isArray(generated) ? generated.length : 0;
+    toast.success(`Generated ${count} questions`);
+    return generated;
+  }, []);
+
+  // ─── Papers CRUD ────────────────────────────────────────────────────────
+
+  const fetchPapers = useCallback(async (filters?: PaperFilters) => {
+    setPapersLoading(true);
+    try {
+      const res = await apiClient.get(`${BASE}/papers`, { params: filters });
+      const data = unwrapResponse<PapersListResponse>(res);
+      setPapers(data.papers ?? []);
+      setPapersTotal(data.total ?? 0);
+    } catch (err: unknown) {
+      toast.error(extractErrorMessage(err, 'Failed to load papers'));
+    } finally {
+      setPapersLoading(false);
     }
-    async function fetchTopics() {
-      try {
-        const params: Record<string, unknown> = {};
-        if (subjectId) params.subjectId = subjectId;
-        if (gradeId) params.gradeId = gradeId;
-        const res = await apiClient.get('/teacher-workbench/curriculum/topics', { params });
-        setTopics(unwrapList<CurriculumTopic>(res));
-      } catch (err: unknown) {
-        console.error('Failed to load topics', err);
-      }
+  }, []);
+
+  const getPaper = useCallback(async (id: string): Promise<AssessmentPaperItem | null> => {
+    try {
+      const res = await apiClient.get(`${BASE}/papers/${id}`);
+      return unwrapResponse<AssessmentPaperItem>(res);
+    } catch (err: unknown) {
+      toast.error(extractErrorMessage(err, 'Failed to load paper'));
+      return null;
     }
-    fetchTopics();
-  }, [filters.subjectId, filters.gradeId]);
+  }, []);
 
-  useEffect(() => {
-    fetchQuestions();
-  }, [fetchQuestions]);
+  const createPaper = useCallback(async (data: CreatePaperPayload) => {
+    const res = await apiClient.post(`${BASE}/papers`, data);
+    const paper = unwrapResponse<AssessmentPaperItem>(res);
+    toast.success('Paper created');
+    return paper;
+  }, []);
 
-  const createQuestion = useCallback(
-    async (data: Record<string, unknown>) => {
-      try {
-        await apiClient.post('/teacher-workbench/questions', { ...data, schoolId });
-        toast.success('Question created');
-        await fetchQuestions();
-        return true;
-      } catch (err: unknown) {
-        toast.error(extractErrorMessage(err, 'Failed to create question'));
-        return false;
-      }
+  const updatePaper = useCallback(async (id: string, data: UpdatePaperPayload) => {
+    const res = await apiClient.put(`${BASE}/papers/${id}`, data);
+    const paper = unwrapResponse<AssessmentPaperItem>(res);
+    toast.success('Paper updated');
+    return paper;
+  }, []);
+
+  const addQuestionToPaper = useCallback(
+    async (paperId: string, data: AddQuestionToPaperPayload) => {
+      const res = await apiClient.post(`${BASE}/papers/${paperId}/questions`, data);
+      const paper = unwrapResponse<AssessmentPaperItem>(res);
+      toast.success('Question added to paper');
+      return paper;
     },
-    [schoolId, fetchQuestions],
+    [],
   );
 
-  const updateQuestion = useCallback(
-    async (id: string, data: Record<string, unknown>) => {
-      try {
-        await apiClient.put(`/teacher-workbench/questions/${id}`, data);
-        toast.success('Question updated');
-        await fetchQuestions();
-        return true;
-      } catch (err: unknown) {
-        toast.error(extractErrorMessage(err, 'Failed to update question'));
-        return false;
-      }
+  const removeQuestionFromPaper = useCallback(
+    async (paperId: string, sectionIndex: number, questionIndex: number) => {
+      const res = await apiClient.delete(
+        `${BASE}/papers/${paperId}/questions/${sectionIndex}/${questionIndex}`,
+      );
+      const paper = unwrapResponse<AssessmentPaperItem>(res);
+      toast.success('Question removed from paper');
+      return paper;
     },
-    [fetchQuestions],
+    [],
   );
 
-  const deleteQuestion = useCallback(
-    async (id: string) => {
+  const finalisePaper = useCallback(async (id: string) => {
+    const res = await apiClient.post(`${BASE}/papers/${id}/finalise`, {});
+    const paper = unwrapResponse<AssessmentPaperItem>(res);
+    toast.success('Paper finalised');
+    return paper;
+  }, []);
+
+  const getCompliance = useCallback(
+    async (id: string): Promise<CapsComplianceReport | null> => {
       try {
-        await apiClient.delete(`/teacher-workbench/questions/${id}`);
-        toast.success('Question deleted');
-        await fetchQuestions();
+        const res = await apiClient.get(`${BASE}/papers/${id}/compliance`);
+        return unwrapResponse<CapsComplianceReport>(res);
       } catch (err: unknown) {
-        toast.error(extractErrorMessage(err, 'Failed to delete question'));
+        toast.error(extractErrorMessage(err, 'Failed to check compliance'));
+        return null;
       }
     },
-    [fetchQuestions],
+    [],
   );
 
-  const importFromPaper = useCallback(
-    async (paperId: string, frameworkId: string) => {
-      try {
-        await apiClient.post(
-          `/teacher-workbench/questions/import-from-paper/${paperId}`,
-          { frameworkId },
-        );
-        toast.success('Questions imported from paper');
-        await fetchQuestions();
-        return true;
-      } catch (err: unknown) {
-        toast.error(extractErrorMessage(err, 'Failed to import questions'));
-        return false;
-      }
-    },
-    [fetchQuestions],
-  );
-
-  const uploadImage = useCallback(async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('image', file);
-    const response = await apiClient.post('/teacher-workbench/uploads/image', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    const data = unwrapResponse(response) as { url: string };
-    return data.url;
+  const clonePaper = useCallback(async (id: string) => {
+    const res = await apiClient.post(`${BASE}/papers/${id}/clone`, {});
+    const paper = unwrapResponse<AssessmentPaperItem>(res);
+    toast.success('Paper cloned');
+    return paper;
   }, []);
 
   return {
+    // Questions state
     questions,
-    loading,
-    totalCount,
-    filters,
-    setFilters,
-    frameworks,
-    subjects,
-    topics,
+    questionsTotal,
+    questionsLoading,
+    // Questions actions
     fetchQuestions,
+    getQuestion,
     createQuestion,
     updateQuestion,
     deleteQuestion,
-    importFromPaper,
-    uploadImage,
+    submitQuestionForReview,
+    reviewQuestion,
+    generateQuestions,
+    // Papers state
+    papers,
+    papersTotal,
+    papersLoading,
+    // Papers actions
+    fetchPapers,
+    getPaper,
+    createPaper,
+    updatePaper,
+    addQuestionToPaper,
+    removeQuestionFromPaper,
+    finalisePaper,
+    getCompliance,
+    clonePaper,
   };
 }
