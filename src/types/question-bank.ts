@@ -202,6 +202,20 @@ export interface UpdatePaperPayload {
   sections?: PaperSectionItem[];
 }
 
+export interface GeneratePaperPayload {
+  subjectId: string;
+  gradeId: string;
+  term: number;
+  year: number;
+  paperType: PaperType;
+  totalMarks: number;
+  duration: number;
+  topicNodeIds?: string[];
+  cognitiveWeighting?: CognitiveDistribution;
+  difficulty?: 'easy' | 'balanced' | 'challenging';
+  instructions?: string;
+}
+
 export interface AddQuestionToPaperPayload {
   sectionIndex: number;
   questionId: string;

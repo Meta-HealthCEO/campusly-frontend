@@ -15,6 +15,7 @@ import type {
   CreatePaperPayload,
   UpdatePaperPayload,
   AddQuestionToPaperPayload,
+  GeneratePaperPayload,
 } from '@/types';
 
 const BASE = '/question-bank';
@@ -200,6 +201,43 @@ export function useQuestionBank() {
     return paper;
   }, []);
 
+  const generatePaper = useCallback(async (data: GeneratePaperPayload) => {
+    const res = await apiClient.post(`${BASE}/papers/generate`, data);
+    const paper = unwrapResponse<AssessmentPaperItem>(res);
+    toast.success('Paper generated');
+    return paper;
+  }, []);
+
+  const downloadPaperPdf = useCallback(async (paperId: string) => {
+    const res = await apiClient.get(`${BASE}/papers/${paperId}/pdf`, {
+      responseType: 'blob',
+    });
+    const url = window.URL.createObjectURL(new Blob([res.data as BlobPart]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `paper-${paperId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    toast.success('Paper PDF downloaded');
+  }, []);
+
+  const downloadMemoPdf = useCallback(async (paperId: string) => {
+    const res = await apiClient.get(`${BASE}/papers/${paperId}/memo-pdf`, {
+      responseType: 'blob',
+    });
+    const url = window.URL.createObjectURL(new Blob([res.data as BlobPart]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `memo-${paperId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    toast.success('Memo PDF downloaded');
+  }, []);
+
   return {
     // Questions state
     questions,
@@ -228,5 +266,8 @@ export function useQuestionBank() {
     finalisePaper,
     getCompliance,
     clonePaper,
+    generatePaper,
+    downloadPaperPdf,
+    downloadMemoPdf,
   };
 }
