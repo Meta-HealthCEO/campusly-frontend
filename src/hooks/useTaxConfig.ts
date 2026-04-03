@@ -24,7 +24,7 @@ export function useTaxConfig() {
     }
   }, []);
 
-  const saveTaxTable = useCallback(async (data: Omit<TaxTable, 'id'>): Promise<TaxTable> => {
+  const saveTaxTable = useCallback(async (data: Omit<TaxTable, 'id' | 'schoolId'>): Promise<TaxTable> => {
     const response = await apiClient.post('/payroll/tax-tables', data);
     const saved = unwrapResponse<TaxTable>(response);
     setTaxTable(saved);
