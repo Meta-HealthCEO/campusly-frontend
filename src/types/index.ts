@@ -51,3 +51,4 @@ export * from './assets';
 export * from './governance';
 export * from './curriculum';
 export * from './pastoral';
+export * from './classroom';
