@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Loader2, TreePine } from 'lucide-react';
 import { NodeTreeItem } from './NodeTreeItem';
 import type { CurriculumNodeItem } from '@/types';
@@ -44,6 +44,9 @@ export function NodeTree({
       .finally(() => setLoading(false));
   }, [frameworkId, fetchChildren, refreshKey]);
 
+  const nodesByParentRef = useRef(nodesByParent);
+  nodesByParentRef.current = nodesByParent;
+
   const handleExpand = useCallback(async (nodeId: string) => {
     setExpandedNodes((prev) => {
       const next = new Set(prev);
@@ -55,7 +58,7 @@ export function NodeTree({
       return next;
     });
 
-    if (!nodesByParent.has(nodeId)) {
+    if (!nodesByParentRef.current.has(nodeId)) {
       const children = await fetchChildren(nodeId);
       setNodesByParent((prev) => {
         const next = new Map(prev);
@@ -63,7 +66,7 @@ export function NodeTree({
         return next;
       });
     }
-  }, [nodesByParent, fetchChildren]);
+  }, [fetchChildren]);
 
   const rootNodes = nodesByParent.get('root') ?? [];
 

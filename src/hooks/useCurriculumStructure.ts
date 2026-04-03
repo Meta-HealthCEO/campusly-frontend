@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 import { unwrapResponse, unwrapList } from '@/lib/api-helpers';
@@ -30,19 +30,22 @@ export function useCurriculumStructure() {
 
   // ─── Frameworks ──────────────────────────────────────────────────────────────
 
+  const selectedFrameworkRef = useRef(selectedFramework);
+  selectedFrameworkRef.current = selectedFramework;
+
   const fetchFrameworks = useCallback(async () => {
     try {
       const response = await apiClient.get('/curriculum-structure/frameworks');
       const data = unwrapList<CurriculumFrameworkItem>(response);
       setFrameworks(data);
-      if (data.length > 0 && !selectedFramework) {
+      if (data.length > 0 && !selectedFrameworkRef.current) {
         const defaultFw = data.find((f: CurriculumFrameworkItem) => f.isDefault) ?? data[0];
         setSelectedFramework(defaultFw.id);
       }
     } catch (err: unknown) {
       console.error('Failed to load frameworks', err);
     }
-  }, [selectedFramework]);
+  }, []);
 
   const createFramework = useCallback(async (data: CreateFrameworkPayload) => {
     const response = await apiClient.post('/curriculum-structure/frameworks', data);

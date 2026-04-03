@@ -18,7 +18,7 @@ interface NodePickerProps {
   onChange: (nodeId: string | null, node: CurriculumNodeItem | null) => void;
   onSearch: (frameworkId: string, search: string, filterType?: string) => Promise<CurriculumNodeItem[]>;
   onLoadNode: (id: string) => Promise<CurriculumNodeItem>;
-  filterTypes?: string[];
+  filterType?: string;
   placeholder?: string;
   disabled?: boolean;
 }
@@ -29,7 +29,7 @@ export function NodePicker({
   onChange,
   onSearch,
   onLoadNode,
-  filterTypes,
+  filterType,
   placeholder = 'Select curriculum node...',
   disabled = false,
 }: NodePickerProps) {
@@ -60,7 +60,6 @@ export function NodePicker({
       }
       setLoading(true);
       try {
-        const filterType = filterTypes && filterTypes.length > 0 ? filterTypes[0] : undefined;
         const nodes = await onSearch(frameworkId, term, filterType);
         setResults(nodes);
       } catch {
@@ -69,7 +68,7 @@ export function NodePicker({
         setLoading(false);
       }
     },
-    [frameworkId, filterTypes, onSearch],
+    [frameworkId, filterType, onSearch],
   );
 
   const handleSelect = (node: CurriculumNodeItem) => {
