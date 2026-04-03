@@ -113,7 +113,7 @@ export function useGovernanceSIP() {
     }
   }, []);
 
-  const updateGoal = useCallback(async (goalId: string, data: Partial<CreateSIPGoalPayload>) => {
+  const updateGoal = useCallback(async (goalId: string, data: Partial<SIPGoal>) => {
     try {
       const response = await apiClient.put(`/governance/sip/goals/${goalId}`, data);
       const updated = unwrapResponse<SIPGoal>(response);
