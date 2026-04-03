@@ -71,12 +71,12 @@ export function ReviewDialog({
   const Icon = TYPE_ICONS[resource.type];
   const creatorName = resolveCreatorName(resource.createdBy);
 
-  const handleAction = async (status: 'approved' | 'rejected') => {
+  const handleAction = async (action: 'approve' | 'reject') => {
     setSubmitting(true);
     try {
       await onSubmit(resource.id, {
-        status,
-        reviewNotes: notes || undefined,
+        action,
+        notes: notes || undefined,
       });
       onOpenChange(false);
     } catch (err: unknown) {
@@ -132,14 +132,14 @@ export function ReviewDialog({
             type="button"
             variant="destructive"
             disabled={submitting}
-            onClick={() => handleAction('rejected')}
+            onClick={() => handleAction('reject')}
           >
             {submitting ? 'Submitting...' : 'Reject'}
           </Button>
           <Button
             type="button"
             disabled={submitting}
-            onClick={() => handleAction('approved')}
+            onClick={() => handleAction('approve')}
           >
             {submitting ? 'Submitting...' : 'Approve'}
           </Button>

@@ -133,7 +133,7 @@ export function ResourceFormDialog({
       difficulty: values.difficulty,
       estimatedMinutes: values.estimatedMinutes,
       blocks: blockList.map(({ blockId: _id, ...rest }) => rest),
-      ...(selectedNodeId ? { curriculumNodeId: selectedNodeId } : {}),
+      curriculumNodeId: selectedNodeId ?? '',
     };
     await onSubmit(payload, blockList);
   };

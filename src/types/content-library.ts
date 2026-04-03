@@ -77,7 +77,7 @@ export interface ContentResourceItem {
 }
 
 export interface CreateResourcePayload {
-  curriculumNodeId?: string;
+  curriculumNodeId: string;
   type: ResourceType;
   format: ResourceFormat;
   title: string;
@@ -94,37 +94,29 @@ export interface CreateResourcePayload {
 }
 
 export interface UpdateResourcePayload {
-  curriculumNodeId?: string;
-  type?: ResourceType;
-  format?: ResourceFormat;
   title?: string;
   blocks?: Omit<ContentBlockItem, 'blockId'>[];
-  source?: ResourceSource;
-  sourceAttribution?: string;
-  gradeId?: string;
-  subjectId?: string;
-  term?: number;
   tags?: string[];
   difficulty?: number;
   estimatedMinutes?: number;
+  format?: ResourceFormat;
   prerequisites?: string[];
 }
 
 export interface ReviewPayload {
-  status: 'approved' | 'rejected';
-  reviewNotes?: string;
+  action: 'approve' | 'reject';
+  notes?: string;
 }
 
 export interface GenerateContentPayload {
   curriculumNodeId: string;
   type: ResourceType;
-  format: ResourceFormat;
   gradeId: string;
   subjectId: string;
-  term?: number;
+  term: number;
+  blockTypes: ContentBlockType[];
   difficulty?: number;
-  estimatedMinutes?: number;
-  additionalInstructions?: string;
+  instructions?: string;
 }
 
 export interface ResourceFilters {

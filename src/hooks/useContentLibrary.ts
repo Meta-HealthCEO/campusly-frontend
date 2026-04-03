@@ -123,7 +123,7 @@ export function useContentLibrary() {
     async (id: string, data: ReviewPayload): Promise<boolean> => {
       try {
         await apiClient.patch(`${BASE}/${id}/review`, data);
-        toast.success(`Resource ${data.status}`);
+        toast.success(`Resource ${data.action === 'approve' ? 'approved' : 'rejected'}`);
         return true;
       } catch (err: unknown) {
         toast.error(extractErrorMessage(err, 'Failed to review resource'));
@@ -136,10 +136,7 @@ export function useContentLibrary() {
   const generateContent = useCallback(
     async (data: GenerateContentPayload): Promise<ContentResourceItem | null> => {
       try {
-        const response = await apiClient.post(`${BASE}/generate`, {
-          ...data,
-          schoolId,
-        });
+        const response = await apiClient.post(`${BASE}/generate`, data);
         toast.success('Content generated \u2014 saved as draft');
         return unwrapResponse<ContentResourceItem>(response);
       } catch (err: unknown) {
@@ -147,7 +144,7 @@ export function useContentLibrary() {
         return null;
       }
     },
-    [schoolId],
+    [],
   );
 
   return {
