@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback } from 'react';
 import { TextBlock } from './TextBlock';
 import { QuizBlock } from './QuizBlock';
 import { FillBlankBlock } from './FillBlankBlock';
@@ -17,9 +17,9 @@ interface BlockRendererProps {
 }
 
 export function BlockRenderer({ block, onAttempt, interaction }: BlockRendererProps) {
-  const handleSubmit = useMemo(
-    () => async (response: string) => onAttempt(block.blockId, response),
-    [onAttempt, block.blockId]
+  const handleSubmit = useCallback(
+    async (response: string) => onAttempt(block.blockId, response),
+    [onAttempt, block.blockId],
   );
 
   switch (block.type) {

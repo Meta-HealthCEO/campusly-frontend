@@ -18,7 +18,7 @@ interface StudentLearningResult {
   masteryLoading: boolean;
   fetchApprovedResources: (filters?: StudentResourceFilters) => Promise<void>;
   getResource: (id: string) => Promise<ContentResourceItem>;
-  submitAttempt: (resourceId: string, data: AttemptPayload) => Promise<AttemptResult>;
+  submitAttempt: (resourceId: string, studentId: string, data: AttemptPayload) => Promise<AttemptResult>;
   fetchMyMastery: (
     studentId: string,
     filters?: Pick<StudentResourceFilters, 'subjectId' | 'gradeId'>,
@@ -79,10 +79,11 @@ export function useStudentLearning(): StudentLearningResult {
   }, []);
 
   const submitAttempt = useCallback(
-    async (resourceId: string, data: AttemptPayload): Promise<AttemptResult> => {
+    async (resourceId: string, studentId: string, data: AttemptPayload): Promise<AttemptResult> => {
       const res = await apiClient.post(
         `/content-library/student/resources/${resourceId}/attempt`,
         data,
+        { params: { studentId } },
       );
       return unwrapResponse<AttemptResult>(res);
     },
@@ -101,7 +102,10 @@ export function useStudentLearning(): StudentLearningResult {
         if (filters?.gradeId) params.gradeId = filters.gradeId;
 
         const res = await apiClient.get('/content-library/student/mastery', { params });
-        const items = unwrapList<StudentMasteryItem>(res);
+        const raw = res.data?.data ?? res.data;
+        const items: StudentMasteryItem[] = Array.isArray(raw)
+          ? raw
+          : ((raw as Record<string, unknown>)?.records as StudentMasteryItem[] ?? []);
         setMastery(items);
       } catch (err: unknown) {
         console.error('Failed to fetch mastery data', err);

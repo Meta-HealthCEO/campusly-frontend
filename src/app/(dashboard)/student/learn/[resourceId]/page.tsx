@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -13,6 +13,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { BlockRenderer } from '@/components/content/renderers/BlockRenderer';
 import { useStudentLearning } from '@/hooks/useStudentLearning';
+import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import type {
   ContentResourceItem,
@@ -41,12 +42,15 @@ export default function StudentLessonPage() {
   const params = useParams();
   const resourceId = params.resourceId as string;
   const { getResource, submitAttempt } = useStudentLearning();
+  const { student } = useCurrentStudent();
 
   const [resource, setResource] = useState<ContentResourceItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [interactions, setInteractions] = useState<Map<string, BlockInteractionState>>(
     new Map(),
   );
+  const interactionsRef = useRef(interactions);
+  interactionsRef.current = interactions;
 
   // Load resource
   useEffect(() => {
@@ -84,7 +88,10 @@ export default function StudentLessonPage() {
   // Handle an attempt for a block
   const handleAttempt = useCallback(
     async (blockId: string, response: string): Promise<AttemptResult> => {
-      const block = resource?.blocks.find((b: ContentBlockItem) => b.blockId === blockId);
+      if (!student?.id) {
+        throw new Error('Student not loaded');
+      }
+
       const payload = {
         blockId,
         curriculumNodeId:
@@ -93,10 +100,10 @@ export default function StudentLessonPage() {
             : resource?.curriculumNodeId?.id ?? '',
         response,
         timeSpentSeconds: 0,
-        hintsUsed: interactions.get(blockId)?.hintsRevealed ?? 0,
+        hintsUsed: interactionsRef.current.get(blockId)?.hintsRevealed ?? 0,
       };
 
-      const result = await submitAttempt(resourceId, payload);
+      const result = await submitAttempt(resourceId, student.id, payload);
 
       setInteractions((prev) => {
         const next = new Map(prev);
@@ -121,7 +128,7 @@ export default function StudentLessonPage() {
 
       return result;
     },
-    [resource, resourceId, submitAttempt, interactions],
+    [resource, resourceId, submitAttempt, student?.id],
   );
 
   // Progress tracking
