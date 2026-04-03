@@ -19,12 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { CurriculumTopic, TopicStatus, PacingUpdatePayload, TopicUpdateEntry } from '@/types/curriculum';
+import type { PacingTopic, TopicStatus, PacingUpdatePayload, TopicUpdateEntry } from '@/types/curriculum';
 
 interface PacingUpdateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  topics: CurriculumTopic[];
+  topics: PacingTopic[];
   onSubmit: (data: PacingUpdatePayload) => Promise<void>;
 }
 
@@ -42,7 +42,7 @@ const TOPIC_STATUSES: { value: TopicStatus; label: string }[] = [
   { value: 'skipped', label: 'Skipped' },
 ];
 
-function buildInitialTopicStates(topics: CurriculumTopic[]): TopicFormState[] {
+function buildInitialTopicStates(topics: PacingTopic[]): TopicFormState[] {
   return topics.map((t) => ({
     topicId: t.id,
     status: t.status,
@@ -59,7 +59,7 @@ function toISODate(date: Date): string {
 }
 
 interface TopicRowProps {
-  topic: CurriculumTopic;
+  topic: PacingTopic;
   state: TopicFormState;
   onChange: (updated: Partial<TopicFormState>) => void;
 }
@@ -75,7 +75,7 @@ function TopicUpdateRow({ topic, state, onChange }: TopicRowProps) {
           <Label className="text-xs">Status</Label>
           <Select
             value={state.status}
-            onValueChange={(val: string) => onChange({ status: val as TopicStatus })}
+            onValueChange={(val: unknown) => onChange({ status: val as TopicStatus })}
           >
             <SelectTrigger className="w-full h-8 text-xs">
               <SelectValue />

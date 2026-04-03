@@ -1,26 +1,26 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import type { PacingOverview, PacingStatus } from '@/types/curriculum';
+import type { PacingOverview, CurriculumPacingStatus } from '@/types/curriculum';
 
 interface PacingTrafficLightProps {
   bySubject: PacingOverview['bySubject'];
   onCellClick?: (subjectId: string) => void;
 }
 
-const cellBg: Record<PacingStatus, string> = {
+const cellBg: Record<CurriculumPacingStatus, string> = {
   on_track: 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100',
   slightly_behind: 'bg-amber-50 border-amber-200 hover:bg-amber-100',
   significantly_behind: 'bg-destructive/5 border-destructive/20 hover:bg-destructive/10',
 };
 
-const statusText: Record<PacingStatus, string> = {
+const statusText: Record<CurriculumPacingStatus, string> = {
   on_track: 'text-emerald-700',
   slightly_behind: 'text-amber-700',
   significantly_behind: 'text-destructive',
 };
 
-const statusLabel: Record<PacingStatus, string> = {
+const statusLabel: Record<CurriculumPacingStatus, string> = {
   on_track: 'On Track',
   slightly_behind: 'Slightly Behind',
   significantly_behind: 'Significantly Behind',

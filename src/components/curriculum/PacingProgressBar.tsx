@@ -1,15 +1,15 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import type { PacingStatus } from '@/types/curriculum';
+import type { CurriculumPacingStatus } from '@/types/curriculum';
 
 interface PacingProgressBarProps {
   actual: number;
   expected: number;
-  status: PacingStatus;
+  status: CurriculumPacingStatus;
 }
 
-const actualBarColor: Record<PacingStatus, string> = {
+const actualBarColor: Record<CurriculumPacingStatus, string> = {
   on_track: 'bg-emerald-500',
   slightly_behind: 'bg-amber-500',
   significantly_behind: 'bg-destructive',

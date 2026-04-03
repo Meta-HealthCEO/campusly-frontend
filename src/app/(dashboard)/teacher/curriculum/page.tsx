@@ -38,8 +38,7 @@ export default function TeacherCurriculumPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!schoolId) return;
-    fetchPlans({ schoolId });
+    fetchPlans();
   }, [schoolId, fetchPlans]);
 
   useEffect(() => {
@@ -100,15 +99,19 @@ export default function TeacherCurriculumPage() {
         <>
           <PlanSelectorDropdown
             plans={plans}
-            selectedPlanId={selectedPlanId}
-            onSelect={setSelectedPlanId}
+            selectedId={selectedPlanId}
+            onChange={setSelectedPlanId}
           />
 
           {selectedPlan && (
             <div className="space-y-6">
-              <PacingProgressBar plan={selectedPlan} />
+              <PacingProgressBar
+                actual={selectedPlan.pacingPercent ?? 0}
+                expected={selectedPlan.expectedPercent ?? 0}
+                status={selectedPlan.pacingStatus ?? 'on_track'}
+              />
 
-              <TopicProgressList plan={selectedPlan} />
+              <TopicProgressList topics={selectedPlan.topics} />
 
               <div className="flex justify-end">
                 <Button onClick={() => setDialogOpen(true)}>
@@ -120,7 +123,7 @@ export default function TeacherCurriculumPage() {
               {historyLoading ? (
                 <LoadingSpinner />
               ) : (
-                <PacingUpdateHistory entries={history} />
+                <PacingUpdateHistory updates={history} />
               )}
             </div>
           )}
@@ -138,9 +141,8 @@ export default function TeacherCurriculumPage() {
       <PacingUpdateDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        plan={selectedPlan}
+        topics={selectedPlan?.topics ?? []}
         onSubmit={handleSubmitUpdate}
-        saving={saving}
       />
     </div>
   );

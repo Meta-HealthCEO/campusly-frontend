@@ -63,7 +63,7 @@ export default function BenchmarkConfigPage() {
         <span className="text-sm font-medium text-muted-foreground">Year</span>
         <Select
           value={String(selectedYear)}
-          onValueChange={(v: string) => setSelectedYear(Number(v))}
+          onValueChange={(v: unknown) => setSelectedYear(Number(v))}
         >
           <SelectTrigger className="w-full sm:w-32">
             <SelectValue />
@@ -89,9 +89,7 @@ export default function BenchmarkConfigPage() {
       ) : (
         <BenchmarkGrid
           benchmarks={benchmarks}
-          year={selectedYear}
           onSave={handleSave}
-          saving={saving}
         />
       )}
     </div>

@@ -24,7 +24,7 @@ interface InterventionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   intervention: CurriculumIntervention | null;
-  onSubmit: (id: string, data: { status: string; notes?: string }) => Promise<void>;
+  onSubmit: (id: string, data: { status: InterventionStatus; notes?: string }) => Promise<void>;
 }
 
 const STATUS_OPTIONS: { value: InterventionStatus; label: string }[] = [

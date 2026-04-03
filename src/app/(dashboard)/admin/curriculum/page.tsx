@@ -75,16 +75,11 @@ export default function AdminCurriculumPage() {
     }
   }, [fetchComparison, comparisonYear]);
 
-  const handleOpenIntervention = useCallback((intervention: CurriculumIntervention) => {
-    setSelectedIntervention(intervention);
-    setInterventionDialogOpen(true);
-  }, []);
-
   const handleUpdateIntervention = useCallback(
-    async (id: string, status: InterventionStatus, notes?: string) => {
+    async (id: string, data: { status: InterventionStatus; notes?: string }) => {
       setSaving(true);
       try {
-        await updateIntervention(id, { status, notes });
+        await updateIntervention(id, data);
         toast.success('Intervention updated');
         setInterventionDialogOpen(false);
         setSelectedIntervention(null);
@@ -128,8 +123,8 @@ export default function AdminCurriculumPage() {
             <LoadingSpinner />
           ) : overview ? (
             <>
-              <PacingOverviewCards overview={overview} />
-              <PacingTrafficLight overview={overview} />
+              <PacingOverviewCards summary={overview.summary} />
+              <PacingTrafficLight bySubject={overview.bySubject} />
             </>
           ) : (
             <EmptyState
@@ -146,7 +141,7 @@ export default function AdminCurriculumPage() {
             <span className="text-sm font-medium text-muted-foreground">Year</span>
             <Select
               value={String(comparisonYear)}
-              onValueChange={(v: string) => setComparisonYear(Number(v))}
+              onValueChange={(v: unknown) => setComparisonYear(Number(v))}
             >
               <SelectTrigger className="w-full sm:w-32">
                 <SelectValue />
@@ -187,7 +182,14 @@ export default function AdminCurriculumPage() {
           ) : (
             <InterventionList
               interventions={interventions}
-              onAction={handleOpenIntervention}
+              onAcknowledge={(id) => {
+                const item = interventions.find((i) => i.id === id);
+                if (item) { setSelectedIntervention(item); setInterventionDialogOpen(true); }
+              }}
+              onResolve={(id) => {
+                const item = interventions.find((i) => i.id === id);
+                if (item) { setSelectedIntervention(item); setInterventionDialogOpen(true); }
+              }}
             />
           )}
         </TabsContent>
@@ -198,7 +200,6 @@ export default function AdminCurriculumPage() {
         onOpenChange={setInterventionDialogOpen}
         intervention={selectedIntervention}
         onSubmit={handleUpdateIntervention}
-        saving={saving}
       />
     </div>
   );

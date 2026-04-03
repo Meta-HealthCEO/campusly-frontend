@@ -2,10 +2,10 @@
 
 import { Circle, CheckCircle2, Clock, MinusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { CurriculumTopic, TopicStatus } from '@/types/curriculum';
+import type { PacingTopic, TopicStatus } from '@/types/curriculum';
 
 interface TopicProgressListProps {
-  topics: CurriculumTopic[];
+  topics: PacingTopic[];
 }
 
 function formatDateRange(start: string, end: string): string {
@@ -29,7 +29,7 @@ const statusLabel: Record<TopicStatus, string> = {
 };
 
 interface TopicRowProps {
-  topic: CurriculumTopic;
+  topic: PacingTopic;
 }
 
 function TopicRow({ topic }: TopicRowProps) {

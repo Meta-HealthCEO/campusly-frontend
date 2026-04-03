@@ -4,7 +4,8 @@
       "Bash(grep -E \"\\(page|layout\\).tsx$\")",
       "Bash(docker run:*)",
       "Bash(xargs wc:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(grep -l \"curriculum\" \"c:\\\\Users\\\\shaun\\\\campusly-frontend\\\\scopes\"/*)"
     ]
   }
 }

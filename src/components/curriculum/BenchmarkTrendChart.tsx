@@ -89,8 +89,8 @@ export function BenchmarkTrendChart({ trends }: BenchmarkTrendChartProps) {
             width={40}
           />
           <Tooltip
-            formatter={(value: number, name: string) => [
-              `${value.toFixed(1)}%`,
+            formatter={(value, name) => [
+              `${Number(value).toFixed(1)}%`,
               name === 'passRate' ? 'Actual Pass Rate' : 'Target Pass Rate',
             ]}
           />

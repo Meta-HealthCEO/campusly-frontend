@@ -21,7 +21,7 @@ function getPlanLabel(plan: CurriculumPlan): string {
 
 export function PlanSelectorDropdown({ plans, selectedId, onChange }: PlanSelectorDropdownProps) {
   return (
-    <Select value={selectedId} onValueChange={(val: string) => onChange(val)}>
+    <Select value={selectedId} onValueChange={(val: unknown) => onChange(val as string)}>
       <SelectTrigger className="w-full sm:w-72">
         <SelectValue placeholder="Select a curriculum plan" />
       </SelectTrigger>

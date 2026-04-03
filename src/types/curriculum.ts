@@ -1,9 +1,9 @@
-export type PacingStatus = 'on_track' | 'slightly_behind' | 'significantly_behind';
+export type CurriculumPacingStatus = 'on_track' | 'slightly_behind' | 'significantly_behind';
 export type TopicStatus = 'not_started' | 'in_progress' | 'completed' | 'skipped';
 export type InterventionStatus = 'active' | 'acknowledged' | 'resolved';
 export type BenchmarkComparisonStatus = 'above_target' | 'at_target' | 'below_target';
 
-export interface CurriculumTopic {
+export interface PacingTopic {
   id: string;
   title: string;
   description: string;
@@ -23,10 +23,10 @@ export interface CurriculumPlan {
   gradeId: { id: string; name: string; level: number };
   term: number;
   year: number;
-  topics: CurriculumTopic[];
+  topics: PacingTopic[];
   totalTopics: number;
   completedTopics: number;
-  pacingStatus?: PacingStatus;
+  pacingStatus?: CurriculumPacingStatus;
   pacingPercent?: number;
   expectedPercent?: number;
   assignedTeacher?: { id: string; firstName: string; lastName: string };
@@ -141,14 +141,14 @@ export interface PacingOverview {
     plans: number;
     avgPacingPercent: number;
     avgExpectedPercent: number;
-    pacingStatus: PacingStatus;
+    pacingStatus: CurriculumPacingStatus;
   }[];
   byGrade: {
     gradeId: string;
     gradeName: string;
     plans: number;
     avgPacingPercent: number;
-    pacingStatus: PacingStatus;
+    pacingStatus: CurriculumPacingStatus;
   }[];
   interventions: CurriculumIntervention[];
 }

@@ -1,14 +1,14 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import type { PacingStatus } from '@/types/curriculum';
+import type { CurriculumPacingStatus } from '@/types/curriculum';
 
 interface PacingStatusBadgeProps {
-  status: PacingStatus;
+  status: CurriculumPacingStatus;
   className?: string;
 }
 
-const statusConfig: Record<PacingStatus, { label: string; className: string }> = {
+const statusConfig: Record<CurriculumPacingStatus, { label: string; className: string }> = {
   on_track: {
     label: 'On Track',
     className: 'bg-emerald-100 text-emerald-800',
