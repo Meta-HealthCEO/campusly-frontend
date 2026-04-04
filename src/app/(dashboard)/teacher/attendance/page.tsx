@@ -55,7 +55,11 @@ export default function TeacherAttendancePage() {
                 onValueChange={(val: unknown) => changeClass(val as string)}
               >
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Select class" />
+                  <SelectValue placeholder="Select class">
+                    {classes.find((c) => c.id === selectedClass)
+                      ? `${classes.find((c) => c.id === selectedClass)?.grade?.name ?? ''} ${classes.find((c) => c.id === selectedClass)?.name ?? ''}`
+                      : 'Select class'}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {classes.map((cls) => (
