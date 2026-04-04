@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { BookOpen, Search, Plus, AlertTriangle } from 'lucide-react';
-import { toast } from 'sonner';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -55,6 +55,7 @@ const STATUS_OPTIONS: { value: ResourceStatus; label: string }[] = [
 // ─── Page ──────────────────────────────────────────────────────────────────
 
 export default function TeacherContentBrowserPage() {
+  const router = useRouter();
   const { user } = useAuthStore();
   const { resources, total, loading, fetchResources, createResource } =
     useContentLibrary();
@@ -117,7 +118,7 @@ export default function TeacherContentBrowserPage() {
   };
 
   const handleCardClick = (resource: ContentResourceItem) => {
-    toast.info(`Resource: ${resource.title}`);
+    router.push(`/teacher/curriculum/preview/${resource.id}`);
   };
 
   const handleAssignClick = (resource: ContentResourceItem) => {
