@@ -107,12 +107,26 @@ export function useTeacherAttendance() {
       toast.error('School information not available');
       return;
     }
+    if (!selectedClass) {
+      toast.error('Please select a class');
+      return;
+    }
+    if (currentAttendance.length === 0) {
+      toast.error('No students to mark attendance for');
+      return;
+    }
+    // Validate date is not in the future
+    const today = toISODate(new Date());
+    if (selectedDate > today) {
+      toast.error('Cannot record attendance for a future date');
+      return;
+    }
     setSaving(true);
     try {
       await apiClient.post('/attendance/bulk', {
         classId: selectedClass,
         schoolId: user.schoolId,
-        date: selectedDate,
+        date: `${selectedDate}T00:00:00.000Z`,
         period: parseInt(selectedPeriod),
         records: currentAttendance.map((a) => ({
           studentId: a.studentId,
@@ -122,7 +136,12 @@ export function useTeacherAttendance() {
       setSaved(true);
       toast.success('Attendance saved successfully!');
     } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to save attendance'));
+      const msg = extractErrorMessage(err, '');
+      if (msg.includes('Validation failed') || msg.includes('validation')) {
+        toast.error('Could not save attendance. Please check that all fields are filled correctly.');
+      } else {
+        toast.error(msg || 'Failed to save attendance. Please try again.');
+      }
     } finally {
       setSaving(false);
     }

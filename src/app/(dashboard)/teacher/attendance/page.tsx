@@ -45,6 +45,7 @@ export default function TeacherAttendancePage() {
               <Input
                 type="date"
                 value={selectedDate}
+                max={new Date().toISOString().slice(0, 10)}
                 onChange={(e) => changeDate(e.target.value)}
                 className="w-full sm:w-40"
               />
