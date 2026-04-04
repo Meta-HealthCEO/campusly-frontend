@@ -93,8 +93,10 @@ export function useBulkMessages() {
         setPage((obj.page as number) ?? p);
         setTotalPages((obj.totalPages as number) ?? 1);
       }
-    } catch {
-      console.error('Failed to load messages');
+    } catch (err: unknown) {
+      // Silently handle permission errors (teacher may not have access)
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 403) console.error('Failed to load messages');
     } finally {
       setLoading(false);
     }
@@ -276,8 +278,9 @@ export function useParentsList() {
             relationship: (p.relationship as string) ?? undefined,
           };
         }));
-      } catch {
-        console.error('Failed to load parents');
+      } catch (err: unknown) {
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status !== 403) console.error('Failed to load parents');
       } finally {
         setLoading(false);
       }
