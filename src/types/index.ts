@@ -55,5 +55,7 @@ export * from './classroom';
 export * from './curriculum-structure';
 export * from './content-library';
 export * from './student-learning';
-export * from './question-bank';
+// question-bank types have name conflicts with teacher-workbench
+// Import directly from '@/types/question-bank' instead of from '@/types'
+// export * from './question-bank';
 export * from './textbook';

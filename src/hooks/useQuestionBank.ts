@@ -6,7 +6,7 @@ import type {
   QuestionItem,
   AssessmentPaperItem,
   CapsComplianceReport,
-  QuestionFilters,
+  QBQuestionFilters,
   PaperFilters,
   CreateQuestionPayload,
   UpdateQuestionPayload,
@@ -16,7 +16,7 @@ import type {
   UpdatePaperPayload,
   AddQuestionToPaperPayload,
   GeneratePaperPayload,
-} from '@/types';
+} from '@/types/question-bank';
 
 const BASE = '/question-bank';
 
@@ -47,7 +47,7 @@ export function useQuestionBank() {
 
   // ─── Questions CRUD ─────────────────────────────────────────────────────
 
-  const fetchQuestions = useCallback(async (filters?: QuestionFilters) => {
+  const fetchQuestions = useCallback(async (filters?: QBQuestionFilters) => {
     setQuestionsLoading(true);
     try {
       const res = await apiClient.get(`${BASE}/questions`, { params: filters });

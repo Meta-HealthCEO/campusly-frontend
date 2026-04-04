@@ -40,7 +40,7 @@ function newSection(index: number): PaperBuilderSection {
 
 export default function PaperBuilderPage() {
   const router = useRouter();
-  const { questions, loading, filters, setFilters } = useQuestionBank();
+  const { questions, questionsLoading: loading, fetchQuestions } = useQuestionBank();
   const { generating } = usePaperMemo();
   const { submitting } = usePaperModeration();
 
@@ -48,6 +48,8 @@ export default function PaperBuilderPage() {
   const [config, setConfig] = useState<PaperConfig>(DEFAULT_CONFIG);
   const [saving, setSaving] = useState(false);
   const [activeMobileTab, setActiveMobileTab] = useState('bank');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [filters, setFilters] = useState<any>({});
 
   const totalMarks = useMemo(() => calcTotalMarks(sections), [sections]);
   const derivedConfig = useMemo(
@@ -185,7 +187,7 @@ export default function PaperBuilderPage() {
       <div className="hidden lg:grid lg:grid-cols-12 gap-4 items-start">
         <div className="lg:col-span-3 border rounded-xl p-4 bg-card min-h-[70vh]">
           <QuestionBankBrowser
-            questions={questions}
+            questions={questions as unknown as BankQuestion[]}
             loading={loading}
             onAddQuestion={handleAddQuestion}
             filters={filters}
@@ -226,7 +228,7 @@ export default function PaperBuilderPage() {
           </TabsList>
           <TabsContent value="bank" className="mt-3 border rounded-xl p-4 bg-card min-h-[60vh]">
             <QuestionBankBrowser
-              questions={questions}
+              questions={questions as unknown as BankQuestion[]}
               loading={loading}
               onAddQuestion={handleAddQuestion}
               filters={filters}

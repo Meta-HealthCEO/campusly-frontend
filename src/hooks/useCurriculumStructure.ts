@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
-import { apiClient } from '@/lib/api-client';
+import apiClient from '@/lib/api-client';
 import { unwrapResponse, unwrapList } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type {
@@ -13,7 +13,7 @@ import type {
   CreateNodePayload,
   UpdateNodePayload,
   BulkImportPayload,
-  BulkImportResult,
+  CurriculumBulkImportResult,
   CreateFrameworkPayload,
   NodeFilters,
 } from '@/types';
@@ -112,7 +112,7 @@ export function useCurriculumStructure() {
 
   const bulkImport = useCallback(async (data: BulkImportPayload) => {
     const response = await apiClient.post('/curriculum-structure/nodes/bulk', data);
-    const result = unwrapResponse<BulkImportResult>(response);
+    const result = unwrapResponse<CurriculumBulkImportResult>(response);
     toast.success(
       `Imported ${result.imported} nodes${result.skipped > 0 ? ` (${result.skipped} skipped)` : ''}`,
     );
