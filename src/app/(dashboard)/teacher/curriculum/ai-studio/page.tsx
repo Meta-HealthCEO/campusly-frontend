@@ -53,8 +53,40 @@ export default function AiStudioPage() {
     (nodeId: string | null, node: CurriculumNodeItem | null) => {
       setSelectedNodeId(nodeId);
       setSelectedNode(node);
+
+      // Auto-populate config from node code (e.g., CAPS-MATHEMATICS-GR10-T1-ALG-01)
+      if (node?.code) {
+        const code = node.code;
+        // Extract term from code (T1, T2, T3, T4)
+        const termMatch = code.match(/-T(\d)-/);
+        if (termMatch) setTerm(Number(termMatch[1]));
+
+        // Match grade from code (GR10, GR11, GR12) to academic grades
+        const gradeMatch = code.match(/GR(\d+)/);
+        if (gradeMatch) {
+          const gradeNum = gradeMatch[1];
+          const matched = grades.find((g) => g.name.includes(gradeNum));
+          if (matched) setGradeId(matched.id);
+        }
+
+        // Match subject from code to academic subjects
+        const subjectPart = code.split('-')[1]; // e.g., MATHEMATICS, MATHLIT, LIFESCI, PHYSSCI
+        if (subjectPart) {
+          const subjectMap: Record<string, string[]> = {
+            MATHEMATICS: ['Mathematics', 'Maths'],
+            MATHLIT: ['Mathematical Literacy', 'Maths Lit'],
+            LIFESCI: ['Life Sciences', 'Life Science'],
+            PHYSSCI: ['Physical Sciences', 'Physical Science'],
+          };
+          const keywords = subjectMap[subjectPart] ?? [subjectPart];
+          const matched = subjects.find((s) =>
+            keywords.some((kw) => s.name.toLowerCase().includes(kw.toLowerCase())),
+          );
+          if (matched) setSubjectId(matched.id);
+        }
+      }
     },
-    [],
+    [grades, subjects],
   );
 
   const handleGenerate = useCallback(

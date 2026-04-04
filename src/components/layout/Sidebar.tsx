@@ -37,13 +37,13 @@ export function Sidebar({ items }: SidebarProps) {
         <div className="flex h-16 items-center justify-between border-b px-4">
           {!sidebarCollapsed && (
             <Link href="/" className="flex items-center gap-2">
-              <GraduationCap className="h-7 w-7 text-primary" />
+              <GraduationCap className="h-7 w-7 text-[#2563eb]" />
               <span className="text-lg font-bold">Campusly</span>
             </Link>
           )}
           {sidebarCollapsed && (
             <Link href="/" className="mx-auto">
-              <GraduationCap className="h-7 w-7 text-primary" />
+              <GraduationCap className="h-7 w-7 text-[#2563eb]" />
             </Link>
           )}
           <button

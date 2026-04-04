@@ -3,8 +3,8 @@ import type { UserRole } from '@/types';
 export function getStoredTokens() {
   if (typeof window === 'undefined') return null;
   const accessToken = localStorage.getItem('accessToken');
-  const refreshToken = localStorage.getItem('refreshToken');
-  if (!accessToken || !refreshToken) return null;
+  const refreshToken = localStorage.getItem('refreshToken') ?? '';
+  if (!accessToken) return null;
   return { accessToken, refreshToken };
 }
 
