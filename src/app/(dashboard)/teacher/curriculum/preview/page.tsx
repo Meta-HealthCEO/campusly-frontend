@@ -59,9 +59,7 @@ export default function TeacherStudentPreviewPage() {
   );
 
   const handlePreview = (resource: ContentResourceItem) => {
-    toast.info(`Opening preview: ${resource.title}`);
-    // Navigate to student learn view for this resource
-    router.push(`/student/learn/${resource.id}`);
+    router.push(`/teacher/curriculum/preview/${resource.id}`);
   };
 
   const subjectOptions = useMemo(
