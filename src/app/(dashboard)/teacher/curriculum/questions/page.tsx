@@ -1,20 +1,18 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { FileQuestion, Plus, Search, AlertTriangle } from 'lucide-react';
+import { FileQuestion, Sparkles, Upload, Search, AlertTriangle } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { QuestionCard, QuestionFormDialog } from '@/components/questions';
+import {
+  QuestionCard, QuestionFormDialog, GenerateQuestionsDialog, UploadPaperDialog,
+} from '@/components/questions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { NodePicker } from '@/components/curriculum';
 import { useQuestionBank } from '@/hooks/useQuestionBank';
@@ -57,7 +55,7 @@ export default function TeacherQuestionsPage() {
   const {
     questions, questionsTotal, questionsLoading,
     fetchQuestions, getQuestion, createQuestion, updateQuestion,
-    generateQuestions,
+    generateQuestions, extractFromPaper,
   } = useQuestionBank();
   const { subjects } = useSubjects();
   const { grades } = useGrades();
@@ -75,8 +73,10 @@ export default function TeacherQuestionsPage() {
   const [selectedNodeCode, setSelectedNodeCode] = useState<string | null>(null);
 
   // ─── Dialog state ──────────────────────────────────────────────────────
-  const [formOpen, setFormOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionItem | null>(null);
+  const [generateOpen, setGenerateOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
   const [fetchError, setFetchError] = useState(false);
 
   // ─── Build filters object ──────────────────────────────────────────────
@@ -102,18 +102,9 @@ export default function TeacherQuestionsPage() {
     const full = await getQuestion(question.id);
     if (full) {
       setEditingQuestion(full);
-      setFormOpen(true);
+      setEditOpen(true);
     }
   }, [getQuestion]);
-
-  const handleCreate = useCallback(async (payload: CreateQuestionPayload) => {
-    try {
-      await createQuestion(payload);
-      await fetchQuestions(filters);
-    } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to create question'));
-    }
-  }, [createQuestion, fetchQuestions, filters]);
 
   const handleUpdate = useCallback(async (id: string, payload: UpdateQuestionPayload) => {
     try {
@@ -124,11 +115,6 @@ export default function TeacherQuestionsPage() {
     }
   }, [updateQuestion, fetchQuestions, filters]);
 
-  const handleOpenCreate = useCallback(() => {
-    setEditingQuestion(null);
-    setFormOpen(true);
-  }, []);
-
   const handleNodeChange = useCallback(
     (nodeId: string | null, node: CurriculumNodeItem | null) => {
       setSelectedNodeId(nodeId);
@@ -138,7 +124,18 @@ export default function TeacherQuestionsPage() {
     [],
   );
 
-  // ─── Map subjects/grades for dialog ────────────────────────────────────
+  const handleRefresh = useCallback(() => {
+    fetchQuestions(filters).catch(() => setFetchError(true));
+  }, [fetchQuestions, filters]);
+
+  /** Batch-save extracted questions from paper upload */
+  const handleSaveExtracted = useCallback(async (payloads: CreateQuestionPayload[]) => {
+    for (const payload of payloads) {
+      await createQuestion(payload);
+    }
+  }, [createQuestion]);
+
+  // ─── Map subjects/grades for dialogs ────────────────────────────────────
   const subjectOptions = useMemo(
     () => subjects.map((s) => ({ id: s.id, name: s.name })),
     [subjects],
@@ -160,11 +157,20 @@ export default function TeacherQuestionsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Question Bank" description="Browse, create, and manage questions">
-        <Button onClick={handleOpenCreate}>
-          <Plus className="mr-2 size-4" />
-          Create Question
-        </Button>
+      <PageHeader
+        title="Question Bank"
+        description="AI-generated and uploaded questions for building assessment papers"
+      >
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button onClick={() => setGenerateOpen(true)}>
+            <Sparkles className="mr-2 size-4" />
+            Generate with AI
+          </Button>
+          <Button variant="outline" onClick={() => setUploadOpen(true)}>
+            <Upload className="mr-2 size-4" />
+            Upload Paper
+          </Button>
+        </div>
       </PageHeader>
 
       {/* ─── Filters ──────────────────────────────────────────────────── */}
@@ -269,12 +275,18 @@ export default function TeacherQuestionsPage() {
         <EmptyState
           icon={FileQuestion}
           title="No questions found"
-          description="Adjust your filters or create a new question to get started."
+          description="Generate questions with AI or upload a paper to get started."
           action={
-            <Button onClick={handleOpenCreate}>
-              <Plus className="mr-2 size-4" />
-              Create Question
-            </Button>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button onClick={() => setGenerateOpen(true)}>
+                <Sparkles className="mr-2 size-4" />
+                Generate with AI
+              </Button>
+              <Button variant="outline" onClick={() => setUploadOpen(true)}>
+                <Upload className="mr-2 size-4" />
+                Upload Paper
+              </Button>
+            </div>
           }
         />
       ) : (
@@ -285,11 +297,11 @@ export default function TeacherQuestionsPage() {
         </div>
       )}
 
-      {/* ─── Form Dialog ──────────────────────────────────────────────── */}
+      {/* ─── Edit Dialog (existing questions only) ────────────────────── */}
       <QuestionFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        onSubmitCreate={handleCreate}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSubmitCreate={async () => {}}
         onSubmitUpdate={handleUpdate}
         editingQuestion={editingQuestion}
         subjects={subjectOptions}
@@ -298,6 +310,33 @@ export default function TeacherQuestionsPage() {
         selectedNodeTitle={selectedNodeTitle ?? undefined}
         selectedNodeCode={selectedNodeCode ?? undefined}
         onGenerateQuestion={generateQuestions}
+      />
+
+      {/* ─── Generate Questions Dialog ────────────────────────────────── */}
+      <GenerateQuestionsDialog
+        open={generateOpen}
+        onOpenChange={setGenerateOpen}
+        subjects={subjectOptions}
+        grades={gradeOptions}
+        frameworkId={selectedFramework}
+        onSearch={searchNodes}
+        onLoadNode={loadNode}
+        onGenerate={generateQuestions}
+        onComplete={handleRefresh}
+      />
+
+      {/* ─── Upload Paper Dialog ──────────────────────────────── */}
+      <UploadPaperDialog
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        subjects={subjectOptions}
+        grades={gradeOptions}
+        frameworkId={selectedFramework}
+        onSearch={searchNodes}
+        onLoadNode={loadNode}
+        onExtract={extractFromPaper}
+        onSaveQuestions={handleSaveExtracted}
+        onComplete={handleRefresh}
       />
     </div>
   );

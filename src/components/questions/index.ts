@@ -5,3 +5,5 @@ export { CompliancePanel } from './CompliancePanel';
 export { PaperSection } from './PaperSection';
 export { QuestionSearchPanel } from './QuestionSearchPanel';
 export { PaperGenerateDialog } from './PaperGenerateDialog';
+export { GenerateQuestionsDialog } from './GenerateQuestionsDialog';
+export { UploadPaperDialog } from './UploadPaperDialog';

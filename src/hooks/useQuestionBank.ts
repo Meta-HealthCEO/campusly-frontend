@@ -12,6 +12,8 @@ import type {
   UpdateQuestionPayload,
   ReviewQuestionPayload,
   GenerateQuestionsPayload,
+  ExtractFromPaperPayload,
+  ExtractedQuestionItem,
   CreatePaperPayload,
   UpdatePaperPayload,
   AddQuestionToPaperPayload,
@@ -108,8 +110,14 @@ export function useQuestionBank() {
     const res = await apiClient.post(`${BASE}/questions/generate`, data);
     const generated = unwrapResponse<QuestionItem[]>(res);
     const count = Array.isArray(generated) ? generated.length : 0;
-    toast.success(`Generated ${count} questions`);
+    toast.success(`Generated ${count} question${count !== 1 ? 's' : ''}`);
     return generated;
+  }, []);
+
+  const extractFromPaper = useCallback(async (data: ExtractFromPaperPayload) => {
+    const res = await apiClient.post(`${BASE}/questions/extract-from-paper`, data);
+    const extracted = unwrapResponse<ExtractedQuestionItem[]>(res);
+    return Array.isArray(extracted) ? extracted : [];
   }, []);
 
   // ─── Papers CRUD ────────────────────────────────────────────────────────
@@ -252,6 +260,7 @@ export function useQuestionBank() {
     submitQuestionForReview,
     reviewQuestion,
     generateQuestions,
+    extractFromPaper,
     // Papers state
     papers,
     papersTotal,

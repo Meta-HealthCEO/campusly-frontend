@@ -216,6 +216,24 @@ export interface GeneratePaperPayload {
   instructions?: string;
 }
 
+export interface ExtractFromPaperPayload {
+  image: string;
+  imageType: 'image/jpeg' | 'image/png' | 'image/webp';
+  subjectId: string;
+  gradeId: string;
+}
+
+export interface ExtractedQuestionItem {
+  stem: string;
+  type: QuestionType;
+  options: QuestionOption[];
+  answer: string;
+  markingRubric: string;
+  marks: number;
+  capsLevel: CapsLevel;
+  difficulty: number;
+}
+
 export interface AddQuestionToPaperPayload {
   sectionIndex: number;
   questionId: string;
