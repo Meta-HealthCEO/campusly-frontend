@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { FileQuestion, Plus, Sparkles, Search, AlertTriangle } from 'lucide-react';
+import { FileQuestion, Plus, Search, AlertTriangle } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -57,6 +57,7 @@ export default function TeacherQuestionsPage() {
   const {
     questions, questionsTotal, questionsLoading,
     fetchQuestions, getQuestion, createQuestion, updateQuestion,
+    generateQuestions,
   } = useQuestionBank();
   const { subjects } = useSubjects();
   const { grades } = useGrades();
@@ -71,6 +72,7 @@ export default function TeacherQuestionsPage() {
   const [mineOnly, setMineOnly] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedNodeTitle, setSelectedNodeTitle] = useState<string | null>(null);
+  const [selectedNodeCode, setSelectedNodeCode] = useState<string | null>(null);
 
   // ─── Dialog state ──────────────────────────────────────────────────────
   const [formOpen, setFormOpen] = useState(false);
@@ -131,6 +133,7 @@ export default function TeacherQuestionsPage() {
     (nodeId: string | null, node: CurriculumNodeItem | null) => {
       setSelectedNodeId(nodeId);
       setSelectedNodeTitle(node?.title ?? null);
+      setSelectedNodeCode(node?.code ?? null);
     },
     [],
   );
@@ -293,6 +296,8 @@ export default function TeacherQuestionsPage() {
         grades={gradeOptions}
         selectedNodeId={selectedNodeId ?? undefined}
         selectedNodeTitle={selectedNodeTitle ?? undefined}
+        selectedNodeCode={selectedNodeCode ?? undefined}
+        onGenerateQuestion={generateQuestions}
       />
     </div>
   );
