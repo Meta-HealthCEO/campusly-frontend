@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import apiClient from '@/lib/api-client';
-import { unwrapList, extractErrorMessage } from '@/lib/api-helpers';
+import { unwrapList, unwrapResponse, extractErrorMessage } from '@/lib/api-helpers';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/useAuthStore';
-import type { SchoolClass, Assessment } from '@/types';
+import type { SchoolClass, Assessment, Subject } from '@/types';
 
 interface MarkEntry {
   studentId: string;
@@ -14,14 +14,40 @@ interface MarkEntry {
   existingMark: number | null;
 }
 
+interface ClassStats {
+  average: number;
+  highest: number;
+  lowest: number;
+  passCount: number;
+  totalWithMarks: number;
+}
+
+interface CreateAssessmentPayload {
+  name: string;
+  subjectId: string;
+  classId: string;
+  type: Assessment['type'];
+  totalMarks: number;
+  weight: number;
+  term: number;
+  date: string;
+}
+
+interface MarkValidationError {
+  studentId: string;
+  message: string;
+}
+
 export function useTeacherGrades() {
   const { user } = useAuthStore();
   const schoolId = user?.schoolId ?? '';
 
   const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [markEntries, setMarkEntries] = useState<MarkEntry[]>([]);
   const [selectedClass, setSelectedClass] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedAssessment, setSelectedAssessment] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -41,7 +67,28 @@ export function useTeacherGrades() {
     fetchClasses();
   }, []);
 
-  // Load assessments when class changes
+  // Load subjects
+  useEffect(() => {
+    async function fetchSubjects() {
+      try {
+        const res = await apiClient.get('/academic/subjects');
+        setSubjects(unwrapList<Subject>(res));
+      } catch {
+        console.error('Failed to load subjects');
+      }
+    }
+    fetchSubjects();
+  }, []);
+
+  // Reset subject and assessment when class changes
+  useEffect(() => {
+    setSelectedSubject('');
+    setSelectedAssessment('');
+    setAssessments([]);
+    setMarkEntries([]);
+  }, [selectedClass]);
+
+  // Load assessments when class or subject changes
   useEffect(() => {
     if (!selectedClass) {
       setAssessments([]);
@@ -49,9 +96,9 @@ export function useTeacherGrades() {
     }
     async function fetchAssessments() {
       try {
-        const res = await apiClient.get('/academic/assessments', {
-          params: { classId: selectedClass },
-        });
+        const params: Record<string, string> = { classId: selectedClass };
+        if (selectedSubject) params.subjectId = selectedSubject;
+        const res = await apiClient.get('/academic/assessments', { params });
         setAssessments(unwrapList<Assessment>(res));
       } catch {
         console.error('Failed to load assessments');
@@ -60,7 +107,7 @@ export function useTeacherGrades() {
     fetchAssessments();
     setSelectedAssessment('');
     setMarkEntries([]);
-  }, [selectedClass]);
+  }, [selectedClass, selectedSubject]);
 
   // Load students + existing marks when assessment changes
   const loadMarks = useCallback(async () => {
@@ -134,6 +181,59 @@ export function useTeacherGrades() {
     (a) => a.id === selectedAssessment,
   );
 
+  // Mark validation
+  const markValidationErrors = useMemo((): MarkValidationError[] => {
+    if (!currentAssessment) return [];
+    const errors: MarkValidationError[] = [];
+    for (const entry of markEntries) {
+      if (entry.mark === '') continue;
+      const num = Number(entry.mark);
+      if (isNaN(num)) {
+        errors.push({ studentId: entry.studentId, message: 'Must be a number' });
+      } else if (num < 0) {
+        errors.push({ studentId: entry.studentId, message: 'Cannot be negative' });
+      } else if (num > currentAssessment.totalMarks) {
+        errors.push({
+          studentId: entry.studentId,
+          message: `Exceeds total (${currentAssessment.totalMarks})`,
+        });
+      }
+    }
+    return errors;
+  }, [markEntries, currentAssessment]);
+
+  const hasValidationErrors = markValidationErrors.length > 0;
+
+  const getMarkError = useCallback(
+    (studentId: string): string | undefined => {
+      return markValidationErrors.find((e) => e.studentId === studentId)?.message;
+    },
+    [markValidationErrors],
+  );
+
+  // Class stats
+  const classStats = useMemo((): ClassStats | null => {
+    if (!currentAssessment || markEntries.length === 0) return null;
+    const validMarks = markEntries
+      .filter((e) => e.mark !== '')
+      .map((e) => Number(e.mark))
+      .filter((n) => !isNaN(n));
+
+    if (validMarks.length === 0) return null;
+
+    const total = currentAssessment.totalMarks;
+    const percentages = validMarks.map((m) => (m / total) * 100);
+    const avg = percentages.reduce((sum, p) => sum + p, 0) / percentages.length;
+
+    return {
+      average: Math.round(avg * 10) / 10,
+      highest: Math.max(...validMarks),
+      lowest: Math.min(...validMarks),
+      passCount: percentages.filter((p) => p >= 50).length,
+      totalWithMarks: validMarks.length,
+    };
+  }, [markEntries, currentAssessment]);
+
   const handleMarkChange = useCallback(
     (studentId: string, value: string) => {
       setMarkEntries((prev) =>
@@ -147,6 +247,12 @@ export function useTeacherGrades() {
 
   const saveMarks = useCallback(async () => {
     if (!currentAssessment) return;
+
+    if (hasValidationErrors) {
+      toast.error('Fix validation errors before saving');
+      return;
+    }
+
     const marks = markEntries
       .filter((e) => e.mark !== '')
       .map((e) => ({
@@ -174,22 +280,50 @@ export function useTeacherGrades() {
     } finally {
       setSaving(false);
     }
-  }, [currentAssessment, markEntries, selectedAssessment, schoolId, loadMarks]);
+  }, [currentAssessment, markEntries, selectedAssessment, schoolId, loadMarks, hasValidationErrors]);
+
+  const createAssessment = useCallback(async (payload: CreateAssessmentPayload) => {
+    try {
+      const res = await apiClient.post('/academic/assessments', {
+        ...payload,
+        schoolId,
+        academicYear: new Date().getFullYear(),
+      });
+      const created = unwrapResponse<Assessment>(res);
+      toast.success('Assessment created successfully');
+      // Refresh assessments list
+      const params: Record<string, string> = { classId: payload.classId };
+      if (payload.subjectId) params.subjectId = payload.subjectId;
+      const refreshRes = await apiClient.get('/academic/assessments', { params });
+      setAssessments(unwrapList<Assessment>(refreshRes));
+      return created;
+    } catch (err: unknown) {
+      toast.error(extractErrorMessage(err, 'Failed to create assessment'));
+      throw err;
+    }
+  }, [schoolId]);
 
   return {
     classes,
+    subjects,
     assessments,
     markEntries,
     selectedClass,
+    selectedSubject,
     selectedAssessment,
     loading,
     saving,
     currentAssessment,
+    classStats,
+    hasValidationErrors,
+    getMarkError,
     setSelectedClass,
+    setSelectedSubject,
     setSelectedAssessment,
     handleMarkChange,
     saveMarks,
+    createAssessment,
   };
 }
 
-export type { MarkEntry };
+export type { MarkEntry, ClassStats, CreateAssessmentPayload, MarkValidationError };

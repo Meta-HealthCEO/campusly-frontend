@@ -50,7 +50,7 @@ export interface TimetableSlot {
 export interface Assessment {
   id: string;
   name: string;
-  type: 'test' | 'exam' | 'assignment' | 'project' | 'quiz';
+  type: 'test' | 'exam' | 'assignment' | 'practical' | 'project';
   subjectId: string;
   subject: Subject;
   classId: string;
