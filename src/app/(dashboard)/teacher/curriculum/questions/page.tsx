@@ -16,8 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { NodePicker } from '@/components/curriculum';
 import { useQuestionBank } from '@/hooks/useQuestionBank';
 import { useSubjects, useGrades } from '@/hooks/useAcademics';
+import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { QUESTION_TYPES, CAPS_LEVELS } from '@/components/questions/question-constants';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { toast } from 'sonner';
@@ -30,6 +32,7 @@ import type {
   CreateQuestionPayload,
   UpdateQuestionPayload,
 } from '@/types/question-bank';
+import type { CurriculumNodeItem } from '@/types/curriculum-structure';
 
 const DIFFICULTY_OPTIONS = [
   { value: 'all', label: 'All Difficulties' },
@@ -55,6 +58,7 @@ export default function TeacherQuestionsPage() {
   } = useQuestionBank();
   const { subjects } = useSubjects();
   const { grades } = useGrades();
+  const { frameworks, selectedFramework, searchNodes, loadNode } = useCurriculumStructure();
 
   // ─── Filter state ──────────────────────────────────────────────────────
   const [search, setSearch] = useState('');
@@ -63,6 +67,8 @@ export default function TeacherQuestionsPage() {
   const [diffFilter, setDiffFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [mineOnly, setMineOnly] = useState(false);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedNodeTitle, setSelectedNodeTitle] = useState<string | null>(null);
 
   // ─── Dialog state ──────────────────────────────────────────────────────
   const [formOpen, setFormOpen] = useState(false);
@@ -77,8 +83,9 @@ export default function TeacherQuestionsPage() {
     if (diffFilter !== 'all') f.difficulty = Number(diffFilter);
     if (statusFilter !== 'all') f.status = statusFilter as QuestionStatus;
     if (mineOnly) f.mine = true;
+    if (selectedNodeId) f.curriculumNodeId = selectedNodeId;
     return f;
-  }, [search, typeFilter, capsFilter, diffFilter, statusFilter, mineOnly]);
+  }, [search, typeFilter, capsFilter, diffFilter, statusFilter, mineOnly, selectedNodeId]);
 
   useEffect(() => {
     fetchQuestions(filters);
@@ -115,6 +122,14 @@ export default function TeacherQuestionsPage() {
     setEditingQuestion(null);
     setFormOpen(true);
   }, []);
+
+  const handleNodeChange = useCallback(
+    (nodeId: string | null, node: CurriculumNodeItem | null) => {
+      setSelectedNodeId(nodeId);
+      setSelectedNodeTitle(node?.title ?? null);
+    },
+    [],
+  );
 
   // ─── Map subjects/grades for dialog ────────────────────────────────────
   const subjectOptions = useMemo(
@@ -207,6 +222,21 @@ export default function TeacherQuestionsPage() {
         </Button>
       </div>
 
+      {/* ─── Curriculum Node Picker ───────────────────────────────────────── */}
+      {frameworks.length > 0 && (
+        <div className="w-full sm:max-w-sm">
+          <NodePicker
+            frameworkId={selectedFramework}
+            value={selectedNodeId}
+            onChange={handleNodeChange}
+            onSearch={searchNodes}
+            onLoadNode={loadNode}
+            placeholder="Filter by curriculum node..."
+            disabled={!selectedFramework}
+          />
+        </div>
+      )}
+
       {/* ─── Count badge ──────────────────────────────────────────────── */}
       {!questionsLoading && (
         <div className="flex items-center gap-2">
@@ -246,6 +276,8 @@ export default function TeacherQuestionsPage() {
         editingQuestion={editingQuestion}
         subjects={subjectOptions}
         grades={gradeOptions}
+        selectedNodeId={selectedNodeId ?? undefined}
+        selectedNodeTitle={selectedNodeTitle ?? undefined}
       />
     </div>
   );

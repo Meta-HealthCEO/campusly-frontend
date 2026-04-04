@@ -2,11 +2,13 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { BookOpen, Search, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ResourceCard } from '@/components/content/ResourceCard';
 import { ResourceFormDialog } from '@/components/content/ResourceFormDialog';
+import { NodePicker } from '@/components/curriculum';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -18,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { useContentLibrary } from '@/hooks/useContentLibrary';
 import { useSubjects, useGrades } from '@/hooks/useAcademics';
+import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type {
   ContentResourceItem,
@@ -27,6 +30,7 @@ import type {
   ResourceType,
   ResourceStatus,
 } from '@/types';
+import type { CurriculumNodeItem } from '@/types/curriculum-structure';
 
 // ─── Filter Constants ──────────────────────────────────────────────────────
 
@@ -53,12 +57,16 @@ export default function TeacherContentBrowserPage() {
     useContentLibrary();
   const { subjects } = useSubjects();
   const { grades } = useGrades();
+  const { frameworks, selectedFramework, searchNodes, loadNode } =
+    useCurriculumStructure();
 
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [mineOnly, setMineOnly] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedNodeTitle, setSelectedNodeTitle] = useState<string | null>(null);
 
   const buildFilters = useCallback((): ResourceFilters => {
     const filters: ResourceFilters = {};
@@ -66,8 +74,9 @@ export default function TeacherContentBrowserPage() {
     if (typeFilter !== 'all') filters.type = typeFilter as ResourceType;
     if (statusFilter !== 'all') filters.status = statusFilter as ResourceStatus;
     if (mineOnly) filters.mine = true;
+    if (selectedNodeId) filters.curriculumNodeId = selectedNodeId;
     return filters;
-  }, [search, typeFilter, statusFilter, mineOnly]);
+  }, [search, typeFilter, statusFilter, mineOnly, selectedNodeId]);
 
   useEffect(() => {
     fetchResources(buildFilters());
@@ -94,8 +103,13 @@ export default function TeacherContentBrowserPage() {
     }
   };
 
-  const handleCardClick = (_resource: ContentResourceItem) => {
-    // Future: open detail / edit dialog
+  const handleNodeChange = (nodeId: string | null, node: CurriculumNodeItem | null) => {
+    setSelectedNodeId(nodeId);
+    setSelectedNodeTitle(node?.title ?? null);
+  };
+
+  const handleCardClick = (resource: ContentResourceItem) => {
+    toast.info(`Resource: ${resource.title}`);
   };
 
   if (!user) return null;
@@ -166,6 +180,20 @@ export default function TeacherContentBrowserPage() {
         </Button>
       </div>
 
+      {/* ── Curriculum Node Filter ────────────────────────────────── */}
+      {frameworks.length > 0 && (
+        <div className="w-full sm:w-96">
+          <NodePicker
+            frameworkId={selectedFramework}
+            value={selectedNodeId}
+            onChange={handleNodeChange}
+            onSearch={searchNodes}
+            onLoadNode={loadNode}
+            placeholder="Filter by curriculum node..."
+          />
+        </div>
+      )}
+
       {/* ── Resource Grid ────────────────────────────────────────── */}
       {loading ? (
         <LoadingSpinner />
@@ -199,8 +227,8 @@ export default function TeacherContentBrowserPage() {
         onOpenChange={setFormOpen}
         subjects={subjectOptions}
         grades={gradeOptions}
-        selectedNodeId={null}
-        selectedNodeTitle={null}
+        selectedNodeId={selectedNodeId}
+        selectedNodeTitle={selectedNodeTitle}
         onSubmit={handleCreate}
       />
     </div>
