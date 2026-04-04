@@ -4,12 +4,12 @@ import { Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  TYPE_LABELS,
-  STATUS_VARIANT,
-  STATUS_LABELS,
-  CAPS_COLORS,
-  CAPS_LABELS,
-} from './question-constants';
+  QUESTION_TYPE_LABELS,
+  QUESTION_STATUS_VARIANT,
+  QUESTION_STATUS_LABELS,
+  CAPS_LEVEL_LABELS,
+  CAPS_LEVEL_COLORS,
+} from '@/lib/design-system';
 import type { QuestionItem } from '@/types/question-bank';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -57,13 +57,13 @@ export function QuestionCard({ question, onClick }: QuestionCardProps) {
 
         {/* Badge row */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <Badge variant="secondary">{TYPE_LABELS[question.type]}</Badge>
+          <Badge variant="secondary">{QUESTION_TYPE_LABELS[question.type]}</Badge>
           <Badge variant="outline">[{question.marks}]</Badge>
-          <Badge className={CAPS_COLORS[capsLevel]}>
-            {CAPS_LABELS[capsLevel]}
+          <Badge className={CAPS_LEVEL_COLORS[capsLevel]}>
+            {CAPS_LEVEL_LABELS[capsLevel]}
           </Badge>
-          <Badge variant={STATUS_VARIANT[question.status]}>
-            {STATUS_LABELS[question.status]}
+          <Badge variant={QUESTION_STATUS_VARIANT[question.status]}>
+            {QUESTION_STATUS_LABELS[question.status]}
           </Badge>
           {question.source === 'ai_generated' && (
             <Badge variant="outline" className="gap-1">

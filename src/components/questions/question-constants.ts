@@ -4,67 +4,41 @@ import type {
   CapsLevel,
   BloomsLevel,
 } from '@/types/question-bank';
+import {
+  QUESTION_TYPE_ENTRIES,
+  QUESTION_TYPE_LABELS,
+  QUESTION_STATUS_VARIANT,
+  QUESTION_STATUS_LABELS,
+  CAPS_LEVEL_LABELS,
+  CAPS_LEVEL_COLORS,
+  CAPS_LEVEL_ORDER,
+} from '@/lib/design-system';
 
 // ─── Question Type Labels ───────────────────────────────────────────────────
+// Re-exported for backwards compatibility
 
-export const QUESTION_TYPES: { value: QuestionType; label: string }[] = [
-  { value: 'mcq', label: 'Multiple Choice' },
-  { value: 'true_false', label: 'True / False' },
-  { value: 'short_answer', label: 'Short Answer' },
-  { value: 'structured', label: 'Structured' },
-  { value: 'essay', label: 'Essay' },
-  { value: 'match', label: 'Matching' },
-  { value: 'fill_blank', label: 'Fill in Blank' },
-  { value: 'calculation', label: 'Calculation' },
-  { value: 'diagram_label', label: 'Diagram Label' },
-  { value: 'case_study', label: 'Case Study' },
-];
+export const QUESTION_TYPES: { value: QuestionType; label: string }[] = QUESTION_TYPE_ENTRIES;
 
-export const TYPE_LABELS: Record<QuestionType, string> = Object.fromEntries(
-  QUESTION_TYPES.map((qt) => [qt.value, qt.label]),
-) as Record<QuestionType, string>;
+export const TYPE_LABELS: Record<QuestionType, string> = QUESTION_TYPE_LABELS;
 
 // ─── Status ─────────────────────────────────────────────────────────────────
 
 export const STATUS_VARIANT: Record<
   QuestionStatus,
   'secondary' | 'outline' | 'default' | 'destructive'
-> = {
-  draft: 'secondary',
-  pending_review: 'outline',
-  approved: 'default',
-  rejected: 'destructive',
-};
+> = QUESTION_STATUS_VARIANT;
 
-export const STATUS_LABELS: Record<QuestionStatus, string> = {
-  draft: 'Draft',
-  pending_review: 'Pending Review',
-  approved: 'Approved',
-  rejected: 'Rejected',
-};
+export const STATUS_LABELS: Record<QuestionStatus, string> = QUESTION_STATUS_LABELS;
 
 // ─── CAPS Levels ────────────────────────────────────────────────────────────
 
-export const CAPS_LEVELS: { value: CapsLevel; label: string }[] = [
-  { value: 'knowledge', label: 'Knowledge' },
-  { value: 'routine', label: 'Routine' },
-  { value: 'complex', label: 'Complex' },
-  { value: 'problem_solving', label: 'Problem Solving' },
-];
+export const CAPS_LEVELS: { value: CapsLevel; label: string }[] = CAPS_LEVEL_ORDER.map(
+  (value) => ({ value, label: CAPS_LEVEL_LABELS[value] }),
+);
 
-export const CAPS_LABELS: Record<CapsLevel, string> = {
-  knowledge: 'Knowledge',
-  routine: 'Routine',
-  complex: 'Complex',
-  problem_solving: 'Problem Solving',
-};
+export const CAPS_LABELS: Record<CapsLevel, string> = CAPS_LEVEL_LABELS;
 
-export const CAPS_COLORS: Record<CapsLevel, string> = {
-  knowledge: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-  routine: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  complex: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-  problem_solving: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-};
+export const CAPS_COLORS: Record<CapsLevel, string> = CAPS_LEVEL_COLORS;
 
 // ─── Blooms Levels ──────────────────────────────────────────────────────────
 

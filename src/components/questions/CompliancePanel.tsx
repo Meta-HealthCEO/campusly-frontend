@@ -3,18 +3,8 @@
 import { useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
+import { CAPS_LEVEL_LABELS, CAPS_LEVEL_ORDER } from '@/lib/design-system';
 import type { CapsComplianceReport, CapsLevel } from '@/types/question-bank';
-
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-const CAPS_BAR_LABELS: Record<CapsLevel, string> = {
-  knowledge: 'Knowledge',
-  routine: 'Routine',
-  complex: 'Complex',
-  problem_solving: 'Problem Solving',
-};
-
-const CAPS_ORDER: CapsLevel[] = ['knowledge', 'routine', 'complex', 'problem_solving'];
 
 interface BarData {
   level: CapsLevel;
@@ -42,11 +32,11 @@ function computeBars(
     problem_solving: target.problemSolving,
   };
 
-  return CAPS_ORDER.map((level) => {
+  return CAPS_LEVEL_ORDER.map((level) => {
     const actual = distMap[level];
     const targetPct = targetMap[level];
     const outOfRange = Math.abs(actual - targetPct) > 5;
-    return { level, label: CAPS_BAR_LABELS[level], actual, target: targetPct, outOfRange };
+    return { level, label: CAPS_LEVEL_LABELS[level], actual, target: targetPct, outOfRange };
   });
 }
 

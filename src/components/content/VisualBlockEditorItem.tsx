@@ -14,21 +14,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { ContentBlockItem, ContentBlockType } from '@/types';
-
-const BLOCK_TYPE_LABELS: Record<ContentBlockType, string> = {
-  text: 'Text',
-  image: 'Image',
-  video: 'Video',
-  quiz: 'Quiz',
-  drag_drop: 'Drag & Drop',
-  fill_blank: 'Fill Blank',
-  match_columns: 'Match Columns',
-  ordering: 'Ordering',
-  hotspot: 'Hotspot',
-  step_reveal: 'Step Reveal',
-  code: 'Code',
-};
+import { BLOCK_TYPE_LABELS } from '@/lib/design-system';
+import type { ContentBlockItem } from '@/types';
 
 interface QuizData {
   question: string;

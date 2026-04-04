@@ -10,21 +10,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { VisualBlockEditorItem } from './VisualBlockEditorItem';
+import { BLOCK_TYPE_ENTRIES } from '@/lib/design-system';
 import type { ContentBlockItem, ContentBlockType } from '@/types';
-
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-const BLOCK_TYPES: { value: ContentBlockType; label: string }[] = [
-  { value: 'text', label: 'Text' },
-  { value: 'image', label: 'Image' },
-  { value: 'video', label: 'Video' },
-  { value: 'quiz', label: 'Quiz' },
-  { value: 'fill_blank', label: 'Fill Blank' },
-  { value: 'match_columns', label: 'Match Columns' },
-  { value: 'ordering', label: 'Ordering' },
-  { value: 'step_reveal', label: 'Step Reveal' },
-  { value: 'code', label: 'Code' },
-];
 
 function createBlock(type: ContentBlockType, order: number): ContentBlockItem {
   return {
@@ -158,7 +145,7 @@ export function VisualBlockEditor({
             <SelectValue placeholder="Add a block..." />
           </SelectTrigger>
           <SelectContent>
-            {BLOCK_TYPES.map((bt) => (
+            {BLOCK_TYPE_ENTRIES.map((bt) => (
               <SelectItem key={bt.value} value={bt.value}>
                 {bt.label}
               </SelectItem>

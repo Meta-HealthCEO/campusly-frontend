@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { DIFFICULTY_LEVELS_SIMPLE } from '@/lib/design-system';
 import type { ResourceType } from '@/types';
 import type { Grade, Subject } from '@/types';
 
@@ -39,12 +40,6 @@ const RESOURCE_TYPES: { value: ResourceType; label: string; desc: string; icon: 
   { value: 'lesson', label: 'Lesson', desc: 'Full lesson with explanations & examples', icon: BookOpen },
   { value: 'worksheet', label: 'Worksheet', desc: 'Practice exercises & problems', icon: FileText },
   { value: 'activity', label: 'Activity', desc: 'Interactive tasks & group work', icon: Gamepad2 },
-];
-
-const DIFFICULTY_LEVELS = [
-  { value: 1, label: 'Foundation', color: 'bg-emerald-500' },
-  { value: 3, label: 'Standard', color: 'bg-amber-500' },
-  { value: 5, label: 'Advanced', color: 'bg-primary' },
 ];
 
 export function ConfigStep({
@@ -157,7 +152,7 @@ export function ConfigStep({
       <div className="space-y-3">
         <Label className="text-base font-semibold">Difficulty Level</Label>
         <div className="flex gap-3">
-          {DIFFICULTY_LEVELS.map((d) => (
+          {DIFFICULTY_LEVELS_SIMPLE.map((d) => (
             <button
               key={d.value}
               type="button"
@@ -170,7 +165,7 @@ export function ConfigStep({
               )}
             >
               <div className="flex items-center justify-center gap-2">
-                <span className={cn('h-2.5 w-2.5 rounded-full', d.color)} />
+                <span className={cn('h-2.5 w-2.5 rounded-full', d.dot)} />
                 {d.label}
               </div>
             </button>

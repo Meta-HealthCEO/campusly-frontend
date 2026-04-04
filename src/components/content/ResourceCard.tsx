@@ -3,6 +3,7 @@
 import { BookOpen, FileText, PenTool, Lightbulb, Zap, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { RESOURCE_STATUS_VARIANT, RESOURCE_STATUS_LABELS, RESOURCE_TYPE_LABELS } from '@/lib/design-system';
 import type { ContentResourceItem, ResourceType, ResourceStatus } from '@/types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -13,28 +14,6 @@ const TYPE_ICONS: Record<ResourceType, React.ElementType> = {
   worksheet: PenTool,
   worked_example: Lightbulb,
   activity: Zap,
-};
-
-const TYPE_LABELS: Record<ResourceType, string> = {
-  lesson: 'Lesson',
-  study_notes: 'Study Notes',
-  worksheet: 'Worksheet',
-  worked_example: 'Worked Example',
-  activity: 'Activity',
-};
-
-const STATUS_VARIANT: Record<ResourceStatus, 'secondary' | 'outline' | 'default' | 'destructive'> = {
-  draft: 'secondary',
-  pending_review: 'outline',
-  approved: 'default',
-  rejected: 'destructive',
-};
-
-const STATUS_LABELS: Record<ResourceStatus, string> = {
-  draft: 'Draft',
-  pending_review: 'Pending Review',
-  approved: 'Approved',
-  rejected: 'Rejected',
 };
 
 function resolveNodeTitle(node: ContentResourceItem['curriculumNodeId']): string {
@@ -89,11 +68,11 @@ export function ResourceCard({ resource, onClick }: ResourceCardProps) {
 
         {/* Badges */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <Badge variant={STATUS_VARIANT[resource.status]}>
-            {STATUS_LABELS[resource.status]}
+          <Badge variant={RESOURCE_STATUS_VARIANT[resource.status as ResourceStatus]}>
+            {RESOURCE_STATUS_LABELS[resource.status as ResourceStatus]}
           </Badge>
           <Badge variant="secondary">
-            {TYPE_LABELS[resource.type]}
+            {RESOURCE_TYPE_LABELS[resource.type]}
           </Badge>
           {resource.source === 'ai_generated' && (
             <Badge variant="outline" className="gap-1">
