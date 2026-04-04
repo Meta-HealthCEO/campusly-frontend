@@ -12,6 +12,30 @@ import type {
   PaperSection,
 } from '@/components/ai-tools/types';
 
+export interface MarkPaperQuestionResult {
+  questionNumber: number;
+  studentAnswer: string;
+  correctAnswer: string;
+  marksAwarded: number;
+  maxMarks: number;
+  feedback: string;
+}
+
+export interface MarkPaperResult {
+  studentName: string;
+  totalMarks: number;
+  maxMarks: number;
+  percentage: number;
+  questions: MarkPaperQuestionResult[];
+}
+
+interface MarkPaperPayload {
+  paperId: string;
+  studentName: string;
+  image: string;
+  imageType: 'image/jpeg' | 'image/png' | 'image/webp';
+}
+
 function mapPaper(raw: Record<string, unknown>): GeneratedPaper {
   return { ...raw, id: (raw._id as string) ?? (raw.id as string) } as GeneratedPaper;
 }
@@ -251,6 +275,24 @@ export function useAITools() {
     }
   }, []);
 
+  const markPaperFromImage = useCallback(async (payload: MarkPaperPayload): Promise<MarkPaperResult | null> => {
+    setLoading(true);
+    try {
+      const response = await apiClient.post('/ai-tools/mark-paper', payload);
+      const raw = unwrapResponse(response);
+      toast.success('Paper marked successfully!');
+      return raw as MarkPaperResult;
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
+        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+        ?? 'Failed to mark paper. Please try again.';
+      toast.error(msg);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const loadUsageStats = useCallback(async (startDate?: string, endDate?: string) => {
     setLoading(true);
     try {
@@ -274,6 +316,7 @@ export function useAITools() {
     gradingJobs, setGradingJobs,
     usageStats,
     generatePaper,
+    markPaperFromImage,
     loadPapers,
     loadPaperById,
     savePaper,

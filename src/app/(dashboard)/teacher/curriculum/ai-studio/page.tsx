@@ -24,7 +24,7 @@ import type {
 export default function AiStudioPage() {
   const { frameworks, selectedFramework, loading: fwLoading, searchNodes, loadNode } =
     useCurriculumStructure();
-  const { generateContent, submitForReview, reviewResource } = useContentLibrary();
+  const { generateContent, submitForReview, reviewResource, refineResource, updateResource } = useContentLibrary();
   const { subjects, loading: subjectsLoading } = useSubjects();
   const { grades, loading: gradesLoading } = useGrades();
 
@@ -69,6 +69,10 @@ export default function AiStudioPage() {
   const handleRegenerate = useCallback(() => {
     setGeneratedResource(null);
     setStep(3);
+  }, []);
+
+  const handleResourceUpdated = useCallback((resource: ContentResourceItem) => {
+    setGeneratedResource(resource);
   }, []);
 
   const handleReset = useCallback(() => {
@@ -160,8 +164,11 @@ export default function AiStudioPage() {
             subjects={subjects}
             onPublish={submitForReview}
             onReview={reviewResource}
+            onRefine={refineResource}
             onRegenerate={handleRegenerate}
             onReset={handleReset}
+            onResourceUpdated={handleResourceUpdated}
+            onUpdateResource={updateResource}
           />
         )}
       </div>

@@ -147,6 +147,19 @@ export function useContentLibrary() {
     [],
   );
 
+  const refineResource = useCallback(
+    async (id: string, instruction: string): Promise<ContentResourceItem | null> => {
+      try {
+        const response = await apiClient.post(`${BASE}/${id}/refine`, { instruction });
+        return unwrapResponse<ContentResourceItem>(response);
+      } catch (err: unknown) {
+        toast.error(extractErrorMessage(err, 'Failed to refine resource'));
+        return null;
+      }
+    },
+    [],
+  );
+
   return {
     resources,
     total,
@@ -159,5 +172,6 @@ export function useContentLibrary() {
     submitForReview,
     reviewResource,
     generateContent,
+    refineResource,
   };
 }
