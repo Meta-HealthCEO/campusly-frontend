@@ -182,10 +182,17 @@ export default function PaperBuilderPage() {
       await finalisePaper(paperId);
       setConfirmFinalise(false);
       await loadPaper();
+      toast.success('Assessment created in Gradebook', {
+        description: 'The paper is now available for mark capture.',
+        action: {
+          label: 'Go to Grades',
+          onClick: () => router.push('/teacher/grades'),
+        },
+      });
     } catch (err: unknown) {
       toast.error(extractErrorMessage(err, 'Failed to finalise paper'));
     }
-  }, [paperId, finalisePaper, loadPaper]);
+  }, [paperId, finalisePaper, loadPaper, router]);
 
   const handleClone = useCallback(async () => {
     try {
@@ -316,7 +323,6 @@ export default function PaperBuilderPage() {
         </div>
       )}
 
-      {/* Compliance panel */}
       {compliance && (
         <div className="rounded-lg border p-4">
           <h3 className="text-sm font-medium mb-3">CAPS Compliance</h3>
@@ -324,7 +330,6 @@ export default function PaperBuilderPage() {
         </div>
       )}
 
-      {/* Finalise confirmation dialog */}
       <Dialog open={confirmFinalise} onOpenChange={setConfirmFinalise}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -335,9 +340,7 @@ export default function PaperBuilderPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmFinalise(false)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setConfirmFinalise(false)}>Cancel</Button>
             <Button onClick={handleFinalise}>Finalise</Button>
           </DialogFooter>
         </DialogContent>

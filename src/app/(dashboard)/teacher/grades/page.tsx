@@ -10,16 +10,13 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-  DialogDescription, DialogFooter,
-} from '@/components/ui/dialog';
-import { Save, BookOpen, Download, Pencil, Trash2 } from 'lucide-react';
+import { Save, BookOpen, Download, FileText } from 'lucide-react';
 import { useTeacherGrades } from '@/hooks/useTeacherGrades';
 import { CreateAssessmentDialog } from '@/components/grades/CreateAssessmentDialog';
 import { EditAssessmentDialog } from '@/components/grades/EditAssessmentDialog';
 import { StudentHistoryDialog } from '@/components/grades/StudentHistoryDialog';
 import { ClassStatsBar } from '@/components/grades/ClassStatsBar';
+import { AssessmentInfoCard } from '@/components/grades/AssessmentInfoCard';
 import type { Assessment } from '@/types';
 
 function getSubjectName(a: Assessment): string {
@@ -28,6 +25,12 @@ function getSubjectName(a: Assessment): string {
     return ((a.subjectId as Record<string, unknown>).name as string) ?? '';
   }
   return '';
+}
+
+function getPaperId(a: Assessment): string | null {
+  if (!a.paperId) return null;
+  if (typeof a.paperId === 'string') return a.paperId;
+  return a.paperId.id;
 }
 
 const TERM_OPTIONS = [
@@ -51,7 +54,6 @@ export default function TeacherGradesPage() {
   } = useTeacherGrades();
 
   const [editOpen, setEditOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
 
   if (loading) return <LoadingSpinner />;
 
@@ -163,7 +165,10 @@ export default function TeacherGradesPage() {
                 <SelectContent>
                   {assessments.map((a) => (
                     <SelectItem key={a.id} value={a.id}>
-                      {a.name} ({getSubjectName(a) || a.type})
+                      <span className="flex items-center gap-1.5">
+                        {getPaperId(a) && <FileText className="h-3 w-3 shrink-0 text-muted-foreground" />}
+                        {a.name} ({getSubjectName(a) || a.type})
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -201,27 +206,11 @@ export default function TeacherGradesPage() {
 
       {/* Current assessment info + edit/delete */}
       {currentAssessment && (
-        <Card>
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-              <BookOpen className="h-5 w-5 text-primary" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-medium truncate">{currentAssessment.name}</p>
-              <p className="text-sm text-muted-foreground truncate">
-                {getSubjectName(currentAssessment)} &middot; {currentAssessment.type} &middot; Total: {currentAssessment.totalMarks} marks &middot; Weight: {currentAssessment.weight}%
-              </p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Button variant="ghost" size="icon" onClick={() => setEditOpen(true)} title="Edit assessment">
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" title="Delete assessment" onClick={() => setDeleteOpen(true)}>
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <AssessmentInfoCard
+          assessment={currentAssessment}
+          onEdit={() => setEditOpen(true)}
+          onDelete={deleteAssessment}
+        />
       )}
 
       <EditAssessmentDialog
@@ -230,23 +219,6 @@ export default function TeacherGradesPage() {
         onClose={() => setEditOpen(false)}
         onUpdate={async (id, payload) => { await updateAssessment(id, payload); }}
       />
-
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Assessment</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete &quot;{currentAssessment?.name}&quot;? This will also delete all marks. This cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={async () => { if (currentAssessment) { await deleteAssessment(currentAssessment.id); setDeleteOpen(false); } }}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {classStats && currentAssessment && (
         <ClassStatsBar stats={classStats} totalMarks={currentAssessment.totalMarks} />

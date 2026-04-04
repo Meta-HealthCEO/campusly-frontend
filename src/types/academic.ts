@@ -53,11 +53,12 @@ export interface Assessment {
   type: 'test' | 'exam' | 'assignment' | 'practical' | 'project';
   subjectId: string;
   subject: Subject;
-  classId: string;
+  classId: string | null;
   totalMarks: number;
   weight: number;
   date: string;
   term: number;
+  paperId?: string | { id: string; title: string } | null;
 }
 
 // ─── Timetable Clash Types ──────────────────────────────────────────────────
