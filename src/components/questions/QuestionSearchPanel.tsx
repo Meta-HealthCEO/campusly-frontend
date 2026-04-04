@@ -13,14 +13,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { QUESTION_TYPES, CAPS_LEVELS, TYPE_LABELS, CAPS_LABELS, CAPS_COLORS } from './question-constants';
-import type { QuestionItem, QuestionFilters, QuestionType, CapsLevel } from '@/types/question-bank';
+import type { QuestionItem, QBQuestionFilters, QuestionType, CapsLevel } from '@/types/question-bank';
 
 // ─── Props ──────────────────────────────────────────────────────────────────
 
 interface QuestionSearchPanelProps {
   questions: QuestionItem[];
   loading: boolean;
-  onSearch: (filters: QuestionFilters) => void;
+  onSearch: (filters: QBQuestionFilters) => void;
   onAdd: (question: QuestionItem) => void;
   excludeQuestionIds: Set<string>;
 }
@@ -57,7 +57,7 @@ export function QuestionSearchPanel({
   );
 
   const handleSearch = () => {
-    const filters: QuestionFilters = {};
+    const filters: QBQuestionFilters = {};
     if (searchText.trim()) filters.search = searchText.trim();
     if (typeFilter !== 'all') filters.type = typeFilter as QuestionType;
     if (capsFilter !== 'all') filters.capsLevel = capsFilter as CapsLevel;

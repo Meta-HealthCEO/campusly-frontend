@@ -86,24 +86,26 @@ export function NodePicker({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className="w-full justify-between font-normal"
-          disabled={disabled}
-        >
-          {selectedNode ? (
-            <span className="flex items-center gap-2 truncate">
-              <Badge variant="outline" className="text-[10px] px-1 py-0">
-                {selectedNode.type}
-              </Badge>
-              <span className="truncate">{selectedNode.title}</span>
-            </span>
-          ) : (
-            <span className="text-muted-foreground">{placeholder}</span>
-          )}
-          <ChevronRight className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="outline"
+            className="w-full justify-between font-normal"
+            disabled={disabled}
+          />
+        }
+      >
+        {selectedNode ? (
+          <span className="flex items-center gap-2 truncate">
+            <Badge variant="outline" className="text-[10px] px-1 py-0">
+              {selectedNode.type}
+            </Badge>
+            <span className="truncate">{selectedNode.title}</span>
+          </span>
+        ) : (
+          <span className="text-muted-foreground">{placeholder}</span>
+        )}
+        <ChevronRight className="ml-2 h-4 w-4 shrink-0 opacity-50" />
       </PopoverTrigger>
       <PopoverContent className="w-80 p-2" align="start">
         <div className="flex items-center gap-2 pb-2">

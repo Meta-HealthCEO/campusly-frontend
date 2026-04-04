@@ -9,7 +9,7 @@ import {
   Compass, Target, Clipboard, Newspaper,
   Wrench, Database, FileEdit, CheckCircle, ClipboardCheck,
   CalendarCheck, CalendarCog, Crown, DoorOpen, UserPlus,
-  AlertTriangle, Calculator,
+  AlertTriangle, Calculator, Library, PenTool, HelpCircle,
   type LucideIcon
 } from 'lucide-react';
 import type { PermissionFlag } from '@/types';
@@ -177,6 +177,12 @@ export const ROUTES = {
   TEACHER_PASTORAL: '/teacher/pastoral',
   TEACHER_LEAVE: '/teacher/leave',
   TEACHER_CONFERENCES: '/teacher/conferences',
+
+  // Teacher — Curriculum
+  TEACHER_CURRICULUM: '/teacher/curriculum',
+  TEACHER_CURRICULUM_CONTENT: '/teacher/curriculum/content',
+  TEACHER_CURRICULUM_QUESTIONS: '/teacher/curriculum/questions',
+  TEACHER_CURRICULUM_ASSESSMENTS: '/teacher/curriculum/assessments',
 
   // Teacher Workbench
   TEACHER_WORKBENCH: '/teacher/workbench',
@@ -373,6 +379,16 @@ export const TEACHER_NAV: NavItem[] = [
   { label: 'Attendance', href: ROUTES.TEACHER_ATTENDANCE, icon: ClipboardList },
   { label: 'Grades', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
   { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: BookOpen },
+  {
+    label: 'Curriculum',
+    href: ROUTES.TEACHER_CURRICULUM,
+    icon: Library,
+    children: [
+      { label: 'Content Library', href: ROUTES.TEACHER_CURRICULUM_CONTENT, icon: BookOpen },
+      { label: 'Question Bank', href: ROUTES.TEACHER_CURRICULUM_QUESTIONS, icon: HelpCircle },
+      { label: 'Assessments', href: ROUTES.TEACHER_CURRICULUM_ASSESSMENTS, icon: PenTool },
+    ],
+  },
   {
     label: 'AI Tools', href: ROUTES.TEACHER_AI_TOOLS, icon: Sparkles, badge: 'AI',
     children: [

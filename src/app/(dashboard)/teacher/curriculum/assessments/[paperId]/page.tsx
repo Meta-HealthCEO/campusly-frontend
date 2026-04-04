@@ -23,7 +23,7 @@ import type {
   QuestionItem,
   CapsComplianceReport,
   PaperSectionItem,
-  QuestionFilters as QBQuestionFilters,
+  QBQuestionFilters,
 } from '@/types/question-bank';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────

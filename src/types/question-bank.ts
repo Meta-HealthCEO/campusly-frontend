@@ -4,7 +4,7 @@ export type QuestionType =
   | 'mcq' | 'true_false' | 'short_answer' | 'structured' | 'essay'
   | 'match' | 'fill_blank' | 'calculation' | 'diagram_label' | 'case_study';
 
-export type QuestionSource = 'system' | 'ai_generated' | 'teacher';
+export type QBQuestionSource = 'system' | 'ai_generated' | 'teacher';
 
 export type QuestionStatus = 'draft' | 'pending_review' | 'approved' | 'rejected';
 
@@ -56,7 +56,7 @@ export interface QuestionItem {
   cognitiveLevel: CognitiveLevelPair;
   difficulty: number;
   tags: string[];
-  source: QuestionSource;
+  source: QBQuestionSource;
   status: QuestionStatus;
   reviewedBy: string | { id: string; firstName: string; lastName: string } | null;
   reviewedAt: string | null;
@@ -225,7 +225,7 @@ export interface AddQuestionToPaperPayload {
 
 // ─── Filters ─────────────────────────────────────────────────────────────────
 
-export interface QuestionFilters {
+export interface QBQuestionFilters {
   curriculumNodeId?: string;
   type?: QuestionType;
   capsLevel?: CapsLevel;

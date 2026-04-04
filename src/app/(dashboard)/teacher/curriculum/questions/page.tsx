@@ -26,7 +26,7 @@ import type {
   QuestionType,
   CapsLevel,
   QuestionStatus,
-  QuestionFilters,
+  QBQuestionFilters,
   CreateQuestionPayload,
   UpdateQuestionPayload,
 } from '@/types/question-bank';
@@ -69,8 +69,8 @@ export default function TeacherQuestionsPage() {
   const [editingQuestion, setEditingQuestion] = useState<QuestionItem | null>(null);
 
   // ─── Build filters object ──────────────────────────────────────────────
-  const filters = useMemo((): QuestionFilters => {
-    const f: QuestionFilters = {};
+  const filters = useMemo((): QBQuestionFilters => {
+    const f: QBQuestionFilters = {};
     if (search.trim()) f.search = search.trim();
     if (typeFilter !== 'all') f.type = typeFilter as QuestionType;
     if (capsFilter !== 'all') f.capsLevel = capsFilter as CapsLevel;

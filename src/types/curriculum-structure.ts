@@ -101,7 +101,7 @@ export interface BulkImportPayload {
   nodes: BulkImportNodeItem[];
 }
 
-export interface BulkImportResult {
+export interface CurriculumBulkImportResult {
   imported: number;
   skipped: number;
   skippedCodes: string[];
