@@ -185,7 +185,8 @@ export function CurriculumTreeBrowser({
       void fetchChildren(null);
       setExpanded(new Set());
     }
-  }, [frameworkId, fetchChildren]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [frameworkId]);
 
   const handleToggle = useCallback(
     async (nodeId: string) => {

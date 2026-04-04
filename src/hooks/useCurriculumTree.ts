@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import type { CurriculumNodeItem } from '@/types';
@@ -8,9 +8,10 @@ import type { CurriculumNodeItem } from '@/types';
 type ChildCache = Map<string, CurriculumNodeItem[]>;
 
 export function useCurriculumTree(frameworkId: string) {
-  // Key: parentId string ('root' for top-level, or the actual parentId)
   const [cache, setCache] = useState<ChildCache>(new Map());
   const [loadingKeys, setLoadingKeys] = useState<Set<string>>(new Set());
+  const cacheRef = useRef(cache);
+  cacheRef.current = cache;
 
   const cacheKey = (parentId: string | null): string =>
     parentId === null ? 'root' : parentId;
@@ -34,7 +35,7 @@ export function useCurriculumTree(frameworkId: string) {
       const key = cacheKey(parentId);
 
       // Return cached result immediately
-      const cached = cache.get(key);
+      const cached = cacheRef.current.get(key);
       if (cached !== undefined) return cached;
 
       setLoadingKeys((prev) => {
@@ -71,7 +72,7 @@ export function useCurriculumTree(frameworkId: string) {
         });
       }
     },
-    [frameworkId, cache],
+    [frameworkId],
   );
 
   const clearCache = useCallback(() => {

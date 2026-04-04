@@ -395,16 +395,7 @@ export const TEACHER_NAV: NavItem[] = [
       { label: 'Mark Papers', href: ROUTES.TEACHER_CURRICULUM_MARK_PAPERS, icon: Camera, badge: 'AI' },
     ],
   },
-  {
-    label: 'AI Tools', href: ROUTES.TEACHER_AI_TOOLS, icon: Sparkles, badge: 'AI',
-    children: [
-      { label: 'Overview', href: ROUTES.TEACHER_AI_TOOLS, icon: Sparkles },
-      { label: 'Create Paper', href: ROUTES.TEACHER_AI_CREATE_PAPER, icon: FileText },
-      { label: 'AI Grading', href: ROUTES.TEACHER_AI_GRADING, icon: Award },
-      { label: 'Paper Library', href: ROUTES.TEACHER_AI_PAPERS, icon: BookMarked },
-      { label: 'Report Comments', href: ROUTES.TEACHER_AI_REPORT_COMMENTS, icon: FileText },
-    ],
-  },
+  { label: 'Report Comments', href: ROUTES.TEACHER_AI_REPORT_COMMENTS, icon: FileText, badge: 'AI' },
   { label: 'Incidents', href: ROUTES.TEACHER_INCIDENTS, icon: AlertTriangle, module: 'incident_wellbeing' },
   { label: 'Discipline', href: ROUTES.TEACHER_DISCIPLINE, icon: Shield },
   { label: 'Classes', href: ROUTES.TEACHER_CLASSES, icon: Users },
