@@ -410,22 +410,7 @@ export const TEACHER_NAV: NavItem[] = [
   // ─── Permission-gated (Special Roles) ──────────────────────────────
   { label: 'HOD Oversight', href: ROUTES.TEACHER_HOD, icon: Users, permission: 'isHOD' },
   { label: 'Pastoral Care', href: ROUTES.TEACHER_PASTORAL, icon: Heart, permission: 'isCounselor' },
-  {
-    label: 'Workbench',
-    href: ROUTES.TEACHER_WORKBENCH,
-    icon: Wrench,
-    badge: 'NEW',
-    module: 'teacher_workbench',
-    children: [
-      { label: 'Overview', href: ROUTES.TEACHER_WORKBENCH, icon: LayoutDashboard },
-      { label: 'Curriculum', href: ROUTES.TEACHER_WORKBENCH_CURRICULUM, icon: BookOpen },
-      { label: 'Question Bank', href: ROUTES.TEACHER_WORKBENCH_QUESTION_BANK, icon: Database },
-      { label: 'Paper Builder', href: ROUTES.TEACHER_WORKBENCH_PAPER_BUILDER, icon: FileEdit },
-      { label: 'Moderation', href: ROUTES.TEACHER_WORKBENCH_MODERATION, icon: CheckCircle },
-      { label: 'Marking Hub', href: ROUTES.TEACHER_WORKBENCH_MARKING_HUB, icon: ClipboardCheck },
-      { label: 'Planner', href: ROUTES.TEACHER_WORKBENCH_PLANNER, icon: CalendarDays },
-    ],
-  },
+  { label: 'Term Planner', href: ROUTES.TEACHER_WORKBENCH_PLANNER, icon: CalendarDays, module: 'teacher_workbench' },
 ];
 
 export const MODULES = [
