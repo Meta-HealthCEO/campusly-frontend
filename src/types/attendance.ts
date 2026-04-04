@@ -59,3 +59,35 @@ export interface AttendancePattern {
     percentage: number;
   }>;
 }
+
+// ─── Attendance Stats (precomputed running summaries) ──────────────────────
+
+export interface AttendanceMonthlyBreakdown {
+  month: string;       // "2026-01"
+  totalDays: number;
+  present: number;
+  absent: number;
+  late: number;
+  percentage: number;
+}
+
+export interface AttendanceStats {
+  id: string;
+  studentId: string;
+  schoolId: string;
+  classId: string;
+  gradeId: string;
+  totalDays: number;
+  present: number;
+  absent: number;
+  late: number;
+  excused: number;
+  percentage: number;
+  monthly: AttendanceMonthlyBreakdown[];
+  currentStreak: number;
+  longestStreak: number;
+  lastAttendanceDate: string;
+  lastStatus: string;
+  isChronicAbsentee: boolean;
+  updatedAt: string;
+}
