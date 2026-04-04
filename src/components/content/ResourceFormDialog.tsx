@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { toast } from 'sonner';
 import { BlockEditor } from './BlockEditor';
 import type {
   ContentBlockItem,
@@ -121,6 +122,10 @@ export function ResourceFormDialog({
   }, [open, reset]);
 
   const handleFormSubmit = async (values: FormValues) => {
+    if (!selectedNodeId) {
+      toast.error('Please select a curriculum topic before creating a resource');
+      return;
+    }
     const payload: CreateResourcePayload = {
       title: values.title,
       type: values.type,
@@ -133,7 +138,7 @@ export function ResourceFormDialog({
       difficulty: values.difficulty,
       estimatedMinutes: values.estimatedMinutes,
       blocks: blockList.map(({ blockId: _id, ...rest }) => rest),
-      curriculumNodeId: selectedNodeId ?? '',
+      curriculumNodeId: selectedNodeId,
     };
     await onSubmit(payload, blockList);
   };

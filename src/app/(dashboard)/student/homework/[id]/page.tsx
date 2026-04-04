@@ -133,7 +133,7 @@ export default function HomeworkDetailPage() {
         <Card>
           <CardHeader><CardTitle className="text-lg">Submit Your Work</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <Textarea placeholder="Type your answer or paste your work here..." value={content} onChange={(e) => setContent(e.target.value)} className="min-h-[150px]" />
+            <Textarea placeholder="Type your answer or paste your work here..." value={content} onChange={(e) => setContent(e.target.value)} className="min-h-37.5" />
             <div className="flex justify-end">
               <Button onClick={handleSubmit} disabled={!content.trim() || isOverdue || submitting}>
                 <Send className="mr-2 h-4 w-4" />{submitting ? 'Submitting...' : 'Submit Homework'}

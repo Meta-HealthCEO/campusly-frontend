@@ -10,11 +10,12 @@ const MAX_SIZE_MB = 10;
 
 interface ImageDropzoneProps {
   imagePreview: string | null;
+  imageType?: 'image/jpeg' | 'image/png' | 'image/webp';
   onImageSelected: (base64: string, mediaType: 'image/jpeg' | 'image/png' | 'image/webp') => void;
   onClear: () => void;
 }
 
-export function ImageDropzone({ imagePreview, onImageSelected, onClear }: ImageDropzoneProps) {
+export function ImageDropzone({ imagePreview, imageType = 'image/jpeg', onImageSelected, onClear }: ImageDropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState('');
@@ -68,7 +69,7 @@ export function ImageDropzone({ imagePreview, onImageSelected, onClear }: ImageD
     return (
       <div className="relative">
         <img
-          src={`data:image/jpeg;base64,${imagePreview}`}
+          src={`data:${imageType};base64,${imagePreview}`}
           alt="Student answer sheet"
           className="w-full max-h-96 object-contain rounded-lg border"
         />

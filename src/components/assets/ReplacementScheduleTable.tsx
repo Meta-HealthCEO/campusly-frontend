@@ -57,7 +57,7 @@ export function ReplacementScheduleTable({ assets }: ReplacementScheduleTablePro
             return (
               <tr key={asset.assetId} className={rowClass}>
                 <td className="px-3 py-2 font-mono text-xs whitespace-nowrap">{asset.assetTag}</td>
-                <td className="px-3 py-2 max-w-[180px] truncate">{asset.name}</td>
+                <td className="px-3 py-2 max-w-45 truncate">{asset.name}</td>
                 <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
                   {new Date(asset.purchaseDate).toLocaleDateString()}
                 </td>

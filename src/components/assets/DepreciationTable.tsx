@@ -56,7 +56,7 @@ export function DepreciationTable({ report }: DepreciationTableProps) {
             {report.assets.map((asset: DepreciationAsset) => (
               <tr key={asset.assetId} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                 <td className="px-3 py-2 font-mono text-xs whitespace-nowrap">{asset.assetTag}</td>
-                <td className="px-3 py-2 max-w-[180px] truncate">{asset.name}</td>
+                <td className="px-3 py-2 max-w-45 truncate">{asset.name}</td>
                 <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
                   {new Date(asset.purchaseDate).toLocaleDateString()}
                 </td>

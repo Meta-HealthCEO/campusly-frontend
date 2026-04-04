@@ -159,7 +159,7 @@ export default function AdminLeavePage() {
         <TabsContent value="calendar" className="space-y-4 mt-4">
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" onClick={prevMonth}><ChevronLeft className="h-4 w-4" /></Button>
-            <span className="text-sm font-medium min-w-[120px] text-center">
+            <span className="text-sm font-medium min-w-30 text-center">
               {new Date(calYear, calMonth).toLocaleString('default', { month: 'long', year: 'numeric' })}
             </span>
             <Button size="sm" variant="outline" onClick={nextMonth}><ChevronRight className="h-4 w-4" /></Button>

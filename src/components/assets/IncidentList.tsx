@@ -63,7 +63,7 @@ export function IncidentList({ incidents, onEdit }: IncidentListProps) {
       id: 'asset',
       header: 'Asset',
       cell: ({ row }) => (
-        <span className="font-medium truncate block max-w-[140px]">
+        <span className="font-medium truncate block max-w-35">
           {getAssetName(row.original.assetId)}
         </span>
       ),
@@ -89,7 +89,7 @@ export function IncidentList({ incidents, onEdit }: IncidentListProps) {
       id: 'reportedBy',
       header: 'Reported By',
       cell: ({ row }) => (
-        <span className="truncate block max-w-[130px]">
+        <span className="truncate block max-w-32.5">
           {getReporterName(row.original.reportedBy)}
         </span>
       ),

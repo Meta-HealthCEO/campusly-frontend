@@ -88,7 +88,7 @@ export function AuditFilterBar() {
           value={filters.action ?? ''}
           onValueChange={handleActionChange}
         >
-          <SelectTrigger className="w-[130px]">
+          <SelectTrigger className="w-32.5">
             <SelectValue placeholder="All actions" />
           </SelectTrigger>
           <SelectContent>
@@ -105,7 +105,7 @@ export function AuditFilterBar() {
         <Label className="text-xs text-muted-foreground">Entity</Label>
         <Input
           placeholder="e.g. Student, Fee"
-          className="w-[150px]"
+          className="w-37.5"
           value={filters.entity ?? ''}
           onChange={handleEntityChange}
           onBlur={handleEntityBlur}
@@ -117,7 +117,7 @@ export function AuditFilterBar() {
         <Label className="text-xs text-muted-foreground">From</Label>
         <Input
           type="date"
-          className="w-[150px]"
+          className="w-37.5"
           value={toLocalDateInputValue(filters.startDate)}
           onChange={handleStartDateChange}
         />
@@ -127,7 +127,7 @@ export function AuditFilterBar() {
         <Label className="text-xs text-muted-foreground">To</Label>
         <Input
           type="date"
-          className="w-[150px]"
+          className="w-37.5"
           value={toLocalDateInputValue(filters.endDate)}
           onChange={handleEndDateChange}
         />

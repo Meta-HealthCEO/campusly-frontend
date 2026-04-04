@@ -276,7 +276,7 @@ export function PreviewStep({
           </Button>
           <Button
             variant="outline"
-            onClick={() => window.open(`/teacher/curriculum/content-library`, '_blank')}
+            onClick={() => window.open('/teacher/curriculum/content', '_blank')}
           >
             <ExternalLink className="mr-1 h-4 w-4" />
             Content Library

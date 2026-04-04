@@ -33,7 +33,7 @@ export function AuditSchoolSelector() {
         value={filters.schoolId ?? ''}
         onValueChange={handleChange}
       >
-        <SelectTrigger className="w-[200px]">
+        <SelectTrigger className="w-50">
           <SelectValue placeholder="All schools" />
         </SelectTrigger>
         <SelectContent>
