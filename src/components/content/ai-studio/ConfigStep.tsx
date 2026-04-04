@@ -2,16 +2,10 @@
 
 import { BookOpen, FileText, Gamepad2, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { DIFFICULTY_LEVELS_SIMPLE } from '@/lib/design-system';
 import type { ResourceType } from '@/types';
@@ -60,7 +54,9 @@ export function ConfigStep({
   onNext,
   onBack,
 }: ConfigStepProps) {
-  const canContinue = subjectId && gradeId && term > 0;
+  // Resource type is always selected (default: lesson). Subject/grade/term
+  // are auto-detected from the curriculum tree — don't block if missing.
+  const canContinue = true;
 
   return (
     <div className="space-y-6">
@@ -99,56 +95,22 @@ export function ConfigStep({
         </div>
       </div>
 
-      {/* Subject, Grade, Term */}
+      {/* Auto-detected from curriculum tree — show as read-only info */}
       <Card>
-        <CardContent className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-          <div className="space-y-2">
-            <Label>Subject <span className="text-destructive">*</span></Label>
-            <Select value={subjectId} onValueChange={(v: unknown) => onSubjectChange(v as string)}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select subject">
-                  {subjects.find((s: Subject) => s.id === subjectId)?.name ?? 'Select subject'}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {subjects.map((s: Subject) => (
-                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Grade <span className="text-destructive">*</span></Label>
-            <Select value={gradeId} onValueChange={(v: unknown) => onGradeChange(v as string)}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select grade">
-                  {grades.find((g: Grade) => g.id === gradeId)?.name ?? 'Select grade'}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {grades.map((g: Grade) => (
-                  <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Term <span className="text-destructive">*</span></Label>
-            <Select
-              value={term > 0 ? String(term) : ''}
-              onValueChange={(v: unknown) => onTermChange(Number(v))}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select term" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Term 1</SelectItem>
-                <SelectItem value="2">Term 2</SelectItem>
-                <SelectItem value="3">Term 3</SelectItem>
-                <SelectItem value="4">Term 4</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <CardContent className="flex flex-wrap items-center gap-3 text-sm">
+          <span className="text-muted-foreground">Detected from topic:</span>
+          {subjectId && (
+            <Badge variant="outline">{subjects.find((s: Subject) => s.id === subjectId)?.name ?? 'Subject'}</Badge>
+          )}
+          {gradeId && (
+            <Badge variant="outline">{grades.find((g: Grade) => g.id === gradeId)?.name ?? 'Grade'}</Badge>
+          )}
+          {term > 0 && (
+            <Badge variant="outline">Term {term}</Badge>
+          )}
+          {!subjectId && !gradeId && !term && (
+            <span className="text-muted-foreground italic">Could not detect — will use general settings</span>
+          )}
         </CardContent>
       </Card>
 
