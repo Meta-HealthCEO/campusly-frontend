@@ -34,6 +34,7 @@ export function useCurriculumStructure() {
   selectedFrameworkRef.current = selectedFramework;
 
   const fetchFrameworks = useCallback(async () => {
+    setLoading(true);
     try {
       const response = await apiClient.get('/curriculum-structure/frameworks');
       const data = unwrapList<CurriculumFrameworkItem>(response);
@@ -44,6 +45,8 @@ export function useCurriculumStructure() {
       }
     } catch (err: unknown) {
       console.error('Failed to load frameworks', err);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
