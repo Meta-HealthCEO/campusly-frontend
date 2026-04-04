@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Save, BookOpen, Download, FileText } from 'lucide-react';
 import { useTeacherGrades } from '@/hooks/useTeacherGrades';
-import { CreateAssessmentDialog } from '@/components/grades/CreateAssessmentDialog';
+// Assessment creation now goes through Curriculum → Assessments → Paper Builder
 import { EditAssessmentDialog } from '@/components/grades/EditAssessmentDialog';
 import { StudentHistoryDialog } from '@/components/grades/StudentHistoryDialog';
 import { ClassStatsBar } from '@/components/grades/ClassStatsBar';
@@ -176,12 +176,10 @@ export default function TeacherGradesPage() {
             </div>
 
             <div className="sm:ml-auto">
-              <CreateAssessmentDialog
-                subjects={subjects}
-                selectedClassId={selectedClass}
-                selectedSubjectId={selectedSubject}
-                onCreateAssessment={createAssessment}
-              />
+              <Button variant="outline" onClick={() => window.location.href = '/teacher/curriculum/assessments'}>
+                <FileText className="mr-2 h-4 w-4" />
+                Create Assessment
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -192,14 +190,11 @@ export default function TeacherGradesPage() {
         <EmptyState
           icon={BookOpen}
           title="No assessments yet"
-          description="Create an assessment to start entering marks for this class."
+          description="Create an assessment paper in Curriculum → Assessments, then finalise it to capture marks here."
           action={
-            <CreateAssessmentDialog
-              subjects={subjects}
-              selectedClassId={selectedClass}
-              selectedSubjectId={selectedSubject}
-              onCreateAssessment={createAssessment}
-            />
+            <Button onClick={() => window.location.href = '/teacher/curriculum/assessments'}>
+              Go to Assessments
+            </Button>
           }
         />
       )}
