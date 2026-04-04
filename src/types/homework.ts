@@ -4,6 +4,16 @@
 
 import type { Student, Teacher } from './common';
 import type { Subject } from './academic';
+import type { ContentBlockItem, ResourceType, ResourceStatus } from './content-library';
+
+/** Populated resource attached to a homework assignment */
+export interface HomeworkResource {
+  id: string;
+  title: string;
+  type: ResourceType;
+  status: ResourceStatus;
+  blocks: ContentBlockItem[];
+}
 
 export interface Homework {
   id: string;
@@ -15,6 +25,8 @@ export interface Homework {
   classId: string;
   teacherId: string;
   teacher?: Teacher;
+  resourceId?: string;
+  resource?: HomeworkResource;
   dueDate: string;
   attachments: string[];
   status: 'draft' | 'published' | 'closed';

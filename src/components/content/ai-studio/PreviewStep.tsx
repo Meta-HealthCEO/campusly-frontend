@@ -13,6 +13,7 @@ import {
   Layers,
   Pencil,
   X,
+  ClipboardList,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +44,7 @@ interface PreviewStepProps {
   onReset: () => void;
   onResourceUpdated: (resource: ContentResourceItem) => void;
   onUpdateResource?: (id: string, data: UpdateResourcePayload) => Promise<ContentResourceItem | null>;
+  onAssign?: (resource: ContentResourceItem) => void;
 }
 
 export function PreviewStep({
@@ -56,6 +58,7 @@ export function PreviewStep({
   onReset,
   onResourceUpdated,
   onUpdateResource,
+  onAssign,
 }: PreviewStepProps) {
   const [publishing, setPublishing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -278,6 +281,12 @@ export function PreviewStep({
             <ExternalLink className="mr-1 h-4 w-4" />
             Content Library
           </Button>
+          {onAssign && (
+            <Button variant="outline" onClick={() => onAssign(resource)}>
+              <ClipboardList className="mr-1 h-4 w-4" />
+              Assign to Class
+            </Button>
+          )}
           <Button onClick={handlePublish} disabled={publishing}>
             <CheckCircle className="mr-1 h-4 w-4" />
             {publishing ? 'Publishing...' : 'Approve & Publish'}

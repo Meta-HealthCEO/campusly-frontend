@@ -7,8 +7,10 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { BookOpen, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import { RESOURCE_TYPE_LABELS } from '@/lib/design-system';
 import { useStudentHomeworkList } from '@/hooks/useStudentHomework';
 import Link from 'next/link';
+import type { ResourceType } from '@/types';
 
 const statusConfig: Record<
   string,
@@ -91,6 +93,12 @@ export default function StudentHomeworkPage() {
                         {config.label}
                       </Badge>
                     </div>
+
+                    {hw.resource && (
+                      <Badge variant="outline" className="w-fit">
+                        {RESOURCE_TYPE_LABELS[hw.resource.type as ResourceType] ?? hw.resource.type}
+                      </Badge>
+                    )}
 
                     <p className="text-xs text-muted-foreground line-clamp-2">
                       {hw.description}

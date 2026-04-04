@@ -14,6 +14,9 @@ interface HomeworkDetail {
   status: string;
   attachments: string[];
   createdAt: string;
+  resourceId?: string;
+  resourceType?: string;
+  resourceTitle?: string;
 }
 
 interface SubmissionItem {
@@ -57,6 +60,12 @@ export function useTeacherHomeworkDetail(homeworkId: string) {
           const backendStatus =
             raw.status === 'assigned' ? 'assigned' : raw.status;
 
+          // Resolve resource if populated
+          const resourceObj =
+            typeof raw.resourceId === 'object' && raw.resourceId !== null
+              ? (raw.resourceId as Record<string, unknown>)
+              : null;
+
           setHomework({
             id: (raw.id as string) ?? '',
             title: raw.title as string,
@@ -68,6 +77,11 @@ export function useTeacherHomeworkDetail(homeworkId: string) {
             status: backendStatus as string,
             attachments: (raw.attachments as string[]) ?? [],
             createdAt: (raw.createdAt as string) ?? '',
+            resourceId: resourceObj
+              ? ((resourceObj._id as string) ?? (resourceObj.id as string))
+              : (typeof raw.resourceId === 'string' ? raw.resourceId as string : undefined),
+            resourceType: (resourceObj?.type as string) ?? undefined,
+            resourceTitle: (resourceObj?.title as string) ?? undefined,
           });
         }
 

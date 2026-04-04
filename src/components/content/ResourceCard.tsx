@@ -1,8 +1,9 @@
 'use client';
 
-import { BookOpen, FileText, PenTool, Lightbulb, Zap, Sparkles } from 'lucide-react';
+import { BookOpen, FileText, PenTool, Lightbulb, Zap, Sparkles, ClipboardList } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { RESOURCE_STATUS_VARIANT, RESOURCE_STATUS_LABELS, RESOURCE_TYPE_LABELS } from '@/lib/design-system';
 import type { ContentResourceItem, ResourceType, ResourceStatus } from '@/types';
 
@@ -37,11 +38,12 @@ function resolveCreatorName(creator: ContentResourceItem['createdBy']): string {
 interface ResourceCardProps {
   resource: ContentResourceItem;
   onClick: (resource: ContentResourceItem) => void;
+  onAssign?: (resource: ContentResourceItem) => void;
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export function ResourceCard({ resource, onClick }: ResourceCardProps) {
+export function ResourceCard({ resource, onClick, onAssign }: ResourceCardProps) {
   const Icon = TYPE_ICONS[resource.type];
   const nodeTitle = resolveNodeTitle(resource.curriculumNodeId);
   const subjectName = resolveSubjectName(resource.subjectId);
@@ -85,12 +87,30 @@ export function ResourceCard({ resource, onClick }: ResourceCardProps) {
           )}
         </div>
 
-        {/* Creator */}
-        {creatorName && (
-          <p className="text-xs text-muted-foreground truncate">
-            By {creatorName}
-          </p>
-        )}
+        {/* Footer: creator + assign button */}
+        <div className="flex items-center justify-between">
+          {creatorName ? (
+            <p className="text-xs text-muted-foreground truncate">
+              By {creatorName}
+            </p>
+          ) : (
+            <span />
+          )}
+          {onAssign && resource.status === 'approved' && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                onAssign(resource);
+              }}
+            >
+              <ClipboardList className="mr-1 h-3.5 w-3.5" />
+              Assign
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

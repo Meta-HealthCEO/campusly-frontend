@@ -13,6 +13,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { BookOpen, Calendar, User, Paperclip, CheckCircle, Clock, Send, ArrowLeft } from 'lucide-react';
+import { ResourceHomeworkViewer } from '@/components/homework/ResourceHomeworkViewer';
 import { useStudentHomeworkDetail } from '@/hooks/useStudentHomework';
 import { formatDate } from '@/lib/utils';
 
@@ -37,10 +38,11 @@ export default function HomeworkDetailPage() {
   const hasSubmission = !!submission;
 
   const handleSubmit = async () => {
-    if (!content.trim()) return;
+    const hasResource = homework?.resource && homework.resource.blocks.length > 0;
+    if (!hasResource && !content.trim()) return;
     setSubmitting(true);
     try {
-      await submitHomework(content);
+      await submitHomework(hasResource ? 'Resource completed' : content);
       toast.success('Homework submitted!');
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to submit homework');
@@ -129,6 +131,14 @@ export default function HomeworkDetailPage() {
             )}
           </CardContent>
         </Card>
+      ) : homework.resource && homework.resource.blocks.length > 0 ? (
+        <ResourceHomeworkViewer
+          resource={homework.resource}
+          submitted={false}
+          isOverdue={isOverdue}
+          submitting={submitting}
+          onSubmit={() => handleSubmit()}
+        />
       ) : (
         <Card>
           <CardHeader><CardTitle className="text-lg">Submit Your Work</CardTitle></CardHeader>

@@ -5,6 +5,8 @@ import { useCurrentStudent } from './useCurrentStudent';
 import { normalizeHomework, normalizeSubmission } from '@/lib/homework-helpers';
 import type { Homework, HomeworkSubmission } from '@/types';
 
+type RawHomeworkInput = Parameters<typeof normalizeHomework>[0];
+
 interface StudentHomeworkListResult {
   homeworkList: Homework[];
   submissions: HomeworkSubmission[];
@@ -79,7 +81,7 @@ export function useStudentHomeworkDetail(homeworkId: string): StudentHomeworkDet
       try {
         const hwRes = await apiClient.get(`/homework/${homeworkId}`);
         const hwRaw = unwrapResponse(hwRes);
-        setHomework({ ...(hwRaw as Record<string, unknown>), id: (hwRaw._id as string) ?? (hwRaw.id as string) } as unknown as Homework);
+        setHomework(normalizeHomework(hwRaw as RawHomeworkInput));
 
         if (student) {
           const sid = student._id ?? student.id;

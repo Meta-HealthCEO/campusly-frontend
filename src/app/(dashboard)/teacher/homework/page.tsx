@@ -12,8 +12,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Plus, BookOpen, Users, Calendar, FileText, Trash2 } from 'lucide-react';
+import { Plus, BookOpen, Users, Calendar, FileText, Trash2, ExternalLink } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import { RESOURCE_TYPE_LABELS } from '@/lib/design-system';
 import { HomeworkForm } from '@/components/homework/HomeworkForm';
 import { TemplateSelector } from '@/components/homework/TemplateSelector';
 import { SaveAsTemplateButton } from '@/components/homework/SaveAsTemplateButton';
@@ -123,7 +124,14 @@ export default function TeacherHomeworkPage() {
                           <FileText className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <h3 className="font-semibold">{hw.title}</h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold">{hw.title}</h3>
+                            {hw.resource && (
+                              <Badge variant="secondary" className="shrink-0">
+                                {RESOURCE_TYPE_LABELS[hw.resource.type] ?? hw.resource.type}
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-sm text-muted-foreground">
                             {hw.subject?.name ?? hw.subjectName ?? ''}
                           </p>

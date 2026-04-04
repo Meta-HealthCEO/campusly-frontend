@@ -8,6 +8,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ResourceCard } from '@/components/content/ResourceCard';
 import { ResourceFormDialog } from '@/components/content/ResourceFormDialog';
+import { AssignHomeworkDialog } from '@/components/homework/AssignHomeworkDialog';
 import { NodePicker } from '@/components/curriculum';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ import {
 import { useContentLibrary } from '@/hooks/useContentLibrary';
 import { useSubjects, useGrades } from '@/hooks/useAcademics';
 import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
+import { useAssignHomework } from '@/hooks/useAssignHomework';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type {
   ContentResourceItem,
@@ -30,6 +32,7 @@ import type {
   ResourceType,
   ResourceStatus,
 } from '@/types';
+import type { AssignHomeworkFormValues } from '@/components/homework/AssignHomeworkDialog';
 import type { CurriculumNodeItem } from '@/types/curriculum-structure';
 
 // ─── Filter Constants ──────────────────────────────────────────────────────
@@ -65,9 +68,12 @@ export default function TeacherContentBrowserPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [mineOnly, setMineOnly] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignResource, setAssignResource] = useState<ContentResourceItem | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedNodeTitle, setSelectedNodeTitle] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState(false);
+  const { classes, assignHomework } = useAssignHomework();
 
   const buildFilters = useCallback((): ResourceFilters => {
     const filters: ResourceFilters = {};
@@ -112,6 +118,28 @@ export default function TeacherContentBrowserPage() {
 
   const handleCardClick = (resource: ContentResourceItem) => {
     toast.info(`Resource: ${resource.title}`);
+  };
+
+  const handleAssignClick = (resource: ContentResourceItem) => {
+    setAssignResource(resource);
+    setAssignOpen(true);
+  };
+
+  const handleAssignSubmit = async (formData: AssignHomeworkFormValues) => {
+    if (!assignResource) return;
+    const subId = typeof assignResource.subjectId === 'string'
+      ? assignResource.subjectId
+      : assignResource.subjectId.id;
+    const success = await assignHomework({
+      resourceId: assignResource.id,
+      resourceTitle: assignResource.title,
+      subjectId: subId,
+      formData,
+    });
+    if (success) {
+      setAssignOpen(false);
+      setAssignResource(null);
+    }
   };
 
   if (!user) return null;
@@ -229,6 +257,7 @@ export default function TeacherContentBrowserPage() {
                 key={resource.id}
                 resource={resource}
                 onClick={handleCardClick}
+                onAssign={handleAssignClick}
               />
             ))}
           </div>
@@ -249,6 +278,21 @@ export default function TeacherContentBrowserPage() {
         selectedNodeTitle={selectedNodeTitle}
         onSubmit={handleCreate}
       />
+
+      {/* ── Assign as Homework Dialog ───────────────────────────── */}
+      {assignResource && (
+        <AssignHomeworkDialog
+          open={assignOpen}
+          onOpenChange={(v) => {
+            setAssignOpen(v);
+            if (!v) setAssignResource(null);
+          }}
+          resourceTitle={assignResource.title}
+          resourceType={assignResource.type}
+          classes={classes}
+          onSubmit={handleAssignSubmit}
+        />
+      )}
     </div>
   );
 }

@@ -380,7 +380,6 @@ export const SUPERADMIN_NAV: NavItem[] = [
 export const TEACHER_NAV: NavItem[] = [
   { label: 'Dashboard', href: ROUTES.TEACHER_DASHBOARD, icon: Home },
   { label: 'Attendance', href: ROUTES.TEACHER_ATTENDANCE, icon: ClipboardList },
-  { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: BookOpen },
   {
     label: 'Curriculum',
     href: ROUTES.TEACHER_CURRICULUM,
@@ -390,6 +389,7 @@ export const TEACHER_NAV: NavItem[] = [
       { label: 'Question Bank', href: ROUTES.TEACHER_CURRICULUM_QUESTIONS, icon: HelpCircle },
       { label: 'Assessments', href: ROUTES.TEACHER_CURRICULUM_ASSESSMENTS, icon: PenTool },
       { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
+      { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
       { label: 'Student Preview', href: ROUTES.TEACHER_CURRICULUM_PREVIEW, icon: GraduationCap },
       { label: 'AI Studio', href: ROUTES.TEACHER_CURRICULUM_AI_STUDIO, icon: Sparkles, badge: 'AI' },
       { label: 'Mark Papers', href: ROUTES.TEACHER_CURRICULUM_MARK_PAPERS, icon: Camera, badge: 'AI' },

@@ -12,8 +12,10 @@ import {
   GenerateStep,
   PreviewStep,
 } from '@/components/content/ai-studio';
+import { AssignHomeworkDialog } from '@/components/homework/AssignHomeworkDialog';
 import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { useContentLibrary } from '@/hooks/useContentLibrary';
+import { useAssignHomework } from '@/hooks/useAssignHomework';
 import { useSubjects, useGrades } from '@/hooks/useAcademics';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type {
@@ -22,6 +24,7 @@ import type {
   ResourceType,
   GenerateContentPayload,
 } from '@/types';
+import type { AssignHomeworkFormValues } from '@/components/homework/AssignHomeworkDialog';
 
 export default function AiStudioPage() {
   const { user } = useAuthStore();
@@ -30,6 +33,8 @@ export default function AiStudioPage() {
   const { generateContent, submitForReview, reviewResource, refineResource, updateResource } = useContentLibrary();
   const { subjects, loading: subjectsLoading } = useSubjects();
   const { grades, loading: gradesLoading } = useGrades();
+
+  const { classes, assignHomework } = useAssignHomework();
 
   // ─── Step state ──────────────────────────────────────────────────────────────
   const [step, setStep] = useState(1);
@@ -48,6 +53,33 @@ export default function AiStudioPage() {
 
   // ─── Step 4: Preview ────────────────────────────────────────────────────────
   const [generatedResource, setGeneratedResource] = useState<ContentResourceItem | null>(null);
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignResource, setAssignResource] = useState<ContentResourceItem | null>(null);
+
+  const handleAssignClick = useCallback((resource: ContentResourceItem) => {
+    setAssignResource(resource);
+    setAssignOpen(true);
+  }, []);
+
+  const handleAssignSubmit = useCallback(
+    async (formData: AssignHomeworkFormValues) => {
+      if (!assignResource) return;
+      const subId = typeof assignResource.subjectId === 'string'
+        ? assignResource.subjectId
+        : assignResource.subjectId.id;
+      const success = await assignHomework({
+        resourceId: assignResource.id,
+        resourceTitle: assignResource.title,
+        subjectId: subId,
+        formData,
+      });
+      if (success) {
+        setAssignOpen(false);
+        setAssignResource(null);
+      }
+    },
+    [assignResource, assignHomework],
+  );
 
   const handleNodeChange = useCallback(
     (nodeId: string | null, node: CurriculumNodeItem | null) => {
@@ -214,9 +246,25 @@ export default function AiStudioPage() {
             onReset={handleReset}
             onResourceUpdated={handleResourceUpdated}
             onUpdateResource={updateResource}
+            onAssign={handleAssignClick}
           />
         )}
       </div>
+
+      {/* ── Assign as Homework Dialog ───────────────────────────── */}
+      {assignResource && (
+        <AssignHomeworkDialog
+          open={assignOpen}
+          onOpenChange={(v) => {
+            setAssignOpen(v);
+            if (!v) setAssignResource(null);
+          }}
+          resourceTitle={assignResource.title}
+          resourceType={assignResource.type}
+          classes={classes}
+          onSubmit={handleAssignSubmit}
+        />
+      )}
     </div>
   );
 }

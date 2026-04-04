@@ -1,4 +1,13 @@
-import type { Homework, HomeworkSubmission } from '@/types';
+import type { Homework, HomeworkSubmission, HomeworkResource } from '@/types';
+
+interface RawResource {
+  _id?: string;
+  id?: string;
+  title?: string;
+  type?: string;
+  status?: string;
+  blocks?: unknown[];
+}
 
 interface RawHomework {
   _id?: string;
@@ -8,6 +17,7 @@ interface RawHomework {
   subjectId: string | { _id: string; name: string; code?: string };
   classId: string | { _id: string; name: string };
   teacherId: string | { _id: string; firstName?: string; lastName?: string; email?: string };
+  resourceId?: string | RawResource | null;
   schoolId?: string;
   dueDate: string;
   attachments?: string[];
@@ -50,6 +60,23 @@ export function normalizeHomework(raw: RawHomework): Homework {
   const backendStatus = (raw.status ?? 'assigned') as string;
   const status = backendStatus === 'assigned' ? 'published' : backendStatus;
 
+  // Resolve resourceId — may be a string ID or populated object
+  let resourceId: string | undefined;
+  let resource: HomeworkResource | undefined;
+  if (raw.resourceId && typeof raw.resourceId === 'object') {
+    const resObj = raw.resourceId as RawResource;
+    resourceId = resObj._id ?? resObj.id;
+    resource = {
+      id: resObj._id ?? resObj.id ?? '',
+      title: resObj.title ?? '',
+      type: (resObj.type ?? 'lesson') as HomeworkResource['type'],
+      status: (resObj.status ?? 'draft') as HomeworkResource['status'],
+      blocks: (resObj.blocks ?? []) as HomeworkResource['blocks'],
+    };
+  } else if (typeof raw.resourceId === 'string') {
+    resourceId = raw.resourceId;
+  }
+
   return {
     id: raw._id ?? raw.id ?? '',
     title: raw.title,
@@ -65,6 +92,8 @@ export function normalizeHomework(raw: RawHomework): Homework {
           user: { firstName: teacherObj.firstName ?? '', lastName: teacherObj.lastName ?? '' },
         } as unknown as Homework['teacher'])
       : undefined,
+    resourceId,
+    resource,
     dueDate: raw.dueDate,
     attachments: raw.attachments ?? [],
     status: status as Homework['status'],

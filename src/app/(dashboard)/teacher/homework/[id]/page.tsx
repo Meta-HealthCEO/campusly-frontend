@@ -14,6 +14,7 @@ import {
   Users,
   CheckCircle,
   Paperclip,
+  ExternalLink,
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { GradingInterface } from '@/components/homework/GradingInterface';
@@ -117,6 +118,22 @@ export default function TeacherHomeworkDetailPage() {
             <span>Total marks: {homework.totalMarks}</span>
           </div>
           <p className="mt-3 text-sm">{homework.description}</p>
+          {homework.resourceId && (
+            <div className="mt-3">
+              <Link
+                href="/teacher/curriculum/content"
+                className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                View Linked Resource
+                {homework.resourceType && (
+                  <Badge variant="secondary" className="ml-1">
+                    {homework.resourceType.replace('_', ' ')}
+                  </Badge>
+                )}
+              </Link>
+            </div>
+          )}
           {homework.attachments.length > 0 && (
             <div className="mt-3 space-y-1">
               <p className="text-xs font-medium text-muted-foreground">Attachments</p>

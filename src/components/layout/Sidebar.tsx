@@ -57,7 +57,7 @@ export function Sidebar({ items }: SidebarProps) {
         {/* Nav */}
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
           {filteredItems.map((item) => {
-            const isActive = pathname === item.href || (item.children?.some((c) => pathname === c.href));
+            const isActive = pathname === item.href || (item.children?.some((c) => pathname === c.href || pathname.startsWith(c.href + '/')));
             const Icon = item.icon;
 
             return (
@@ -93,7 +93,7 @@ export function Sidebar({ items }: SidebarProps) {
                         href={child.href}
                         className={cn(
                           'block rounded-md px-3 py-1.5 text-sm transition-colors',
-                          pathname === child.href ? 'text-primary font-medium' : 'text-muted-foreground hover:text-foreground'
+                          (pathname === child.href || pathname.startsWith(child.href + '/')) ? 'text-primary font-medium' : 'text-muted-foreground hover:text-foreground'
                         )}
                       >
                         {child.label}
