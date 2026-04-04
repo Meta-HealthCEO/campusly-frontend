@@ -46,7 +46,7 @@ export function useTeacherDashboard(): DashboardData {
         await Promise.allSettled([
           apiClient.get(`/academic/timetable/teacher/${user.id}`),
           apiClient.get('/homework'),
-          apiClient.get('/attendance/absentees'),
+          apiClient.get('/attendance/absentees', { params: { date: new Date().toISOString() } }),
           apiClient.get('/academic/classes'),
         ]);
 
