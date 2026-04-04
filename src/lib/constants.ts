@@ -9,7 +9,7 @@ import {
   Compass, Target, Clipboard, Newspaper,
   Wrench, Database, FileEdit, CheckCircle, ClipboardCheck,
   CalendarCheck, CalendarCog, Crown, DoorOpen, UserPlus,
-  AlertTriangle, Calculator, Library, PenTool, HelpCircle, Camera,
+  AlertTriangle, Calculator, Library, PenTool, HelpCircle, Camera, Eye,
   type LucideIcon
 } from 'lucide-react';
 import type { PermissionFlag } from '@/types';
@@ -385,14 +385,14 @@ export const TEACHER_NAV: NavItem[] = [
     href: ROUTES.TEACHER_CURRICULUM,
     icon: Library,
     children: [
+      { label: 'AI Studio', href: ROUTES.TEACHER_CURRICULUM_AI_STUDIO, icon: Sparkles, badge: 'AI' },
       { label: 'Content Library', href: ROUTES.TEACHER_CURRICULUM_CONTENT, icon: BookOpen },
       { label: 'Question Bank', href: ROUTES.TEACHER_CURRICULUM_QUESTIONS, icon: HelpCircle },
       { label: 'Assessments', href: ROUTES.TEACHER_CURRICULUM_ASSESSMENTS, icon: PenTool },
-      { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
       { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
-      { label: 'Student Preview', href: ROUTES.TEACHER_CURRICULUM_PREVIEW, icon: GraduationCap },
-      { label: 'AI Studio', href: ROUTES.TEACHER_CURRICULUM_AI_STUDIO, icon: Sparkles, badge: 'AI' },
+      { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
       { label: 'Mark Papers', href: ROUTES.TEACHER_CURRICULUM_MARK_PAPERS, icon: Camera, badge: 'AI' },
+      { label: 'Student Preview', href: ROUTES.TEACHER_CURRICULUM_PREVIEW, icon: Eye },
     ],
   },
   { label: 'Report Comments', href: ROUTES.TEACHER_AI_REPORT_COMMENTS, icon: FileText, badge: 'AI' },

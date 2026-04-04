@@ -48,22 +48,16 @@ const CURRICULUM_CARDS: HubCard[] = [
     icon: PenTool,
   },
   {
-    title: 'Gradebook',
-    description: 'Enter and manage student marks for finalised assessments.',
-    href: '/teacher/grades',
-    icon: BarChart3,
-  },
-  {
     title: 'Homework',
-    description: 'View assigned homework, track submissions, and grade student work.',
+    description: 'Assign content to students, track submissions, and grade work.',
     href: '/teacher/homework',
     icon: ClipboardList,
   },
   {
-    title: 'Student Preview',
-    description: 'Preview approved content exactly as students will see it.',
-    href: '/teacher/curriculum/preview',
-    icon: Eye,
+    title: 'Gradebook',
+    description: 'Enter and manage student marks for finalised assessments.',
+    href: '/teacher/grades',
+    icon: BarChart3,
   },
   {
     title: 'Mark Papers',
@@ -71,6 +65,12 @@ const CURRICULUM_CARDS: HubCard[] = [
     href: '/teacher/curriculum/mark-papers',
     icon: Camera,
     badge: 'AI',
+  },
+  {
+    title: 'Student Preview',
+    description: 'Preview approved content exactly as students will see it.',
+    href: '/teacher/curriculum/preview',
+    icon: Eye,
   },
 ];
 
