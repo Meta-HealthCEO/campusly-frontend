@@ -4,7 +4,9 @@ import { BookOpen, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { NodePicker } from '@/components/curriculum/NodePicker';
+import { CurriculumTreeBrowser } from '@/components/curriculum/CurriculumTreeBrowser';
 import type { CurriculumNodeItem, CurriculumFrameworkItem } from '@/types';
 
 interface TopicStepProps {
@@ -30,6 +32,10 @@ export function TopicStep({
 }: TopicStepProps) {
   const framework = frameworks.find((f: CurriculumFrameworkItem) => f.id === selectedFramework);
 
+  const handleBrowseSelect = (node: CurriculumNodeItem) => {
+    onNodeChange(node.id, node);
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
@@ -48,14 +54,38 @@ export function TopicStep({
           <label className="text-sm font-medium">
             Curriculum Node <span className="text-destructive">*</span>
           </label>
-          <NodePicker
-            frameworkId={selectedFramework}
-            value={selectedNodeId}
-            onChange={onNodeChange}
-            onSearch={onSearch}
-            onLoadNode={onLoadNode}
-            placeholder="Search for a topic, subtopic, or outcome..."
-          />
+
+          <Tabs defaultValue="browse">
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="browse" className="flex-1 sm:flex-none">
+                Browse
+              </TabsTrigger>
+              <TabsTrigger value="search" className="flex-1 sm:flex-none">
+                Search
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="browse" className="mt-3">
+              <div className="rounded-md border max-h-80 overflow-y-auto p-1">
+                <CurriculumTreeBrowser
+                  frameworkId={selectedFramework}
+                  onSelect={handleBrowseSelect}
+                  selectedNodeId={selectedNodeId}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="search" className="mt-3">
+              <NodePicker
+                frameworkId={selectedFramework}
+                value={selectedNodeId}
+                onChange={onNodeChange}
+                onSearch={onSearch}
+                onLoadNode={onLoadNode}
+                placeholder="Search for a topic, subtopic, or outcome..."
+              />
+            </TabsContent>
+          </Tabs>
 
           {selectedNode && (
             <div className="rounded-lg border bg-muted/30 p-4 space-y-2 transition-all duration-300">
