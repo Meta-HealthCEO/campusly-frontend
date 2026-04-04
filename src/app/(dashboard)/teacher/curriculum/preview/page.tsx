@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, Search, BookOpen, FileText, BarChart3 } from 'lucide-react';
+import { Eye, Search, BookOpen, FileText, BarChart3, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,11 +22,13 @@ import { NodePicker } from '@/components/curriculum';
 import { useContentLibrary } from '@/hooks/useContentLibrary';
 import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { useSubjects, useGrades } from '@/hooks/useAcademics';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { toast } from 'sonner';
 import type { ContentResourceItem, ResourceFilters } from '@/types';
 import type { CurriculumNodeItem } from '@/types/curriculum-structure';
 
 export default function TeacherStudentPreviewPage() {
+  const { user } = useAuthStore();
   const router = useRouter();
   const { resources, loading, fetchResources } = useContentLibrary();
   const { frameworks, selectedFramework, searchNodes, loadNode } = useCurriculumStructure();
@@ -71,6 +73,16 @@ export default function TeacherStudentPreviewPage() {
     () => grades.map((g) => ({ id: g.id, name: g.name })),
     [grades],
   );
+
+  if (!user?.schoolId) {
+    return (
+      <EmptyState
+        icon={AlertTriangle}
+        title="School not configured"
+        description="You need to be part of a school to use this feature. Contact your administrator or complete onboarding."
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

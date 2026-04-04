@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { FileQuestion, Plus, Sparkles, Search } from 'lucide-react';
+import { FileQuestion, Plus, Sparkles, Search, AlertTriangle } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -19,6 +19,7 @@ import {
 import { NodePicker } from '@/components/curriculum';
 import { useQuestionBank } from '@/hooks/useQuestionBank';
 import { useSubjects, useGrades } from '@/hooks/useAcademics';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { QUESTION_TYPES, CAPS_LEVELS } from '@/components/questions/question-constants';
 import { extractErrorMessage } from '@/lib/api-helpers';
@@ -52,6 +53,7 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
 ];
 
 export default function TeacherQuestionsPage() {
+  const { user } = useAuthStore();
   const {
     questions, questionsTotal, questionsLoading,
     fetchQuestions, getQuestion, createQuestion, updateQuestion,
@@ -140,6 +142,16 @@ export default function TeacherQuestionsPage() {
     () => grades.map((g) => ({ id: g.id, name: g.name })),
     [grades],
   );
+
+  if (!user?.schoolId) {
+    return (
+      <EmptyState
+        icon={AlertTriangle}
+        title="School not configured"
+        description="You need to be part of a school to use this feature. Contact your administrator or complete onboarding."
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

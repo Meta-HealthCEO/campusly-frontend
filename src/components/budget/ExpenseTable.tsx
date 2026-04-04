@@ -44,7 +44,7 @@ export function ExpenseTable({
         accessorKey: 'description',
         header: 'Description',
         cell: ({ row }) => (
-          <span className="truncate max-w-[200px] block">{row.original.description}</span>
+          <span className="truncate max-w-50 block">{row.original.description}</span>
         ),
       },
       {

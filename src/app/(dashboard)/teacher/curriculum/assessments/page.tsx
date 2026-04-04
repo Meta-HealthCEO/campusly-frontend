@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ClipboardList, Plus, FileText, Sparkles } from 'lucide-react';
+import { ClipboardList, Plus, FileText, Sparkles, AlertTriangle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -23,6 +23,7 @@ import {
 import { PaperGenerateDialog } from '@/components/questions';
 import { useQuestionBank } from '@/hooks/useQuestionBank';
 import { useSubjects, useGrades } from '@/hooks/useAcademics';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { toast } from 'sonner';
 import type {
@@ -76,19 +77,12 @@ const FORM_DEFAULTS: PaperFormValues = {
   year: new Date().getFullYear(), paperType: 'class_test', duration: 60, instructions: '',
 };
 
-function getSubjectName(subjectId: AssessmentPaperItem['subjectId']): string {
-  return typeof subjectId === 'string' ? subjectId : subjectId.name;
-}
-
-function getGradeName(gradeId: AssessmentPaperItem['gradeId']): string {
-  return typeof gradeId === 'string' ? gradeId : gradeId.name;
-}
-
-function questionCount(paper: AssessmentPaperItem): number {
-  return paper.sections.reduce((sum, s) => sum + s.questions.length, 0);
-}
+const getSubjectName = (s: AssessmentPaperItem['subjectId']) => typeof s === 'string' ? s : s.name;
+const getGradeName = (g: AssessmentPaperItem['gradeId']) => typeof g === 'string' ? g : g.name;
+const questionCount = (p: AssessmentPaperItem) => p.sections.reduce((sum, s) => sum + s.questions.length, 0);
 
 export default function TeacherAssessmentsPage() {
+  const { user } = useAuthStore();
   const router = useRouter();
   const {
     papers, papersTotal, papersLoading,
@@ -106,17 +100,11 @@ export default function TeacherAssessmentsPage() {
     if (statusFilter !== 'all') f.status = statusFilter as PaperStatus;
     return f;
   }, [statusFilter]);
-
-  useEffect(() => {
-    fetchPapers(filters);
-  }, [filters, fetchPapers]);
+  useEffect(() => { fetchPapers(filters); }, [filters, fetchPapers]);
 
   const { register, handleSubmit, setValue, watch, reset, formState: { isSubmitting } } =
     useForm<PaperFormValues>({ defaultValues: FORM_DEFAULTS });
-
-  useEffect(() => {
-    if (createOpen) reset(FORM_DEFAULTS);
-  }, [createOpen, reset]);
+  useEffect(() => { if (createOpen) reset(FORM_DEFAULTS); }, [createOpen, reset]);
 
   const onSubmitCreate = useCallback(async (data: PaperFormValues) => {
     try {
@@ -153,6 +141,16 @@ export default function TeacherAssessmentsPage() {
       return null;
     }
   }, [generatePaper, router]);
+
+  if (!user?.schoolId) {
+    return (
+      <EmptyState
+        icon={AlertTriangle}
+        title="School not configured"
+        description="You need to be part of a school to use this feature. Contact your administrator or complete onboarding."
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -234,7 +234,7 @@ export function PacingUpdateDialog({
               placeholder="Summary of the week's progress..."
               value={overallNotes}
               onChange={(e) => setOverallNotes(e.target.value)}
-              className="min-h-[72px] w-full resize-none"
+              className="min-h-18 w-full resize-none"
             />
           </div>
 
@@ -245,7 +245,7 @@ export function PacingUpdateDialog({
               placeholder="Any blockers or challenges this week..."
               value={challengesFaced}
               onChange={(e) => setChallengesFaced(e.target.value)}
-              className="min-h-[72px] w-full resize-none"
+              className="min-h-18 w-full resize-none"
             />
           </div>
         </div>

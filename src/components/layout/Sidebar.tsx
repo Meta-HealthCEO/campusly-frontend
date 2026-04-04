@@ -29,7 +29,7 @@ export function Sidebar({ items }: SidebarProps) {
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-card transition-all duration-300 lg:relative lg:z-auto',
-          sidebarCollapsed ? 'w-[70px]' : 'w-64',
+          sidebarCollapsed ? 'w-17.5' : 'w-64',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >

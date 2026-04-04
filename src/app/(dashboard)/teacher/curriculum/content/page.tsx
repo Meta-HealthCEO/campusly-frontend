@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { BookOpen, Search, Plus } from 'lucide-react';
+import { BookOpen, Search, Plus, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -113,6 +113,16 @@ export default function TeacherContentBrowserPage() {
   };
 
   if (!user) return null;
+
+  if (!user.schoolId) {
+    return (
+      <EmptyState
+        icon={AlertTriangle}
+        title="School not configured"
+        description="You need to be part of a school to use this feature. Contact your administrator or complete onboarding."
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

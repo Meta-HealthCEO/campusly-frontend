@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, AlertTriangle } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { EmptyState } from '@/components/shared/EmptyState';
 import {
   StepIndicator,
   TopicStep,
@@ -14,6 +15,7 @@ import {
 import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { useContentLibrary } from '@/hooks/useContentLibrary';
 import { useSubjects, useGrades } from '@/hooks/useAcademics';
+import { useAuthStore } from '@/stores/useAuthStore';
 import type {
   CurriculumNodeItem,
   ContentResourceItem,
@@ -22,6 +24,7 @@ import type {
 } from '@/types';
 
 export default function AiStudioPage() {
+  const { user } = useAuthStore();
   const { frameworks, selectedFramework, loading: fwLoading, searchNodes, loadNode } =
     useCurriculumStructure();
   const { generateContent, submitForReview, reviewResource, refineResource, updateResource } = useContentLibrary();
@@ -88,7 +91,17 @@ export default function AiStudioPage() {
     setGeneratedResource(null);
   }, []);
 
-  // ─── Loading ────────────────────────────────────────────────────────────────
+  // ─── Guards ─────────────────────────────────────────────────────────────────
+  if (!user?.schoolId) {
+    return (
+      <EmptyState
+        icon={AlertTriangle}
+        title="School not configured"
+        description="You need to be part of a school to use this feature. Contact your administrator or complete onboarding."
+      />
+    );
+  }
+
   if (fwLoading || subjectsLoading || gradesLoading) {
     return <LoadingSpinner />;
   }

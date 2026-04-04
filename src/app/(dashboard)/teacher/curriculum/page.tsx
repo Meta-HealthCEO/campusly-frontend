@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { BookOpen, HelpCircle, PenTool } from 'lucide-react';
+import { BookOpen, HelpCircle, PenTool, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { useContentLibrary } from '@/hooks/useContentLibrary';
 import { useQuestionBank } from '@/hooks/useQuestionBank';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { useEffect } from 'react';
 
 interface HubCard {
@@ -17,6 +19,7 @@ interface HubCard {
 }
 
 export default function TeacherCurriculumPage() {
+  const { user } = useAuthStore();
   const { resources, fetchResources } = useContentLibrary();
   const { questions, fetchQuestions } = useQuestionBank();
 
@@ -24,6 +27,16 @@ export default function TeacherCurriculumPage() {
     fetchResources({});
     fetchQuestions({});
   }, [fetchResources, fetchQuestions]);
+
+  if (!user?.schoolId) {
+    return (
+      <EmptyState
+        icon={AlertTriangle}
+        title="School not configured"
+        description="You need to be part of a school to use this feature. Contact your administrator or complete onboarding."
+      />
+    );
+  }
 
   const cards: HubCard[] = [
     {

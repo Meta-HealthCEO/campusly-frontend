@@ -44,7 +44,7 @@ export function PolicyComplianceTable({ compliance }: PolicyComplianceTableProps
                 {compliance.policies.map((policy) => (
                   <tr key={policy.documentId} className="border-b last:border-0">
                     <td className="py-2 pr-4">
-                      <span className="truncate block max-w-[200px]">{policy.title}</span>
+                      <span className="truncate block max-w-50">{policy.title}</span>
                     </td>
                     <td className="py-2 pr-4 text-muted-foreground">
                       {policy.policyReviewDate

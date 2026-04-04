@@ -88,7 +88,7 @@ export function TopicProgressList({ topics }: TopicProgressListProps) {
   }
 
   return (
-    <div className="overflow-y-auto max-h-[480px] rounded-lg border bg-card">
+    <div className="overflow-y-auto max-h-120 rounded-lg border bg-card">
       <ul className="divide-y divide-border px-4">
         {topics.map((topic) => (
           <TopicRow key={topic.id} topic={topic} />

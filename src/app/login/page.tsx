@@ -101,11 +101,19 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
-            Register your school
-          </Link>
+        <div className="mt-6 space-y-2 text-center text-sm text-gray-600">
+          <p>
+            Don&apos;t have an account?{' '}
+            <Link href="/register" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
+              Register your school
+            </Link>
+          </p>
+          <p>
+            Are you a teacher?{' '}
+            <Link href="/register-teacher" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
+              Sign up for free
+            </Link>
+          </p>
         </div>
       </AuthCard>
     </AuthLayout>

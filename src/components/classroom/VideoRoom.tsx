@@ -13,7 +13,7 @@ export function VideoRoom({ session, isTeacher, participantCount = 0 }: VideoRoo
   const teacherName = `${session.teacherId.firstName} ${session.teacherId.lastName}`;
 
   return (
-    <div className="flex flex-col items-center justify-center w-full min-h-[320px] rounded-xl border-2 border-dashed border-muted bg-muted/20 p-6 text-center gap-4">
+    <div className="flex flex-col items-center justify-center w-full min-h-80 rounded-xl border-2 border-dashed border-muted bg-muted/20 p-6 text-center gap-4">
       <div className="rounded-full bg-muted p-5">
         <VideoIcon className="size-10 text-muted-foreground" />
       </div>

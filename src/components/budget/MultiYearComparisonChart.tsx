@@ -74,7 +74,7 @@ export function MultiYearComparisonChart({ report }: MultiYearComparisonChartPro
           <tbody>
             {report.categories.map((cat) => (
               <tr key={cat.categoryName} className="border-b">
-                <td className="py-2 pr-4 truncate max-w-[150px]">{cat.categoryName}</td>
+                <td className="py-2 pr-4 truncate max-w-37.5">{cat.categoryName}</td>
                 {report.years.map((y) => {
                   const val = cat.values.find((v) => v.year === y);
                   return (

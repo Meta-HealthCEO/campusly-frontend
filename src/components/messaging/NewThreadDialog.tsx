@@ -151,7 +151,7 @@ export function NewThreadDialog({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Type your message..."
-              className="min-h-[100px]"
+              className="min-h-25"
             />
           </div>
         </div>

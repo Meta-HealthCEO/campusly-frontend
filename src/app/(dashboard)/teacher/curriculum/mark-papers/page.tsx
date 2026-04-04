@@ -15,9 +15,10 @@ import {
 } from '@/components/ui/select';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { ImageDropzone } from '@/components/ai-tools/ImageDropzone';
 import { MarkingResultsPanel } from '@/components/ai-tools/MarkingResultsPanel';
-import { Sparkles, Loader2, ArrowLeft, FileText } from 'lucide-react';
+import { Sparkles, Loader2, ArrowLeft, FileText, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { ROUTES } from '@/lib/constants';
@@ -35,19 +36,11 @@ export default function MarkPapersPage() {
   const { loading: aiLoading, markPaperFromImage, loadPapers: loadAIPapers, papers: aiPapers } = useAITools();
   const { papers: qbPapers, papersLoading: qbLoading, fetchPapers: fetchQBPapers } = useQuestionBank();
 
-  // Step tracking
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-
-  // Step 1: paper selection
-  const [paperSource, setPaperSource] = useState<'ai' | 'qb'>('ai');
   const [selectedPaperId, setSelectedPaperId] = useState('');
-
-  // Step 2: student + image
   const [studentName, setStudentName] = useState('');
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imageType, setImageType] = useState<'image/jpeg' | 'image/png' | 'image/webp'>('image/jpeg');
-
-  // Step 3/4: results
   const [results, setResults] = useState<{
     studentName: string;
     totalMarks: number;
@@ -56,13 +49,9 @@ export default function MarkPapersPage() {
     questions: AdjustedQuestion[];
   } | null>(null);
 
-  // Load papers on mount
-  useEffect(() => {
-    loadAIPapers();
-    fetchQBPapers();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadAIPapers(); fetchQBPapers(); }, []);
 
-  // Combine paper lists for selection
   const allPapers = useMemo(() => {
     const mapped: Array<{ id: string; label: string; source: 'ai' | 'qb'; totalMarks: number }> = [];
     for (const p of aiPapers) {
@@ -149,9 +138,17 @@ export default function MarkPapersPage() {
     setStep(2);
   }, []);
 
-  const isLoadingPapers = qbLoading;
+  if (!user?.schoolId) {
+    return (
+      <EmptyState
+        icon={AlertTriangle}
+        title="School not configured"
+        description="You need to be part of a school to use this feature. Contact your administrator or complete onboarding."
+      />
+    );
+  }
 
-  if (isLoadingPapers) return <LoadingSpinner />;
+  if (qbLoading) return <LoadingSpinner />;
 
   return (
     <div className="space-y-6">

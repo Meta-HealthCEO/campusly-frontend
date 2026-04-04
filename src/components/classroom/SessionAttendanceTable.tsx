@@ -47,7 +47,7 @@ export function SessionAttendanceTable({ records }: SessionAttendanceTableProps)
         <TableBody>
           {records.map((r) => (
             <TableRow key={r.id}>
-              <TableCell className="font-medium truncate max-w-[160px]">
+              <TableCell className="font-medium truncate max-w-40">
                 {r.studentId.firstName} {r.studentId.lastName}
               </TableCell>
               <TableCell className="text-sm">{formatTime(r.joinedAt)}</TableCell>

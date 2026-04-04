@@ -137,7 +137,7 @@ export function AttendanceCalendar({ records, childName }: AttendanceCalendarPro
             <Button variant="outline" size="icon" onClick={goToPrevMonth} aria-label="Previous month">
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm font-medium min-w-[140px] text-center">
+            <span className="text-sm font-medium min-w-35 text-center">
               {formatMonthYear(year, month)}
             </span>
             <Button variant="outline" size="icon" onClick={goToNextMonth} aria-label="Next month">
