@@ -120,7 +120,12 @@ export function PreviewStep({
       if (submitted) {
         const approved = await onReview(resource.id, { action: 'approve' });
         if (approved) {
-          toast.success('Resource published and available to students!');
+          toast.success('Published! Students can now access this resource.', {
+            action: {
+              label: 'View in Library',
+              onClick: () => window.open('/teacher/curriculum/content', '_blank'),
+            },
+          });
         }
       }
     } catch (err: unknown) {
@@ -182,10 +187,15 @@ export function PreviewStep({
               </div>
               <CardTitle className="text-xl">{resource.title}</CardTitle>
             </div>
-            <Badge variant="outline" className="gap-1 shrink-0">
-              <Sparkles className="h-3 w-3" />
-              AI Generated
-            </Badge>
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              <Badge variant="outline" className="gap-1">
+                <Sparkles className="h-3 w-3" />
+                AI Generated
+              </Badge>
+              <span className="text-[10px] text-muted-foreground">
+                Auto-saved as draft
+              </span>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
