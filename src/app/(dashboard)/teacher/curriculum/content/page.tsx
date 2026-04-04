@@ -67,6 +67,7 @@ export default function TeacherContentBrowserPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedNodeTitle, setSelectedNodeTitle] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState(false);
 
   const buildFilters = useCallback((): ResourceFilters => {
     const filters: ResourceFilters = {};
@@ -79,7 +80,8 @@ export default function TeacherContentBrowserPage() {
   }, [search, typeFilter, statusFilter, mineOnly, selectedNodeId]);
 
   useEffect(() => {
-    fetchResources(buildFilters());
+    setFetchError(false);
+    fetchResources(buildFilters()).catch(() => setFetchError(true));
   }, [fetchResources, buildFilters]);
 
   const subjectOptions = useMemo(
@@ -207,6 +209,12 @@ export default function TeacherContentBrowserPage() {
       {/* ── Resource Grid ────────────────────────────────────────── */}
       {loading ? (
         <LoadingSpinner />
+      ) : fetchError ? (
+        <EmptyState
+          icon={AlertTriangle}
+          title="Failed to load resources"
+          description="Something went wrong. Please try refreshing the page."
+        />
       ) : resources.length === 0 ? (
         <EmptyState
           icon={BookOpen}

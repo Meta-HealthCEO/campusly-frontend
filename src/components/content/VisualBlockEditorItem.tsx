@@ -295,6 +295,7 @@ export function VisualBlockEditorItem({
               disabled={index === 0}
               onClick={() => onMoveUp(block.blockId)}
               aria-label="Move block up"
+              className="size-10 sm:size-7"
             >
               <ChevronUp className="size-4" />
             </Button>
@@ -304,6 +305,7 @@ export function VisualBlockEditorItem({
               disabled={index === totalBlocks - 1}
               onClick={() => onMoveDown(block.blockId)}
               aria-label="Move block down"
+              className="size-10 sm:size-7"
             >
               <ChevronDown className="size-4" />
             </Button>
@@ -312,6 +314,7 @@ export function VisualBlockEditorItem({
               size="icon-sm"
               onClick={() => setEditing((e) => !e)}
               aria-label={editing ? 'Switch to preview' : 'Edit block'}
+              className="size-10 sm:size-7"
             >
               {editing ? (
                 <Eye className="size-4" />
@@ -324,6 +327,7 @@ export function VisualBlockEditorItem({
               size="icon-sm"
               onClick={() => onRemove(block.blockId)}
               aria-label="Delete block"
+              className="size-10 sm:size-7"
             >
               <Trash2 className="size-4 text-destructive" />
             </Button>

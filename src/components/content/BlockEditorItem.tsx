@@ -80,6 +80,7 @@ export function BlockEditorItem({
             disabled={index === 0}
             onClick={() => onMoveUp(block.blockId)}
             aria-label="Move up"
+            className="size-10 sm:size-7"
           >
             <ChevronUp className="size-4" />
           </Button>
@@ -89,6 +90,7 @@ export function BlockEditorItem({
             disabled={index === totalBlocks - 1}
             onClick={() => onMoveDown(block.blockId)}
             aria-label="Move down"
+            className="size-10 sm:size-7"
           >
             <ChevronDown className="size-4" />
           </Button>
@@ -97,6 +99,7 @@ export function BlockEditorItem({
             size="icon-sm"
             onClick={() => onRemove(block.blockId)}
             aria-label="Delete block"
+            className="size-10 sm:size-7"
           >
             <Trash2 className="size-4 text-destructive" />
           </Button>

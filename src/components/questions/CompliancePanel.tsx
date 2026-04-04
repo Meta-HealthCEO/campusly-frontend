@@ -112,7 +112,7 @@ export function CompliancePanel({ compliance, totalMarks }: CompliancePanelProps
       {/* Overall status + marks */}
       <div className="flex flex-wrap items-center gap-3">
         {compliance.compliant ? (
-          <Badge className="gap-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+          <Badge className="gap-1 bg-primary/10 text-primary">
             <CheckCircle2 className="size-3" />
             Compliant
           </Badge>
@@ -172,7 +172,7 @@ export function CompliancePanel({ compliance, totalMarks }: CompliancePanelProps
       {/* Difficulty spread */}
       <div className="space-y-2">
         <h4 className="text-sm font-medium">Difficulty Spread</h4>
-        <div className="grid grid-cols-3 gap-2 text-center text-xs">
+        <div className="grid grid-cols-1 gap-2 text-center text-xs sm:grid-cols-3">
           <div className="rounded-lg border bg-muted/30 p-2">
             <div className="font-medium text-base">{difficultySpread.easy}</div>
             <div className="text-muted-foreground">Easy</div>

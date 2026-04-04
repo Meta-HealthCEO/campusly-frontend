@@ -56,7 +56,7 @@ export function QuizBlock({ block, onSubmit, interaction }: QuizBlockProps) {
               <label
                 key={opt.label}
                 className={`flex items-center gap-3 rounded-lg border p-3 text-sm cursor-pointer transition-colors ${
-                  showCorrect ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950' :
+                  showCorrect ? 'border-primary bg-primary/10' :
                   showWrong ? 'border-destructive bg-destructive/10' :
                   isSelected ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
                 } ${answered ? 'pointer-events-none' : ''}`}
@@ -72,8 +72,8 @@ export function QuizBlock({ block, onSubmit, interaction }: QuizBlockProps) {
                 />
                 <span className="font-medium">{opt.label}.</span>
                 <span>{opt.text}</span>
-                {showCorrect && <CheckCircle2 className="ml-auto h-4 w-4 text-emerald-500" />}
-                {showWrong && <XCircle className="ml-auto h-4 w-4 text-destructive" />}
+                {showCorrect && <CheckCircle2 className="ml-auto size-4 text-primary" />}
+                {showWrong && <XCircle className="ml-auto size-4 text-destructive" />}
               </label>
             );
           })}
@@ -115,7 +115,7 @@ export function QuizBlock({ block, onSubmit, interaction }: QuizBlockProps) {
       {/* Hints */}
       {!answered && block.hints.length > 0 && hintsShown < block.hints.length && (
         <Button variant="ghost" size="sm" onClick={revealHint} className="gap-1.5">
-          <Lightbulb className="h-4 w-4" />
+          <Lightbulb className="size-4" />
           Show Hint ({hintsShown + 1}/{block.hints.length})
         </Button>
       )}
@@ -138,9 +138,9 @@ export function QuizBlock({ block, onSubmit, interaction }: QuizBlockProps) {
 
       {/* Result */}
       {answered && interaction.attemptResult && (
-        <div className={`rounded-lg p-3 text-sm ${interaction.correct ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300' : 'bg-destructive/10 text-destructive'}`}>
+        <div className={`rounded-lg p-3 text-sm ${interaction.correct ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
           <div className="flex items-center gap-2 font-medium">
-            {interaction.correct ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+            {interaction.correct ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
             {interaction.correct ? 'Correct!' : 'Incorrect'}
             <span className="ml-auto text-xs">
               Score: {interaction.attemptResult.score}/{interaction.attemptResult.maxScore}

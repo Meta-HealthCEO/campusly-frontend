@@ -75,6 +75,7 @@ export default function TeacherQuestionsPage() {
   // ─── Dialog state ──────────────────────────────────────────────────────
   const [formOpen, setFormOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionItem | null>(null);
+  const [fetchError, setFetchError] = useState(false);
 
   // ─── Build filters object ──────────────────────────────────────────────
   const filters = useMemo((): QBQuestionFilters => {
@@ -90,7 +91,8 @@ export default function TeacherQuestionsPage() {
   }, [search, typeFilter, capsFilter, diffFilter, statusFilter, mineOnly, selectedNodeId]);
 
   useEffect(() => {
-    fetchQuestions(filters);
+    setFetchError(false);
+    fetchQuestions(filters).catch(() => setFetchError(true));
   }, [filters, fetchQuestions]);
 
   // ─── Handlers ──────────────────────────────────────────────────────────
@@ -259,6 +261,12 @@ export default function TeacherQuestionsPage() {
       {/* ─── Content ──────────────────────────────────────────────────── */}
       {questionsLoading ? (
         <LoadingSpinner />
+      ) : fetchError ? (
+        <EmptyState
+          icon={AlertTriangle}
+          title="Failed to load questions"
+          description="Something went wrong. Please try refreshing the page."
+        />
       ) : questions.length === 0 ? (
         <EmptyState
           icon={FileQuestion}

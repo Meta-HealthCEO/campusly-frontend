@@ -68,7 +68,7 @@ export function MatchColumnsBlock({ block, onSubmit, interaction }: MatchColumns
             <span className={`text-sm min-w-0 flex-1 truncate px-3 py-2 rounded border ${
               results
                 ? results[leftIdx]
-                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950'
+                  ? 'border-primary bg-primary/10'
                   : results[leftIdx] === false
                     ? 'border-destructive bg-destructive/10'
                     : ''
@@ -97,9 +97,9 @@ export function MatchColumnsBlock({ block, onSubmit, interaction }: MatchColumns
             </div>
             {results && (
               results[leftIdx]
-                ? <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                ? <CheckCircle2 className="size-4 text-primary shrink-0" />
                 : results[leftIdx] === false
-                  ? <XCircle className="h-4 w-4 text-destructive shrink-0" />
+                  ? <XCircle className="size-4 text-destructive shrink-0" />
                   : null
             )}
           </div>
@@ -109,7 +109,7 @@ export function MatchColumnsBlock({ block, onSubmit, interaction }: MatchColumns
       {/* Hints */}
       {!answered && block.hints.length > 0 && hintsShown < block.hints.length && (
         <Button variant="ghost" size="sm" onClick={() => setHintsShown((p) => p + 1)} className="gap-1.5">
-          <Lightbulb className="h-4 w-4" />
+          <Lightbulb className="size-4" />
           Show Hint ({hintsShown + 1}/{block.hints.length})
         </Button>
       )}
@@ -130,9 +130,9 @@ export function MatchColumnsBlock({ block, onSubmit, interaction }: MatchColumns
       )}
 
       {answered && interaction.attemptResult && (
-        <div className={`rounded-lg p-3 text-sm ${interaction.correct ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300' : 'bg-destructive/10 text-destructive'}`}>
+        <div className={`rounded-lg p-3 text-sm ${interaction.correct ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
           <div className="flex items-center gap-2 font-medium">
-            {interaction.correct ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+            {interaction.correct ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
             Score: {interaction.attemptResult.score}/{interaction.attemptResult.maxScore}
           </div>
           {block.explanation && <p className="mt-2 text-xs opacity-80">{block.explanation}</p>}

@@ -17,13 +17,13 @@ interface MasteryProgressBarProps {
 }
 
 function getBarColor(pct: number): string {
-  if (pct >= 70) return 'bg-emerald-500';
+  if (pct >= 70) return 'bg-primary';
   if (pct >= 40) return 'bg-yellow-500';
   return 'bg-amber-500';
 }
 
 function getTextColor(pct: number): string {
-  if (pct >= 70) return 'text-emerald-600 dark:text-emerald-400';
+  if (pct >= 70) return 'text-primary';
   if (pct >= 40) return 'text-yellow-600 dark:text-yellow-400';
   return 'text-amber-600 dark:text-amber-400';
 }
