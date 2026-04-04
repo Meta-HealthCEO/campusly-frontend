@@ -28,6 +28,22 @@ export const registerSchema = z.object({
 });
 export type RegisterFormData = z.infer<typeof registerSchema>;
 
+export const studentRegisterSchema = z.object({
+  firstName: z.string().min(2, 'First name is required'),
+  lastName: z.string().min(2, 'Last name is required'),
+  email: z.string().email('Please enter a valid email'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/\d/, 'Password must contain at least one digit'),
+  confirmPassword: z.string(),
+  classroomCode: z.string().length(6, 'Classroom code must be exactly 6 characters'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+});
+export type StudentRegisterFormData = z.infer<typeof studentRegisterSchema>;
+
 export const teacherRegisterSchema = z.object({
   firstName: z.string().min(2, 'First name is required'),
   lastName: z.string().min(2, 'Last name is required'),

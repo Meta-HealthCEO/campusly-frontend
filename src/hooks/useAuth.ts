@@ -24,6 +24,14 @@ export interface RegisterTeacherPayload {
   schoolName?: string;
 }
 
+export interface RegisterStudentPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  classroomCode: string;
+}
+
 export interface ResetPasswordPayload {
   token: string;
   password: string;
@@ -96,6 +104,29 @@ export function useAuth() {
     router.push('/teacher/onboarding');
   };
 
+  const registerStudent = async (payload: RegisterStudentPayload) => {
+    const response = await apiClient.post('/auth/register-student', payload);
+    const responseData = unwrapResponse(response);
+    const userData = responseData.user ?? responseData;
+    const accessToken = responseData.accessToken ?? responseData.access_token;
+    const refreshToken = responseData.refreshToken ?? responseData.refresh_token;
+    const authUser: User = {
+      id: userData._id ?? userData.id,
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      role: 'student',
+      phone: userData.phone ?? '',
+      schoolId: userData.schoolId ?? '',
+      isActive: userData.isActive ?? true,
+      avatar: userData.profileImage ?? userData.avatar ?? undefined,
+      createdAt: userData.createdAt ?? '',
+      updatedAt: userData.updatedAt ?? '',
+    };
+    storeLogin(authUser, { accessToken, refreshToken: refreshToken ?? '' });
+    router.push('/student/dashboard');
+  };
+
   const forgotPassword = async (email: string) => {
     await apiClient.post('/auth/forgot-password', { email });
   };
@@ -104,5 +135,5 @@ export function useAuth() {
     await apiClient.post('/auth/reset-password', payload);
   };
 
-  return { login, logout, register, registerTeacher, forgotPassword, resetPassword, user, isAuthenticated };
+  return { login, logout, register, registerTeacher, registerStudent, forgotPassword, resetPassword, user, isAuthenticated };
 }

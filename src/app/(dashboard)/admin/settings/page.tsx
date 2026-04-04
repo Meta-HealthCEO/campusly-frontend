@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { SchoolGeneralTab } from '@/components/school/SchoolGeneralTab';
 import { SchoolModulesTab } from '@/components/school/SchoolModulesTab';
 import { SchoolUsersTab } from '@/components/school/SchoolUsersTab';
+import { JoinCodeCard } from '@/components/shared/JoinCodeCard';
 import { useSchool } from '@/hooks/useSchool';
 
 export default function SettingsPage() {
@@ -51,7 +52,10 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="users" className="mt-4">
-          <SchoolUsersTab />
+          <div className="space-y-6">
+            <JoinCodeCard />
+            <SchoolUsersTab />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

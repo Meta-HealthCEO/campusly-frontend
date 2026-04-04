@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { ClassroomCodeCard } from '@/components/shared/ClassroomCodeCard';
 import {
   Dialog,
   DialogContent,
@@ -69,7 +70,7 @@ export default function TeacherClassesPage() {
                       className={cn(
                         'h-full rounded-full transition-all',
                         capacityPercentage > 90
-                          ? 'bg-destructive/100'
+                          ? 'bg-destructive'
                           : capacityPercentage > 75
                           ? 'bg-amber-500'
                           : 'bg-emerald-500'
@@ -102,7 +103,7 @@ export default function TeacherClassesPage() {
         open={!!selectedClassId}
         onOpenChange={(open) => { if (!open) setSelectedClassId(null); }}
       >
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="flex flex-col max-h-[85vh] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {selectedClass
@@ -110,7 +111,14 @@ export default function TeacherClassesPage() {
                 : 'Student List'}
             </DialogTitle>
           </DialogHeader>
-          <div className="max-h-[400px] overflow-y-auto space-y-2">
+          <div className="flex-1 overflow-y-auto space-y-4">
+          {selectedClassId && selectedClass && (
+            <ClassroomCodeCard
+              classId={selectedClassId}
+              className={`${selectedClass.grade?.name ?? ''} ${selectedClass.name}`.trim()}
+            />
+          )}
+          <div className="space-y-2">
             {classStudents.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">No students in this class.</p>
             ) : (
@@ -132,6 +140,7 @@ export default function TeacherClassesPage() {
                 </div>
               ))
             )}
+          </div>
           </div>
         </DialogContent>
       </Dialog>

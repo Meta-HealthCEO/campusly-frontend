@@ -114,6 +114,12 @@ export default function LoginPage() {
               Sign up for free
             </Link>
           </p>
+          <p>
+            Are you a student?{' '}
+            <Link href="/register-student" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
+              Join your class
+            </Link>
+          </p>
         </div>
       </AuthCard>
     </AuthLayout>

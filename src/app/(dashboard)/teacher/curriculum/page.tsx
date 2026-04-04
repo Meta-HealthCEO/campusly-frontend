@@ -5,8 +5,10 @@ import { BookOpen, HelpCircle, PenTool, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { UsageBanner } from '@/components/shared/UsageBanner';
 import { useContentLibrary } from '@/hooks/useContentLibrary';
 import { useQuestionBank } from '@/hooks/useQuestionBank';
+import { useUsage } from '@/hooks/useUsage';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useEffect } from 'react';
 
@@ -22,6 +24,7 @@ export default function TeacherCurriculumPage() {
   const { user } = useAuthStore();
   const { resources, fetchResources } = useContentLibrary();
   const { questions, fetchQuestions } = useQuestionBank();
+  const { data: usageData } = useUsage();
 
   useEffect(() => {
     fetchResources({});
@@ -67,6 +70,8 @@ export default function TeacherCurriculumPage() {
         title="Curriculum"
         description="Create and manage teaching content aligned to the CAPS curriculum"
       />
+
+      {usageData && <UsageBanner data={usageData} />}
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((card) => {

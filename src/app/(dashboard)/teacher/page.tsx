@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import {
   ClipboardList, AlertTriangle, Users, Calendar,
-  CheckSquare, PenLine, BarChart3,
+  CheckSquare, PenLine, BarChart3, School,
 } from 'lucide-react';
 import { AnnouncementBanner } from '@/components/announcements/AnnouncementBanner';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -16,7 +16,7 @@ import { useTeacherDashboard } from '@/hooks/useTeacherDashboard';
 import Link from 'next/link';
 
 export default function TeacherDashboard() {
-  const { user } = useAuthStore();
+  const { user, permissions } = useAuthStore();
   const {
     timetable, pendingHomework, absentToday,
     classCount, ungradedCount, loading,
@@ -27,9 +27,28 @@ export default function TeacherDashboard() {
   const firstName = user?.firstName ?? 'Teacher';
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
+  const isIndependent = permissions.isSchoolPrincipal && user?.role === 'teacher';
+
   return (
     <div className="space-y-6">
       <PageHeader title={`Good morning, ${firstName}!`} description="Here is your teaching dashboard for today" />
+
+      {isIndependent && (
+        <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <School className="h-5 w-5 shrink-0 text-primary" />
+            <div>
+              <p className="text-sm font-medium">Operating independently?</p>
+              <p className="text-xs text-muted-foreground">Join your school on Campusly to collaborate with colleagues.</p>
+            </div>
+          </div>
+          <Link href="/teacher/settings/join-school">
+            <Button size="sm" variant="outline" className="w-full sm:w-auto shrink-0">
+              Join Your School
+            </Button>
+          </Link>
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Today's Classes" value={String(timetable.length)} icon={Calendar} description={`${today} schedule`} />
