@@ -12,12 +12,20 @@ interface StudentAttendance {
   status: AttendanceStatus;
 }
 
+function toISODate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export function useTeacherAttendance() {
   const { user } = useAuthStore();
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('1');
+  const [selectedDate, setSelectedDate] = useState(() => toISODate(new Date()));
   const [attendance, setAttendance] = useState<StudentAttendance[]>([]);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -60,11 +68,19 @@ export function useTeacherAttendance() {
 
   const changeClass = useCallback((classId: string) => {
     setSelectedClass(classId);
+    setAttendance([]);
     setSaved(false);
   }, []);
 
   const changePeriod = useCallback((period: string) => {
     setSelectedPeriod(period);
+    setAttendance([]);
+    setSaved(false);
+  }, []);
+
+  const changeDate = useCallback((date: string) => {
+    setSelectedDate(date);
+    setAttendance([]);
     setSaved(false);
   }, []);
 
@@ -96,7 +112,7 @@ export function useTeacherAttendance() {
       await apiClient.post('/attendance/bulk', {
         classId: selectedClass,
         schoolId: user.schoolId,
-        date: new Date().toISOString(),
+        date: selectedDate,
         period: parseInt(selectedPeriod),
         records: currentAttendance.map((a) => ({
           studentId: a.studentId,
@@ -110,13 +126,14 @@ export function useTeacherAttendance() {
     } finally {
       setSaving(false);
     }
-  }, [user?.schoolId, selectedClass, selectedPeriod, currentAttendance]);
+  }, [user?.schoolId, selectedClass, selectedPeriod, selectedDate, currentAttendance]);
 
   return {
     students,
     classes,
     selectedClass,
     selectedPeriod,
+    selectedDate,
     classStudents,
     currentAttendance,
     saved,
@@ -124,6 +141,7 @@ export function useTeacherAttendance() {
     updateStatus,
     changeClass,
     changePeriod,
+    changeDate,
     saveAttendance,
   };
 }

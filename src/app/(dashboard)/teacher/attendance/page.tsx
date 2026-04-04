@@ -3,9 +3,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Users, Save, Calendar } from 'lucide-react';
+import { Users, Save } from 'lucide-react';
 import { useTeacherAttendance } from '@/hooks/useTeacherAttendance';
 
 const periods = ['1', '2', '3', '4', '5', '6'];
@@ -15,6 +16,7 @@ export default function TeacherAttendancePage() {
     classes,
     selectedClass,
     selectedPeriod,
+    selectedDate,
     classStudents,
     currentAttendance,
     saved,
@@ -22,6 +24,7 @@ export default function TeacherAttendancePage() {
     updateStatus,
     changeClass,
     changePeriod,
+    changeDate,
     saveAttendance,
   } = useTeacherAttendance();
 
@@ -30,23 +33,21 @@ export default function TeacherAttendancePage() {
   const lateCount = currentAttendance.filter((a) => a.status === 'late').length;
   const excusedCount = currentAttendance.filter((a) => a.status === 'excused').length;
 
-  const today = new Date().toLocaleDateString('en-ZA', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
   return (
     <div className="space-y-6">
       <PageHeader title="Take Attendance" description="Record student attendance for each period" />
 
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">{today}</span>
+              <span className="text-sm text-muted-foreground">Date:</span>
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => changeDate(e.target.value)}
+                className="w-full sm:w-40"
+              />
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Class:</span>
@@ -54,7 +55,7 @@ export default function TeacherAttendancePage() {
                 value={selectedClass}
                 onValueChange={(val: unknown) => changeClass(val as string)}
               >
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-full sm:w-44">
                   <SelectValue placeholder="Select class">
                     {classes.find((c) => c.id === selectedClass)
                       ? `${classes.find((c) => c.id === selectedClass)?.grade?.name ?? ''} ${classes.find((c) => c.id === selectedClass)?.name ?? ''}`
@@ -76,7 +77,7 @@ export default function TeacherAttendancePage() {
                 value={selectedPeriod}
                 onValueChange={(val: unknown) => changePeriod(val as string)}
               >
-                <SelectTrigger className="w-28">
+                <SelectTrigger className="w-full sm:w-28">
                   <SelectValue placeholder="Period" />
                 </SelectTrigger>
                 <SelectContent>

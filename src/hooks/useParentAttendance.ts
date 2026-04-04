@@ -4,6 +4,13 @@ import { unwrapList } from '@/lib/api-helpers';
 import { useCurrentParent } from './useCurrentParent';
 import type { Attendance } from '@/types';
 
+function toISODate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export interface ChildAttendance {
   childId: string;
   firstName: string;
@@ -37,7 +44,12 @@ export function useParentAttendance(): ParentAttendanceResult {
         for (const child of children) {
           let records: Attendance[] = [];
           try {
-            const res = await apiClient.get(`/attendance/student/${child.id}`);
+            const now = new Date();
+            const startDate = toISODate(new Date(now.getFullYear(), now.getMonth(), 1));
+            const endDate = toISODate(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+            const res = await apiClient.get(`/attendance/student/${child.id}`, {
+              params: { startDate, endDate },
+            });
             records = unwrapList<Attendance>(res);
           } catch { /* no records */ }
 
