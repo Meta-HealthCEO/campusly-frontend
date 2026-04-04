@@ -27,7 +27,7 @@ import type { CurriculumNodeItem } from '@/types/curriculum-structure';
 
 interface SelectOption { id: string; name: string }
 
-type ImageMediaType = 'image/jpeg' | 'image/png' | 'image/webp';
+type DocumentMediaType = 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
 
 type Step = 'upload' | 'extracting' | 'review' | 'saving';
 
@@ -52,7 +52,7 @@ export function UploadPaperDialog({
 }: UploadPaperDialogProps) {
   const [step, setStep] = useState<Step>('upload');
   const [imageBase64, setImageBase64] = useState<string | null>(null);
-  const [imageType, setImageType] = useState<ImageMediaType>('image/jpeg');
+  const [imageType, setImageType] = useState<DocumentMediaType>('image/jpeg');
   const [subjectId, setSubjectId] = useState('');
   const [gradeId, setGradeId] = useState('');
   const [nodeId, setNodeId] = useState<string | null>(null);
@@ -82,7 +82,7 @@ export function UploadPaperDialog({
     onOpenChange(isOpen);
   }, [onOpenChange, resetState]);
 
-  const handleImageSelected = useCallback((base64: string, mediaType: ImageMediaType) => {
+  const handleImageSelected = useCallback((base64: string, mediaType: DocumentMediaType) => {
     setImageBase64(base64);
     setImageType(mediaType);
   }, []);
@@ -251,7 +251,7 @@ export function UploadPaperDialog({
 
 interface UploadStepFieldsProps {
   imageBase64: string | null;
-  imageType: ImageMediaType;
+  imageType: DocumentMediaType;
   subjectId: string;
   gradeId: string;
   nodeId: string | null;
@@ -260,7 +260,7 @@ interface UploadStepFieldsProps {
   frameworkId: string;
   subjectName: string;
   gradeName: string;
-  onImageSelected: (base64: string, mediaType: ImageMediaType) => void;
+  onImageSelected: (base64: string, mediaType: DocumentMediaType) => void;
   onImageClear: () => void;
   onSubjectChange: (id: string) => void;
   onGradeChange: (id: string) => void;
@@ -282,6 +282,7 @@ function UploadStepFields({
         imageType={imageType}
         onImageSelected={onImageSelected}
         onClear={onImageClear}
+        acceptPdf
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

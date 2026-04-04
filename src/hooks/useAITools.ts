@@ -33,7 +33,7 @@ interface MarkPaperPayload {
   paperId: string;
   studentName: string;
   image: string;
-  imageType: 'image/jpeg' | 'image/png' | 'image/webp';
+  imageType: 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
 }
 
 function mapPaper(raw: Record<string, unknown>): GeneratedPaper {

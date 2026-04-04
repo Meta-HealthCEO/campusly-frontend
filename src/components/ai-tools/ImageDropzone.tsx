@@ -5,17 +5,19 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Camera, X, Upload } from 'lucide-react';
 
-const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_SIZE_MB = 10;
+type AcceptedMediaType = 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
+const ACCEPTED_TYPES: AcceptedMediaType[] = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+const MAX_SIZE_MB = 20;
 
 interface ImageDropzoneProps {
   imagePreview: string | null;
-  imageType?: 'image/jpeg' | 'image/png' | 'image/webp';
-  onImageSelected: (base64: string, mediaType: 'image/jpeg' | 'image/png' | 'image/webp') => void;
+  imageType?: AcceptedMediaType;
+  onImageSelected: (base64: string, mediaType: AcceptedMediaType) => void;
   onClear: () => void;
+  acceptPdf?: boolean;
 }
 
-export function ImageDropzone({ imagePreview, imageType = 'image/jpeg', onImageSelected, onClear }: ImageDropzoneProps) {
+export function ImageDropzone({ imagePreview, imageType = 'image/jpeg', onImageSelected, onClear, acceptPdf = false }: ImageDropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState('');
@@ -23,8 +25,8 @@ export function ImageDropzone({ imagePreview, imageType = 'image/jpeg', onImageS
   const processFile = useCallback((file: File) => {
     setError('');
 
-    if (!ACCEPTED_TYPES.includes(file.type)) {
-      setError('Please upload a JPEG, PNG, or WebP image.');
+    if (!ACCEPTED_TYPES.includes(file.type as AcceptedMediaType)) {
+      setError(acceptPdf ? 'Please upload a JPEG, PNG, WebP image or PDF.' : 'Please upload a JPEG, PNG, or WebP image.');
       return;
     }
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
@@ -38,7 +40,7 @@ export function ImageDropzone({ imagePreview, imageType = 'image/jpeg', onImageS
       // Extract the base64 portion (strip data:image/xxx;base64, prefix)
       const base64 = result.split(',')[1];
       if (base64) {
-        onImageSelected(base64, file.type as 'image/jpeg' | 'image/png' | 'image/webp');
+        onImageSelected(base64, file.type as AcceptedMediaType);
       }
     };
     reader.readAsDataURL(file);
@@ -66,13 +68,24 @@ export function ImageDropzone({ imagePreview, imageType = 'image/jpeg', onImageS
   }, [processFile]);
 
   if (imagePreview) {
+    const isPdf = imageType === 'application/pdf';
     return (
       <div className="relative">
-        <img
-          src={`data:${imageType};base64,${imagePreview}`}
-          alt="Student answer sheet"
-          className="w-full max-h-96 object-contain rounded-lg border"
-        />
+        {isPdf ? (
+          <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-6">
+            <Upload className="h-8 w-8 text-muted-foreground" />
+            <div>
+              <p className="font-medium text-sm">PDF uploaded</p>
+              <p className="text-xs text-muted-foreground">Ready for AI processing</p>
+            </div>
+          </div>
+        ) : (
+          <img
+            src={`data:${imageType};base64,${imagePreview}`}
+            alt="Uploaded document"
+            className="w-full max-h-96 object-contain rounded-lg border"
+          />
+        )}
         <Button
           variant="destructive"
           size="sm"
@@ -117,7 +130,7 @@ export function ImageDropzone({ imagePreview, imageType = 'image/jpeg', onImageS
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept={acceptPdf ? "image/jpeg,image/png,image/webp,application/pdf" : "image/jpeg,image/png,image/webp"}
         className="hidden"
         onChange={handleInputChange}
       />

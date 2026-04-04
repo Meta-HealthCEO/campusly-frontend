@@ -40,7 +40,7 @@ export default function MarkPapersPage() {
   const [selectedPaperId, setSelectedPaperId] = useState('');
   const [studentName, setStudentName] = useState('');
   const [imageBase64, setImageBase64] = useState<string | null>(null);
-  const [imageType, setImageType] = useState<'image/jpeg' | 'image/png' | 'image/webp'>('image/jpeg');
+  const [imageType, setImageType] = useState<'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf'>('image/jpeg');
   const [results, setResults] = useState<{
     studentName: string;
     totalMarks: number;
@@ -81,7 +81,7 @@ export default function MarkPapersPage() {
   );
 
   const handleImageSelected = useCallback(
-    (base64: string, type: 'image/jpeg' | 'image/png' | 'image/webp') => {
+    (base64: string, type: 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf') => {
       setImageBase64(base64);
       setImageType(type);
     },

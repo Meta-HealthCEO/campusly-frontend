@@ -218,7 +218,7 @@ export interface GeneratePaperPayload {
 
 export interface ExtractFromPaperPayload {
   image: string;
-  imageType: 'image/jpeg' | 'image/png' | 'image/webp';
+  imageType: 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
   subjectId: string;
   gradeId: string;
 }
