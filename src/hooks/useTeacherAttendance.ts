@@ -52,7 +52,12 @@ export function useTeacherAttendance() {
       try {
         const classesRes = await apiClient.get('/academic/classes');
         const allClasses = unwrapList<SchoolClass>(classesRes);
-        const mine = allClasses.find((c) => c.teacherId === user!.id) ?? null;
+        const mine = allClasses.find((c) => {
+          const tid = typeof c.teacherId === 'object' && c.teacherId !== null
+            ? (c.teacherId as { id?: string; _id?: string }).id ?? (c.teacherId as { _id?: string })._id
+            : c.teacherId;
+          return tid === user!.id;
+        }) ?? null;
         setHomeClass(mine);
 
         if (!mine) return;
