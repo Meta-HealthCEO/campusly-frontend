@@ -1,16 +1,24 @@
 'use client';
 
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { EmptyState } from '@/components/shared/EmptyState';
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
-import { Save, BookOpen } from 'lucide-react';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+  DialogDescription, DialogFooter,
+} from '@/components/ui/dialog';
+import { Save, BookOpen, Download, Pencil, Trash2 } from 'lucide-react';
 import { useTeacherGrades } from '@/hooks/useTeacherGrades';
 import { CreateAssessmentDialog } from '@/components/grades/CreateAssessmentDialog';
+import { EditAssessmentDialog } from '@/components/grades/EditAssessmentDialog';
+import { StudentHistoryDialog } from '@/components/grades/StudentHistoryDialog';
 import { ClassStatsBar } from '@/components/grades/ClassStatsBar';
 import type { Assessment } from '@/types';
 
@@ -22,15 +30,28 @@ function getSubjectName(a: Assessment): string {
   return '';
 }
 
+const TERM_OPTIONS = [
+  { value: 'all', label: 'All terms' },
+  { value: '1', label: 'Term 1' },
+  { value: '2', label: 'Term 2' },
+  { value: '3', label: 'Term 3' },
+  { value: '4', label: 'Term 4' },
+];
+
 export default function TeacherGradesPage() {
   const {
     classes, subjects, assessments, markEntries,
-    selectedClass, selectedSubject, selectedAssessment,
+    selectedClass, selectedSubject, selectedAssessment, selectedTerm,
     loading, saving, currentAssessment, classStats,
     hasValidationErrors, getMarkError,
-    setSelectedClass, setSelectedSubject, setSelectedAssessment,
-    handleMarkChange, saveMarks, createAssessment,
+    studentHistory, selectedStudent,
+    setSelectedClass, setSelectedSubject, setSelectedAssessment, setSelectedTerm,
+    setSelectedStudent, handleMarkChange, saveMarks, createAssessment,
+    updateAssessment, deleteAssessment, fetchStudentHistory,
   } = useTeacherGrades();
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   if (loading) return <LoadingSpinner />;
 
@@ -40,13 +61,44 @@ export default function TeacherGradesPage() {
     : 'Select class';
 
   const selectedSubjectName = subjects.find((s) => s.id === selectedSubject)?.name ?? 'All subjects';
-
   const selectedAssessmentName = assessments.find((a) => a.id === selectedAssessment)?.name ?? 'Select assessment';
+  const selectedTermLabel = TERM_OPTIONS.find((t) => t.value === selectedTerm)?.label ?? 'All terms';
+
+  function exportCSV() {
+    if (!currentAssessment || markEntries.length === 0) return;
+    const rows = [
+      [`Class: ${classDisplayName}`],
+      [`Assessment: ${currentAssessment.name}`],
+      [],
+      ['Student Name', 'Admission Number', 'Mark', 'Total', 'Percentage'],
+      ...markEntries.map((e) => {
+        const pct = e.mark
+          ? Math.round((Number(e.mark) / currentAssessment.totalMarks) * 100)
+          : '';
+        return [
+          `${e.lastName} ${e.firstName}`,
+          e.admissionNumber,
+          e.mark,
+          currentAssessment.totalMarks,
+          pct !== '' ? `${pct}%` : '',
+        ];
+      }),
+    ];
+    const csv = rows.map((r) => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${classDisplayName} - ${currentAssessment.name}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   return (
     <div className="space-y-6">
       <PageHeader title="Gradebook" description="Enter and manage student assessment marks" />
 
+      {/* Filters */}
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-4">
@@ -75,14 +127,26 @@ export default function TeacherGradesPage() {
                 onValueChange={(val: unknown) => setSelectedSubject((val as string) === 'all' ? '' : (val as string))}
               >
                 <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="All subjects">
-                    {selectedSubjectName}
-                  </SelectValue>
+                  <SelectValue placeholder="All subjects">{selectedSubjectName}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All subjects</SelectItem>
                   {subjects.map((s) => (
                     <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">Term:</span>
+              <Select value={selectedTerm} onValueChange={(val: unknown) => setSelectedTerm(val as string)}>
+                <SelectTrigger className="w-full sm:w-36">
+                  <SelectValue placeholder="All terms">{selectedTermLabel}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {TERM_OPTIONS.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -118,26 +182,77 @@ export default function TeacherGradesPage() {
         </CardContent>
       </Card>
 
+      {/* No assessments empty state */}
+      {selectedClass && assessments.length === 0 && !selectedAssessment && (
+        <EmptyState
+          icon={BookOpen}
+          title="No assessments yet"
+          description="Create an assessment to start entering marks for this class."
+          action={
+            <CreateAssessmentDialog
+              subjects={subjects}
+              selectedClassId={selectedClass}
+              selectedSubjectId={selectedSubject}
+              onCreateAssessment={createAssessment}
+            />
+          }
+        />
+      )}
+
+      {/* Current assessment info + edit/delete */}
       {currentAssessment && (
         <Card>
           <CardContent className="p-4 flex items-center gap-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
               <BookOpen className="h-5 w-5 text-primary" />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="font-medium truncate">{currentAssessment.name}</p>
               <p className="text-sm text-muted-foreground truncate">
                 {getSubjectName(currentAssessment)} &middot; {currentAssessment.type} &middot; Total: {currentAssessment.totalMarks} marks &middot; Weight: {currentAssessment.weight}%
               </p>
             </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button variant="ghost" size="icon" onClick={() => setEditOpen(true)} title="Edit assessment">
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" title="Delete assessment" onClick={() => setDeleteOpen(true)}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
+
+      <EditAssessmentDialog
+        open={editOpen}
+        assessment={currentAssessment ?? null}
+        onClose={() => setEditOpen(false)}
+        onUpdate={async (id, payload) => { await updateAssessment(id, payload); }}
+      />
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Assessment</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &quot;{currentAssessment?.name}&quot;? This will also delete all marks. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={async () => { if (currentAssessment) { await deleteAssessment(currentAssessment.id); setDeleteOpen(false); } }}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {classStats && currentAssessment && (
         <ClassStatsBar stats={classStats} totalMarks={currentAssessment.totalMarks} />
       )}
 
+      {/* Marks table */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">Student Marks ({markEntries.length} students)</CardTitle>
@@ -171,8 +286,14 @@ export default function TeacherGradesPage() {
                     return (
                       <tr key={entry.studentId} className="border-b last:border-0">
                         <td className="py-3 text-sm text-muted-foreground">{index + 1}</td>
-                        <td className="py-3 text-sm font-medium truncate max-w-[200px]">
-                          {entry.lastName}, {entry.firstName}
+                        <td className="py-3 text-sm font-medium truncate max-w-50">
+                          <button
+                            type="button"
+                            className="hover:underline text-left"
+                            onClick={() => setSelectedStudent(entry)}
+                          >
+                            {entry.lastName}, {entry.firstName}
+                          </button>
                         </td>
                         <td className="py-3 text-sm text-muted-foreground">{entry.admissionNumber}</td>
                         <td className="py-3">
@@ -193,7 +314,7 @@ export default function TeacherGradesPage() {
                         </td>
                         <td className="py-3">
                           {percentage !== null && !isNaN(percentage) ? (
-                            <span className={`text-sm font-semibold ${percentage >= 80 ? 'text-emerald-600' : percentage >= 50 ? 'text-blue-600' : 'text-destructive'}`}>
+                            <span className={`text-sm font-semibold ${percentage >= 80 ? 'text-primary' : percentage >= 50 ? 'text-blue-600' : 'text-destructive'}`}>
                               {percentage}%
                             </span>
                           ) : (
@@ -208,7 +329,11 @@ export default function TeacherGradesPage() {
             </div>
           )}
           {markEntries.length > 0 && (
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 flex flex-wrap justify-end gap-2">
+              <Button variant="outline" onClick={exportCSV}>
+                <Download className="mr-2 h-4 w-4" />
+                Export CSV
+              </Button>
               <Button onClick={saveMarks} disabled={saving || hasValidationErrors}>
                 <Save className="mr-2 h-4 w-4" />
                 {saving ? 'Saving...' : 'Save Marks'}
@@ -217,6 +342,13 @@ export default function TeacherGradesPage() {
           )}
         </CardContent>
       </Card>
+
+      <StudentHistoryDialog
+        student={selectedStudent}
+        history={studentHistory}
+        onClose={() => setSelectedStudent(null)}
+        onFetchHistory={fetchStudentHistory}
+      />
     </div>
   );
 }

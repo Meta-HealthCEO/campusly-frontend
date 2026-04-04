@@ -33,9 +33,29 @@ interface CreateAssessmentPayload {
   date: string;
 }
 
+interface UpdateAssessmentPayload {
+  name?: string;
+  subjectId?: string;
+  type?: Assessment['type'];
+  totalMarks?: number;
+  weight?: number;
+  term?: number;
+  date?: string;
+}
+
 interface MarkValidationError {
   studentId: string;
   message: string;
+}
+
+interface StudentMark {
+  id: string;
+  assessmentName: string;
+  subjectName: string;
+  mark: number;
+  total: number;
+  percentage: number;
+  date: string;
 }
 
 export function useTeacherGrades() {
@@ -44,13 +64,16 @@ export function useTeacherGrades() {
 
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [allAssessments, setAllAssessments] = useState<Assessment[]>([]);
   const [markEntries, setMarkEntries] = useState<MarkEntry[]>([]);
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedAssessment, setSelectedAssessment] = useState('');
+  const [selectedTerm, setSelectedTerm] = useState('all');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [studentHistory, setStudentHistory] = useState<StudentMark[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<MarkEntry | null>(null);
 
   // Load classes
   useEffect(() => {
@@ -80,18 +103,19 @@ export function useTeacherGrades() {
     fetchSubjects();
   }, []);
 
-  // Reset subject and assessment when class changes
+  // Reset when class changes
   useEffect(() => {
     setSelectedSubject('');
     setSelectedAssessment('');
-    setAssessments([]);
+    setSelectedTerm('all');
+    setAllAssessments([]);
     setMarkEntries([]);
   }, [selectedClass]);
 
   // Load assessments when class or subject changes
   useEffect(() => {
     if (!selectedClass) {
-      setAssessments([]);
+      setAllAssessments([]);
       return;
     }
     async function fetchAssessments() {
@@ -99,7 +123,7 @@ export function useTeacherGrades() {
         const params: Record<string, string> = { classId: selectedClass };
         if (selectedSubject) params.subjectId = selectedSubject;
         const res = await apiClient.get('/academic/assessments', { params });
-        setAssessments(unwrapList<Assessment>(res));
+        setAllAssessments(unwrapList<Assessment>(res));
       } catch {
         console.error('Failed to load assessments');
       }
@@ -108,6 +132,12 @@ export function useTeacherGrades() {
     setSelectedAssessment('');
     setMarkEntries([]);
   }, [selectedClass, selectedSubject]);
+
+  // Filtered assessments by term
+  const assessments = useMemo(() => {
+    if (selectedTerm === 'all') return allAssessments;
+    return allAssessments.filter((a) => String(a.term) === selectedTerm);
+  }, [allAssessments, selectedTerm]);
 
   // Load students + existing marks when assessment changes
   const loadMarks = useCallback(async () => {
@@ -140,7 +170,6 @@ export function useTeacherGrades() {
         }
       }
 
-      // Filter students by classId
       const classStudents = students.filter((s) => {
         const cid =
           typeof s.classId === 'object'
@@ -177,9 +206,8 @@ export function useTeacherGrades() {
     loadMarks();
   }, [loadMarks]);
 
-  const currentAssessment = assessments.find(
-    (a) => a.id === selectedAssessment,
-  );
+  const currentAssessment = assessments.find((a) => a.id === selectedAssessment)
+    ?? allAssessments.find((a) => a.id === selectedAssessment);
 
   // Mark validation
   const markValidationErrors = useMemo((): MarkValidationError[] => {
@@ -282,6 +310,13 @@ export function useTeacherGrades() {
     }
   }, [currentAssessment, markEntries, selectedAssessment, schoolId, loadMarks, hasValidationErrors]);
 
+  const refreshAssessments = useCallback(async (classId: string, subjectId: string) => {
+    const params: Record<string, string> = { classId };
+    if (subjectId) params.subjectId = subjectId;
+    const refreshRes = await apiClient.get('/academic/assessments', { params });
+    setAllAssessments(unwrapList<Assessment>(refreshRes));
+  }, []);
+
   const createAssessment = useCallback(async (payload: CreateAssessmentPayload) => {
     try {
       const res = await apiClient.post('/academic/assessments', {
@@ -291,39 +326,106 @@ export function useTeacherGrades() {
       });
       const created = unwrapResponse<Assessment>(res);
       toast.success('Assessment created successfully');
-      // Refresh assessments list
-      const params: Record<string, string> = { classId: payload.classId };
-      if (payload.subjectId) params.subjectId = payload.subjectId;
-      const refreshRes = await apiClient.get('/academic/assessments', { params });
-      setAssessments(unwrapList<Assessment>(refreshRes));
+      await refreshAssessments(payload.classId, payload.subjectId);
       return created;
     } catch (err: unknown) {
       toast.error(extractErrorMessage(err, 'Failed to create assessment'));
       throw err;
     }
-  }, [schoolId]);
+  }, [schoolId, refreshAssessments]);
+
+  const updateAssessment = useCallback(async (id: string, payload: UpdateAssessmentPayload) => {
+    try {
+      const res = await apiClient.put(`/academic/assessments/${id}`, payload);
+      const updated = unwrapResponse<Assessment>(res);
+      toast.success('Assessment updated successfully');
+      await refreshAssessments(selectedClass, selectedSubject);
+      return updated;
+    } catch (err: unknown) {
+      toast.error(extractErrorMessage(err, 'Failed to update assessment'));
+      throw err;
+    }
+  }, [selectedClass, selectedSubject, refreshAssessments]);
+
+  const deleteAssessment = useCallback(async (id: string) => {
+    try {
+      await apiClient.delete(`/academic/assessments/${id}`);
+      toast.success('Assessment deleted');
+      setAllAssessments((prev) => prev.filter((a) => a.id !== id));
+      if (selectedAssessment === id) {
+        setSelectedAssessment('');
+        setMarkEntries([]);
+      }
+    } catch (err: unknown) {
+      toast.error(extractErrorMessage(err, 'Failed to delete assessment'));
+      throw err;
+    }
+  }, [selectedAssessment]);
+
+  const fetchStudentHistory = useCallback(async (studentId: string) => {
+    try {
+      const res = await apiClient.get(`/academic/marks/student/${studentId}`);
+      const raw = unwrapList<Record<string, unknown>>(res);
+      const history: StudentMark[] = raw.map((m) => {
+        const assessment = (m.assessmentId ?? m.assessment) as Record<string, unknown> | null;
+        const subject = (m.subjectId ?? m.subject) as Record<string, unknown> | null;
+        const mark = m.mark as number;
+        const total = m.total as number;
+        return {
+          id: (m.id as string) ?? '',
+          assessmentName: (assessment?.name as string) ?? '',
+          subjectName: (subject?.name as string) ?? '',
+          mark,
+          total,
+          percentage: total > 0 ? Math.round((mark / total) * 100) : 0,
+          date: (m.createdAt as string) ?? '',
+        };
+      });
+      setStudentHistory(history);
+    } catch {
+      console.error('Failed to load student history');
+      setStudentHistory([]);
+    }
+  }, []);
 
   return {
     classes,
     subjects,
     assessments,
+    allAssessments,
     markEntries,
     selectedClass,
     selectedSubject,
     selectedAssessment,
+    selectedTerm,
     loading,
     saving,
     currentAssessment,
     classStats,
     hasValidationErrors,
     getMarkError,
+    studentHistory,
+    selectedStudent,
     setSelectedClass,
     setSelectedSubject,
     setSelectedAssessment,
+    setSelectedTerm,
+    setSelectedStudent,
     handleMarkChange,
     saveMarks,
     createAssessment,
+    updateAssessment,
+    deleteAssessment,
+    fetchStudentHistory,
+    loadMarks,
   };
 }
 
-export type { MarkEntry, ClassStats, CreateAssessmentPayload, MarkValidationError };
+export type {
+  MarkEntry,
+  ClassStats,
+  CreateAssessmentPayload,
+  UpdateAssessmentPayload,
+  MarkValidationError,
+  StudentMark,
+};
