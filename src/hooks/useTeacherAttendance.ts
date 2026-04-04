@@ -5,10 +5,15 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { toast } from 'sonner';
 import type { Student, SchoolClass } from '@/types';
 
-type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused';
+export type AttendanceStatus = 'present' | 'absent' | 'late';
 
-interface StudentAttendance {
+interface AttendanceRecord {
   studentId: string;
+  status: AttendanceStatus;
+}
+
+interface RawAttendanceRecord {
+  studentId: string | { id?: string; _id?: string };
   status: AttendanceStatus;
 }
 
@@ -19,150 +24,193 @@ function toISODate(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
+function resolveId(val: string | { id?: string; _id?: string } | undefined): string {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  return val.id ?? val._id ?? '';
+}
+
+const today = toISODate(new Date());
+
 export function useTeacherAttendance() {
   const { user } = useAuthStore();
+  const [homeClass, setHomeClass] = useState<SchoolClass | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
-  const [classes, setClasses] = useState<SchoolClass[]>([]);
-  const [selectedClass, setSelectedClass] = useState('');
-  const [selectedPeriod, setSelectedPeriod] = useState('1');
-  const [selectedDate, setSelectedDate] = useState(() => toISODate(new Date()));
-  const [attendance, setAttendance] = useState<StudentAttendance[]>([]);
-  const [saved, setSaved] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [attendance, setAttendance] = useState<Map<string, AttendanceStatus>>(new Map());
+  const [existingLoaded, setExistingLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
+  // ── Initial load: find home class + fetch its students ──────────────────
   useEffect(() => {
-    async function fetchData() {
+    if (!user?.id) return;
+
+    async function init() {
+      setLoading(true);
       try {
-        const [studentsRes, classesRes] = await Promise.allSettled([
-          apiClient.get('/students'),
-          apiClient.get('/academic/classes'),
-        ]);
-        if (studentsRes.status === 'fulfilled') {
-          const arr = unwrapList<Student>(studentsRes.value);
-          if (arr.length > 0) setStudents(arr);
-        }
-        if (classesRes.status === 'fulfilled') {
-          const arr = unwrapList<SchoolClass>(classesRes.value);
-          if (arr.length > 0) {
-            setClasses(arr);
-            setSelectedClass(arr[0]?.id ?? '');
-          }
-        }
-      } catch {
-        console.error('Failed to load attendance data');
+        const classesRes = await apiClient.get('/academic/classes');
+        const allClasses = unwrapList<SchoolClass>(classesRes);
+        const mine = allClasses.find((c) => c.teacherId === user!.id) ?? null;
+        setHomeClass(mine);
+
+        if (!mine) return;
+
+        const studentsRes = await apiClient.get('/students');
+        const allStudents = unwrapList<Student>(studentsRes);
+        const homeStudents = allStudents.filter((s) => {
+          const cid = resolveId(
+            typeof s.classId === 'object' && s.classId !== null
+              ? (s.classId as { id?: string; _id?: string })
+              : s.classId as string,
+          );
+          return cid === mine.id;
+        });
+        setStudents(homeStudents);
+
+        await loadExistingAttendance(mine.id, today, homeStudents);
+      } catch (err: unknown) {
+        console.error('Failed to load attendance data', err);
+      } finally {
+        setLoading(false);
       }
     }
-    fetchData();
-  }, []);
 
-  const updateStatus = useCallback(
-    (studentId: string, status: AttendanceStatus) => {
-      setAttendance((prev) => {
-        const filtered = prev.filter((a) => a.studentId !== studentId);
-        return [...filtered, { studentId, status }];
-      });
-      setSaved(false);
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // ── Load existing attendance for a given date ────────────────────────────
+  const loadExistingAttendance = useCallback(
+    async (classId: string, date: string, homeStudents: Student[]) => {
+      try {
+        const res = await apiClient.get(`/attendance/class/${classId}`, {
+          params: { date },
+        });
+        const raw = res.data?.data ?? res.data;
+        const records: RawAttendanceRecord[] = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.records)
+          ? raw.records
+          : [];
+
+        if (records.length > 0) {
+          const map = new Map<string, AttendanceStatus>();
+          records.forEach((r) => {
+            const sid = resolveId(
+              typeof r.studentId === 'object' ? r.studentId : r.studentId,
+            );
+            if (sid) map.set(sid, r.status);
+          });
+          setAttendance(map);
+          setExistingLoaded(true);
+        } else {
+          // Default all to present
+          const map = new Map<string, AttendanceStatus>();
+          homeStudents.forEach((s) => map.set(s.id, 'present'));
+          setAttendance(map);
+          setExistingLoaded(false);
+        }
+      } catch {
+        // If endpoint errors, default all to present
+        const map = new Map<string, AttendanceStatus>();
+        homeStudents.forEach((s) => map.set(s.id, 'present'));
+        setAttendance(map);
+        setExistingLoaded(false);
+      }
     },
     [],
   );
 
-  const changeClass = useCallback((classId: string) => {
-    setSelectedClass(classId);
-    setAttendance([]);
+  // ── Date change ─────────────────────────────────────────────────────────
+  const changeDate = useCallback(
+    async (date: string) => {
+      setSelectedDate(date);
+      setSaved(false);
+      setExistingLoaded(false);
+      if (homeClass) {
+        await loadExistingAttendance(homeClass.id, date, students);
+      }
+    },
+    [homeClass, students, loadExistingAttendance],
+  );
+
+  // ── Status mutations ─────────────────────────────────────────────────────
+  const updateStatus = useCallback((studentId: string, status: AttendanceStatus) => {
+    setAttendance((prev) => {
+      const next = new Map(prev);
+      next.set(studentId, status);
+      return next;
+    });
     setSaved(false);
   }, []);
 
-  const changePeriod = useCallback((period: string) => {
-    setSelectedPeriod(period);
-    setAttendance([]);
+  const markAllPresent = useCallback(() => {
+    setAttendance((prev) => {
+      const next = new Map(prev);
+      students.forEach((s) => next.set(s.id, 'present'));
+      return next;
+    });
     setSaved(false);
-  }, []);
+  }, [students]);
 
-  const changeDate = useCallback((date: string) => {
-    setSelectedDate(date);
-    setAttendance([]);
-    setSaved(false);
-  }, []);
-
-  const classStudents = students.filter((s) => {
-    const cid =
-      typeof s.classId === 'object' && s.classId !== null
-        ? (s.classId as unknown as { _id?: string; id?: string })._id ??
-          (s.classId as unknown as { id?: string }).id
-        : s.classId;
-    return cid === selectedClass;
-  });
-
-  const currentAttendance = classStudents.map((student) => {
-    const sid = student.id;
-    const existing = attendance.find((a) => a.studentId === sid);
-    return {
-      studentId: sid,
-      status: existing?.status || ('present' as AttendanceStatus),
-    };
-  });
-
+  // ── Save ─────────────────────────────────────────────────────────────────
   const saveAttendance = useCallback(async () => {
     if (!user?.schoolId) {
       toast.error('School information not available');
       return;
     }
-    if (!selectedClass) {
-      toast.error('Please select a class');
+    if (!homeClass) {
+      toast.error('No home class assigned');
       return;
     }
-    if (currentAttendance.length === 0) {
+    if (students.length === 0) {
       toast.error('No students to mark attendance for');
       return;
     }
-    // Validate date is not in the future
-    const today = toISODate(new Date());
     if (selectedDate > today) {
       toast.error('Cannot record attendance for a future date');
       return;
     }
+
+    const records: AttendanceRecord[] = students.map((s) => ({
+      studentId: s.id,
+      status: attendance.get(s.id) ?? 'present',
+    }));
+
     setSaving(true);
     try {
       await apiClient.post('/attendance/bulk', {
-        classId: selectedClass,
+        classId: homeClass.id,
         schoolId: user.schoolId,
         date: `${selectedDate}T00:00:00.000Z`,
-        period: parseInt(selectedPeriod),
-        records: currentAttendance.map((a) => ({
-          studentId: a.studentId,
-          status: a.status,
-        })),
+        period: 1,
+        records,
       });
       setSaved(true);
-      toast.success('Attendance saved successfully!');
+      setExistingLoaded(true);
+      toast.success(`Attendance saved for ${selectedDate}`);
     } catch (err: unknown) {
       const msg = extractErrorMessage(err, '');
-      if (msg.includes('Validation failed') || msg.includes('validation')) {
-        toast.error('Could not save attendance. Please check that all fields are filled correctly.');
-      } else {
-        toast.error(msg || 'Failed to save attendance. Please try again.');
-      }
+      toast.error(msg || 'Failed to save attendance. Please try again.');
     } finally {
       setSaving(false);
     }
-  }, [user?.schoolId, selectedClass, selectedPeriod, selectedDate, currentAttendance]);
+  }, [user?.schoolId, homeClass, students, selectedDate, attendance]);
 
   return {
+    homeClass,
     students,
-    classes,
-    selectedClass,
-    selectedPeriod,
     selectedDate,
-    classStudents,
-    currentAttendance,
-    saved,
+    attendance,
+    existingLoaded,
     saving,
-    updateStatus,
-    changeClass,
-    changePeriod,
+    saved,
+    loading,
     changeDate,
+    updateStatus,
+    markAllPresent,
     saveAttendance,
   };
 }
-
-export type { AttendanceStatus, StudentAttendance };

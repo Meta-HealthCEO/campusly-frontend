@@ -1,197 +1,271 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Users, Save } from 'lucide-react';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { useTeacherAttendance } from '@/hooks/useTeacherAttendance';
+import type { AttendanceStatus } from '@/hooks/useTeacherAttendance';
+import { CheckCircle2, XCircle, Clock, UserX, Save, Users } from 'lucide-react';
+import { useMemo } from 'react';
+import type { Student } from '@/types';
 
-const periods = ['1', '2', '3', '4', '5', '6'];
+function toISODate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+const todayISO = toISODate(new Date());
+
+// ── Status toggle button ─────────────────────────────────────────────────────
+
+interface StatusButtonProps {
+  status: AttendanceStatus;
+  current: AttendanceStatus;
+  onClick: () => void;
+}
+
+function StatusButton({ status, current, onClick }: StatusButtonProps) {
+  const active = current === status;
+  const config: Record<AttendanceStatus, { label: string; icon: React.ReactNode; activeClass: string }> = {
+    present: {
+      label: 'Present',
+      icon: <CheckCircle2 className="h-4 w-4" />,
+      activeClass: 'bg-emerald-100 text-emerald-700 border-emerald-400 dark:bg-emerald-900/30 dark:text-emerald-400',
+    },
+    absent: {
+      label: 'Absent',
+      icon: <XCircle className="h-4 w-4" />,
+      activeClass: 'bg-destructive/10 text-destructive border-destructive/40',
+    },
+    late: {
+      label: 'Late',
+      icon: <Clock className="h-4 w-4" />,
+      activeClass: 'bg-amber-100 text-amber-700 border-amber-400 dark:bg-amber-900/30 dark:text-amber-400',
+    },
+  };
+  const { label, icon, activeClass } = config[status];
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-colors min-h-[44px]',
+        active ? activeClass : 'border-border text-muted-foreground hover:bg-muted',
+      ].join(' ')}
+      aria-pressed={active}
+    >
+      {icon}
+      <span className="hidden sm:inline">{label}</span>
+    </button>
+  );
+}
+
+// ── Student row ──────────────────────────────────────────────────────────────
+
+interface StudentRowProps {
+  student: Student;
+  status: AttendanceStatus;
+  onUpdate: (studentId: string, status: AttendanceStatus) => void;
+}
+
+function getStudentName(student: Student): string {
+  const userId = student.userId;
+  const first =
+    student.user?.firstName ??
+    (typeof userId === 'object' && userId !== null
+      ? (userId as { firstName?: string }).firstName
+      : undefined) ??
+    student.firstName ??
+    '';
+  const last =
+    student.user?.lastName ??
+    (typeof userId === 'object' && userId !== null
+      ? (userId as { lastName?: string }).lastName
+      : undefined) ??
+    student.lastName ??
+    '';
+  return `${first} ${last}`.trim() || 'Unknown';
+}
+
+function dotClass(status: AttendanceStatus): string {
+  if (status === 'present') return 'bg-emerald-500';
+  if (status === 'absent') return 'bg-destructive';
+  return 'bg-amber-500';
+}
+
+function StudentRow({ student, status, onUpdate }: StudentRowProps) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border p-3">
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${dotClass(status)}`} />
+        <div className="min-w-0">
+          <p className="text-sm font-medium truncate">{getStudentName(student)}</p>
+          {student.admissionNumber && (
+            <p className="text-xs text-muted-foreground truncate">{student.admissionNumber}</p>
+          )}
+        </div>
+      </div>
+      <div className="flex gap-2 flex-shrink-0">
+        <StatusButton status="present" current={status} onClick={() => onUpdate(student.id, 'present')} />
+        <StatusButton status="absent" current={status} onClick={() => onUpdate(student.id, 'absent')} />
+        <StatusButton status="late" current={status} onClick={() => onUpdate(student.id, 'late')} />
+      </div>
+    </div>
+  );
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TeacherAttendancePage() {
   const {
-    classes,
-    selectedClass,
-    selectedPeriod,
+    homeClass,
+    students,
     selectedDate,
-    classStudents,
-    currentAttendance,
+    attendance,
     saved,
     saving,
-    updateStatus,
-    changeClass,
-    changePeriod,
+    loading,
     changeDate,
+    updateStatus,
+    markAllPresent,
     saveAttendance,
   } = useTeacherAttendance();
 
-  const presentCount = currentAttendance.filter((a) => a.status === 'present').length;
-  const absentCount = currentAttendance.filter((a) => a.status === 'absent').length;
-  const lateCount = currentAttendance.filter((a) => a.status === 'late').length;
-  const excusedCount = currentAttendance.filter((a) => a.status === 'excused').length;
+  const stats = useMemo(() => {
+    let present = 0;
+    let absent = 0;
+    let late = 0;
+    students.forEach((s) => {
+      const st = attendance.get(s.id) ?? 'present';
+      if (st === 'present') present++;
+      else if (st === 'absent') absent++;
+      else late++;
+    });
+    return { present, absent, late };
+  }, [attendance, students]);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Morning Roll Call" description="Mark daily attendance for your home class" />
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!homeClass) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Morning Roll Call" description="Mark daily attendance for your home class" />
+        <EmptyState
+          icon={UserX}
+          title="No Home Class Assigned"
+          description="You are not assigned as a class teacher. Contact your administrator."
+        />
+      </div>
+    );
+  }
+
+  const classLabel = `${homeClass.grade?.name ?? homeClass.gradeName ?? ''} ${homeClass.name}`.trim();
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Take Attendance" description="Record student attendance for each period" />
+    <div className="space-y-4">
+      <PageHeader title="Morning Roll Call" description={classLabel} />
 
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Date:</span>
-              <Input
-                type="date"
-                value={selectedDate}
-                max={new Date().toISOString().slice(0, 10)}
-                onChange={(e) => changeDate(e.target.value)}
-                className="w-full sm:w-40"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Class:</span>
-              <Select
-                value={selectedClass}
-                onValueChange={(val: unknown) => changeClass(val as string)}
-              >
-                <SelectTrigger className="w-full sm:w-44">
-                  <SelectValue placeholder="Select class">
-                    {classes.find((c) => c.id === selectedClass)
-                      ? `${classes.find((c) => c.id === selectedClass)?.grade?.name ?? ''} ${classes.find((c) => c.id === selectedClass)?.name ?? ''}`
-                      : 'Select class'}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {classes.map((cls) => (
-                    <SelectItem key={cls.id} value={cls.id}>
-                      {cls.grade?.name ?? cls.gradeName ?? ''} {cls.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Period:</span>
-              <Select
-                value={selectedPeriod}
-                onValueChange={(val: unknown) => changePeriod(val as string)}
-              >
-                <SelectTrigger className="w-full sm:w-28">
-                  <SelectValue placeholder="Period" />
-                </SelectTrigger>
-                <SelectContent>
-                  {periods.map((p) => (
-                    <SelectItem key={p} value={p}>Period {p}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-emerald-600">{presentCount}</p>
-            <p className="text-xs text-muted-foreground">Present</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-destructive">{absentCount}</p>
-            <p className="text-xs text-muted-foreground">Absent</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-amber-600">{lateCount}</p>
-            <p className="text-xs text-muted-foreground">Late</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-blue-600">{excusedCount}</p>
-            <p className="text-xs text-muted-foreground">Excused</p>
-          </CardContent>
-        </Card>
+      {/* Date picker + stats bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border bg-card p-4">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Date:</span>
+          <Input
+            type="date"
+            value={selectedDate}
+            max={todayISO}
+            onChange={(e) => { void changeDate(e.target.value); }}
+            className="w-full sm:w-40"
+          />
+        </div>
+        <div className="flex flex-wrap gap-3 text-sm sm:ml-auto">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+            <span className="text-muted-foreground">{students.length} students</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="text-emerald-700 dark:text-emerald-400 font-medium">{stats.present} Present</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-destructive" />
+            <span className="text-destructive font-medium">{stats.absent} Absent</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-amber-500" />
+            <span className="text-amber-700 dark:text-amber-400 font-medium">{stats.late} Late</span>
+          </span>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Students ({classStudents.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {classStudents.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">
-              No students found for this class.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 px-3 py-2 text-xs font-medium text-muted-foreground border-b">
-                <span>Student</span>
-                <span className="w-16 text-center">Present</span>
-                <span className="w-16 text-center">Absent</span>
-                <span className="w-16 text-center">Late</span>
-                <span className="w-16 text-center">Excused</span>
-              </div>
-              {classStudents.map((student) => {
-                const sid = student.id;
-                const studentStatus = currentAttendance.find((a) => a.studentId === sid)?.status || 'present';
-                return (
-                  <div
-                    key={sid}
-                    className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 items-center rounded-lg border px-3 py-3"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">
-                        {student.user?.firstName ?? (typeof student.userId === 'object' && student.userId !== null ? (student.userId as unknown as { firstName?: string }).firstName : undefined) ?? student.firstName}{' '}
-                        {student.user?.lastName ?? (typeof student.userId === 'object' && student.userId !== null ? (student.userId as unknown as { lastName?: string }).lastName : undefined) ?? student.lastName}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{student.admissionNumber}</p>
-                    </div>
-                    <div className="w-16 flex justify-center">
-                      <Checkbox
-                        checked={studentStatus === 'present'}
-                        onCheckedChange={() => updateStatus(sid, 'present')}
-                      />
-                    </div>
-                    <div className="w-16 flex justify-center">
-                      <Checkbox
-                        checked={studentStatus === 'absent'}
-                        onCheckedChange={() => updateStatus(sid, 'absent')}
-                      />
-                    </div>
-                    <div className="w-16 flex justify-center">
-                      <Checkbox
-                        checked={studentStatus === 'late'}
-                        onCheckedChange={() => updateStatus(sid, 'late')}
-                      />
-                    </div>
-                    <div className="w-16 flex justify-center">
-                      <Checkbox
-                        checked={studentStatus === 'excused'}
-                        onCheckedChange={() => updateStatus(sid, 'excused')}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          <div className="mt-4 flex justify-end">
-            <Button onClick={saveAttendance} disabled={saved || saving}>
-              <Save className="mr-2 h-4 w-4" />
-              {saving ? 'Saving...' : saved ? 'Saved' : 'Submit Attendance'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Quick actions */}
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Users className="h-4 w-4" />
+          <span>Tap a status to mark each student</span>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="default" onClick={markAllPresent} className="flex-1 sm:flex-none">
+            <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />
+            Mark All Present
+          </Button>
+          <Button
+            size="default"
+            onClick={() => { void saveAttendance(); }}
+            disabled={saving || saved}
+            className="flex-1 sm:flex-none"
+          >
+            <Save className="mr-2 h-4 w-4" />
+            {saving ? 'Saving…' : saved ? 'Saved' : 'Save Attendance'}
+          </Button>
+        </div>
+      </div>
+
+      {/* Student list */}
+      {students.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title="No Students"
+          description="No students are enrolled in this class yet."
+        />
+      ) : (
+        <div className="space-y-2">
+          {students.map((student) => (
+            <StudentRow
+              key={student.id}
+              student={student}
+              status={attendance.get(student.id) ?? 'present'}
+              onUpdate={updateStatus}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Bottom save button (mobile convenience) */}
+      {students.length > 5 && (
+        <div className="flex justify-end pt-2 pb-4">
+          <Button
+            size="default"
+            onClick={() => { void saveAttendance(); }}
+            disabled={saving || saved}
+            className="w-full sm:w-auto"
+          >
+            <Save className="mr-2 h-4 w-4" />
+            {saving ? 'Saving…' : saved ? 'Saved' : 'Save Attendance'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
