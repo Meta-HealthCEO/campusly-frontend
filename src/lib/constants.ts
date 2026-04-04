@@ -184,6 +184,7 @@ export const ROUTES = {
   TEACHER_CURRICULUM_QUESTIONS: '/teacher/curriculum/questions',
   TEACHER_CURRICULUM_ASSESSMENTS: '/teacher/curriculum/assessments',
   TEACHER_CURRICULUM_PREVIEW: '/teacher/curriculum/preview',
+  TEACHER_CURRICULUM_AI_STUDIO: '/teacher/curriculum/ai-studio',
 
   // Teacher Workbench
   TEACHER_WORKBENCH: '/teacher/workbench',
@@ -389,6 +390,7 @@ export const TEACHER_NAV: NavItem[] = [
       { label: 'Question Bank', href: ROUTES.TEACHER_CURRICULUM_QUESTIONS, icon: HelpCircle },
       { label: 'Assessments', href: ROUTES.TEACHER_CURRICULUM_ASSESSMENTS, icon: PenTool },
       { label: 'Student Preview', href: ROUTES.TEACHER_CURRICULUM_PREVIEW, icon: GraduationCap },
+      { label: 'AI Studio', href: ROUTES.TEACHER_CURRICULUM_AI_STUDIO, icon: Sparkles, badge: 'AI' },
     ],
   },
   {
