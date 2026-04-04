@@ -27,7 +27,7 @@ export function useContentLibrary() {
       if (!schoolId) return;
       setLoading(true);
       try {
-        const params: Record<string, unknown> = { schoolId, ...filters };
+        const params: Record<string, unknown> = { ...filters };
         const response = await apiClient.get(BASE, { params });
         const raw = response.data.data ?? response.data;
         if (Array.isArray(raw)) {
@@ -66,7 +66,7 @@ export function useContentLibrary() {
   const createResource = useCallback(
     async (data: CreateResourcePayload): Promise<ContentResourceItem | null> => {
       try {
-        const response = await apiClient.post(BASE, { ...data, schoolId });
+        const response = await apiClient.post(BASE, data);
         toast.success('Resource created');
         return unwrapResponse<ContentResourceItem>(response);
       } catch (err: unknown) {
