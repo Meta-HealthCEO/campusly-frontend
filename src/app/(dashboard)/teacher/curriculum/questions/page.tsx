@@ -158,11 +158,6 @@ export default function TeacherQuestionsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Question Bank" description="Browse, create, and manage questions">
-        <Button variant="outline" disabled>
-          <Sparkles className="mr-2 size-4" />
-          Generate
-          {/* TODO: wire up AI generate dialog in Phase 3b */}
-        </Button>
         <Button onClick={handleOpenCreate}>
           <Plus className="mr-2 size-4" />
           Create Question
