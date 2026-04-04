@@ -106,7 +106,9 @@ export function ConfigStep({
             <Label>Subject <span className="text-destructive">*</span></Label>
             <Select value={subjectId} onValueChange={(v: unknown) => onSubjectChange(v as string)}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select subject" />
+                <SelectValue placeholder="Select subject">
+                  {subjects.find((s: Subject) => s.id === subjectId)?.name ?? 'Select subject'}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {subjects.map((s: Subject) => (
@@ -119,7 +121,9 @@ export function ConfigStep({
             <Label>Grade <span className="text-destructive">*</span></Label>
             <Select value={gradeId} onValueChange={(v: unknown) => onGradeChange(v as string)}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select grade" />
+                <SelectValue placeholder="Select grade">
+                  {grades.find((g: Grade) => g.id === gradeId)?.name ?? 'Select grade'}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {grades.map((g: Grade) => (
