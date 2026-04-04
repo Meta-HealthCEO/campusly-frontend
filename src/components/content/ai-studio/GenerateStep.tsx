@@ -30,9 +30,9 @@ const PROGRESS_STEPS = [
 const BLOCK_TYPES_BY_RESOURCE: Record<ResourceType, ContentBlockType[]> = {
   lesson: ['text', 'quiz', 'fill_blank', 'step_reveal', 'image'],
   worksheet: ['text', 'quiz', 'fill_blank', 'match_columns', 'ordering'],
-  activity: ['text', 'quiz', 'fill_blank', 'match_columns'],
-  study_notes: ['text', 'image', 'step_reveal'],
-  worked_example: ['text', 'step_reveal', 'image'],
+  activity: ['text', 'quiz', 'fill_blank', 'match_columns', 'image'],
+  study_notes: ['text', 'quiz', 'fill_blank', 'image', 'step_reveal'],
+  worked_example: ['text', 'quiz', 'fill_blank', 'step_reveal', 'image'],
 };
 
 export function GenerateStep({

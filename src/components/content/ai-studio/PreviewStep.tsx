@@ -116,20 +116,21 @@ export function PreviewStep({
       const submitted = await onPublish(resource.id);
       if (submitted) {
         const approved = await onReview(resource.id, { action: 'approve' });
-        if (approved) toast.success('Resource published successfully!');
+        if (approved) {
+          toast.success('Resource published and available to students!');
+        }
       }
     } catch (err: unknown) {
-      console.error('Publish failed:', err);
+      const msg = err instanceof Error ? err.message : 'Publish failed';
+      if (msg.includes('permission') || msg.includes('403')) {
+        toast.error('Submitted for review. An HOD or admin needs to approve it.');
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setPublishing(false);
     }
-  }, [resource.id, onPublish, onReview]);
-
-  const handleSaveDraft = useCallback(() => {
-    setSaving(true);
-    toast.success('Saved as draft in your Content Library');
-    setTimeout(() => setSaving(false), 500);
-  }, []);
+  }, [resource.id, onPublish, onReview, onResourceUpdated]);
 
   const handleEnterEdit = useCallback(() => {
     setEditedBlocks([...resource.blocks]);
@@ -269,10 +270,6 @@ export function PreviewStep({
           <Button variant="outline" onClick={onRegenerate}>
             <RefreshCw className="mr-1 h-4 w-4" />
             Regenerate
-          </Button>
-          <Button variant="outline" onClick={handleSaveDraft} disabled={saving}>
-            <Save className="mr-1 h-4 w-4" />
-            Save as Draft
           </Button>
           <Button
             variant="outline"
