@@ -33,7 +33,10 @@ export function useHomeworkTemplates() {
         id: (d._id as string) ?? (d.id as string) ?? '',
       })) as unknown as HomeworkTemplate[]);
     } catch (err: unknown) {
-      console.error('Failed to fetch templates', extractErrorMessage(err));
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 401 && status !== 403) {
+        console.error('Failed to fetch templates', extractErrorMessage(err));
+      }
     } finally {
       setLoading(false);
     }
