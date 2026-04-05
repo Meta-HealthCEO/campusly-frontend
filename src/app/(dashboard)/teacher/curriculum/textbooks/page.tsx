@@ -323,7 +323,7 @@ export default function TeacherTextbooksPage() {
       ) : (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {textbooks.map((tb: TextbookItem) => (
-            <TextbookCard key={tb.id} textbook={tb} onClick={setSelected} />
+            <TextbookCard key={tb.id} textbook={tb} onClick={(t) => refreshSelected(t.id)} />
           ))}
         </div>
       )}
