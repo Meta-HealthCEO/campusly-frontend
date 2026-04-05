@@ -153,7 +153,7 @@ export default function TeacherTextbooksPage() {
 
   const existingResourceIds = useMemo(() => {
     if (!selected || !targetChapterId) return new Set<string>();
-    const ch = selected.chapters.find((c: ChapterItem) => c.id === targetChapterId);
+    const ch = selected.chapters?.find((c: ChapterItem) => c.id === targetChapterId);
     if (!ch) return new Set<string>();
     return new Set(ch.resources.map((r) => {
       return typeof r.resourceId === 'object' ? r.resourceId.id : r.resourceId;
@@ -175,7 +175,7 @@ export default function TeacherTextbooksPage() {
   const handleAddResource = useCallback(
     async (resource: ContentResourceItem) => {
       if (!selected || !targetChapterId) return;
-      const ch = selected.chapters.find((c: ChapterItem) => c.id === targetChapterId);
+      const ch = selected.chapters?.find((c: ChapterItem) => c.id === targetChapterId);
       const nextOrder = ch ? ch.resources.length : 0;
       await addResourceToChapter(selected.id, targetChapterId, {
         resourceId: resource.id,
@@ -227,7 +227,7 @@ export default function TeacherTextbooksPage() {
           onOpenChange={setChapterFormOpen}
           onSubmit={handleChapterSubmit}
           editingChapter={editingChapter}
-          nextOrder={selected.chapters.length}
+          nextOrder={selected.chapters?.length ?? 0}
         />
 
         <ResourcePickerDialog
