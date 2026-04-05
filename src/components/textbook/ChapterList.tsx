@@ -231,7 +231,7 @@ export function ChapterList({
     onReorder(ids);
   };
 
-  if (chapters.length === 0) {
+  if ((chapters ?? []).length === 0) {
     return (
       <div className="space-y-4">
         <EmptyState
