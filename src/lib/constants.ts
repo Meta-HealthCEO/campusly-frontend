@@ -387,6 +387,7 @@ export const TEACHER_NAV: NavItem[] = [
     icon: Library,
     children: [
       { label: 'AI Studio', href: ROUTES.TEACHER_CURRICULUM_AI_STUDIO, icon: Sparkles, badge: 'AI' },
+      { label: 'Textbooks', href: '/teacher/curriculum/textbooks', icon: BookMarked },
       { label: 'Content Library', href: ROUTES.TEACHER_CURRICULUM_CONTENT, icon: BookOpen },
       { label: 'Question Bank', href: ROUTES.TEACHER_CURRICULUM_QUESTIONS, icon: HelpCircle },
       { label: 'Assessments', href: ROUTES.TEACHER_CURRICULUM_ASSESSMENTS, icon: PenTool },

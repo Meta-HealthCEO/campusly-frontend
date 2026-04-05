@@ -1,0 +1,38 @@
+<h2>What level of diagram rendering do you need?</h2>
+<p class="subtitle">These represent different levels of investment and complexity</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Static Rendered Diagrams</h3>
+      <p>AI generates diagram code &rarr; rendered as crisp SVG images on screen. Students <strong>see</strong> the diagram but can't interact with it. Like a printed textbook — clean, accurate, professional.</p>
+      <div style="margin-top:8px; padding:8px 12px; background:rgba(255,255,255,0.05); border-radius:6px; font-size:13px; color:#94a3b8;">
+        <strong>Examples:</strong> A parabola with labeled intercepts, a circle geometry diagram with marked angles, a Venn diagram with shaded regions, a number line with plotted fractions
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Interactive Diagrams</h3>
+      <p>Same as A, but students can <strong>interact</strong> — drag points on a graph, rotate 3D shapes, zoom into constructions, hover for coordinates. Like GeoGebra or Desmos embedded in your platform.</p>
+      <div style="margin-top:8px; padding:8px 12px; background:rgba(255,255,255,0.05); border-radius:6px; font-size:13px; color:#94a3b8;">
+        <strong>Examples:</strong> Drag vertex of a triangle to see angle changes, slide parameter to see how parabola shifts, explore transformation geometry by moving shapes
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Static Now, Interactive Later</h3>
+      <p>Ship high-quality static diagrams first (Option A), but architect the system so interactive features can be added per diagram type over time. Pragmatic path to world-class.</p>
+      <div style="margin-top:8px; padding:8px 12px; background:rgba(255,255,255,0.05); border-radius:6px; font-size:13px; color:#94a3b8;">
+        <strong>Phase 1:</strong> Beautiful SVG diagrams for all math question types<br>
+        <strong>Phase 2:</strong> Add interactivity to graphs, geometry, and 3D shapes when ready
+      </div>
+    </div>
+  </div>
+</div>

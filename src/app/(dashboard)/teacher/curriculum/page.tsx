@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import {
-  BookOpen, HelpCircle, PenTool, BarChart3, ClipboardList,
-  Eye, Sparkles, Camera, AlertTriangle,
+  BookOpen, BookMarked, HelpCircle, PenTool, BarChart3, ClipboardList,
+  Eye, Sparkles, Camera, AlertTriangle, FileText,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,12 @@ const CURRICULUM_CARDS: HubCard[] = [
     href: '/teacher/curriculum/ai-studio',
     icon: Sparkles,
     badge: 'AI',
+  },
+  {
+    title: 'Textbooks',
+    description: 'Create and manage digital textbooks with chapters and lessons for each subject.',
+    href: '/teacher/curriculum/textbooks',
+    icon: BookMarked,
   },
   {
     title: 'Content Library',

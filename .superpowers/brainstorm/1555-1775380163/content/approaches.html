@@ -1,0 +1,105 @@
+<h2>Three Approaches for Math Diagram Rendering</h2>
+<p class="subtitle">All use server-side rendering. The difference is what the AI generates and how it gets rendered.</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Full TikZ Pipeline</h3>
+      <p>Claude generates <strong>TikZ/LaTeX code</strong> for every diagram &rarr; backend renders via TeX Live (Docker) &rarr; returns clean SVG &rarr; frontend displays it.</p>
+
+      <div style="margin-top:12px; font-size:13px; font-family:monospace; background:rgba(255,255,255,0.05); padding:12px; border-radius:6px; line-height:1.8; color:#94a3b8;">
+        Claude &rarr; TikZ code &rarr; <strong>TeX Live (Docker)</strong> &rarr; SVG &rarr; stored as URL &rarr; &lt;img&gt;
+      </div>
+
+      <div style="margin-top:12px;">
+        <div class="pros-cons">
+          <div class="pros"><h4>Pros</h4>
+            <ul>
+              <li>TikZ is the <strong>gold standard</strong> for academic math diagrams</li>
+              <li>Claude is exceptionally good at generating TikZ</li>
+              <li>Handles ALL math diagram types (geometry, graphs, constructions, Venn, number lines, 3D)</li>
+              <li>Output is publication-quality — identical to what you'd see in a CAPS textbook</li>
+              <li>Massive TikZ ecosystem (pgfplots for graphs, tkz-euclide for geometry, circuitikz for science later)</li>
+            </ul>
+          </div>
+          <div class="cons"><h4>Cons</h4>
+            <ul>
+              <li>TeX Live Docker image is large (~1-2GB)</li>
+              <li>Rendering takes 1-3 seconds per diagram</li>
+              <li>TikZ errors can be cryptic to debug</li>
+              <li>Adding interactivity later requires mapping SVG elements back to data</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Structured JSON + Node Canvas Renderers</h3>
+      <p>Claude generates <strong>structured JSON</strong> describing the diagram &rarr; backend renders with Node.js libraries (D3, sharp, canvas) &rarr; returns SVG/PNG.</p>
+
+      <div style="margin-top:12px; font-size:13px; font-family:monospace; background:rgba(255,255,255,0.05); padding:12px; border-radius:6px; line-height:1.8; color:#94a3b8;">
+        Claude &rarr; JSON spec &rarr; <strong>Custom Node renderers</strong> &rarr; SVG &rarr; stored as URL &rarr; &lt;img&gt;
+      </div>
+
+      <div style="margin-top:12px;">
+        <div class="pros-cons">
+          <div class="pros"><h4>Pros</h4>
+            <ul>
+              <li>No Docker/LaTeX dependency — runs in your existing Node.js backend</li>
+              <li>Structured data makes interactivity much easier later (JSON &rarr; React component)</li>
+              <li>Faster rendering (milliseconds, not seconds)</li>
+              <li>Full control over styling and output</li>
+            </ul>
+          </div>
+          <div class="cons"><h4>Cons</h4>
+            <ul>
+              <li>Must build a renderer for <strong>every diagram type</strong> (graphs, geometry, Venn, number lines, etc.)</li>
+              <li>Months of work to match TikZ quality across all CAPS topics</li>
+              <li>Claude's JSON descriptions may lose nuance that TikZ captures naturally</li>
+              <li>Risk of inconsistent quality across diagram types</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>TikZ Primary + Structured Data Sidecar <span style="color:#22c55e; font-size:12px; margin-left:8px;">&#9733; RECOMMENDED</span></h3>
+      <p>Claude generates <strong>both TikZ code AND a structured JSON description</strong> for each diagram. Backend renders TikZ &rarr; SVG for display now. JSON is stored alongside for future interactivity.</p>
+
+      <div style="margin-top:12px; font-size:13px; font-family:monospace; background:rgba(255,255,255,0.05); padding:12px; border-radius:6px; line-height:1.8; color:#94a3b8;">
+        Claude &rarr; { tikz: "...", data: {...} } &rarr; <strong>TeX Live</strong> &rarr; SVG (display)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&rarr; JSON stored (future interactive use)
+      </div>
+
+      <div style="margin-top:12px;">
+        <div class="pros-cons">
+          <div class="pros"><h4>Pros</h4>
+            <ul>
+              <li>Publication-quality diagrams <strong>now</strong> via TikZ</li>
+              <li>Structured data ready for interactive renderers <strong>later</strong></li>
+              <li>Best of both worlds — no quality compromise, no future rework</li>
+              <li>JSON sidecar enables: search by diagram properties, accessibility descriptions, difficulty analysis</li>
+              <li>Can progressively replace TikZ with interactive renderers per diagram type</li>
+            </ul>
+          </div>
+          <div class="cons"><h4>Cons</h4>
+            <ul>
+              <li>AI prompt is more complex (must output both formats)</li>
+              <li>More tokens per question generation (cost ~20-30% higher)</li>
+              <li>Still needs TeX Live Docker for Phase 1</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

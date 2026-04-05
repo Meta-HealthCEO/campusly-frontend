@@ -5,7 +5,9 @@
       "Bash(docker run:*)",
       "Bash(xargs wc:*)",
       "Bash(npx tsx:*)",
-      "Bash(grep -l \"curriculum\" \"c:\\\\Users\\\\shaun\\\\campusly-frontend\\\\scopes\"/*)"
+      "Bash(grep -l \"curriculum\" \"c:\\\\Users\\\\shaun\\\\campusly-frontend\\\\scopes\"/*)",
+      "mcp__ecomed-files__list_allowed_directories",
+      "mcp__ecomed-files__list_directory"
     ]
   }
 }

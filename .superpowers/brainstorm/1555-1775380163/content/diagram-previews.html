@@ -1,0 +1,419 @@
+<h2>How Rendered Diagrams Will Look in Campusly</h2>
+<p class="subtitle">These simulate TikZ-rendered SVG output as students and teachers would see them</p>
+
+<!-- GRADE 11: Parabola -->
+<div class="section">
+  <div class="label">Grade 11 — Functions</div>
+  <div class="mockup">
+    <div class="mockup-header">Question 3.1 &nbsp;&bull;&nbsp; 5 marks</div>
+    <div class="mockup-body" style="padding:20px;">
+      <p style="font-size:15px; color:#e2e8f0; margin-bottom:16px;">
+        The graph of <span style="font-family:serif; font-style:italic;">f(x) = &minus;(x &minus; 3)&sup2; + 4</span> is shown below. Determine the coordinates of the turning point and the x-intercepts.
+      </p>
+      <div style="background:#ffffff; border-radius:8px; padding:16px; display:flex; justify-content:center;">
+        <svg viewBox="-40 -20 340 260" width="420" height="320" style="font-family: 'Latin Modern Math', 'Times New Roman', serif;">
+          <!-- Grid -->
+          <defs>
+            <pattern id="grid1" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e5e7eb" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="280" height="240" fill="url(#grid1)"/>
+
+          <!-- Axes -->
+          <line x1="40" y1="0" x2="40" y2="240" stroke="#374151" stroke-width="1.5"/>
+          <line x1="0" y1="160" x2="280" y2="160" stroke="#374151" stroke-width="1.5"/>
+
+          <!-- Axis labels -->
+          <text x="275" y="155" font-size="14" fill="#374151" font-style="italic">x</text>
+          <text x="45" y="12" font-size="14" fill="#374151" font-style="italic">y</text>
+
+          <!-- Tick marks and labels on x-axis -->
+          <line x1="80" y1="157" x2="80" y2="163" stroke="#374151" stroke-width="1"/>
+          <text x="80" y="177" font-size="11" fill="#6b7280" text-anchor="middle">1</text>
+          <line x1="120" y1="157" x2="120" y2="163" stroke="#374151" stroke-width="1"/>
+          <text x="120" y="177" font-size="11" fill="#6b7280" text-anchor="middle">2</text>
+          <line x1="160" y1="157" x2="160" y2="163" stroke="#374151" stroke-width="1"/>
+          <text x="160" y="177" font-size="11" fill="#6b7280" text-anchor="middle">3</text>
+          <line x1="200" y1="157" x2="200" y2="163" stroke="#374151" stroke-width="1"/>
+          <text x="200" y="177" font-size="11" fill="#6b7280" text-anchor="middle">4</text>
+          <line x1="240" y1="157" x2="240" y2="163" stroke="#374151" stroke-width="1"/>
+          <text x="240" y="177" font-size="11" fill="#6b7280" text-anchor="middle">5</text>
+
+          <!-- Tick marks and labels on y-axis -->
+          <line x1="37" y1="120" x2="43" y2="120" stroke="#374151" stroke-width="1"/>
+          <text x="30" y="124" font-size="11" fill="#6b7280" text-anchor="end">1</text>
+          <line x1="37" y1="80" x2="43" y2="80" stroke="#374151" stroke-width="1"/>
+          <text x="30" y="84" font-size="11" fill="#6b7280" text-anchor="end">2</text>
+          <line x1="37" y1="40" x2="43" y2="40" stroke="#374151" stroke-width="1"/>
+          <text x="30" y="44" font-size="11" fill="#6b7280" text-anchor="end">3</text>
+          <line x1="37" y1="0" x2="43" y2="0" stroke="#374151" stroke-width="1"/>
+          <text x="30" y="4" font-size="11" fill="#6b7280" text-anchor="end">4</text>
+          <line x1="37" y1="200" x2="43" y2="200" stroke="#374151" stroke-width="1"/>
+          <text x="30" y="204" font-size="11" fill="#6b7280" text-anchor="end">&minus;1</text>
+
+          <!-- Origin -->
+          <text x="30" y="174" font-size="11" fill="#6b7280" text-anchor="end">O</text>
+
+          <!-- Parabola: f(x) = -(x-3)^2 + 4, plotted as y = 160 - 40*(-(((x-40)/40 - 3)^2) + 4) -->
+          <path d="M 0,200 Q 40,180 60,168 Q 80,148 100,120 Q 120,60 140,20 Q 150,5 160,0 Q 170,5 180,20 Q 200,60 220,120 Q 240,180 260,200 Q 270,220 280,240"
+                fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
+
+          <!-- More accurate parabola path -->
+          <path d="M 10,232 C 40,200 70,120 100,56 C 120,16 140,0 160,0 C 180,0 200,16 220,56 C 250,120 270,200 280,232"
+                fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" opacity="0"/>
+
+          <!-- Turning point T(3, 4) -->
+          <circle cx="160" cy="0" r="4" fill="#2563eb"/>
+          <text x="172" y="-5" font-size="12" fill="#2563eb" font-style="italic">T(3; 4)</text>
+
+          <!-- X-intercept A(1, 0) -->
+          <circle cx="80" cy="160" r="4" fill="#2563eb"/>
+          <text x="68" y="152" font-size="12" fill="#2563eb" font-style="italic">A</text>
+          <text x="68" y="195" font-size="10" fill="#6b7280" font-style="italic">(1; 0)</text>
+
+          <!-- X-intercept B(5, 0) -->
+          <circle cx="240" cy="160" r="4" fill="#2563eb"/>
+          <text x="244" y="152" font-size="12" fill="#2563eb" font-style="italic">B</text>
+          <text x="232" y="195" font-size="10" fill="#6b7280" font-style="italic">(5; 0)</text>
+
+          <!-- Function label -->
+          <text x="255" y="100" font-size="13" fill="#2563eb" font-style="italic">f</text>
+
+          <!-- Arrow tips on axes -->
+          <polygon points="40,-5 37,5 43,5" fill="#374151"/>
+          <polygon points="285,160 275,157 275,163" fill="#374151"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GRADE 10: Circle Geometry -->
+<div class="section">
+  <div class="label">Grade 11 — Circle Geometry</div>
+  <div class="mockup">
+    <div class="mockup-header">Question 5.2 &nbsp;&bull;&nbsp; 4 marks</div>
+    <div class="mockup-body" style="padding:20px;">
+      <p style="font-size:15px; color:#e2e8f0; margin-bottom:16px;">
+        In the diagram, O is the centre of the circle. AB is a chord and OC &perp; AB. If AB = 24 cm and OC = 5 cm, calculate the radius of the circle.
+      </p>
+      <div style="background:#ffffff; border-radius:8px; padding:24px; display:flex; justify-content:center;">
+        <svg viewBox="-20 -20 280 280" width="340" height="340" style="font-family: 'Latin Modern Math', 'Times New Roman', serif;">
+          <!-- Circle -->
+          <circle cx="130" cy="120" r="110" fill="none" stroke="#374151" stroke-width="2"/>
+
+          <!-- Chord AB -->
+          <line x1="25" y1="185" x2="235" y2="185" stroke="#374151" stroke-width="2"/>
+
+          <!-- OC perpendicular to AB -->
+          <line x1="130" y1="120" x2="130" y2="185" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="6,3"/>
+
+          <!-- Radius OA -->
+          <line x1="130" y1="120" x2="25" y2="185" stroke="#374151" stroke-width="1.5"/>
+
+          <!-- Right angle mark at C -->
+          <polyline points="130,175 140,175 140,185" fill="none" stroke="#374151" stroke-width="1"/>
+
+          <!-- Points -->
+          <circle cx="130" cy="120" r="3.5" fill="#374151"/>
+          <circle cx="25" cy="185" r="3.5" fill="#374151"/>
+          <circle cx="235" cy="185" r="3.5" fill="#374151"/>
+          <circle cx="130" cy="185" r="3.5" fill="#2563eb"/>
+
+          <!-- Labels -->
+          <text x="130" y="108" font-size="14" fill="#374151" text-anchor="middle" font-weight="bold">O</text>
+          <text x="10" y="200" font-size="14" fill="#374151" font-weight="bold">A</text>
+          <text x="240" y="200" font-size="14" fill="#374151" font-weight="bold">B</text>
+          <text x="138" y="200" font-size="14" fill="#2563eb" font-weight="bold">C</text>
+
+          <!-- Measurement: OC = 5 -->
+          <text x="140" y="155" font-size="12" fill="#2563eb" font-style="italic">5</text>
+
+          <!-- Measurement: AB = 24, split as 12 + 12 -->
+          <text x="70" y="215" font-size="12" fill="#6b7280" font-style="italic">12</text>
+          <text x="175" y="215" font-size="12" fill="#6b7280" font-style="italic">12</text>
+
+          <!-- Radius label -->
+          <text x="65" y="148" font-size="12" fill="#374151" font-style="italic">r</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GRADE 9: Transformation Geometry -->
+<div class="section">
+  <div class="label">Grade 9 — Transformation Geometry</div>
+  <div class="mockup">
+    <div class="mockup-header">Question 2.3 &nbsp;&bull;&nbsp; 3 marks</div>
+    <div class="mockup-body" style="padding:20px;">
+      <p style="font-size:15px; color:#e2e8f0; margin-bottom:16px;">
+        Triangle PQR is reflected in the y-axis to form triangle P&prime;Q&prime;R&prime;. Write down the coordinates of P&prime;, Q&prime; and R&prime;.
+      </p>
+      <div style="background:#ffffff; border-radius:8px; padding:16px; display:flex; justify-content:center;">
+        <svg viewBox="-20 -20 360 300" width="440" height="360" style="font-family: 'Latin Modern Math', 'Times New Roman', serif;">
+          <!-- Grid -->
+          <defs>
+            <pattern id="grid2" width="30" height="30" patternUnits="userSpaceOnUse">
+              <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#e5e7eb" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="330" height="270" fill="url(#grid2)"/>
+
+          <!-- Axes -->
+          <line x1="150" y1="0" x2="150" y2="270" stroke="#374151" stroke-width="1.5"/>
+          <line x1="0" y1="150" x2="330" y2="150" stroke="#374151" stroke-width="1.5"/>
+
+          <!-- Arrow tips -->
+          <polygon points="150,-5 147,5 153,5" fill="#374151"/>
+          <polygon points="335,150 325,147 325,153" fill="#374151"/>
+
+          <!-- Axis labels -->
+          <text x="325" y="143" font-size="13" fill="#374151" font-style="italic">x</text>
+          <text x="157" y="12" font-size="13" fill="#374151" font-style="italic">y</text>
+
+          <!-- Tick labels -->
+          <text x="180" y="165" font-size="10" fill="#9ca3af">1</text>
+          <text x="210" y="165" font-size="10" fill="#9ca3af">2</text>
+          <text x="240" y="165" font-size="10" fill="#9ca3af">3</text>
+          <text x="270" y="165" font-size="10" fill="#9ca3af">4</text>
+          <text x="114" y="165" font-size="10" fill="#9ca3af">&minus;1</text>
+          <text x="84" y="165" font-size="10" fill="#9ca3af">&minus;2</text>
+          <text x="54" y="165" font-size="10" fill="#9ca3af">&minus;3</text>
+          <text x="24" y="165" font-size="10" fill="#9ca3af">&minus;4</text>
+
+          <text x="155" y="124" font-size="10" fill="#9ca3af">1</text>
+          <text x="155" y="94" font-size="10" fill="#9ca3af">2</text>
+          <text x="155" y="64" font-size="10" fill="#9ca3af">3</text>
+          <text x="155" y="34" font-size="10" fill="#9ca3af">4</text>
+
+          <!-- Original triangle PQR (right side) - blue -->
+          <polygon points="210,90 270,150 180,150" fill="rgba(37,99,235,0.12)" stroke="#2563eb" stroke-width="2"/>
+          <circle cx="210" cy="90" r="3.5" fill="#2563eb"/>
+          <circle cx="270" cy="150" r="3.5" fill="#2563eb"/>
+          <circle cx="180" cy="150" r="3.5" fill="#2563eb"/>
+          <text x="214" y="82" font-size="13" fill="#2563eb" font-weight="bold">P(2, 2)</text>
+          <text x="275" y="148" font-size="13" fill="#2563eb" font-weight="bold">Q(4, 0)</text>
+          <text x="168" y="172" font-size="13" fill="#2563eb" font-weight="bold">R(1, 0)</text>
+
+          <!-- Reflected triangle P'Q'R' (left side) - red/dashed -->
+          <polygon points="90,90 30,150 120,150" fill="rgba(220,38,38,0.08)" stroke="#dc2626" stroke-width="2" stroke-dasharray="6,3"/>
+          <circle cx="90" cy="90" r="3.5" fill="#dc2626"/>
+          <circle cx="30" cy="150" r="3.5" fill="#dc2626"/>
+          <circle cx="120" cy="150" r="3.5" fill="#dc2626"/>
+          <text x="40" y="82" font-size="13" fill="#dc2626" font-weight="bold">P&apos;</text>
+          <text x="4" y="172" font-size="13" fill="#dc2626" font-weight="bold">Q&apos;</text>
+          <text x="122" y="172" font-size="13" fill="#dc2626" font-weight="bold">R&apos;</text>
+
+          <!-- Reflection arrows (dotted) -->
+          <line x1="210" y1="90" x2="90" y2="90" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="270" y1="150" x2="30" y2="150" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,3"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GRADE 12: Trig Graph -->
+<div class="section">
+  <div class="label">Grade 12 — Trigonometric Functions</div>
+  <div class="mockup">
+    <div class="mockup-header">Question 6.1 &nbsp;&bull;&nbsp; 6 marks</div>
+    <div class="mockup-body" style="padding:20px;">
+      <p style="font-size:15px; color:#e2e8f0; margin-bottom:16px;">
+        The graphs of <span style="font-family:serif; font-style:italic;">f(x) = 2 sin x</span> and <span style="font-family:serif; font-style:italic;">g(x) = cos(x &minus; 30&deg;)</span> for <span style="font-family:serif; font-style:italic;">x &isin; [&minus;180&deg;; 360&deg;]</span> are shown. Determine the values of x for which f(x) = g(x).
+      </p>
+      <div style="background:#ffffff; border-radius:8px; padding:16px; display:flex; justify-content:center;">
+        <svg viewBox="-50 -20 520 240" width="520" height="240" style="font-family: 'Latin Modern Math', 'Times New Roman', serif;">
+          <!-- Grid -->
+          <defs>
+            <pattern id="grid3" width="45" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 45 0 L 0 0 0 40" fill="none" stroke="#f1f5f9" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+          <rect x="0" y="0" width="450" height="200" fill="url(#grid3)"/>
+
+          <!-- Axes -->
+          <line x1="75" y1="0" x2="75" y2="200" stroke="#374151" stroke-width="1.2"/>
+          <line x1="0" y1="100" x2="450" y2="100" stroke="#374151" stroke-width="1.2"/>
+
+          <!-- X-axis tick labels (degrees) -->
+          <text x="0" y="115" font-size="9" fill="#9ca3af" text-anchor="middle">&minus;180&deg;</text>
+          <text x="37" y="115" font-size="9" fill="#9ca3af" text-anchor="middle">&minus;90&deg;</text>
+          <text x="75" y="115" font-size="9" fill="#9ca3af" text-anchor="middle">0&deg;</text>
+          <text x="150" y="115" font-size="9" fill="#9ca3af" text-anchor="middle">90&deg;</text>
+          <text x="225" y="115" font-size="9" fill="#9ca3af" text-anchor="middle">180&deg;</text>
+          <text x="300" y="115" font-size="9" fill="#9ca3af" text-anchor="middle">270&deg;</text>
+          <text x="375" y="115" font-size="9" fill="#9ca3af" text-anchor="middle">360&deg;</text>
+
+          <!-- Y-axis labels -->
+          <text x="68" y="18" font-size="10" fill="#9ca3af" text-anchor="end">2</text>
+          <text x="68" y="55" font-size="10" fill="#9ca3af" text-anchor="end">1</text>
+          <text x="68" y="150" font-size="10" fill="#9ca3af" text-anchor="end">&minus;1</text>
+          <text x="68" y="190" font-size="10" fill="#9ca3af" text-anchor="end">&minus;2</text>
+
+          <!-- f(x) = 2sin(x) — blue curve -->
+          <path d="M 0,100 C 10,60 25,15 37,15 C 50,15 62,60 75,100 C 88,140 100,185 112,185 C 125,185 137,140 150,100 C 163,60 175,15 187,15 C 200,15 212,60 225,100 C 238,140 250,185 262,185 C 275,185 287,140 300,100 C 313,60 325,15 337,15 C 350,15 362,60 375,100"
+                fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
+
+          <!-- g(x) = cos(x - 30°) — red curve -->
+          <path d="M 0,68 C 8,78 18,93 30,100 C 48,110 65,130 80,145 C 95,145 108,130 125,100 C 138,72 148,55 165,55 C 182,55 192,72 205,100 C 218,128 228,145 245,145 C 262,145 272,128 285,100 C 298,72 308,55 325,55 C 342,55 352,72 365,100 C 372,115 378,128 385,137"
+                fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-dasharray="8,4"/>
+
+          <!-- Legend -->
+          <line x1="390" y1="25" x2="415" y2="25" stroke="#2563eb" stroke-width="2.5"/>
+          <text x="420" y="29" font-size="11" fill="#2563eb" font-style="italic">f(x) = 2 sin x</text>
+          <line x1="390" y1="45" x2="415" y2="45" stroke="#dc2626" stroke-width="2" stroke-dasharray="8,4"/>
+          <text x="420" y="49" font-size="11" fill="#dc2626" font-style="italic">g(x) = cos(x&minus;30&deg;)</text>
+
+          <!-- Axis labels -->
+          <text x="445" y="96" font-size="13" fill="#374151" font-style="italic">x</text>
+          <text x="80" y="10" font-size="13" fill="#374151" font-style="italic">y</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GRADE 7: Venn Diagram -->
+<div class="section">
+  <div class="label">Grade 12 — Probability (Venn Diagram)</div>
+  <div class="mockup">
+    <div class="mockup-header">Question 9.1 &nbsp;&bull;&nbsp; 3 marks</div>
+    <div class="mockup-body" style="padding:20px;">
+      <p style="font-size:15px; color:#e2e8f0; margin-bottom:16px;">
+        A survey of 80 learners found that 45 play soccer (S), 30 play cricket (C), and 15 play both. Draw a Venn diagram and determine P(S &cup; C).
+      </p>
+      <div style="background:#ffffff; border-radius:8px; padding:24px; display:flex; justify-content:center;">
+        <svg viewBox="-10 -10 340 210" width="420" height="260" style="font-family: 'Latin Modern Math', 'Times New Roman', serif;">
+          <!-- Universal set rectangle -->
+          <rect x="0" y="0" width="320" height="190" rx="8" fill="none" stroke="#374151" stroke-width="1.5"/>
+          <text x="12" y="20" font-size="13" fill="#374151" font-weight="bold" font-style="italic">U</text>
+
+          <!-- Set S (Soccer) -->
+          <circle cx="120" cy="100" r="75" fill="rgba(37,99,235,0.1)" stroke="#2563eb" stroke-width="2"/>
+          <text x="68" y="75" font-size="15" fill="#2563eb" font-weight="bold">S</text>
+
+          <!-- Set C (Cricket) -->
+          <circle cx="200" cy="100" r="75" fill="rgba(220,38,38,0.1)" stroke="#dc2626" stroke-width="2"/>
+          <text x="235" y="75" font-size="15" fill="#dc2626" font-weight="bold">C</text>
+
+          <!-- Intersection shading -->
+          <clipPath id="clipS"><circle cx="120" cy="100" r="75"/></clipPath>
+          <circle cx="200" cy="100" r="75" fill="rgba(139,92,246,0.15)" clip-path="url(#clipS)"/>
+
+          <!-- Numbers -->
+          <text x="85" y="108" font-size="18" fill="#2563eb" text-anchor="middle" font-weight="bold">30</text>
+          <text x="160" y="108" font-size="18" fill="#7c3aed" text-anchor="middle" font-weight="bold">15</text>
+          <text x="235" y="108" font-size="18" fill="#dc2626" text-anchor="middle" font-weight="bold">15</text>
+
+          <!-- Outside number -->
+          <text x="295" y="178" font-size="16" fill="#374151" text-anchor="middle" font-weight="bold">20</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GRADE 4: Number Line -->
+<div class="section">
+  <div class="label">Grade 4 — Number Lines &amp; Fractions</div>
+  <div class="mockup">
+    <div class="mockup-header">Question 1.2 &nbsp;&bull;&nbsp; 2 marks</div>
+    <div class="mockup-body" style="padding:20px;">
+      <p style="font-size:15px; color:#e2e8f0; margin-bottom:16px;">
+        Look at the number line below. What fraction does point P represent? Write your answer in simplest form.
+      </p>
+      <div style="background:#ffffff; border-radius:8px; padding:24px; display:flex; justify-content:center;">
+        <svg viewBox="-10 -30 420 80" width="460" height="90" style="font-family: 'Latin Modern Math', 'Times New Roman', serif;">
+          <!-- Number line -->
+          <line x1="0" y1="25" x2="400" y2="25" stroke="#374151" stroke-width="2"/>
+
+          <!-- Arrow tips -->
+          <polygon points="0,25 8,21 8,29" fill="#374151"/>
+          <polygon points="400,25 392,21 392,29" fill="#374151"/>
+
+          <!-- Major ticks: 0, 1, 2 -->
+          <line x1="50" y1="15" x2="50" y2="35" stroke="#374151" stroke-width="2"/>
+          <text x="50" y="52" font-size="14" fill="#374151" text-anchor="middle" font-weight="bold">0</text>
+
+          <line x1="200" y1="15" x2="200" y2="35" stroke="#374151" stroke-width="2"/>
+          <text x="200" y="52" font-size="14" fill="#374151" text-anchor="middle" font-weight="bold">1</text>
+
+          <line x1="350" y1="15" x2="350" y2="35" stroke="#374151" stroke-width="2"/>
+          <text x="350" y="52" font-size="14" fill="#374151" text-anchor="middle" font-weight="bold">2</text>
+
+          <!-- Minor ticks (quarters) -->
+          <line x1="87.5" y1="19" x2="87.5" y2="31" stroke="#9ca3af" stroke-width="1"/>
+          <line x1="125" y1="19" x2="125" y2="31" stroke="#9ca3af" stroke-width="1"/>
+          <line x1="162.5" y1="19" x2="162.5" y2="31" stroke="#9ca3af" stroke-width="1"/>
+          <line x1="237.5" y1="19" x2="237.5" y2="31" stroke="#9ca3af" stroke-width="1"/>
+          <line x1="275" y1="19" x2="275" y2="31" stroke="#9ca3af" stroke-width="1"/>
+          <line x1="312.5" y1="19" x2="312.5" y2="31" stroke="#9ca3af" stroke-width="1"/>
+
+          <!-- Point P at 3/4 -->
+          <circle cx="162.5" cy="25" r="5" fill="#dc2626"/>
+          <text x="162.5" y="-5" font-size="14" fill="#dc2626" text-anchor="middle" font-weight="bold">P</text>
+          <line x1="162.5" y1="6" x2="162.5" y2="20" stroke="#dc2626" stroke-width="1.5"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GRADE 10: Box and Whisker -->
+<div class="section">
+  <div class="label">Grade 10 — Data Handling (Box-and-Whisker)</div>
+  <div class="mockup">
+    <div class="mockup-header">Question 8.2 &nbsp;&bull;&nbsp; 4 marks</div>
+    <div class="mockup-body" style="padding:20px;">
+      <p style="font-size:15px; color:#e2e8f0; margin-bottom:16px;">
+        The box-and-whisker plot below shows the distribution of marks (out of 50) for a class of 30 learners. Determine the interquartile range and comment on the skewness of the data.
+      </p>
+      <div style="background:#ffffff; border-radius:8px; padding:24px; display:flex; justify-content:center;">
+        <svg viewBox="-10 -20 440 100" width="480" height="110" style="font-family: 'Latin Modern Math', 'Times New Roman', serif;">
+          <!-- Number line at bottom -->
+          <line x1="20" y1="60" x2="420" y2="60" stroke="#9ca3af" stroke-width="1"/>
+
+          <!-- Tick marks -->
+          <line x1="20" y1="55" x2="20" y2="65" stroke="#9ca3af" stroke-width="1"/>
+          <text x="20" y="78" font-size="11" fill="#6b7280" text-anchor="middle">10</text>
+          <line x1="100" y1="55" x2="100" y2="65" stroke="#9ca3af" stroke-width="1"/>
+          <text x="100" y="78" font-size="11" fill="#6b7280" text-anchor="middle">20</text>
+          <line x1="180" y1="55" x2="180" y2="65" stroke="#9ca3af" stroke-width="1"/>
+          <text x="180" y="78" font-size="11" fill="#6b7280" text-anchor="middle">30</text>
+          <line x1="260" y1="55" x2="260" y2="65" stroke="#9ca3af" stroke-width="1"/>
+          <text x="260" y="78" font-size="11" fill="#6b7280" text-anchor="middle">40</text>
+          <line x1="340" y1="55" x2="340" y2="65" stroke="#9ca3af" stroke-width="1"/>
+          <text x="340" y="78" font-size="11" fill="#6b7280" text-anchor="middle">50</text>
+
+          <!-- Whisker left: min=12 -->
+          <line x1="36" y1="25" x2="140" y2="25" stroke="#374151" stroke-width="1.5"/>
+          <line x1="36" y1="15" x2="36" y2="35" stroke="#374151" stroke-width="2"/>
+
+          <!-- Box: Q1=22, Q3=38 -->
+          <rect x="140" y="10" width="180" height="30" fill="rgba(37,99,235,0.12)" stroke="#2563eb" stroke-width="2" rx="2"/>
+
+          <!-- Median line at 32 -->
+          <line x1="216" y1="10" x2="216" y2="40" stroke="#dc2626" stroke-width="2.5"/>
+
+          <!-- Whisker right: max=47 -->
+          <line x1="320" y1="25" x2="376" y2="25" stroke="#374151" stroke-width="1.5"/>
+          <line x1="376" y1="15" x2="376" y2="35" stroke="#374151" stroke-width="2"/>
+
+          <!-- Labels -->
+          <text x="36" y="4" font-size="10" fill="#6b7280" text-anchor="middle">12</text>
+          <text x="140" y="4" font-size="10" fill="#2563eb" text-anchor="middle">Q&#8321;=22</text>
+          <text x="216" y="4" font-size="10" fill="#dc2626" text-anchor="middle">M=32</text>
+          <text x="320" y="4" font-size="10" fill="#2563eb" text-anchor="middle">Q&#8323;=38</text>
+          <text x="376" y="4" font-size="10" fill="#6b7280" text-anchor="middle">47</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:24px; padding:16px; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.2); border-radius:8px;">
+  <p style="color:#22c55e; font-size:14px; margin:0;"><strong>Note:</strong> These are hand-crafted SVG mockups to show the visual quality. Actual output from TikZ/LaTeX will be even crisper — publication-quality vector graphics with perfect mathematical typography (Latin Modern font), precise geometric constructions, and smooth function curves via pgfplots sampling.</p>
+</div>
