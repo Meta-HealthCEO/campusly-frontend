@@ -221,7 +221,7 @@ export function ChapterList({
   onAddResource,
   onRemoveResource,
 }: ChapterListProps) {
-  const sorted = chapters.slice().sort((a: ChapterItem, b: ChapterItem) => a.order - b.order);
+  const sorted = (chapters ?? []).slice().sort((a: ChapterItem, b: ChapterItem) => a.order - b.order);
 
   const move = (index: number, direction: -1 | 1) => {
     const ids = sorted.map((c: ChapterItem) => c.id);
