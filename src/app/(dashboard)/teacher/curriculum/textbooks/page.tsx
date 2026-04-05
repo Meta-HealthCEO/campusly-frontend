@@ -213,7 +213,7 @@ export default function TeacherTextbooksPage() {
         />
 
         <ChapterList
-          chapters={selected.chapters}
+          chapters={selected.chapters ?? []}
           onAddChapter={() => { setEditingChapter(null); setChapterFormOpen(true); }}
           onEditChapter={(ch: ChapterItem) => { setEditingChapter(ch); setChapterFormOpen(true); }}
           onRemoveChapter={handleRemoveChapter}
