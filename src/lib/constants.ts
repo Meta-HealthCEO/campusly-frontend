@@ -185,6 +185,7 @@ export const ROUTES = {
   TEACHER_CURRICULUM_ASSESSMENTS: '/teacher/curriculum/assessments',
   TEACHER_CURRICULUM_PREVIEW: '/teacher/curriculum/preview',
   TEACHER_CURRICULUM_AI_STUDIO: '/teacher/curriculum/ai-studio',
+  TEACHER_CURRICULUM_PAPERS: '/teacher/curriculum/papers',
   TEACHER_CURRICULUM_MARK_PAPERS: '/teacher/curriculum/mark-papers',
 
   // Teacher Workbench
@@ -389,6 +390,7 @@ export const TEACHER_NAV: NavItem[] = [
       { label: 'Content Library', href: ROUTES.TEACHER_CURRICULUM_CONTENT, icon: BookOpen },
       { label: 'Question Bank', href: ROUTES.TEACHER_CURRICULUM_QUESTIONS, icon: HelpCircle },
       { label: 'Assessments', href: ROUTES.TEACHER_CURRICULUM_ASSESSMENTS, icon: PenTool },
+      { label: 'Generated Papers', href: ROUTES.TEACHER_CURRICULUM_PAPERS, icon: FileText, badge: 'AI' },
       { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
       { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
       { label: 'Mark Papers', href: ROUTES.TEACHER_CURRICULUM_MARK_PAPERS, icon: Camera, badge: 'AI' },

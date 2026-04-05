@@ -4,6 +4,10 @@ import { useState } from 'react';
 import { ImageOff } from 'lucide-react';
 import type { QuestionDiagram } from '@/types/diagram';
 
+// ─── API Base ──────────────────────────────────────────────────────────────
+// Strip trailing /api so we get the raw backend origin for static files
+const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4500/api').replace(/\/api\/?$/, '');
+
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface DiagramRendererProps {
@@ -51,8 +55,9 @@ export default function DiagramRenderer({
     );
   }
 
-  // Determine the image URL to use
-  const imageUrl = printMode && diagram.pdfUrl ? diagram.pdfUrl : diagram.svgUrl;
+  // Determine the image URL to use — prepend backend origin for relative paths
+  const rawUrl = printMode && diagram.pdfUrl ? diagram.pdfUrl : diagram.svgUrl;
+  const imageUrl = rawUrl?.startsWith('/') ? `${API_ORIGIN}${rawUrl}` : rawUrl;
 
   // Failed state, missing URL, or image load error — fallback
   if (diagram.renderStatus === 'failed' || !imageUrl || imgError) {

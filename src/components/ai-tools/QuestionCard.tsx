@@ -5,6 +5,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import DiagramRenderer from '@/components/shared/DiagramRenderer';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { Pencil, Check, RefreshCw, Loader2 } from 'lucide-react';
 import type { PaperQuestion } from './types';
 
@@ -71,7 +75,11 @@ export function QuestionCard({
                 </div>
               </div>
             ) : (
-              <p className="text-sm whitespace-pre-line break-words">{question.questionText}</p>
+              <div className="text-sm [&_.katex-display]:my-2">
+                <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                  {question.questionText}
+                </ReactMarkdown>
+              </div>
             )}
             {question.diagram && (
               <DiagramRenderer diagram={question.diagram} size="sm" className="mt-2" />
