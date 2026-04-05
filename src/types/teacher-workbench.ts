@@ -3,6 +3,8 @@
 // Moderation, Term Planner
 // ============================================================
 
+import type { QuestionDiagram } from './diagram';
+
 // ------------------------------------------------------------
 // Enums / Unions
 // ------------------------------------------------------------
@@ -147,6 +149,7 @@ export interface BankQuestion {
   /** Alias for modelAnswer — used by some components */
   correctAnswer: string;
   markingNotes: string;
+  diagram?: QuestionDiagram | null;
   images: string[];
   options: MCQOption[];
   tags: string[];

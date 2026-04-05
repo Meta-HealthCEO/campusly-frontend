@@ -1,11 +1,14 @@
 // AI Tools module types (local to avoid modifying src/types/index.ts)
 
+import type { QuestionDiagram } from '@/types/diagram';
+
 export interface PaperQuestion {
   questionNumber: number;
   questionText: string;
   marks: number;
   modelAnswer: string;
   markingGuideline: string;
+  diagram?: QuestionDiagram | null;
 }
 
 export interface PaperSection {

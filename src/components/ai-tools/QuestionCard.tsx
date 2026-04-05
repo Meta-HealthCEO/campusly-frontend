@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import DiagramRenderer from '@/components/shared/DiagramRenderer';
 import { Pencil, Check, RefreshCw, Loader2 } from 'lucide-react';
 import type { PaperQuestion } from './types';
 
@@ -71,6 +72,9 @@ export function QuestionCard({
               </div>
             ) : (
               <p className="text-sm whitespace-pre-line break-words">{question.questionText}</p>
+            )}
+            {question.diagram && (
+              <DiagramRenderer diagram={question.diagram} size="sm" className="mt-2" />
             )}
             {showModelAnswer && question.modelAnswer && (
               <div className="mt-2 rounded-lg bg-emerald-50 p-3 text-sm">

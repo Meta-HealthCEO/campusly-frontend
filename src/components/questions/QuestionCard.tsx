@@ -3,6 +3,7 @@
 import { Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import DiagramRenderer from '@/components/shared/DiagramRenderer';
 import {
   QUESTION_TYPE_LABELS,
   QUESTION_STATUS_VARIANT,
@@ -54,6 +55,10 @@ export function QuestionCard({ question, onClick }: QuestionCardProps) {
       <CardContent className="flex flex-col gap-3">
         {/* Stem preview */}
         <p className="text-sm line-clamp-2">{truncateStem(question.stem)}</p>
+
+        {question.diagram && (
+          <DiagramRenderer diagram={question.diagram} size="sm" className="mt-2" />
+        )}
 
         {/* Badge row */}
         <div className="flex flex-wrap items-center gap-1.5">

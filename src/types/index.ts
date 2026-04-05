@@ -59,3 +59,4 @@ export * from './student-learning';
 // Import directly from '@/types/question-bank' instead of from '@/types'
 // export * from './question-bank';
 export * from './textbook';
+export * from './diagram';

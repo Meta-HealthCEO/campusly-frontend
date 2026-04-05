@@ -1,3 +1,5 @@
+import type { QuestionDiagram } from './diagram';
+
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
 export type QuestionType =
@@ -49,6 +51,7 @@ export interface QuestionItem {
   type: QuestionType;
   stem: string;
   media: QuestionMedia[];
+  diagram: QuestionDiagram | null;
   options: QuestionOption[];
   answer: string;
   markingRubric: string;

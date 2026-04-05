@@ -41,6 +41,10 @@ function renderQuestionHtml(
     bodyHtml = renderAnswerLines(4);
   }
 
+  const diagramHtml = q.diagram?.svgUrl
+    ? `<div style="text-align:center;margin:12px 0;"><img src="${q.diagram.svgUrl}" alt="${escapeHtml(q.diagram.alt ?? '')}" style="max-width:400px;height:auto;" /></div>`
+    : '';
+
   return `
     <div class="question">
       <p>
@@ -48,6 +52,7 @@ function renderQuestionHtml(
         <span class="marks">${marksLabel}</span>
         ${escapeHtml(q.questionText)}
       </p>
+      ${diagramHtml}
       ${bodyHtml}
     </div>
   `;
