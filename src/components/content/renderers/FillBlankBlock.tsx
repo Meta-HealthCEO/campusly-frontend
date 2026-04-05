@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
@@ -69,7 +73,11 @@ export function FillBlankBlock({ block, onSubmit, interaction }: FillBlankBlockP
 
           return (
             <span key={i} className="inline-flex items-center gap-1">
-              <span>{segment}</span>
+              <span className="inline [&_p]:inline [&_h3]:inline [&_h3]:font-semibold [&_h3]:text-base">
+                <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                  {segment}
+                </ReactMarkdown>
+              </span>
               {showInput && (
                 <span className="inline-flex items-center gap-1">
                   <Input
