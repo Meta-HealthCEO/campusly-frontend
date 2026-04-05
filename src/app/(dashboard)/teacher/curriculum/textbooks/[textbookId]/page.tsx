@@ -68,12 +68,13 @@ export default function TeacherTextbookReaderPage() {
     setInteractions(new Map());
     try {
       const sorted = [...chapter.resources].sort((a, b) => a.order - b.order);
-      const loaded: ContentResourceItem[] = [];
-      for (const r of sorted) {
-        const id = typeof r.resourceId === 'string' ? r.resourceId : r.resourceId.id;
-        const resource = await getResource(id);
-        if (resource) loaded.push(resource);
-      }
+      const results = await Promise.all(
+        sorted.map((r) => {
+          const id = typeof r.resourceId === 'string' ? r.resourceId : r.resourceId.id;
+          return getResource(id);
+        }),
+      );
+      const loaded = results.filter((r): r is ContentResourceItem => r !== null);
       setChapterResources(loaded);
       const map = new Map<string, BlockInteractionState>();
       loaded.forEach((res) => {
