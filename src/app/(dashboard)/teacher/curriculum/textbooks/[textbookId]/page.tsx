@@ -147,8 +147,10 @@ export default function TeacherTextbookReaderPage() {
     );
   }
 
-  const allBlocks = chapterResources.flatMap((r) =>
-    [...r.blocks].sort((a: ContentBlockItem, b: ContentBlockItem) => a.order - b.order),
+  const allBlocks = chapterResources.flatMap((r, ri) =>
+    [...r.blocks]
+      .sort((a: ContentBlockItem, b: ContentBlockItem) => a.order - b.order)
+      .map((b) => ({ ...b, _uniqueKey: `${ri}-${b.blockId}` })),
   );
 
   return (
@@ -195,8 +197,8 @@ export default function TeacherTextbookReaderPage() {
             <EmptyState icon={BookOpen} title="No content" description="This chapter has no content blocks yet." />
           ) : (
             <div className="space-y-4">
-              {allBlocks.map((block: ContentBlockItem) => (
-                <Card key={block.blockId}>
+              {allBlocks.map((block) => (
+                <Card key={(block as { _uniqueKey: string })._uniqueKey}>
                   <CardContent>
                     <BlockRenderer
                       block={block}
