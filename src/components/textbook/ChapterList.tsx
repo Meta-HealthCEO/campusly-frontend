@@ -179,7 +179,12 @@ function ChapterRow({
                       key={rid}
                       className="flex items-center gap-2 text-sm"
                     >
-                      <span className="truncate flex-1">{label}</span>
+                      <a
+                        href={`/teacher/curriculum/preview/${rid}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="truncate flex-1 hover:text-primary hover:underline cursor-pointer"
+                      >{label}</a>
                       {rType && <Badge variant="outline" className="text-xs">{rType}</Badge>}
                       <Button
                         size="icon"

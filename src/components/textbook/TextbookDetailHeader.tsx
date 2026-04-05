@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Pencil, Globe, Archive } from 'lucide-react';
+import { ArrowLeft, Pencil, Globe, Archive, Eye } from 'lucide-react';
 import type { TextbookItem, TextbookStatus } from '@/types';
 
 interface TextbookDetailHeaderProps {
@@ -59,6 +59,9 @@ export function TextbookDetailHeader({
 
       {/* Action buttons */}
       <div className="flex flex-wrap gap-2 pl-11">
+        <Button size="sm" onClick={() => window.open(`/student/learn/textbooks/${textbook.id}`, '_blank')}>
+          <Eye className="h-4 w-4 mr-1" /> Preview Textbook
+        </Button>
         <Button variant="outline" size="sm" onClick={onEdit}>
           <Pencil className="h-4 w-4 mr-1" /> Edit Metadata
         </Button>
