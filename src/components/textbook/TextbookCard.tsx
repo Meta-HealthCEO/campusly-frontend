@@ -30,7 +30,7 @@ export function TextbookCard({ textbook, onClick }: TextbookCardProps) {
   const subjectLabel = resolveLabel(textbook.subjectId);
   const gradeLabel = resolveLabel(textbook.gradeId);
   const frameworkLabel = resolveFrameworkLabel(textbook.frameworkId);
-  const chapterCount = textbook.chapters.length;
+  const chapterCount = textbook.chapters?.length ?? 0;
 
   return (
     <Card
