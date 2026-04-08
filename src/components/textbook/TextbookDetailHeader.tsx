@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Pencil, Globe, Archive, Eye } from 'lucide-react';
@@ -59,9 +60,11 @@ export function TextbookDetailHeader({
 
       {/* Action buttons */}
       <div className="flex flex-wrap gap-2 pl-11">
-        <Button size="sm" onClick={() => window.open(`/teacher/curriculum/textbooks/${textbook.id}`, '_blank')}>
-          <Eye className="h-4 w-4 mr-1" /> Read Textbook
-        </Button>
+        <Link href={`/teacher/curriculum/textbooks/${textbook.id}`}>
+          <Button size="sm">
+            <Eye className="h-4 w-4 mr-1" /> Read Textbook
+          </Button>
+        </Link>
         <Button variant="outline" size="sm" onClick={onEdit}>
           <Pencil className="h-4 w-4 mr-1" /> Edit Metadata
         </Button>

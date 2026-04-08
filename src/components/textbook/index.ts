@@ -5,3 +5,8 @@ export { ChapterFormDialog } from './ChapterFormDialog';
 export { ResourcePickerDialog } from './ResourcePickerDialog';
 export { TextbookDetailHeader } from './TextbookDetailHeader';
 export { TextbookSidebar } from './TextbookSidebar';
+export { TextbookDetailPanel } from './TextbookDetailPanel';
+export { TextbookShelfView } from './TextbookShelfView';
+export { TextbookListView } from './TextbookListView';
+export { ViewToggle } from './ViewToggle';
+export type { ViewMode } from './ViewToggle';

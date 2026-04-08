@@ -1,18 +1,84 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
 import type { ContentBlockItem, BlockInteractionState, AttemptResult } from '@/types';
 
-interface QuizData {
+/* ── Normalised quiz shape ─────────────────────────────────── */
+
+interface NormalisedOption {
+  label: string;
+  text: string;
+  isCorrect: boolean;
+}
+
+interface NormalisedQuiz {
   question: string;
   type: 'mcq' | 'true_false' | 'short_answer';
-  options?: { label: string; text: string; isCorrect: boolean }[];
-  correctAnswer?: string;
-  explanation?: string;
+  options: NormalisedOption[];
+  explanation: string;
 }
+
+/** Handles both legacy seed format and structured format */
+function normaliseQuiz(raw: Record<string, unknown>): NormalisedQuiz {
+  const question = (raw.question as string) ?? '';
+  const explanation = (raw.explanation as string) ?? '';
+
+  // Seed format: { question, options: string[], correctIndex: number }
+  if (Array.isArray(raw.options) && typeof raw.options[0] === 'string') {
+    const opts = raw.options as string[];
+    const correctIdx = typeof raw.correctIndex === 'number' ? raw.correctIndex : -1;
+    const labels = 'ABCDEFGHIJKLMNOP';
+    return {
+      question,
+      type: 'mcq',
+      explanation,
+      options: opts.map((text, i) => ({
+        label: labels[i] ?? String(i + 1),
+        text,
+        isCorrect: i === correctIdx,
+      })),
+    };
+  }
+
+  // Structured format: { question, type, options: { label, text, isCorrect }[] }
+  if (Array.isArray(raw.options) && typeof raw.options[0] === 'object') {
+    return {
+      question,
+      type: (raw.type as NormalisedQuiz['type']) ?? 'mcq',
+      explanation,
+      options: raw.options as NormalisedOption[],
+    };
+  }
+
+  // True/False or short answer
+  return {
+    question,
+    type: (raw.type as NormalisedQuiz['type']) ?? 'short_answer',
+    explanation,
+    options: [],
+  };
+}
+
+/* ── Inline markdown renderer (for question & option text) ── */
+
+function MathText({ children }: { children: string }) {
+  return (
+    <span className="inline [&_p]:inline [&_p]:m-0">
+      <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+        {children}
+      </ReactMarkdown>
+    </span>
+  );
+}
+
+/* ── Component ─────────────────────────────────────────────── */
 
 interface QuizBlockProps {
   block: ContentBlockItem;
@@ -21,9 +87,9 @@ interface QuizBlockProps {
 }
 
 export function QuizBlock({ block, onSubmit, interaction }: QuizBlockProps) {
-  const quiz = useMemo<QuizData>(() => {
-    try { return JSON.parse(block.content) as QuizData; }
-    catch { return { question: block.content, type: 'short_answer' }; }
+  const quiz = useMemo<NormalisedQuiz>(() => {
+    try { return normaliseQuiz(JSON.parse(block.content) as Record<string, unknown>); }
+    catch { return { question: block.content, type: 'short_answer', options: [], explanation: '' }; }
   }, [block.content]);
 
   const [selected, setSelected] = useState<string>('');
@@ -43,10 +109,12 @@ export function QuizBlock({ block, onSubmit, interaction }: QuizBlockProps) {
 
   return (
     <div className="space-y-4">
-      <p className="font-medium text-sm">{quiz.question}</p>
+      <div className="font-medium text-sm">
+        <MathText>{quiz.question}</MathText>
+      </div>
 
       {/* MCQ */}
-      {quiz.type === 'mcq' && quiz.options && (
+      {quiz.type === 'mcq' && quiz.options.length > 0 && (
         <div className="space-y-2">
           {quiz.options.map((opt) => {
             const isSelected = selected === opt.label;
@@ -71,7 +139,7 @@ export function QuizBlock({ block, onSubmit, interaction }: QuizBlockProps) {
                   className="accent-primary"
                 />
                 <span className="font-medium">{opt.label}.</span>
-                <span>{opt.text}</span>
+                <span><MathText>{opt.text}</MathText></span>
                 {showCorrect && <CheckCircle2 className="ml-auto size-4 text-primary" />}
                 {showWrong && <XCircle className="ml-auto size-4 text-destructive" />}
               </label>
@@ -123,7 +191,7 @@ export function QuizBlock({ block, onSubmit, interaction }: QuizBlockProps) {
         <div className="space-y-1">
           {block.hints.slice(0, hintsShown).map((hint, i) => (
             <p key={i} className="text-xs text-muted-foreground bg-muted/50 rounded px-3 py-2">
-              Hint {i + 1}: {hint}
+              Hint {i + 1}: <MathText>{hint}</MathText>
             </p>
           ))}
         </div>
@@ -146,8 +214,10 @@ export function QuizBlock({ block, onSubmit, interaction }: QuizBlockProps) {
               Score: {interaction.attemptResult.score}/{interaction.attemptResult.maxScore}
             </span>
           </div>
-          {block.explanation && (
-            <p className="mt-2 text-xs opacity-80">{block.explanation}</p>
+          {(quiz.explanation || block.explanation) && (
+            <div className="mt-2 text-xs opacity-80">
+              <MathText>{quiz.explanation || block.explanation}</MathText>
+            </div>
           )}
         </div>
       )}

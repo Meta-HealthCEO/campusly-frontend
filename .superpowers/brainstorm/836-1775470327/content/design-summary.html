@@ -1,0 +1,194 @@
+<h2>Textbook Library — Final Design</h2>
+<p class="subtitle">Combo view: Bookshelf default + List toggle</p>
+
+<div class="section">
+  <h3>Shelf View (Default)</h3>
+  <div class="mockup">
+    <div class="mockup-header">Teacher &gt; Curriculum &gt; Textbooks</div>
+    <div class="mockup-body" style="padding:20px;background:#fafafa;">
+      <!-- Top bar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div>
+          <div style="font-size:18px;font-weight:700;">Textbooks</div>
+          <div style="font-size:12px;color:#9ca3af;">Create and manage digital textbooks</div>
+        </div>
+        <div style="background:#18181b;color:white;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:500;">+ Create Textbook</div>
+      </div>
+
+      <!-- Filters + toggle -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+        <div style="flex:0 0 200px;border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;font-size:11px;color:#9ca3af;">🔍 Search textbooks...</div>
+        <div style="border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;font-size:11px;color:#333;">CAPS ▾</div>
+        <div style="border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;font-size:11px;color:#333;">All Subjects ▾</div>
+        <div style="border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;font-size:11px;color:#333;">All Statuses ▾</div>
+        <div style="margin-left:auto;display:flex;background:#e5e7eb;border-radius:6px;overflow:hidden;">
+          <div style="padding:5px 10px;font-size:10px;font-weight:600;background:#18181b;color:white;">📚 Shelf</div>
+          <div style="padding:5px 10px;font-size:10px;color:#6b7280;">📋 List</div>
+        </div>
+      </div>
+
+      <!-- Grade 12 shelf -->
+      <div style="margin-bottom:18px;">
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
+          <span style="font-weight:700;font-size:15px;">Grade 12</span>
+          <span style="font-size:11px;color:#9ca3af;">13 textbooks</span>
+        </div>
+        <div style="display:flex;gap:12px;padding:14px 18px;background:linear-gradient(180deg,#8B6914 0%,#6B4F12 100%);border-radius:8px;overflow-x:auto;">
+          <div style="width:70px;flex-shrink:0;text-align:center;">
+            <div style="width:70px;height:95px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:4px;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 8px rgba(0,0,0,0.3);cursor:pointer;">
+              <span style="color:white;font-size:9px;font-weight:600;text-align:center;padding:6px;">Maths</span>
+            </div>
+            <div style="font-size:8px;color:#666;margin-top:4px;">10 ch</div>
+          </div>
+          <div style="width:70px;flex-shrink:0;text-align:center;">
+            <div style="width:70px;height:95px;background:linear-gradient(135deg,#059669,#047857);border-radius:4px;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 8px rgba(0,0,0,0.3);cursor:pointer;">
+              <span style="color:white;font-size:9px;font-weight:600;text-align:center;padding:6px;">Life Sci</span>
+            </div>
+            <div style="font-size:8px;color:#666;margin-top:4px;">12 ch</div>
+          </div>
+          <div style="width:70px;flex-shrink:0;text-align:center;">
+            <div style="width:70px;height:95px;background:linear-gradient(135deg,#dc2626,#b91c1c);border-radius:4px;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 8px rgba(0,0,0,0.3);cursor:pointer;">
+              <span style="color:white;font-size:9px;font-weight:600;text-align:center;padding:6px;">Physics</span>
+            </div>
+            <div style="font-size:8px;color:#666;margin-top:4px;">14 ch</div>
+          </div>
+          <div style="width:70px;flex-shrink:0;text-align:center;">
+            <div style="width:70px;height:95px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:4px;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 8px rgba(0,0,0,0.3);cursor:pointer;">
+              <span style="color:white;font-size:9px;font-weight:600;text-align:center;padding:6px;">History</span>
+            </div>
+            <div style="font-size:8px;color:#666;margin-top:4px;">10 ch</div>
+          </div>
+          <div style="width:70px;flex-shrink:0;text-align:center;">
+            <div style="width:70px;height:95px;background:linear-gradient(135deg,#ea580c,#c2410c);border-radius:4px;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 8px rgba(0,0,0,0.3);cursor:pointer;">
+              <span style="color:white;font-size:9px;font-weight:600;text-align:center;padding:6px;">Econ</span>
+            </div>
+            <div style="font-size:8px;color:#666;margin-top:4px;">15 ch</div>
+          </div>
+          <div style="width:70px;flex-shrink:0;text-align:center;">
+            <div style="width:70px;height:95px;background:linear-gradient(135deg,#0891b2,#0e7490);border-radius:4px;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 8px rgba(0,0,0,0.3);cursor:pointer;">
+              <span style="color:white;font-size:9px;font-weight:600;text-align:center;padding:6px;">Geo</span>
+            </div>
+            <div style="font-size:8px;color:#666;margin-top:4px;">10 ch</div>
+          </div>
+          <div style="width:70px;flex-shrink:0;text-align:center;">
+            <div style="width:70px;height:95px;background:linear-gradient(135deg,#d946ef,#a21caf);border-radius:4px;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 8px rgba(0,0,0,0.3);cursor:pointer;">
+              <span style="color:white;font-size:9px;font-weight:600;text-align:center;padding:6px;">Maths Lit</span>
+            </div>
+            <div style="font-size:8px;color:#666;margin-top:4px;">8 ch</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grade 11 shelf -->
+      <div style="margin-bottom:18px;">
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
+          <span style="font-weight:700;font-size:15px;">Grade 11</span>
+          <span style="font-size:11px;color:#9ca3af;">13 textbooks</span>
+        </div>
+        <div style="display:flex;gap:12px;padding:14px 18px;background:linear-gradient(180deg,#8B6914 0%,#6B4F12 100%);border-radius:8px;">
+          <div style="width:70px;flex-shrink:0;text-align:center;">
+            <div style="width:70px;height:95px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:4px;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 8px rgba(0,0,0,0.3);">
+              <span style="color:white;font-size:9px;font-weight:600;text-align:center;padding:6px;">Maths</span>
+            </div>
+            <div style="font-size:8px;color:#666;margin-top:4px;">11 ch</div>
+          </div>
+          <div style="width:70px;flex-shrink:0;text-align:center;">
+            <div style="width:70px;height:95px;background:linear-gradient(135deg,#059669,#047857);border-radius:4px;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 8px rgba(0,0,0,0.3);">
+              <span style="color:white;font-size:9px;font-weight:600;text-align:center;padding:6px;">Life Sci</span>
+            </div>
+            <div style="font-size:8px;color:#666;margin-top:4px;">12 ch</div>
+          </div>
+          <div style="width:70px;flex-shrink:0;text-align:center;">
+            <div style="width:70px;height:95px;background:linear-gradient(135deg,#dc2626,#b91c1c);border-radius:4px;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 8px rgba(0,0,0,0.3);">
+              <span style="color:white;font-size:9px;font-weight:600;text-align:center;padding:6px;">Physics</span>
+            </div>
+            <div style="font-size:8px;color:#666;margin-top:4px;">14 ch</div>
+          </div>
+          <div style="width:70px;flex-shrink:0;text-align:center;">
+            <div style="width:70px;height:95px;background:linear-gradient(135deg,#ea580c,#c2410c);border-radius:4px;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 8px rgba(0,0,0,0.3);">
+              <span style="color:white;font-size:9px;font-weight:600;text-align:center;padding:6px;">Econ</span>
+            </div>
+            <div style="font-size:8px;color:#666;margin-top:4px;">15 ch</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>List View (Toggle)</h3>
+  <div class="mockup">
+    <div class="mockup-header">Same page, list toggle active</div>
+    <div class="mockup-body" style="padding:20px;background:#fafafa;">
+      <!-- Filters with all 4 dropdowns + toggle -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <div style="flex:0 0 200px;border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;font-size:11px;color:#9ca3af;">🔍 Search textbooks...</div>
+        <div style="border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;font-size:11px;">CAPS ▾</div>
+        <div style="border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;font-size:11px;">All Subjects ▾</div>
+        <div style="border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:600;">All Grades ▾</div>
+        <div style="border:1px solid #e5e7eb;border-radius:6px;padding:6px 10px;font-size:11px;">All Statuses ▾</div>
+        <div style="margin-left:auto;display:flex;background:#e5e7eb;border-radius:6px;overflow:hidden;">
+          <div style="padding:5px 10px;font-size:10px;color:#6b7280;">📚 Shelf</div>
+          <div style="padding:5px 10px;font-size:10px;font-weight:600;background:#18181b;color:white;">📋 List</div>
+        </div>
+      </div>
+
+      <table style="width:100%;border-collapse:collapse;font-size:11px;">
+        <thead>
+          <tr style="border-bottom:2px solid #e5e7eb;text-align:left;">
+            <th style="padding:8px;font-weight:600;color:#6b7280;">Title</th>
+            <th style="padding:8px;font-weight:600;color:#6b7280;">Subject</th>
+            <th style="padding:8px;font-weight:600;color:#6b7280;">Grade</th>
+            <th style="padding:8px;font-weight:600;color:#6b7280;">Chapters</th>
+            <th style="padding:8px;font-weight:600;color:#6b7280;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='transparent'">
+            <td style="padding:8px;font-weight:500;">Grade 12 Mathematics</td>
+            <td style="padding:8px;color:#6b7280;">Mathematics</td>
+            <td style="padding:8px;">Grade 12</td>
+            <td style="padding:8px;">10</td>
+            <td style="padding:8px;"><span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:9999px;font-size:10px;">published</span></td>
+          </tr>
+          <tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;">
+            <td style="padding:8px;font-weight:500;">Grade 12 Life Sciences</td>
+            <td style="padding:8px;color:#6b7280;">Life Sciences</td>
+            <td style="padding:8px;">Grade 12</td>
+            <td style="padding:8px;">12</td>
+            <td style="padding:8px;"><span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:9999px;font-size:10px;">published</span></td>
+          </tr>
+          <tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;">
+            <td style="padding:8px;font-weight:500;">Grade 11 Mathematics</td>
+            <td style="padding:8px;color:#6b7280;">Mathematics</td>
+            <td style="padding:8px;">Grade 11</td>
+            <td style="padding:8px;">11</td>
+            <td style="padding:8px;"><span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:9999px;font-size:10px;">published</span></td>
+          </tr>
+          <tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;">
+            <td style="padding:8px;font-weight:500;">Grade 7 EMS</td>
+            <td style="padding:8px;color:#6b7280;">EMS</td>
+            <td style="padding:8px;">Grade 7</td>
+            <td style="padding:8px;">12</td>
+            <td style="padding:8px;"><span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:9999px;font-size:10px;">published</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Key Behaviours</h3>
+  <ul style="font-size:14px;line-height:1.8;color:#555;">
+    <li><strong>Click a book cover</strong> → navigates directly to the textbook reader</li>
+    <li><strong>Click a list row</strong> → also navigates to the reader</li>
+    <li><strong>Shelf view filters:</strong> Search, Framework, Subject, Status (no Grade — shelves ARE the grades)</li>
+    <li><strong>List view filters:</strong> Search, Framework, Subject, Grade, Status (all filters shown)</li>
+    <li><strong>Book cover colours:</strong> auto-assigned by subject name from a fixed palette</li>
+    <li><strong>Shelf = wooden background</strong> with horizontal scroll if many books per grade</li>
+    <li><strong>Chapter count</strong> shown below each book cover</li>
+    <li><strong>View toggle</strong> persists in localStorage</li>
+  </ul>
+</div>

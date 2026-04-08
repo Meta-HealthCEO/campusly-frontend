@@ -82,7 +82,7 @@ function ChapterRow({
         {/* Header row */}
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-muted-foreground w-6 shrink-0">
-            {chapter.order + 1}.
+            {index + 1}.
           </span>
 
           <button

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, BookOpen, Eye } from 'lucide-react';
 import { toast } from 'sonner';
@@ -38,6 +38,7 @@ function createDefaultInteraction(blockId: string): BlockInteractionState {
 
 export default function TeacherPreviewResourcePage() {
   const params = useParams();
+  const router = useRouter();
   const resourceId = params.resourceId as string;
   const { getResource } = useContentLibrary();
 
@@ -145,11 +146,9 @@ export default function TeacherPreviewResourcePage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Link href="/teacher/curriculum/preview">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="size-5" />
-          </Button>
-        </Link>
+        <Button variant="ghost" size="icon" onClick={() => router.back()}>
+          <ArrowLeft className="size-5" />
+        </Button>
         <div className="min-w-0 flex-1">
           <PageHeader title={resource.title} />
         </div>
@@ -226,12 +225,10 @@ export default function TeacherPreviewResourcePage() {
 
       {/* Bottom nav */}
       <div className="flex justify-between">
-        <Link href="/teacher/curriculum/preview">
-          <Button variant="outline" className="gap-1.5">
-            <ArrowLeft className="size-4" />
-            Back to Preview
-          </Button>
-        </Link>
+        <Button variant="outline" className="gap-1.5" onClick={() => router.back()}>
+          <ArrowLeft className="size-4" />
+          Back
+        </Button>
       </div>
     </div>
   );

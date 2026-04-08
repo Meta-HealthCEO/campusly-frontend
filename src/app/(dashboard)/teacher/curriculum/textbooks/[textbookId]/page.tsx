@@ -101,23 +101,64 @@ export default function TeacherTextbookReaderPage() {
     }
   }, [currentChapter, loadChapterResources]);
 
-  // Preview-mode: don't save attempts
+  // Local grading — checks answer against block data without a backend call
   const handleAttempt = useCallback(
-    async (blockId: string, _response: string): Promise<AttemptResult> => {
+    async (blockId: string, response: string): Promise<AttemptResult> => {
+      // Find the block
+      const block = chapterResources
+        .flatMap((r) => r.blocks ?? [])
+        .find((b: ContentBlockItem) => b.blockId === blockId);
+
+      let correct = false;
+      let score = 0;
+      let maxScore = 1;
+
+      if (block) {
+        try {
+          const data = JSON.parse(block.content) as Record<string, unknown>;
+
+          if (block.type === 'quiz') {
+            // Seed format: { options: string[], correctIndex: number }
+            if (Array.isArray(data.options) && typeof data.correctIndex === 'number') {
+              const labels = 'ABCDEFGHIJKLMNOP';
+              const correctLabel = labels[data.correctIndex as number];
+              correct = response === correctLabel;
+            }
+            // Structured format: { options: { label, isCorrect }[] }
+            else if (Array.isArray(data.options) && typeof (data.options as Record<string, unknown>[])[0] === 'object') {
+              const opts = data.options as { label: string; isCorrect: boolean }[];
+              correct = opts.some((o) => o.label === response && o.isCorrect);
+            }
+          } else if (block.type === 'fill_blank') {
+            const blanks = (data.blanks as string[]) ?? [];
+            maxScore = blanks.length;
+            try {
+              const answers = JSON.parse(response) as string[];
+              score = answers.reduce((s, a, i) =>
+                s + (a.trim().toLowerCase() === (blanks[i] ?? '').trim().toLowerCase() ? 1 : 0),
+              0);
+              correct = score === maxScore;
+            } catch { correct = false; }
+          }
+        } catch { /* content not JSON, treat as incorrect */ }
+      }
+
+      if (block?.type === 'quiz') score = correct ? 1 : 0;
+
       const result: AttemptResult = {
-        id: `preview-${blockId}`, correct: true, score: 1, maxScore: 1, attemptNumber: 1,
+        id: `preview-${blockId}`, correct, score, maxScore, attemptNumber: 1,
       };
       setInteractions((prev) => {
         const next = new Map(prev);
         next.set(blockId, {
-          blockId, answered: true, correct: true, score: 1, maxScore: 1,
+          blockId, answered: true, correct, score, maxScore,
           showExplanation: true, hintsRevealed: 0, attemptResult: result,
         });
         return next;
       });
       return result;
     },
-    [],
+    [chapterResources],
   );
 
   const goToChapter = useCallback((idx: number) => {
