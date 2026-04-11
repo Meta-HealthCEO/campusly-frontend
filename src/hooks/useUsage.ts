@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -23,11 +24,22 @@ export interface UsageData {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useUsage() {
+  // Only fetch when a user is authenticated. Otherwise we trigger a 401
+  // on routes like /login that render layouts containing UsageBanner,
+  // and the noisy redirect-to-login from the api-client interceptor
+  // masks the fact that the user is already on the login page.
+  const user = useAuthStore((s) => s.user);
+  const isAuthenticated = user !== null;
+
   const [data, setData] = useState<UsageData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isAuthenticated);
   const [error, setError] = useState<string | null>(null);
 
   const fetchUsage = useCallback(async () => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -41,7 +53,7 @@ export function useUsage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     void fetchUsage();
