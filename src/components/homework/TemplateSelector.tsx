@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { FileText, Trash2, Copy } from 'lucide-react';
 import type { HomeworkTemplate } from '@/types';
 
@@ -23,17 +24,22 @@ interface TemplateSelectorProps {
 export function TemplateSelector({ templates, onSelect, onDelete }: TemplateSelectorProps) {
   const [open, setOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<HomeworkTemplate | null>(null);
 
   const handleSelect = (template: HomeworkTemplate) => {
     onSelect(template);
     setOpen(false);
   };
 
-  const handleDelete = async (e: React.MouseEvent, templateId: string) => {
-    e.stopPropagation();
-    setDeletingId(templateId);
-    await onDelete(templateId);
-    setDeletingId(null);
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeletingId(pendingDelete.id);
+    try {
+      const ok = await onDelete(pendingDelete.id);
+      if (!ok) throw new Error('delete-failed');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
@@ -81,7 +87,10 @@ export function TemplateSelector({ templates, onSelect, onDelete }: TemplateSele
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    onClick={(e) => handleDelete(e, t.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPendingDelete(t);
+                    }}
                     disabled={deletingId === t.id}
                     aria-label="Delete template"
                   >
@@ -93,6 +102,19 @@ export function TemplateSelector({ templates, onSelect, onDelete }: TemplateSele
           )}
         </div>
       </DialogContent>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={(v) => { if (!v) setPendingDelete(null); }}
+        title="Delete template"
+        description={
+          pendingDelete
+            ? `Are you sure you want to delete the "${pendingDelete.title}" template? This cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
+      />
     </Dialog>
   );
 }

@@ -54,6 +54,10 @@ export function HomeworkForm({
     formState: { errors, isSubmitting },
   } = useForm<HomeworkFormValues>({
     resolver: zodResolver(homeworkFormSchema),
+    // Validate after first blur, then live on every change — gives the user
+    // inline feedback without yelling at them the moment the dialog opens.
+    mode: 'onTouched',
+    reValidateMode: 'onChange',
     defaultValues: {
       title: '',
       description: '',

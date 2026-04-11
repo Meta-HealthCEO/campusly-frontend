@@ -1,9 +1,10 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, MessageSquare, Lock } from 'lucide-react';
+import { Plus, MessageSquare, Lock, Search } from 'lucide-react';
 import { formatRelativeDate } from '@/lib/utils';
 import { UnreadBadge } from './UnreadBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -25,6 +26,22 @@ function getOtherParticipant(thread: MessageThread, currentUserId: string) {
 export function ThreadList({
   threads, activeThreadId, onSelect, onNew, currentUserId,
 }: ThreadListProps) {
+  const [search, setSearch] = useState('');
+
+  const filteredThreads = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return threads;
+    return threads.filter((thread) => {
+      const other = getOtherParticipant(thread, currentUserId);
+      return (
+        (other?.name ?? '').toLowerCase().includes(q)
+        || (thread.studentName ?? '').toLowerCase().includes(q)
+        || (thread.subject ?? '').toLowerCase().includes(q)
+        || (thread.lastMessagePreview ?? '').toLowerCase().includes(q)
+      );
+    });
+  }, [threads, search, currentUserId]);
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-3 border-b">
@@ -35,6 +52,20 @@ export function ThreadList({
         </Button>
       </div>
 
+      {threads.length > 0 && (
+        <div className="p-2 border-b">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search conversations..."
+              className="pl-9 h-9"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto">
         {threads.length === 0 ? (
           <div className="p-4">
@@ -44,9 +75,13 @@ export function ThreadList({
               description="Start a new message to begin a conversation."
             />
           </div>
+        ) : filteredThreads.length === 0 ? (
+          <p className="p-4 text-center text-sm text-muted-foreground">
+            No conversations match &quot;{search}&quot;.
+          </p>
         ) : (
           <div className="divide-y">
-            {threads.map((thread) => {
+            {filteredThreads.map((thread) => {
               const other = getOtherParticipant(thread, currentUserId);
               const isActive = thread.id === activeThreadId;
 

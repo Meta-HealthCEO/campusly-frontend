@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import type { GeneratedPaper, GradingJob } from '@/components/ai-tools/types';
@@ -34,8 +35,9 @@ export function useTeacherAIToolsDashboard() {
         const raw = unwrapResponse(papersRes);
         const list = raw.papers ?? (Array.isArray(raw) ? raw : []);
         setPapers(list as GeneratedPaper[]);
-      } catch {
-        // silently handle
+      } catch (err: unknown) {
+        console.error('Failed to load AI tools dashboard', err);
+        toast.error('Could not load AI tools data. Please refresh.');
       }
       setLoading(false);
     }

@@ -5,10 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { StatCard } from '@/components/shared/StatCard';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { DashboardSkeleton } from '@/components/shared/skeletons';
 import {
   ClipboardList, AlertTriangle, Users, Calendar,
-  CheckSquare, PenLine, BarChart3, School,
+  CheckSquare, PenLine, BarChart3, School, RefreshCw,
 } from 'lucide-react';
 import { AnnouncementBanner } from '@/components/announcements/AnnouncementBanner';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -19,10 +19,10 @@ export default function TeacherDashboard() {
   const { user, permissions } = useAuthStore();
   const {
     timetable, pendingHomework, absentToday,
-    classCount, ungradedCount, loading,
+    classCount, ungradedCount, loading, refreshing, refresh,
   } = useTeacherDashboard();
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <DashboardSkeleton />;
 
   const firstName = user?.firstName ?? 'Teacher';
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
@@ -31,7 +31,18 @@ export default function TeacherDashboard() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={`Good morning, ${firstName}!`} description="Here is your teaching dashboard for today" />
+      <PageHeader title={`Good morning, ${firstName}!`} description="Here is your teaching dashboard for today">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={refresh}
+          disabled={refreshing}
+          aria-label="Refresh dashboard"
+        >
+          <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </PageHeader>
 
       {isIndependent && (
         <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">

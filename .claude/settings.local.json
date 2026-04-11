@@ -8,7 +8,9 @@
       "Bash(grep -l \"curriculum\" \"c:\\\\Users\\\\shaun\\\\campusly-frontend\\\\scopes\"/*)",
       "mcp__ecomed-files__list_allowed_directories",
       "mcp__ecomed-files__list_directory",
-      "mcp__ecomed-files__directory_tree"
+      "mcp__ecomed-files__directory_tree",
+      "mcp__ecomed-files__read_text_file",
+      "Bash(xargs grep:*)"
     ]
   }
 }

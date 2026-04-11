@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import apiClient from '@/lib/api-client';
-import { unwrapList, unwrapResponse, extractErrorMessage } from '@/lib/api-helpers';
+import {
+  unwrapList,
+  unwrapResponse,
+  extractErrorMessage,
+  resolveId,
+  resolveField,
+} from '@/lib/api-helpers';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { SchoolClass, Assessment, Subject } from '@/types';
@@ -72,6 +78,7 @@ export function useTeacherGrades() {
   const [selectedTerm, setSelectedTerm] = useState('all');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
   const [studentHistory, setStudentHistory] = useState<StudentMark[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<MarkEntry | null>(null);
 
@@ -81,8 +88,9 @@ export function useTeacherGrades() {
       try {
         const res = await apiClient.get('/academic/classes');
         setClasses(unwrapList<SchoolClass>(res));
-      } catch {
-        console.error('Failed to load classes');
+      } catch (err: unknown) {
+        console.error('Failed to load classes', err);
+        toast.error('Could not load classes. Please refresh.');
       } finally {
         setLoading(false);
       }
@@ -96,8 +104,9 @@ export function useTeacherGrades() {
       try {
         const res = await apiClient.get('/academic/subjects');
         setSubjects(unwrapList<Subject>(res));
-      } catch {
-        console.error('Failed to load subjects');
+      } catch (err: unknown) {
+        console.error('Failed to load subjects', err);
+        toast.error('Could not load subjects. Please refresh.');
       }
     }
     fetchSubjects();
@@ -124,8 +133,9 @@ export function useTeacherGrades() {
         if (selectedSubject) params.subjectId = selectedSubject;
         const res = await apiClient.get('/academic/assessments', { params });
         setAllAssessments(unwrapList<Assessment>(res));
-      } catch {
-        console.error('Failed to load assessments');
+      } catch (err: unknown) {
+        console.error('Failed to load assessments', err);
+        toast.error('Could not load assessments. Please refresh.');
       }
     }
     fetchAssessments();
@@ -160,34 +170,37 @@ export function useTeacherGrades() {
       if (marksRes.status === 'fulfilled') {
         const marksArr = unwrapList<Record<string, unknown>>(marksRes.value);
         for (const m of marksArr) {
-          const sid =
-            typeof m.studentId === 'object'
-              ? ((m.studentId as Record<string, unknown>)?.id as string) ??
-                ((m.studentId as Record<string, unknown>)?._id as string) ??
-                ''
-              : (m.studentId as string) ?? '';
+          const sid = resolveId(
+            m.studentId as string | { id?: string; _id?: string } | undefined,
+          );
           if (sid) existingMarks[sid] = m.mark as number;
         }
       }
 
       const classStudents = students.filter((s) => {
-        const cid =
-          typeof s.classId === 'object'
-            ? ((s.classId as Record<string, unknown>)?.id as string) ??
-              ((s.classId as Record<string, unknown>)?._id as string) ??
-              ''
-            : (s.classId as string) ?? '';
+        const cid = resolveId(
+          s.classId as string | { id?: string; _id?: string } | undefined,
+        );
         return cid === selectedClass;
       });
 
       setMarkEntries(
         classStudents.map((s) => {
           const id = (s.id as string) ?? '';
-          const u = (s.user ?? s.userId ?? s) as Record<string, unknown>;
+          // A student's name may live on either `user` (populated) or
+          // `userId` (populated under a different key) or directly on the
+          // student root. `resolveField` walks these safely.
+          const userObj = s.user ?? s.userId ?? s;
           return {
             studentId: id,
-            firstName: (u.firstName as string) ?? (s.firstName as string) ?? '',
-            lastName: (u.lastName as string) ?? (s.lastName as string) ?? '',
+            firstName:
+              resolveField<string>(userObj, 'firstName')
+              ?? resolveField<string>(s, 'firstName')
+              ?? '',
+            lastName:
+              resolveField<string>(userObj, 'lastName')
+              ?? resolveField<string>(s, 'lastName')
+              ?? '',
             admissionNumber: (s.admissionNumber as string) ?? '',
             mark:
               existingMarks[id] !== undefined
@@ -197,8 +210,11 @@ export function useTeacherGrades() {
           };
         }),
       );
-    } catch {
-      console.error('Failed to load marks');
+      // Reset dirty state whenever a fresh snapshot loads.
+      setIsDirty(false);
+    } catch (err: unknown) {
+      console.error('Failed to load marks', err);
+      toast.error('Could not load marks. Please refresh.');
     }
   }, [selectedClass, selectedAssessment]);
 
@@ -269,6 +285,7 @@ export function useTeacherGrades() {
           e.studentId === studentId ? { ...e, mark: value } : e,
         ),
       );
+      setIsDirty(true);
     },
     [],
   );
@@ -302,6 +319,7 @@ export function useTeacherGrades() {
         marks,
       });
       toast.success('Marks saved successfully');
+      setIsDirty(false);
       loadMarks();
     } catch (err: unknown) {
       toast.error(extractErrorMessage(err, 'Failed to save marks'));
@@ -367,14 +385,14 @@ export function useTeacherGrades() {
       const res = await apiClient.get(`/academic/marks/student/${studentId}`);
       const raw = unwrapList<Record<string, unknown>>(res);
       const history: StudentMark[] = raw.map((m) => {
-        const assessment = (m.assessmentId ?? m.assessment) as Record<string, unknown> | null;
-        const subject = (m.subjectId ?? m.subject) as Record<string, unknown> | null;
-        const mark = m.mark as number;
-        const total = m.total as number;
+        const assessment = m.assessmentId ?? m.assessment;
+        const subject = m.subjectId ?? m.subject;
+        const mark = (m.mark as number) ?? 0;
+        const total = (m.total as number) ?? 0;
         return {
           id: (m.id as string) ?? '',
-          assessmentName: (assessment?.name as string) ?? '',
-          subjectName: (subject?.name as string) ?? '',
+          assessmentName: resolveField<string>(assessment, 'name') ?? '',
+          subjectName: resolveField<string>(subject, 'name') ?? '',
           mark,
           total,
           percentage: total > 0 ? Math.round((mark / total) * 100) : 0,
@@ -382,8 +400,9 @@ export function useTeacherGrades() {
         };
       });
       setStudentHistory(history);
-    } catch {
-      console.error('Failed to load student history');
+    } catch (err: unknown) {
+      console.error('Failed to load student history', err);
+      toast.error('Could not load student history.');
       setStudentHistory([]);
     }
   }, []);
@@ -400,6 +419,7 @@ export function useTeacherGrades() {
     selectedTerm,
     loading,
     saving,
+    isDirty,
     currentAssessment,
     classStats,
     hasValidationErrors,

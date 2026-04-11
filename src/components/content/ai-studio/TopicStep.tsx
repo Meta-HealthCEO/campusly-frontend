@@ -66,7 +66,7 @@ export function TopicStep({
             </TabsList>
 
             <TabsContent value="browse" className="mt-3">
-              <div className="rounded-md border max-h-80 overflow-y-auto p-1">
+              <div className="rounded-md border max-h-[70vh] min-h-128 overflow-y-auto p-1">
                 <CurriculumTreeBrowser
                   frameworkId={selectedFramework}
                   onSelect={handleBrowseSelect}

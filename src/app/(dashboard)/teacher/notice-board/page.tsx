@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { NoticeBoardFeed } from '@/components/notice-board/NoticeBoardFeed';
 import { CreatePostDialog } from '@/components/notice-board/CreatePostDialog';
@@ -21,6 +22,7 @@ export default function TeacherNoticeBoardPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editPost, setEditPost] = useState<NoticeBoardPost | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<NoticeBoardPost | null>(null);
 
   const scopeOptions = useMemo(() => {
     const options: Array<{ id: string; name: string; scope: PostScope }> = [];
@@ -52,15 +54,21 @@ export default function TeacherNoticeBoardPage() {
     }
   }, [updatePost, fetchFeed]);
 
-  const handleDelete = useCallback(async (post: NoticeBoardPost) => {
+  const requestDelete = useCallback((post: NoticeBoardPost) => {
+    setPendingDelete(post);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!pendingDelete) return;
     try {
-      await deletePost(post.id);
+      await deletePost(pendingDelete.id);
       toast.success('Post deleted');
       fetchFeed();
-    } catch {
+    } catch (err) {
       toast.error('Failed to delete post');
+      throw err; // keep dialog open
     }
-  }, [deletePost, fetchFeed]);
+  }, [deletePost, fetchFeed, pendingDelete]);
 
   const handleTogglePin = useCallback(async (post: NoticeBoardPost) => {
     try {
@@ -91,7 +99,7 @@ export default function TeacherNoticeBoardPage() {
         loading={loading}
         canManage
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={requestDelete}
         onTogglePin={handleTogglePin}
       />
 
@@ -102,6 +110,19 @@ export default function TeacherNoticeBoardPage() {
         editPost={editPost}
         onUpdate={handleUpdate}
         scopeOptions={scopeOptions}
+      />
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={(v) => { if (!v) setPendingDelete(null); }}
+        title="Delete notice"
+        description={
+          pendingDelete
+            ? `Are you sure you want to delete "${pendingDelete.title}"? This cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
       />
     </div>
   );

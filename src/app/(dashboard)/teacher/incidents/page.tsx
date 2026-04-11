@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { TableSkeleton } from '@/components/shared/skeletons';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { IncidentTable } from '@/components/incidents/IncidentTable';
@@ -45,10 +45,17 @@ export default function TeacherIncidentsPage() {
   };
 
   const handleRowClick = (incident: Incident) => {
-    router.push(`/admin/incidents/${incident.id}`);
+    router.push(`/teacher/incidents/${incident.id}`);
   };
 
-  if (loading && incidents.length === 0) return <LoadingSpinner />;
+  if (loading && incidents.length === 0) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Incidents" description="Report and track school incidents" />
+        <TableSkeleton rows={6} columns={5} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import type {
@@ -33,6 +34,7 @@ export function useTeacherObservations(departmentId: string | null) {
       setTotal(data.total ?? 0);
     } catch (err: unknown) {
       console.error('Failed to load observations', err);
+      toast.error('Could not load observations. Please refresh.');
     } finally {
       setLoading(false);
     }

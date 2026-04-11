@@ -21,6 +21,7 @@ export function useTeacherHomework() {
     Record<string, SubmissionCounts>
   >({});
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const fetchSubmissionCounts = useCallback(
     async (hwList: Homework[]) => {
@@ -74,8 +75,11 @@ export function useTeacherHomework() {
         if (teacherHw.length > 0) {
           await fetchSubmissionCounts(teacherHw);
         }
-      } catch {
-        console.error('Failed to load homework data');
+      } catch (err: unknown) {
+        console.error('Failed to load homework data', err);
+        toast.error('Could not load homework data. Please refresh.');
+      } finally {
+        setLoading(false);
       }
     }
     fetchData();
@@ -111,9 +115,7 @@ export function useTeacherHomework() {
   );
 
   const deleteHomework = useCallback(
-    async (hwId: string, e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
+    async (hwId: string) => {
       setDeleting(hwId);
       try {
         await apiClient.delete(`/homework/${hwId}`);
@@ -121,6 +123,7 @@ export function useTeacherHomework() {
         toast.success('Homework deleted');
       } catch (err: unknown) {
         toast.error(extractErrorMessage(err, 'Failed to delete homework'));
+        throw err;
       } finally {
         setDeleting(null);
       }
@@ -139,6 +142,7 @@ export function useTeacherHomework() {
     classOptions,
     submissionCounts,
     deleting,
+    loading,
     createHomework,
     deleteHomework,
   };

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
-import { unwrapList, extractErrorMessage } from '@/lib/api-helpers';
+import { unwrapList, extractErrorMessage, resolveId } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { toast } from 'sonner';
 import type { Student, SchoolClass } from '@/types';
@@ -22,12 +22,6 @@ function toISODate(date: Date): string {
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
-}
-
-function resolveId(val: string | { id?: string; _id?: string } | undefined): string {
-  if (!val) return '';
-  if (typeof val === 'string') return val;
-  return val.id ?? val._id ?? '';
 }
 
 const today = toISODate(new Date());
@@ -52,31 +46,24 @@ export function useTeacherAttendance() {
       try {
         const classesRes = await apiClient.get('/academic/classes');
         const allClasses = unwrapList<SchoolClass>(classesRes);
-        const mine = allClasses.find((c) => {
-          const tid = typeof c.teacherId === 'object' && c.teacherId !== null
-            ? (c.teacherId as { id?: string; _id?: string }).id ?? (c.teacherId as { _id?: string })._id
-            : c.teacherId;
-          return tid === user!.id;
-        }) ?? null;
+        const mine = allClasses.find(
+          (c) => resolveId(c.teacherId as string | { id?: string; _id?: string } | undefined) === user!.id,
+        ) ?? null;
         setHomeClass(mine);
 
         if (!mine) return;
 
         const studentsRes = await apiClient.get('/students');
         const allStudents = unwrapList<Student>(studentsRes);
-        const homeStudents = allStudents.filter((s) => {
-          const cid = resolveId(
-            typeof s.classId === 'object' && s.classId !== null
-              ? (s.classId as { id?: string; _id?: string })
-              : s.classId as string,
-          );
-          return cid === mine.id;
-        });
+        const homeStudents = allStudents.filter(
+          (s) => resolveId(s.classId as string | { id?: string; _id?: string } | undefined) === mine.id,
+        );
         setStudents(homeStudents);
 
         await loadExistingAttendance(mine.id, today, homeStudents);
       } catch (err: unknown) {
         console.error('Failed to load attendance data', err);
+        toast.error('Could not load attendance data. Please refresh.');
       } finally {
         setLoading(false);
       }
@@ -103,9 +90,7 @@ export function useTeacherAttendance() {
         if (records.length > 0) {
           const map = new Map<string, AttendanceStatus>();
           records.forEach((r) => {
-            const sid = resolveId(
-              typeof r.studentId === 'object' ? r.studentId : r.studentId,
-            );
+            const sid = resolveId(r.studentId);
             if (sid) map.set(sid, r.status);
           });
           setAttendance(map);

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapList } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -19,8 +20,9 @@ export function useTeacherTimetable() {
         );
         const arr = unwrapList<TimetableSlot>(res);
         setTimetable(arr);
-      } catch {
-        console.error('Failed to load timetable');
+      } catch (err: unknown) {
+        console.error('Failed to load timetable', err);
+        toast.error('Could not load timetable. Please refresh.');
       } finally {
         setLoading(false);
       }

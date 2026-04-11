@@ -380,12 +380,15 @@ export const SUPERADMIN_NAV: NavItem[] = [
 
 export const TEACHER_NAV: NavItem[] = [
   { label: 'Dashboard', href: ROUTES.TEACHER_DASHBOARD, icon: Home },
+  { label: 'Classes', href: ROUTES.TEACHER_CLASSES, icon: Users },
+  { label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
   { label: 'Attendance', href: ROUTES.TEACHER_ATTENDANCE, icon: ClipboardList },
   {
     label: 'Curriculum',
     href: ROUTES.TEACHER_CURRICULUM,
     icon: Library,
     children: [
+      { label: 'Home', href: ROUTES.TEACHER_CURRICULUM, icon: Library },
       { label: 'AI Studio', href: ROUTES.TEACHER_CURRICULUM_AI_STUDIO, icon: Sparkles, badge: 'AI' },
       { label: 'Textbooks', href: '/teacher/curriculum/textbooks', icon: BookMarked },
       { label: 'Content Library', href: ROUTES.TEACHER_CURRICULUM_CONTENT, icon: BookOpen },
@@ -398,22 +401,41 @@ export const TEACHER_NAV: NavItem[] = [
       { label: 'Student Preview', href: ROUTES.TEACHER_CURRICULUM_PREVIEW, icon: Eye },
     ],
   },
-  { label: 'Report Comments', href: ROUTES.TEACHER_AI_REPORT_COMMENTS, icon: FileText, badge: 'AI' },
-  { label: 'Incidents', href: ROUTES.TEACHER_INCIDENTS, icon: AlertTriangle, module: 'incident_wellbeing' },
-  { label: 'Discipline', href: ROUTES.TEACHER_DISCIPLINE, icon: Shield },
-  { label: 'Classes', href: ROUTES.TEACHER_CLASSES, icon: Users },
-  { label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
-  { label: 'Messages', href: ROUTES.TEACHER_MESSAGES, icon: MessageSquare },
-  { label: 'Notice Board', href: ROUTES.TEACHER_NOTICE_BOARD, icon: Clipboard },
-  { label: 'Communication', href: ROUTES.TEACHER_COMMUNICATION, icon: Megaphone, module: 'communication' },
-  { label: 'Meetings', href: ROUTES.TEACHER_MEETINGS, icon: CalendarCheck },
+  {
+    label: 'Communication',
+    href: ROUTES.TEACHER_MESSAGES,
+    icon: MessageSquare,
+    children: [
+      { label: 'Messages', href: ROUTES.TEACHER_MESSAGES, icon: MessageSquare },
+      { label: 'Notice Board', href: ROUTES.TEACHER_NOTICE_BOARD, icon: Clipboard },
+      { label: 'Announcements', href: ROUTES.TEACHER_COMMUNICATION, icon: Megaphone, module: 'communication' },
+      { label: 'Meetings', href: ROUTES.TEACHER_MEETINGS, icon: CalendarCheck },
+      { label: 'Conferences', href: ROUTES.TEACHER_CONFERENCES, icon: Users, module: 'conference_booking' },
+    ],
+  },
+  {
+    label: 'Student Welfare',
+    href: ROUTES.TEACHER_DISCIPLINE,
+    icon: Shield,
+    children: [
+      { label: 'Discipline', href: ROUTES.TEACHER_DISCIPLINE, icon: Shield },
+      { label: 'Incidents', href: ROUTES.TEACHER_INCIDENTS, icon: AlertTriangle, module: 'incident_wellbeing' },
+      { label: 'Pastoral Care', href: ROUTES.TEACHER_PASTORAL, icon: Heart, permission: 'isCounselor' },
+    ],
+  },
+  {
+    label: 'Reporting',
+    href: ROUTES.TEACHER_REPORTS,
+    icon: BarChart3,
+    children: [
+      { label: 'Reports', href: ROUTES.TEACHER_REPORTS, icon: BarChart3 },
+      { label: 'Report Comments', href: ROUTES.TEACHER_AI_REPORT_COMMENTS, icon: FileText, badge: 'AI' },
+    ],
+  },
+  { label: 'Term Planner', href: ROUTES.TEACHER_WORKBENCH_PLANNER, icon: CalendarDays, module: 'teacher_workbench' },
   { label: 'My Leave', href: ROUTES.TEACHER_LEAVE, icon: CalendarDays, module: 'staff_leave' },
-  { label: 'Conferences', href: ROUTES.TEACHER_CONFERENCES, icon: Users, module: 'conference_booking' },
-  { label: 'Reports', href: ROUTES.TEACHER_REPORTS, icon: BarChart3 },
   // ─── Permission-gated (Special Roles) ──────────────────────────────
   { label: 'HOD Oversight', href: ROUTES.TEACHER_HOD, icon: Users, permission: 'isHOD' },
-  { label: 'Pastoral Care', href: ROUTES.TEACHER_PASTORAL, icon: Heart, permission: 'isCounselor' },
-  { label: 'Term Planner', href: ROUTES.TEACHER_WORKBENCH_PLANNER, icon: CalendarDays, module: 'teacher_workbench' },
 ];
 
 export const MODULES = [

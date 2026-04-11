@@ -5,10 +5,7 @@ import Link from 'next/link';
 import { BookOpen, FileText, Pencil, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-  DialogDescription, DialogFooter,
-} from '@/components/ui/dialog';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import type { Assessment } from '@/types';
 
 interface Props {
@@ -73,28 +70,14 @@ export function AssessmentInfoCard({ assessment, onEdit, onDelete }: Props) {
         </CardContent>
       </Card>
 
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Assessment</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete &quot;{assessment.name}&quot;? This will also delete all marks. This cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancel</Button>
-            <Button
-              variant="destructive"
-              onClick={async () => {
-                await onDelete(assessment.id);
-                setDeleteOpen(false);
-              }}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete Assessment"
+        description={`Are you sure you want to delete "${assessment.name}"? This will also delete all marks. This cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={() => onDelete(assessment.id)}
+      />
     </>
   );
 }

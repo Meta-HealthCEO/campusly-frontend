@@ -5,6 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
+import { ListSkeleton } from '@/components/shared/skeletons';
 import {
   Dialog,
   DialogContent,
@@ -12,7 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Plus, BookOpen, Users, Calendar, FileText, Trash2, ExternalLink } from 'lucide-react';
+import { Plus, BookOpen, Users, Calendar, FileText, Trash2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { RESOURCE_TYPE_LABELS } from '@/lib/design-system';
 import { HomeworkForm } from '@/components/homework/HomeworkForm';
@@ -27,12 +29,14 @@ import Link from 'next/link';
 export default function TeacherHomeworkPage() {
   const [open, setOpen] = useState(false);
   const [formDefaults, setFormDefaults] = useState<Partial<HomeworkFormValues> | undefined>();
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; title: string } | null>(null);
   const {
     teacherHomework,
     subjects,
     classOptions,
     submissionCounts,
     deleting,
+    loading,
     createHomework,
     deleteHomework,
   } = useTeacherHomework();
@@ -98,7 +102,9 @@ export default function TeacherHomeworkPage() {
         </div>
       </PageHeader>
 
-      {teacherHomework.length === 0 ? (
+      {loading ? (
+        <ListSkeleton rows={5} />
+      ) : teacherHomework.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-12">
             <BookOpen className="h-12 w-12 text-muted-foreground" />
@@ -170,7 +176,11 @@ export default function TeacherHomeworkPage() {
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          onClick={(e) => deleteHomework(hw.id, e)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setPendingDelete({ id: hw.id, title: hw.title });
+                          }}
                           disabled={deleting === hw.id}
                           aria-label="Delete homework"
                         >
@@ -185,6 +195,21 @@ export default function TeacherHomeworkPage() {
           })}
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={(v) => { if (!v) setPendingDelete(null); }}
+        title="Delete homework"
+        description={
+          pendingDelete
+            ? `Are you sure you want to delete "${pendingDelete.title}"? All submissions and grades will also be removed. This cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        onConfirm={async () => {
+          if (pendingDelete) await deleteHomework(pendingDelete.id);
+        }}
+      />
     </div>
   );
 }

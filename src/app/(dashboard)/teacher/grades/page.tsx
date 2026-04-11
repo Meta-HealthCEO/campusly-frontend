@@ -5,13 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { StatCardsSkeleton, TableSkeleton } from '@/components/shared/skeletons';
 import { EmptyState } from '@/components/shared/EmptyState';
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
-import { Save, BookOpen, Download, FileText } from 'lucide-react';
+import { Save, BookOpen, Download, FileText, AlertCircle } from 'lucide-react';
 import { useTeacherGrades } from '@/hooks/useTeacherGrades';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 // Assessment creation now goes through Curriculum → Assessments → Paper Builder
 import { EditAssessmentDialog } from '@/components/grades/EditAssessmentDialog';
 import { StudentHistoryDialog } from '@/components/grades/StudentHistoryDialog';
@@ -45,17 +46,28 @@ export default function TeacherGradesPage() {
   const {
     classes, subjects, assessments, markEntries,
     selectedClass, selectedSubject, selectedAssessment, selectedTerm,
-    loading, saving, currentAssessment, classStats,
+    loading, saving, isDirty, currentAssessment, classStats,
     hasValidationErrors, getMarkError,
     studentHistory, selectedStudent,
     setSelectedClass, setSelectedSubject, setSelectedAssessment, setSelectedTerm,
-    setSelectedStudent, handleMarkChange, saveMarks, createAssessment,
+    setSelectedStudent, handleMarkChange, saveMarks,
     updateAssessment, deleteAssessment, fetchStudentHistory,
   } = useTeacherGrades();
 
   const [editOpen, setEditOpen] = useState(false);
 
-  if (loading) return <LoadingSpinner />;
+  // Warn the user before closing/reloading the tab if marks are unsaved.
+  useUnsavedChanges(isDirty, 'You have unsaved marks. Are you sure you want to leave?');
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Gradebook" description="Enter and manage student assessment marks" />
+        <StatCardsSkeleton count={4} />
+        <TableSkeleton rows={8} columns={5} />
+      </div>
+    );
+  }
 
   const selectedClassName = classes.find((c) => c.id === selectedClass);
   const classDisplayName = selectedClassName
@@ -296,12 +308,18 @@ export default function TeacherGradesPage() {
             </div>
           )}
           {markEntries.length > 0 && (
-            <div className="mt-4 flex flex-wrap justify-end gap-2">
+            <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+              {isDirty && (
+                <div className="mr-auto flex items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-700 dark:text-amber-400">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  You have unsaved changes
+                </div>
+              )}
               <Button variant="outline" onClick={exportCSV}>
                 <Download className="mr-2 h-4 w-4" />
                 Export CSV
               </Button>
-              <Button onClick={saveMarks} disabled={saving || hasValidationErrors}>
+              <Button onClick={saveMarks} disabled={saving || hasValidationErrors || !isDirty}>
                 <Save className="mr-2 h-4 w-4" />
                 {saving ? 'Saving...' : 'Save Marks'}
               </Button>

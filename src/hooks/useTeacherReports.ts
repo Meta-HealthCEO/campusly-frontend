@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapList } from '@/lib/api-helpers';
 
@@ -30,8 +31,9 @@ export function useTeacherReportData() {
             name: (c.name as string) ?? 'Unknown',
           })),
         );
-      } catch {
-        console.error('Failed to load classes');
+      } catch (err: unknown) {
+        console.error('Failed to load classes', err);
+        toast.error('Could not load classes. Please refresh.');
       }
     }
     fetchClasses();
@@ -64,8 +66,9 @@ export function useTeacherReportData() {
             };
           }),
         );
-      } catch {
-        console.error('Failed to load students');
+      } catch (err: unknown) {
+        console.error('Failed to load students', err);
+        toast.error('Could not load students. Please refresh.');
       } finally {
         setLoadingStudents(false);
       }

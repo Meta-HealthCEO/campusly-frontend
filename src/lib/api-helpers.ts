@@ -59,3 +59,32 @@ export function extractErrorMessage(
   }
   return fallback;
 }
+
+/**
+ * Resolve an ID from a field that may be a string, an object with `id`,
+ * an object with `_id`, or undefined. Centralises the defensive casts
+ * that previously polluted every teacher hook.
+ *
+ * @example
+ *   resolveId(student.classId)      // string → '507f1f77bcf86cd799439011'
+ *   resolveId(student.classId)      // { _id: '...' } → '...'
+ *   resolveId(undefined)            // → ''
+ */
+export function resolveId(
+  val: string | { id?: string; _id?: string } | null | undefined,
+): string {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  return val.id ?? val._id ?? '';
+}
+
+/** Narrow helper for extracting a named field from a populated sub-document. */
+export function resolveField<T extends string | number | boolean>(
+  val: unknown,
+  key: string,
+): T | undefined {
+  if (typeof val !== 'object' || val === null) return undefined;
+  const obj = val as Record<string, unknown>;
+  const v = obj[key];
+  return v === undefined ? undefined : (v as T);
+}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
-import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { ListSkeleton } from '@/components/shared/skeletons';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { ThreadList } from '@/components/messaging/ThreadList';
 import { MessageView } from '@/components/messaging/MessageView';
@@ -62,7 +62,19 @@ export default function TeacherMessagesPage() {
     setActiveThreadId(null);
   }, []);
 
-  if (loading && threads.length === 0) return <LoadingSpinner />;
+  if (loading && threads.length === 0) {
+    return (
+      <div className="space-y-4">
+        <PageHeader
+          title="Direct Messages"
+          description="Private conversations with parents about their children."
+        />
+        <Card className="p-4">
+          <ListSkeleton rows={5} />
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

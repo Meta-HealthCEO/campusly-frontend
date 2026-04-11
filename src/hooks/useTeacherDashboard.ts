@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapList, unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -24,6 +25,8 @@ interface DashboardData {
   classCount: number;
   ungradedCount: number;
   loading: boolean;
+  refreshing: boolean;
+  refresh: () => Promise<void>;
 }
 
 export function useTeacherDashboard(): DashboardData {
@@ -34,6 +37,7 @@ export function useTeacherDashboard(): DashboardData {
   const [classCount, setClassCount] = useState(0);
   const [ungradedCount, setUngradedCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!user?.id) return;
@@ -66,40 +70,40 @@ export function useTeacherDashboard(): DashboardData {
         setTimetable(todaySlots as unknown as TimetableSlot[]);
       }
 
-      // Homework + submission counts
+      // Homework + submission counts (fetched in parallel)
       if (homeworkRes.status === 'fulfilled') {
         const arr = unwrapList<Homework>(homeworkRes.value);
         const myHomework = arr.filter((hw) => hw.teacherId === user.id);
 
+        const submissionResults = await Promise.allSettled(
+          myHomework.map((hw) =>
+            apiClient.get(`/homework/${hw.id}/submissions`),
+          ),
+        );
+
         let totalUngraded = 0;
         const withCounts: HomeworkWithCount[] = [];
 
-        for (const hw of myHomework) {
-          try {
-            const subRes = await apiClient.get(
-              `/homework/${hw.id}/submissions`,
-            );
-            const subs = unwrapList<Record<string, unknown>>(subRes);
-            const submitted = subs.filter(
-              (s) => s.status === 'submitted',
-            ).length;
-            const graded = subs.filter(
-              (s) => s.grade !== undefined && s.grade !== null,
-            ).length;
-            totalUngraded += submitted;
-            if (submitted > 0) {
-              withCounts.push({
-                id: hw.id,
-                title: hw.title,
-                subjectName: hw.subject?.name ?? hw.subjectName ?? '',
-                totalSubmissions: subs.length,
-                gradedCount: graded,
-              });
-            }
-          } catch {
-            /* skip */
+        myHomework.forEach((hw, idx) => {
+          const result = submissionResults[idx];
+          if (result.status !== 'fulfilled') return;
+
+          const subs = unwrapList<Record<string, unknown>>(result.value);
+          const submitted = subs.filter((s) => s.status === 'submitted').length;
+          const graded = subs.filter(
+            (s) => s.grade !== undefined && s.grade !== null,
+          ).length;
+          totalUngraded += submitted;
+          if (submitted > 0) {
+            withCounts.push({
+              id: hw.id,
+              title: hw.title,
+              subjectName: hw.subject?.name ?? hw.subjectName ?? '',
+              totalSubmissions: subs.length,
+              gradedCount: graded,
+            });
           }
-        }
+        });
 
         setPendingHomework(withCounts);
         setUngradedCount(totalUngraded);
@@ -132,8 +136,9 @@ export function useTeacherDashboard(): DashboardData {
         );
         setClassCount(myClasses.length);
       }
-    } catch {
-      console.error('Failed to load teacher dashboard');
+    } catch (err: unknown) {
+      console.error('Failed to load teacher dashboard', err);
+      toast.error('Could not load dashboard. Please refresh.');
     } finally {
       setLoading(false);
     }
@@ -143,7 +148,25 @@ export function useTeacherDashboard(): DashboardData {
     fetchData();
   }, [fetchData]);
 
-  return { timetable, pendingHomework, absentToday, classCount, ungradedCount, loading };
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchData();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchData]);
+
+  return {
+    timetable,
+    pendingHomework,
+    absentToday,
+    classCount,
+    ungradedCount,
+    loading,
+    refreshing,
+    refresh,
+  };
 }
 
 export type { AbsentRecord, HomeworkWithCount };
