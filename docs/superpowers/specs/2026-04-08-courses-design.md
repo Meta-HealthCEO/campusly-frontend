@@ -505,6 +505,87 @@ the cached URL.
 `https://<frontend-host>/verify/certificate/<code>` renders a public page
 that calls the public API and shows the four snapshotted fields.
 
+## UX constraints — platform vs. teacher responsibilities
+
+The course UX is **standardised across the entire platform**. Every course
+renders through a single fixed layout. Teachers author *content*; the
+platform owns *presentation*. This is the same model used by Coursera,
+Udemy, edX, and Khan Academy, and it's the single most important design
+decision in this feature.
+
+### What the teacher controls
+- Course title, description, cover image
+- Module list and ordering
+- Lesson list, ordering, and which existing resource each lesson references
+- Lesson type (`content` / `chapter` / `homework` / `quiz`)
+- Per-quiz gating settings (pass mark, required-to-advance, max attempts)
+- Course-level pass mark and certificate toggle
+
+### What the platform controls (teacher cannot change)
+- Page layout of the course home, lesson player, and builder
+- Typography, colours, and spacing (inherited from the existing design system)
+- Navigation, breadcrumbs, and mobile behaviour
+- Block rendering — every lesson is rendered through the existing
+  `ContentBlockRenderer` stack (markdown, LaTeX, TikZ, quiz, fill-blank,
+  matching, ordering, code, video, image), the same stack used by
+  Textbooks and Content Library today
+- Progress tracking, lock icons, completion ticks
+- Certificate template (school logo is inherited, everything else is fixed)
+
+### Fixed layouts
+
+**Course home (`/student/courses/[id]`):**
+1. Hero band: cover image + title + teacher + subject/grade + duration + "Continue" CTA
+2. Description paragraph
+3. Overall progress bar
+4. Collapsible module list with per-lesson status icons (✓ completed, ● in progress, 🔒 locked)
+
+**Lesson player (`/student/courses/[id]/learn/[lessonId]`):**
+1. Left sidebar (collapsible on mobile): course outline with current lesson highlighted
+2. Main pane: the referenced resource rendered through `ContentBlockRenderer`
+3. Bottom bar: Previous / Next buttons, disabled until completion rule satisfied
+
+**Course builder (`/teacher/courses/[id]/edit`):**
+Same two-pane shell as the lesson player but in edit mode. Drag handles on
+the left sidebar, a resource picker + lesson-settings panel in the main pane.
+This is deliberate: the builder **is** the student view with edit affordances,
+not a separate editor. Teachers always see what students will see.
+
+### Why this approach
+
+- **Consistency** — every course feels like a Campusly course. A student who
+  has taken one course knows how to take any other course.
+- **No authoring regressions** — a teacher can't accidentally build an
+  unusable layout, because there is no layout to configure.
+- **Speed** — one-click lesson adding, zero layout decisions, zero style
+  pickers. The 15-minute authoring target is only achievable with a
+  constrained surface area.
+- **Re-uses existing investment** — the block renderers, the design tokens,
+  and the interaction tracking are all already built. Courses ships as an
+  *organising layer* on top of your existing content infrastructure, not as
+  a parallel content system.
+
+### Authoring flow
+
+A teacher building a course follows this fixed path:
+
+1. Click "New Course" → fill title, description, subject, grade → Create
+2. Land in the builder with an empty outline
+3. Click "+ Module" → name it → Enter
+4. Click "+ Lesson" → fuzzy-search opens with everything from Content
+   Library, Textbook chapters, Homework, and Question Bank pre-indexed →
+   type to filter → Enter to add
+5. Repeat for more lessons and modules
+6. Drag to reorder if needed
+7. Click "Preview" to see the student view
+8. Click "Submit for Review"
+
+If a teacher needs content that doesn't exist yet, they click "Create
+Content" which opens the existing Content Library authoring flow in a
+new tab. When they return, the new resource is in the picker. This keeps
+the course builder a pure composition tool — no rich-text editors, no
+font pickers, no upload widgets.
+
 ## Frontend surfaces
 
 All new routes. No existing page is rewritten.
