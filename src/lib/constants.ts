@@ -10,6 +10,7 @@ import {
   Wrench, Database, FileEdit, CheckCircle, ClipboardCheck,
   CalendarCheck, CalendarCog, Crown, DoorOpen, UserPlus,
   AlertTriangle, Calculator, Library, PenTool, HelpCircle, Camera, Eye,
+  CheckSquare,
   type LucideIcon
 } from 'lucide-react';
 import type { PermissionFlag } from '@/types';
@@ -145,9 +146,20 @@ export const ROUTES = {
   STUDENT_CAREERS_BURSARIES: '/student/careers/bursaries',
   STUDENT_PORTFOLIO: '/student/portfolio',
 
+  // Student — Courses
+  STUDENT_COURSES: '/student/courses',
+  STUDENT_COURSE_HOME: (id: string) => `/student/courses/${id}`,
+  STUDENT_LESSON_PLAYER: (id: string, lessonId: string) =>
+    `/student/courses/${id}/learn/${lessonId}`,
+  STUDENT_CERTIFICATE: (id: string) => `/student/courses/${id}/certificate`,
+
   // Parent — Careers
   PARENT_CAREERS: '/parent/careers',
   PARENT_PORTFOLIO: '/parent/portfolio',
+
+  // Admin — Courses
+  ADMIN_COURSES: '/admin/courses',
+  ADMIN_COURSES_REVIEW: '/admin/courses/review',
 
   // Admin — Careers
   ADMIN_CAREERS_UNIVERSITIES: '/admin/careers/universities',
@@ -188,6 +200,12 @@ export const ROUTES = {
   TEACHER_CURRICULUM_PAPERS: '/teacher/curriculum/papers',
   TEACHER_CURRICULUM_MARK_PAPERS: '/teacher/curriculum/mark-papers',
 
+  // Teacher — Courses
+  TEACHER_COURSES: '/teacher/courses',
+  TEACHER_COURSE_EDIT: (id: string) => `/teacher/courses/${id}/edit`,
+  TEACHER_COURSE_ASSIGN: (id: string) => `/teacher/courses/${id}/assign`,
+  TEACHER_COURSE_ANALYTICS: (id: string) => `/teacher/courses/${id}/analytics`,
+
   // Teacher Workbench
   TEACHER_WORKBENCH: '/teacher/workbench',
   TEACHER_WORKBENCH_CURRICULUM: '/teacher/workbench/curriculum',
@@ -222,6 +240,16 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Dashboard', href: ROUTES.ADMIN_DASHBOARD, icon: LayoutDashboard },
   { label: 'Students', href: ROUTES.ADMIN_STUDENTS, icon: GraduationCap },
   { label: 'Staff', href: ROUTES.ADMIN_STAFF, icon: Users },
+  {
+    label: 'Courses',
+    href: ROUTES.ADMIN_COURSES,
+    icon: GraduationCap,
+    module: 'courses',
+    children: [
+      { label: 'All Courses', href: ROUTES.ADMIN_COURSES, icon: GraduationCap },
+      { label: 'Review Queue', href: ROUTES.ADMIN_COURSES_REVIEW, icon: CheckSquare },
+    ],
+  },
   {
     label: 'Fees', href: ROUTES.ADMIN_FEES, icon: DollarSign, module: 'fees',
     children: [
@@ -352,6 +380,7 @@ export const STUDENT_NAV: NavItem[] = [
   { label: 'Timetable', href: ROUTES.STUDENT_TIMETABLE, icon: Clock },
   { label: 'Grades', href: ROUTES.STUDENT_GRADES, icon: BarChart3 },
   { label: 'Library', href: ROUTES.STUDENT_LIBRARY, icon: BookMarked, module: 'library' },
+  { label: 'Courses', href: ROUTES.STUDENT_COURSES, icon: GraduationCap, module: 'courses' },
   { label: 'Achievements', href: ROUTES.STUDENT_ACHIEVEMENTS, icon: Award },
   { label: 'Wallet', href: ROUTES.STUDENT_WALLET, icon: Wallet, module: 'wallet' },
   { label: 'My Sports', href: ROUTES.STUDENT_SPORTS, icon: Trophy, module: 'sports' },
@@ -402,6 +431,12 @@ export const TEACHER_NAV: NavItem[] = [
     ],
   },
   {
+    label: 'Courses',
+    href: ROUTES.TEACHER_COURSES,
+    icon: GraduationCap,
+    module: 'courses',
+  },
+  {
     label: 'Communication',
     href: ROUTES.TEACHER_MESSAGES,
     icon: MessageSquare,
@@ -436,6 +471,7 @@ export const TEACHER_NAV: NavItem[] = [
   { label: 'My Leave', href: ROUTES.TEACHER_LEAVE, icon: CalendarDays, module: 'staff_leave' },
   // ─── Permission-gated (Special Roles) ──────────────────────────────
   { label: 'HOD Oversight', href: ROUTES.TEACHER_HOD, icon: Users, permission: 'isHOD' },
+  { label: 'Course Review', href: ROUTES.ADMIN_COURSES_REVIEW, icon: CheckSquare, permission: 'isHOD', module: 'courses' },
 ];
 
 export const MODULES = [
