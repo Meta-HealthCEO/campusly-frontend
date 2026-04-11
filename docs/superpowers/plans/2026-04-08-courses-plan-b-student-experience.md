@@ -763,11 +763,17 @@ import {
   BadRequestError,
 } from '../../common/errors.js';
 
+// Block types that require student interaction to "complete". Names must
+// match BLOCK_TYPES in src/modules/ContentLibrary/model.ts. Excludes text,
+// image, video (passive media) and code (no submission/run mechanism yet).
 const INTERACTIVE_BLOCK_TYPES = new Set([
   'quiz',
   'fill_blank',
-  'match',
+  'match_columns',
   'ordering',
+  'drag_drop',
+  'hotspot',
+  'step_reveal',
 ]);
 
 export class CourseProgressService {
