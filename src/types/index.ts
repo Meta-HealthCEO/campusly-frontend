@@ -60,3 +60,4 @@ export * from './student-learning';
 // export * from './question-bank';
 export * from './textbook';
 export * from './diagram';
+export * from './courses';
