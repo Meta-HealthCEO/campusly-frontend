@@ -44,12 +44,12 @@ const LESSON_ICON: Record<LessonType, typeof FileText> = {
   quiz: HelpCircle,
 };
 
-function statusIcon(status: LessonProgressStatus | undefined): typeof CheckCircle2 {
-  if (status === 'completed') return CheckCircle2;
-  if (status === 'in_progress') return PlayCircle;
-  if (status === 'locked') return Lock;
-  return PlayCircle;
-}
+const STATUS_ICON: Record<LessonProgressStatus, typeof CheckCircle2> = {
+  completed: CheckCircle2,
+  in_progress: PlayCircle,
+  locked: Lock,
+  available: PlayCircle,
+};
 
 function findNextAvailableLesson(course: CourseTree): LessonWithStatus | null {
   for (const mod of course.modules) {
@@ -210,10 +210,10 @@ interface LessonRowProps {
 }
 
 function LessonRow({ lesson, onOpenLesson }: LessonRowProps) {
-  const status = lesson.unlockStatus ?? 'locked';
+  const status: LessonProgressStatus = lesson.unlockStatus ?? 'locked';
   const isLocked = status === 'locked';
   const Icon = LESSON_ICON[lesson.type];
-  const StatusIcon = statusIcon(status);
+  const StatusIcon = STATUS_ICON[status];
 
   return (
     <button

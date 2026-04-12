@@ -27,49 +27,20 @@ export interface UpdateCourseInput {
  * backend's discriminatedUnion. Use the exact type that matches the
  * lesson the teacher picked from the resource picker.
  */
-export type CreateLessonInput =
-  | {
-      moduleId: string;
-      orderIndex?: number;
-      title: string;
-      type: 'content';
-      contentResourceId: string;
-      isRequiredToAdvance?: boolean;
-      passMarkPercent?: number;
-      maxAttempts?: number | null;
-    }
-  | {
-      moduleId: string;
-      orderIndex?: number;
-      title: string;
-      type: 'chapter';
-      textbookId: string;
-      chapterId: string;
-      isRequiredToAdvance?: boolean;
-      passMarkPercent?: number;
-      maxAttempts?: number | null;
-    }
-  | {
-      moduleId: string;
-      orderIndex?: number;
-      title: string;
-      type: 'homework';
-      homeworkId: string;
-      isRequiredToAdvance?: boolean;
-      passMarkPercent?: number;
-      maxAttempts?: number | null;
-    }
-  | {
-      moduleId: string;
-      orderIndex?: number;
-      title: string;
-      type: 'quiz';
-      quizQuestionIds: string[];
-      isRequiredToAdvance?: boolean;
-      passMarkPercent?: number;
-      maxAttempts?: number | null;
-      isGraded?: boolean;
-    };
+type LessonBase = {
+  moduleId: string;
+  orderIndex?: number;
+  title: string;
+  isRequiredToAdvance?: boolean;
+  passMarkPercent?: number;
+  maxAttempts?: number | null;
+};
+export type CreateLessonInput = LessonBase & (
+  | { type: 'content'; contentResourceId: string }
+  | { type: 'chapter'; textbookId: string; chapterId: string }
+  | { type: 'homework'; homeworkId: string }
+  | { type: 'quiz'; quizQuestionIds: string[]; isGraded?: boolean }
+);
 
 export interface UpdateLessonInput {
   title?: string;

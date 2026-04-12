@@ -33,12 +33,12 @@ const LESSON_ICON: Record<LessonType, typeof FileText> = {
   quiz: HelpCircle,
 };
 
-function statusIcon(status: LessonProgressStatus | undefined): typeof CheckCircle2 {
-  if (status === 'completed') return CheckCircle2;
-  if (status === 'in_progress') return PlayCircle;
-  if (status === 'locked') return Lock;
-  return Circle;
-}
+const STATUS_ICON: Record<LessonProgressStatus, typeof CheckCircle2> = {
+  completed: CheckCircle2,
+  in_progress: PlayCircle,
+  locked: Lock,
+  available: Circle,
+};
 
 /**
  * The left sidebar in the lesson player. Shows the full course outline
@@ -122,10 +122,10 @@ interface LessonButtonProps {
 }
 
 function LessonButton({ lesson, isCurrent, onSelect }: LessonButtonProps) {
-  const status = lesson.unlockStatus ?? 'locked';
+  const status: LessonProgressStatus = lesson.unlockStatus ?? 'locked';
   const isLocked = status === 'locked';
   const TypeIcon = LESSON_ICON[lesson.type];
-  const StatusIcon = statusIcon(status);
+  const StatusIcon = STATUS_ICON[status];
 
   return (
     <button
