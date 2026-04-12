@@ -193,6 +193,7 @@ export interface CourseAnalytics {
   }>;
   perClassBreakdown: Array<{
     classId: string | null;
+    className: string;
     enroled: number;
     completed: number;
   }>;
