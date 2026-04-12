@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { CourseBuilderOutline } from '@/components/courses/CourseBuilderOutline';
 import { CourseBuilderLessonEditor } from '@/components/courses/CourseBuilderLessonEditor';
 import { CourseBuilderMetaPanel } from '@/components/courses/CourseBuilderMetaPanel';
+import { ResourcePickerDialog } from '@/components/courses/ResourcePickerDialog';
 import { useCourseBuilder } from '@/hooks/useCourseBuilder';
 import { AlertTriangle } from 'lucide-react';
 
@@ -15,6 +16,7 @@ export default function CourseBuilderPage() {
   const courseId = params.id as string;
   const builder = useCourseBuilder(courseId);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+  const [pickerModuleId, setPickerModuleId] = useState<string | null>(null);
 
   if (builder.loading) return <LoadingSpinner />;
   if (!builder.course) {
@@ -56,13 +58,7 @@ export default function CourseBuilderPage() {
             }
           }}
           onReorderModules={async (orders) => { await builder.reorderModules(orders); }}
-          onAddLesson={(moduleId) => {
-            // Task 6 wires this to the resource picker dialog.
-            // For now, no-op with a console log so the button is present
-            // but non-functional.
-            // eslint-disable-next-line no-console
-            console.log('TODO: open resource picker for module', moduleId);
-          }}
+          onAddLesson={(moduleId) => setPickerModuleId(moduleId)}
           onDeleteLesson={async (lessonId) => {
             await builder.deleteLesson(lessonId);
             if (selectedLessonId === lessonId) setSelectedLessonId(null);
@@ -90,6 +86,18 @@ export default function CourseBuilderPage() {
           isDirty={builder.isDirty}
         />
       </aside>
+      <ResourcePickerDialog
+        open={pickerModuleId !== null}
+        onOpenChange={(v) => { if (!v) setPickerModuleId(null); }}
+        moduleId={pickerModuleId}
+        onPick={async (input) => {
+          const created = await builder.addLesson(input);
+          if (created) {
+            setPickerModuleId(null);
+            setSelectedLessonId(created.id);
+          }
+        }}
+      />
     </div>
   );
 }
