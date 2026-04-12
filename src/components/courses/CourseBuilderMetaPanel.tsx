@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, Send } from 'lucide-react';
+import { AlertCircle, Send, Users } from 'lucide-react';
 import type { CourseTree, CourseStatus } from '@/types';
 import type { UpdateCourseInput } from '@/hooks/useCourseBuilder';
+import { AssignCourseDialog } from './AssignCourseDialog';
 
 interface CourseBuilderMetaPanelProps {
   course: CourseTree;
@@ -37,6 +38,7 @@ export function CourseBuilderMetaPanel({
   onSubmitForReview,
   isDirty,
 }: CourseBuilderMetaPanelProps) {
+  const [assignOpen, setAssignOpen] = useState(false);
   const totalLessons = course.modules.reduce((n, m) => n + m.lessons.length, 0);
   const canSubmit = course.status === 'draft' && totalLessons > 0;
 
@@ -84,10 +86,22 @@ export function CourseBuilderMetaPanel({
               Add at least one lesson before submitting.
             </p>
           )}
-          {course.status === 'published' && course.publishedAt && (
-            <p className="text-xs text-muted-foreground">
-              Published on {new Date(course.publishedAt).toLocaleDateString()}
-            </p>
+          {course.status === 'published' && (
+            <>
+              <Button
+                className="w-full"
+                variant="default"
+                onClick={() => setAssignOpen(true)}
+              >
+                <Users className="mr-2 h-4 w-4" />
+                Assign to Class
+              </Button>
+              {course.publishedAt && (
+                <p className="text-xs text-muted-foreground">
+                  Published on {new Date(course.publishedAt).toLocaleDateString()}
+                </p>
+              )}
+            </>
           )}
           {course.status === 'in_review' && (
             <p className="text-xs text-muted-foreground">
@@ -110,6 +124,13 @@ export function CourseBuilderMetaPanel({
           />
         </CardContent>
       </Card>
+
+      <AssignCourseDialog
+        open={assignOpen}
+        onOpenChange={setAssignOpen}
+        courseId={course.id}
+        courseTitle={course.title}
+      />
     </div>
   );
 }
