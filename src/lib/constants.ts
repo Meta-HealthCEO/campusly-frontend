@@ -7,7 +7,6 @@ import {
   Building2, HeadphonesIcon, PlusCircle, PackageSearch,
   Heart, Upload, Shirt, Trophy, Sparkles,
   Compass, Target, Clipboard, Newspaper,
-  Wrench, Database, FileEdit, CheckCircle, ClipboardCheck,
   CalendarCheck, CalendarCog, Crown, DoorOpen, UserPlus,
   AlertTriangle, Calculator, Library, PenTool, HelpCircle, Camera, Eye,
   CheckSquare,
@@ -173,6 +172,7 @@ export const ROUTES = {
   TEACHER_HOMEWORK: '/teacher/homework',
   TEACHER_DISCIPLINE: '/teacher/discipline',
   TEACHER_CLASSES: '/teacher/classes',
+  TEACHER_STUDENTS: '/teacher/students',
   TEACHER_TIMETABLE: '/teacher/timetable',
   TEACHER_NOTICE_BOARD: '/teacher/notice-board',
   TEACHER_COMMUNICATION: '/teacher/communication',
@@ -199,6 +199,7 @@ export const ROUTES = {
   TEACHER_CURRICULUM_AI_STUDIO: '/teacher/curriculum/ai-studio',
   TEACHER_CURRICULUM_PAPERS: '/teacher/curriculum/papers',
   TEACHER_CURRICULUM_MARK_PAPERS: '/teacher/curriculum/mark-papers',
+  TEACHER_ASSESSMENT_STRUCTURES: '/teacher/curriculum/assessment-structure',
 
   // Teacher — Courses
   TEACHER_COURSES: '/teacher/courses',
@@ -409,7 +410,15 @@ export const SUPERADMIN_NAV: NavItem[] = [
 
 export const TEACHER_NAV: NavItem[] = [
   { label: 'Dashboard', href: ROUTES.TEACHER_DASHBOARD, icon: Home },
-  { label: 'Classes', href: ROUTES.TEACHER_CLASSES, icon: Users },
+  {
+    label: 'Classes',
+    href: ROUTES.TEACHER_CLASSES,
+    icon: Users,
+    children: [
+      { label: 'My Classes', href: ROUTES.TEACHER_CLASSES, icon: Users },
+      { label: 'Students', href: ROUTES.TEACHER_STUDENTS, icon: GraduationCap },
+    ],
+  },
   { label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
   { label: 'Attendance', href: ROUTES.TEACHER_ATTENDANCE, icon: ClipboardList },
   {
@@ -423,6 +432,7 @@ export const TEACHER_NAV: NavItem[] = [
       { label: 'Content Library', href: ROUTES.TEACHER_CURRICULUM_CONTENT, icon: BookOpen },
       { label: 'Question Bank', href: ROUTES.TEACHER_CURRICULUM_QUESTIONS, icon: HelpCircle },
       { label: 'Assessments', href: ROUTES.TEACHER_CURRICULUM_ASSESSMENTS, icon: PenTool },
+      { label: 'Assessment Structure', href: ROUTES.TEACHER_ASSESSMENT_STRUCTURES, icon: BarChart3 },
       { label: 'Generated Papers', href: ROUTES.TEACHER_CURRICULUM_PAPERS, icon: FileText, badge: 'AI' },
       { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
       { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
