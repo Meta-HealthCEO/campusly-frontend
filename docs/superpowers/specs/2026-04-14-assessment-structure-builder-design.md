@@ -85,6 +85,10 @@ AssessmentStructure {
 **Mark** — add field:
 - `isAbsent: Boolean, default: false` — when true, `mark` is null, student was absent
 
+### Uniqueness Constraint
+
+One live structure per subject/class/term: unique on `(teacherId, subjectId, classId, term, academicYear)` where `isTemplate: false` and `isDeleted: false`.
+
 ### Key Rules
 
 - Category weights must total exactly 100%
@@ -102,6 +106,10 @@ AssessmentStructure {
 ## API Endpoints
 
 All under `/api/academic/assessment-structures`. Teacher + school_admin + super_admin can access.
+
+### Multi-Tenancy
+
+All queries must include `schoolId` from `req.user.schoolId`. For standalone teachers, queries filter by `teacherId` + `schoolId: null`. This is enforced at the route handler level, not optional.
 
 ### CRUD
 
@@ -151,17 +159,17 @@ All under `/api/academic/assessment-structures`. Teacher + school_admin + super_
 
 | Method | Path | What |
 |--------|------|------|
-| `POST /:id/save-as-template` | Clone structure as reusable template |
+| `POST /:id/save-as-template` | Clone structure as reusable template. Body: `{ templateName }` |
 | `GET /templates` | List my saved templates |
-| `POST /from-template/:templateId` | Create new structure from template |
+| `POST /from-template/:templateId` | Create new structure from template. Body: `{ term, academicYear, classId?, gradeId?, subjectId?, subjectName, name }` |
 | `DELETE /templates/:id` | Delete saved template |
-| `POST /:id/clone` | Clone structure to new term/class/year (one-step) |
+| `POST /:id/clone` | Clone to new term/class/year. Body: `{ term, academicYear, classId?, gradeId?, name? }` |
 
 ### Export
 
 | Method | Path | What |
 |--------|------|------|
-| `GET /:id/export` | Download term marks as PDF/CSV (all teachers) |
+| `GET /:id/export?format=csv` | Download term marks as CSV or PDF. Query param `format`: `csv` (default) or `pdf`. Available to all teachers. |
 
 ### Validation Rules
 
@@ -241,6 +249,7 @@ Achievement level = 5 (Substantial)
 | Student has mark of 0 | 0%, included in calculation |
 | Student absent (`isAbsent: true`) | Excluded from that line item, weights re-normalized |
 | Category has 0 participating line items | Excluded from projected calculation, shows "no data" |
+| Student absent for ALL items in a category | Category weight redistributed proportionally across student's other categories |
 | All marks missing | No calculation, show "no assessments captured" |
 | Line item weights don't sum to 100% | Blocked at activate validation |
 | Category weights don't sum to 100% | Blocked at activate validation |
@@ -270,7 +279,7 @@ Backend uses a MongoDB aggregation pipeline to fetch structure + all related mar
       "weight": 30,
       "status": "complete",
       "lineItems": [
-        { "name": "Test 1", "totalMarks": 50, "marksCaptured": 28, "marksPending": 0 }
+        { "name": "Test 1", "totalMarks": 50, "studentsCaptured": 28, "studentsPending": 0 }
       ]
     }
   ],
@@ -289,8 +298,8 @@ Backend uses a MongoDB aggregation pipeline to fetch structure + all related mar
           "weight": 30,
           "score": 78,
           "lineItems": [
-            { "name": "Test 1", "mark": 42, "total": 50, "percentage": 84 },
-            { "name": "Test 2", "mark": 71, "total": 100, "percentage": 71 }
+            { "name": "Test 1", "mark": 42, "total": 50, "percentage": 84, "isAbsent": false },
+            { "name": "Test 2", "mark": 71, "total": 100, "percentage": 71, "isAbsent": false }
           ]
         },
         {
@@ -298,7 +307,7 @@ Backend uses a MongoDB aggregation pipeline to fetch structure + all related mar
           "weight": 40,
           "score": null,
           "lineItems": [
-            { "name": "Final Exam", "mark": null, "total": 150, "percentage": null }
+            { "name": "Final Exam", "mark": null, "total": 150, "percentage": null, "isAbsent": false }
           ]
         }
       ]
@@ -341,6 +350,7 @@ src/components/assessment-structure/
   TemplateSelectDialog.tsx           — pick template → set class/term/year → create
   CloneStructureDialog.tsx           — clone to another term/class/year
   LockValidationDialog.tsx           — shows exactly what's missing before lock
+  CreateStructureDialog.tsx           — initial creation form (name, subject, class, term, year)
   StudentManager.tsx                 — add/remove students (standalone teachers only)
 ```
 
@@ -373,6 +383,18 @@ Cards per structure showing: name, term/year, subject, status badge (draft/activ
 
 **Empty state:** "No assessment structures yet. Create one to define your term's assessment plan."
 
+### Create Structure Dialog
+
+"Create New" opens a dialog with:
+- **Name** — text input (e.g. "Maths Grade 8 Term 1")
+- **Subject** — dropdown from teacher's assigned subjects (school) or freetext input (standalone)
+- **Class** — dropdown from teacher's classes (school); hidden for standalone
+- **Grade** — dropdown; optional for standalone
+- **Term** — select (1-4)
+- **Academic Year** — number input (default: current year)
+
+Validates uniqueness (one structure per subject/class/term/year). On submit, creates draft and navigates to builder.
+
 ### Builder View — Structure Tab
 
 Categories displayed as collapsible cards. Each card shows:
@@ -398,6 +420,8 @@ Scrollable DataTable:
 - Projected term mark greyed out with "projected" label until locked
 - "Enter Marks" button → opens MarkEntryDialog for next capturing assessment
 - Click any empty cell in a capturing column → opens MarkEntryDialog for that assessment
+
+**Sorting & search:** Sort by student name (default alphabetical) or projected term mark. Search by student name.
 
 **Mobile:** Collapses to per-student cards with expandable category breakdowns.
 
@@ -434,6 +458,7 @@ Absent checkbox → disables mark input, creates Mark with isAbsent: true
 - **Lock:** "This will freeze all marks for report card submission. Continue?"
 - **Unlock:** Requires reason text field. "Unlocking allows mark changes. Provide a reason."
 - **Delete:** "This will permanently remove this structure. This cannot be undone."
+- **Weight change (active + marks exist):** "Changing this weight will recalculate all projected term marks. X students have marks captured. Continue?"
 
 ### Lock Validation Dialog
 
@@ -451,7 +476,7 @@ Cannot lock — missing marks:
 |---------|-------|--------|--------|
 | Add/remove categories | ✓ | ✓ (if no marks) | ✗ |
 | Add/remove line items | ✓ | ✓ (if no marks) | ✗ |
-| Edit weights | ✓ | ✓ | ✗ |
+| Edit weights | ✓ | ✓ (warning if marks exist) | ✗ |
 | Edit totalMarks | ✓ | ✓ (if no marks) | ✗ |
 | Enter marks | ✗ | ✓ | ✗ |
 | Change line item status | ✗ | ✓ | ✗ |
