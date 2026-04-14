@@ -114,7 +114,6 @@ export default function TeacherTimetablePage() {
           onOpenChange={setConfigDialogOpen}
           config={config}
           onSave={saveConfig}
-          existingSlotCount={timetable.length}
           maxExistingPeriod={maxExistingPeriod}
         />
       </div>
