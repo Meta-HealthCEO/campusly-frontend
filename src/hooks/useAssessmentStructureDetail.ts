@@ -288,10 +288,21 @@ export function useAssessmentStructureDetail(id: string | null) {
     }
   }, [id]);
 
+  /* ── Mark capture (cross-module) ──────────────────────── */
+
+  const saveMarks = useCallback(async (
+    assessmentId: string,
+    marks: Array<{ studentId: string; mark: number; total: number; percentage: number; isAbsent: boolean }>,
+  ) => {
+    const payload = marks.map((m) => ({ ...m, assessmentId }));
+    await apiClient.post('/academic/marks/bulk-capture', { marks: payload });
+  }, []);
+
   return {
     structure,
     loading,
     lockErrors,
+    setLockErrors,
     fetchStructure,
     updateStructure,
     addCategory,
@@ -308,5 +319,6 @@ export function useAssessmentStructureDetail(id: string | null) {
     removeStudent,
     saveAsTemplate,
     cloneStructure,
+    saveMarks,
   };
 }

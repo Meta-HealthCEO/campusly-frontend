@@ -32,16 +32,16 @@ const STATUS_LABEL: Record<StructureStatus, string> = {
 
 interface Props {
   structure: AssessmentStructure;
-  onAddCategory: (payload: AddCategoryPayload) => Promise<void>;
-  onUpdateCategory: (catId: string, payload: UpdateCategoryPayload) => Promise<void>;
-  onDeleteCategory: (catId: string) => Promise<void>;
-  onAddLineItem: (catId: string, payload: AddLineItemPayload) => Promise<void>;
-  onUpdateLineItem: (catId: string, itemId: string, payload: UpdateLineItemPayload) => Promise<void>;
-  onDeleteLineItem: (catId: string, itemId: string) => Promise<void>;
-  onActivate: () => Promise<void>;
-  onLock: () => Promise<boolean>;
-  onUnlock: (reason: string) => Promise<void>;
-  onSaveAsTemplate: (name: string) => Promise<void>;
+  onAddCategory: (payload: AddCategoryPayload) => Promise<unknown>;
+  onUpdateCategory: (catId: string, payload: UpdateCategoryPayload) => Promise<unknown>;
+  onDeleteCategory: (catId: string) => Promise<unknown>;
+  onAddLineItem: (catId: string, payload: AddLineItemPayload) => Promise<unknown>;
+  onUpdateLineItem: (catId: string, itemId: string, payload: UpdateLineItemPayload) => Promise<unknown>;
+  onDeleteLineItem: (catId: string, itemId: string) => Promise<unknown>;
+  onActivate: () => Promise<unknown>;
+  onLock: () => Promise<unknown>;
+  onUnlock: (reason: string) => Promise<unknown>;
+  onSaveAsTemplate: (name: string) => Promise<unknown>;
   onClone: () => void;
   termMarksTab: ReactNode;
   studentsTab?: ReactNode;

@@ -1,6 +1,6 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { BarChart3 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -8,13 +8,27 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { AssessmentStructureBuilder } from '@/components/assessment-structure/AssessmentStructureBuilder';
+import { TermMarksTable } from '@/components/assessment-structure/TermMarksTable';
+import { MarkEntryDialog } from '@/components/assessment-structure/MarkEntryDialog';
+import { LockValidationDialog } from '@/components/assessment-structure/LockValidationDialog';
+import { CloneStructureDialog } from '@/components/assessment-structure/CloneStructureDialog';
+import { StudentManager } from '@/components/assessment-structure/StudentManager';
 import { useAssessmentStructureDetail } from '@/hooks/useAssessmentStructureDetail';
 import { useTermMarks } from '@/hooks/useTermMarks';
 import { useIsStandalone } from '@/hooks/useIsStandalone';
-import type { AddCategoryPayload, UpdateCategoryPayload, AddLineItemPayload, UpdateLineItemPayload } from '@/types';
+import { useTeacherStudents } from '@/hooks/useTeacherStudents';
+import type { ClonePayload } from '@/types';
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+interface MarkEntryState {
+  lineItemId: string;
+  categoryId: string;
+  assessmentId: string;
+  name: string;
+  totalMarks: number;
 }
 
 export default function AssessmentStructureDetailPage({ params }: PageProps) {
@@ -22,122 +36,147 @@ export default function AssessmentStructureDetailPage({ params }: PageProps) {
   const router = useRouter();
   const isStandalone = useIsStandalone();
 
-  const {
-    structure,
-    loading,
-    addCategory,
-    updateCategory,
-    deleteCategory,
-    addLineItem,
-    updateLineItem,
-    deleteLineItem,
-    activate,
-    lock,
-    unlock,
-    saveAsTemplate,
-    cloneStructure,
-  } = useAssessmentStructureDetail(id);
+  const detail = useAssessmentStructureDetail(id);
+  const { termMarks, loading: marksLoading, fetchTermMarks } = useTermMarks(
+    detail.structure?.status !== 'draft' ? id : null,
+  );
+  const { students: allStudents, loading: studentsLoading } = useTeacherStudents();
 
-  const { termMarks } = useTermMarks(id);
+  const [markEntry, setMarkEntry] = useState<MarkEntryState | null>(null);
+  const [cloneOpen, setCloneOpen] = useState(false);
 
-  if (loading) return <LoadingSpinner />;
+  const handleSaveMarks = useCallback(
+    async (marks: Array<{ studentId: string; mark: number; total: number; percentage: number; isAbsent: boolean }>) => {
+      if (!markEntry) return;
+      await detail.saveMarks(markEntry.assessmentId, marks);
+      await fetchTermMarks();
+      detail.fetchStructure();
+    },
+    [markEntry, fetchTermMarks, detail],
+  );
 
-  if (!structure) {
+  const handleSaveAndClose = useCallback(
+    async (marks: Array<{ studentId: string; mark: number; total: number; percentage: number; isAbsent: boolean }>) => {
+      await handleSaveMarks(marks);
+      if (markEntry) {
+        await detail.updateLineItem(markEntry.categoryId, markEntry.lineItemId, { status: 'closed' });
+      }
+    },
+    [handleSaveMarks, markEntry, detail],
+  );
+
+  const handleClone = useCallback(
+    async (payload: ClonePayload) => {
+      const cloned = await detail.cloneStructure(payload);
+      if (cloned) router.push(`/teacher/curriculum/assessment-structure/${cloned.id}`);
+    },
+    [detail, router],
+  );
+
+  if (detail.loading) return <LoadingSpinner />;
+
+  if (!detail.structure) {
     return (
       <EmptyState
         icon={BarChart3}
         title="Structure not found"
         description="This assessment structure could not be loaded."
-        action={
-          <Button onClick={() => router.back()}>Go Back</Button>
-        }
+        action={<Button onClick={() => router.back()}>Go Back</Button>}
       />
     );
   }
 
-  const handleAddCategory = async (payload: AddCategoryPayload) => {
-    await addCategory(payload);
-  };
+  const { structure } = detail;
 
-  const handleUpdateCategory = async (catId: string, payload: UpdateCategoryPayload) => {
-    await updateCategory(catId, payload);
-  };
-
-  const handleDeleteCategory = async (catId: string) => {
-    await deleteCategory(catId);
-  };
-
-  const handleAddLineItem = async (catId: string, payload: AddLineItemPayload) => {
-    await addLineItem(catId, payload);
-  };
-
-  const handleUpdateLineItem = async (catId: string, itemId: string, payload: UpdateLineItemPayload) => {
-    await updateLineItem(catId, itemId, payload);
-  };
-
-  const handleDeleteLineItem = async (catId: string, itemId: string) => {
-    await deleteLineItem(catId, itemId);
-  };
-
-  const handleActivate = async () => {
-    await activate();
-  };
-
-  const handleLock = async () => {
-    return await lock();
-  };
-
-  const handleUnlock = async (reason: string) => {
-    await unlock(reason);
-  };
-
-  const handleSaveAsTemplate = async (name: string) => {
-    await saveAsTemplate(name);
-  };
-
-  const handleClone = () => {
-    void cloneStructure({ term: structure.term, academicYear: structure.academicYear });
-  };
-
-  const termMarksPlaceholder = (
-    <p className="text-sm text-muted-foreground">
-      Term marks view — coming in next task
-      {termMarks && ` (${termMarks.students.length} students)`}
-    </p>
-  );
-
-  const studentsPlaceholder = isStandalone ? (
-    <p className="text-sm text-muted-foreground">
-      Student management — coming in next task
-    </p>
-  ) : undefined;
+  // Map students for StudentManager props
+  const studentList = allStudents.map((s) => ({
+    id: s.id,
+    firstName: s.firstName ?? '',
+    lastName: s.lastName ?? '',
+  }));
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Assessment Structure"
-        description="Manage categories, assessments, and mark capturing"
-      >
-        <Button variant="outline" size="sm" onClick={() => router.back()}>
-          Back
-        </Button>
+      <PageHeader title="Assessment Structure" description="Manage categories, assessments, and mark capturing">
+        <Button variant="outline" size="sm" onClick={() => router.back()}>Back</Button>
       </PageHeader>
 
       <AssessmentStructureBuilder
         structure={structure}
-        onAddCategory={handleAddCategory}
-        onUpdateCategory={handleUpdateCategory}
-        onDeleteCategory={handleDeleteCategory}
-        onAddLineItem={handleAddLineItem}
-        onUpdateLineItem={handleUpdateLineItem}
-        onDeleteLineItem={handleDeleteLineItem}
-        onActivate={handleActivate}
-        onLock={handleLock}
-        onUnlock={handleUnlock}
-        onSaveAsTemplate={handleSaveAsTemplate}
+        onAddCategory={detail.addCategory}
+        onUpdateCategory={detail.updateCategory}
+        onDeleteCategory={detail.deleteCategory}
+        onAddLineItem={detail.addLineItem}
+        onUpdateLineItem={detail.updateLineItem}
+        onDeleteLineItem={detail.deleteLineItem}
+        onActivate={detail.activate}
+        onLock={detail.lock}
+        onUnlock={detail.unlock}
+        onSaveAsTemplate={detail.saveAsTemplate}
+        onClone={() => setCloneOpen(true)}
+        termMarksTab={
+          marksLoading ? (
+            <LoadingSpinner />
+          ) : termMarks ? (
+            <TermMarksTable
+              data={termMarks}
+              onEnterMarks={(lineItemId, categoryId, name, totalMarks) => {
+                let assessmentId = '';
+                for (const cat of structure.categories) {
+                  if (cat.id === categoryId) {
+                    const item = cat.lineItems.find((li) => li.id === lineItemId);
+                    assessmentId = item?.assessmentId ?? '';
+                    break;
+                  }
+                }
+                if (assessmentId) {
+                  setMarkEntry({ lineItemId, categoryId, assessmentId, name, totalMarks });
+                }
+              }}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">Activate the structure to see term marks.</p>
+          )
+        }
+        studentsTab={
+          isStandalone ? (
+            <StudentManager
+              studentIds={structure.studentIds}
+              onAdd={detail.addStudents}
+              onRemove={detail.removeStudent}
+              allStudents={studentList}
+              studentsLoading={studentsLoading}
+            />
+          ) : undefined
+        }
+      />
+
+      {markEntry && termMarks && (
+        <MarkEntryDialog
+          open={!!markEntry}
+          onClose={() => setMarkEntry(null)}
+          lineItemName={markEntry.name}
+          totalMarks={markEntry.totalMarks}
+          students={termMarks.students}
+          lineItemId={markEntry.lineItemId}
+          onSaveMarks={handleSaveMarks}
+          onSaveAndClose={handleSaveAndClose}
+        />
+      )}
+
+      {detail.lockErrors && (
+        <LockValidationDialog
+          open={!!detail.lockErrors}
+          onClose={() => detail.setLockErrors(null)}
+          errors={detail.lockErrors}
+        />
+      )}
+
+      <CloneStructureDialog
+        open={cloneOpen}
+        onClose={() => setCloneOpen(false)}
         onClone={handleClone}
-        termMarksTab={termMarksPlaceholder}
-        studentsTab={studentsPlaceholder}
+        currentName={structure.name}
       />
     </div>
   );

@@ -15,7 +15,7 @@ import {
 import type { AddCategoryPayload, CategoryType } from '@/types';
 
 interface Props {
-  onAdd: (payload: AddCategoryPayload) => Promise<void>;
+  onAdd: (payload: AddCategoryPayload) => Promise<unknown>;
   disabled?: boolean;
 }
 

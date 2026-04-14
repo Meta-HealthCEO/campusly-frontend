@@ -21,11 +21,11 @@ import type {
 interface Props {
   category: Category;
   structureStatus: StructureStatus;
-  onUpdateCategory: (catId: string, payload: UpdateCategoryPayload) => Promise<void>;
-  onDeleteCategory: (catId: string) => Promise<void>;
-  onAddLineItem: (catId: string, payload: AddLineItemPayload) => Promise<void>;
-  onUpdateLineItem: (catId: string, itemId: string, payload: UpdateLineItemPayload) => Promise<void>;
-  onDeleteLineItem: (catId: string, itemId: string) => Promise<void>;
+  onUpdateCategory: (catId: string, payload: UpdateCategoryPayload) => Promise<unknown>;
+  onDeleteCategory: (catId: string) => Promise<unknown>;
+  onAddLineItem: (catId: string, payload: AddLineItemPayload) => Promise<unknown>;
+  onUpdateLineItem: (catId: string, itemId: string, payload: UpdateLineItemPayload) => Promise<unknown>;
+  onDeleteLineItem: (catId: string, itemId: string) => Promise<unknown>;
 }
 
 const TYPE_LABELS: Record<string, string> = {

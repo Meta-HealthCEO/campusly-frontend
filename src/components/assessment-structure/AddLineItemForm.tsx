@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import type { AddLineItemPayload } from '@/types';
 
 interface Props {
-  onAdd: (payload: AddLineItemPayload) => Promise<void>;
+  onAdd: (payload: AddLineItemPayload) => Promise<unknown>;
   disabled?: boolean;
 }
 

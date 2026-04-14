@@ -14,8 +14,8 @@ interface Student {
 
 interface Props {
   studentIds: string[];
-  onAdd: (ids: string[]) => Promise<void>;
-  onRemove: (id: string) => Promise<void>;
+  onAdd: (ids: string[]) => Promise<unknown>;
+  onRemove: (id: string) => Promise<unknown>;
   allStudents: Student[];
   studentsLoading: boolean;
 }
