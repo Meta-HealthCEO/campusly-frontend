@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
@@ -60,7 +61,7 @@ export function TimetableSlotDialog({
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, setValue, reset, watch, formState: { errors } } = useForm<FormValues>({
     defaultValues: { subjectId: '', classId: '', room: '' },
   });
 
@@ -80,6 +81,14 @@ export function TimetableSlotDialog({
 
   const onSubmit = async (values: FormValues) => {
     if (!periodTime) return;
+    if (!values.subjectId) {
+      toast.error('Please select a subject');
+      return;
+    }
+    if (!values.classId) {
+      toast.error('Please select a class');
+      return;
+    }
     setSubmitting(true);
     try {
       const payload: CreateSlotPayload = {
@@ -133,7 +142,7 @@ export function TimetableSlotDialog({
             <div className="space-y-2">
               <Label htmlFor="subjectId">Subject <span className="text-destructive">*</span></Label>
               <Select
-                value={undefined}
+                value={watch('subjectId') || undefined}
                 onValueChange={(v: unknown) => setValue('subjectId', v as string)}
               >
                 <SelectTrigger className="w-full">
@@ -154,7 +163,7 @@ export function TimetableSlotDialog({
             <div className="space-y-2">
               <Label htmlFor="classId">Class <span className="text-destructive">*</span></Label>
               <Select
-                value={undefined}
+                value={watch('classId') || undefined}
                 onValueChange={(v: unknown) => setValue('classId', v as string)}
               >
                 <SelectTrigger className="w-full">

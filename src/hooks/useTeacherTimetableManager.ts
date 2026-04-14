@@ -44,7 +44,8 @@ export function useTeacherTimetableManager() {
     try {
       const res = await apiClient.get('/timetable-builder/config');
       setConfig(unwrapResponse<TimetableConfig>(res));
-    } catch {
+    } catch (err: unknown) {
+      console.error('Failed to load timetable config', err);
       setConfig(null);
     } finally {
       setConfigLoading(false);

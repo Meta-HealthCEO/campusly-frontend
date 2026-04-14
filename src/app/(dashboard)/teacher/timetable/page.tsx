@@ -101,7 +101,7 @@ export default function TeacherTimetablePage() {
         <EmptyState
           icon={Calendar}
           title="No period configuration"
-          description="Set up your school&apos;s period times before building your timetable."
+          description="Set up your school's period times before building your timetable."
           action={
             <Button onClick={() => setConfigDialogOpen(true)}>
               <Settings className="mr-2 h-4 w-4" />
@@ -154,7 +154,6 @@ export default function TeacherTimetablePage() {
         onOpenChange={setConfigDialogOpen}
         config={config}
         onSave={saveConfig}
-        existingSlotCount={timetable.length}
         maxExistingPeriod={maxExistingPeriod}
       />
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { TimetableSlot } from '@/types';
@@ -84,8 +84,12 @@ export function TimetableGrid({ config, timetable, onSlotClick }: Props) {
     return map;
   }, [timetable]);
 
-  // Current period indicator
-  const now = new Date();
+  // Current period indicator (updates every minute)
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
   const currentDay = (['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const)[now.getDay()];
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 

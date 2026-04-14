@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { TimetableSlot } from '@/types';
@@ -80,7 +80,11 @@ export function TimetableMobileView({ config, timetable, onSlotClick }: Props) {
     return map;
   }, [timetable]);
 
-  const now = new Date();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
   const todayDay = (['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const)[now.getDay()];
 
   return (

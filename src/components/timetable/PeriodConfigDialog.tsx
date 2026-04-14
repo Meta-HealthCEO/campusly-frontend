@@ -18,7 +18,6 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   config: TimetableConfig | null;
   onSave: (data: Partial<TimetableConfig>) => Promise<void>;
-  existingSlotCount: number;
   maxExistingPeriod: number;
 }
 
@@ -47,7 +46,7 @@ function generateDefaultTimes(count: number): PeriodTime[] {
 }
 
 export function PeriodConfigDialog({
-  open, onOpenChange, config, onSave, existingSlotCount, maxExistingPeriod,
+  open, onOpenChange, config, onSave, maxExistingPeriod,
 }: Props) {
   const [periodCount, setPeriodCount] = useState(7);
   const [periodTimes, setPeriodTimes] = useState<PeriodTime[]>(generateDefaultTimes(7));
@@ -108,11 +107,10 @@ export function PeriodConfigDialog({
 
   const orphanWarning = useMemo(() => {
     if (periodCount < maxExistingPeriod) {
-      const orphaned = existingSlotCount;
-      return `Reducing to ${periodCount} periods may orphan ${orphaned} existing slot(s) in periods ${periodCount + 1}–${maxExistingPeriod}.`;
+      return `You have timetable entries in periods above P${periodCount} that will no longer appear. Those entries will be hidden but not deleted.`;
     }
     return null;
-  }, [periodCount, maxExistingPeriod, existingSlotCount]);
+  }, [periodCount, maxExistingPeriod]);
 
   const handleSave = async () => {
     setSaving(true);
