@@ -45,7 +45,7 @@ export interface AssessmentStructure {
   classId: string | null;
   gradeId: string | null;
   term: number;
-  academicYear: string;
+  academicYear: number;
   name: string;
   studentIds: string[];
   categories: Category[];
@@ -63,16 +63,13 @@ export interface AssessmentStructure {
 // ─── Payload Types ────────────────────────────────────────────────────────
 
 export interface CreateStructurePayload {
+  name: string;
   subjectId?: string | null;
   subjectName: string;
   classId?: string | null;
   gradeId?: string | null;
   term: number;
-  academicYear: string;
-  name: string;
-  studentIds?: string[];
-  isTemplate?: boolean;
-  templateName?: string | null;
+  academicYear: number;
 }
 
 export interface AddCategoryPayload {
@@ -92,7 +89,7 @@ export interface AddLineItemPayload {
   totalMarks: number;
   weight?: number;
   date?: string;
-  assessmentId?: string;
+  existingAssessmentId?: string;
 }
 
 export interface UpdateLineItemPayload {
@@ -100,29 +97,25 @@ export interface UpdateLineItemPayload {
   totalMarks?: number;
   weight?: number;
   date?: string;
-  assessmentId?: string;
   status?: LineItemStatus;
 }
 
 export interface ClonePayload {
-  name: string;
+  term: number;
+  academicYear: number;
   classId?: string | null;
   gradeId?: string | null;
-  term?: number;
-  academicYear?: string;
-  studentIds?: string[];
+  name?: string;
 }
 
 export interface FromTemplatePayload {
-  templateId: string;
   name: string;
   subjectId?: string | null;
   subjectName: string;
   classId?: string | null;
   gradeId?: string | null;
   term: number;
-  academicYear: string;
-  studentIds?: string[];
+  academicYear: number;
 }
 
 // ─── Term Marks (Calculation Response) ───────────────────────────────────
@@ -145,7 +138,7 @@ export interface StudentCategoryResult {
 }
 
 export interface AchievementLevel {
-  level: string;
+  level: number;
   description: string;
 }
 
@@ -160,7 +153,7 @@ export interface StudentTermResult {
   categories: StudentCategoryResult[];
 }
 
-export type CategoryStatus = 'pending' | 'partial' | 'complete';
+export type CategoryStatus = 'pending' | 'in_progress' | 'complete';
 
 export interface CategorySummaryItem {
   lineItemId: string;
@@ -182,7 +175,7 @@ export interface TermMarksResponse {
   structureId: string;
   structureName: string;
   term: number;
-  academicYear: string;
+  academicYear: number;
   completionPercent: number;
   categories: CategorySummary[];
   students: StudentTermResult[];
