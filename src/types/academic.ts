@@ -59,6 +59,7 @@ export interface Assessment {
   date: string;
   term: number;
   paperId?: string | { id: string; title: string } | null;
+  structureId?: string | null;
 }
 
 // ─── Timetable Clash Types ──────────────────────────────────────────────────

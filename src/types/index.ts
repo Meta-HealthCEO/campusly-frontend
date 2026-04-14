@@ -61,3 +61,4 @@ export * from './student-learning';
 export * from './textbook';
 export * from './diagram';
 export * from './courses';
+export * from './assessment-structure';
