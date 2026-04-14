@@ -6,12 +6,13 @@ import { TableSkeleton } from '@/components/shared/skeletons';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Calendar, Settings } from 'lucide-react';
+import { AlertCircle, Calendar, Printer, Settings } from 'lucide-react';
 import { useTeacherTimetableManager } from '@/hooks/useTeacherTimetableManager';
 import { useTeacherSubjects } from '@/hooks/useTeacherSubjects';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import { TimetableGrid } from '@/components/timetable/TimetableGrid';
 import { TimetableMobileView } from '@/components/timetable/TimetableMobileView';
+import { resolveId } from '@/components/timetable/timetable-helpers';
 import { PeriodConfigDialog } from '@/components/timetable/PeriodConfigDialog';
 import { TimetableSlotDialog } from '@/components/timetable/TimetableSlotDialog';
 import type { TimetableSlot, DayOfWeek } from '@/types';
@@ -77,10 +78,20 @@ export default function TeacherTimetablePage() {
 
   const handleSlotDelete = useCallback(
     async (id: string) => {
-      await deleteSlot(id);
+      const slot = timetable.find((s: TimetableSlot) => s.id === id);
+      const slotData: CreateSlotPayload | undefined = slot ? {
+        day: slot.day,
+        period: slot.period,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        subjectId: resolveId(slot.subjectId),
+        classId: resolveId(slot.classId),
+        room: slot.room,
+      } : undefined;
+      await deleteSlot(id, slotData);
       setSlotDialog((prev) => ({ ...prev, open: false }));
     },
-    [deleteSlot],
+    [timetable, deleteSlot],
   );
 
   // Loading state
@@ -139,14 +150,20 @@ export default function TeacherTimetablePage() {
     <ErrorBoundary>
       <div className="space-y-6">
         <PageHeader title="My Timetable" description="Your weekly teaching schedule">
-          <Button variant="outline" onClick={() => setConfigDialogOpen(true)}>
-            <Settings className="mr-2 h-4 w-4" />
-            Period Settings
-          </Button>
+          <div className="flex gap-2 print:hidden">
+            <Button variant="outline" onClick={() => window.print()}>
+              <Printer className="mr-2 h-4 w-4" />
+              Print
+            </Button>
+            <Button variant="outline" onClick={() => setConfigDialogOpen(true)}>
+              <Settings className="mr-2 h-4 w-4" />
+              Period Settings
+            </Button>
+          </div>
         </PageHeader>
 
         {/* Desktop grid */}
-        <div className="hidden lg:block">
+        <div className="hidden lg:block print:block">
           <TimetableGrid
             config={config!}
             timetable={timetable}
@@ -155,7 +172,7 @@ export default function TeacherTimetablePage() {
         </div>
 
         {/* Mobile view */}
-        <div className="lg:hidden">
+        <div className="lg:hidden print:hidden">
           <TimetableMobileView
             config={config!}
             timetable={timetable}
@@ -164,6 +181,7 @@ export default function TeacherTimetablePage() {
         </div>
 
         {/* Dialogs */}
+        <div className="print:hidden">
         <PeriodConfigDialog
           open={configDialogOpen}
           onOpenChange={setConfigDialogOpen}
@@ -187,6 +205,7 @@ export default function TeacherTimetablePage() {
           onUpdate={handleSlotUpdate}
           onDelete={handleSlotDelete}
         />
+        </div>
       </div>
     </ErrorBoundary>
   );

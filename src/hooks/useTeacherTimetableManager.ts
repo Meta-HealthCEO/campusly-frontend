@@ -16,6 +16,11 @@ export interface CreateSlotPayload {
   room?: string;
 }
 
+function getErrorMessage(err: unknown, fallback: string): string {
+  const response = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data;
+  return response?.error ?? response?.message ?? fallback;
+}
+
 export function useTeacherTimetableManager() {
   const { user } = useAuthStore();
   const [timetable, setTimetable] = useState<TimetableSlot[]>([]);
@@ -68,8 +73,15 @@ export function useTeacherTimetableManager() {
   }, [fetchConfig]);
 
   useEffect(() => {
-    fetchTimetable();
-    fetchConfig();
+    let cancelled = false;
+
+    async function init() {
+      await fetchTimetable();
+      if (!cancelled) await fetchConfig();
+    }
+    init();
+
+    return () => { cancelled = true; };
   }, [fetchTimetable, fetchConfig]);
 
   const saveConfig = useCallback(async (data: Partial<TimetableConfig>) => {
@@ -101,7 +113,7 @@ export function useTeacherTimetableManager() {
       await fetchTimetable();
     } catch (err: unknown) {
       console.error('Failed to create slot', err);
-      toast.error('Failed to add timetable entry.');
+      toast.error(getErrorMessage(err, 'Failed to add timetable entry.'));
       throw err;
     } finally {
       mutatingRef.current = false;
@@ -124,14 +136,14 @@ export function useTeacherTimetableManager() {
       await fetchTimetable();
     } catch (err: unknown) {
       console.error('Failed to update slot', err);
-      toast.error('Failed to update timetable entry.');
+      toast.error(getErrorMessage(err, 'Failed to update timetable entry.'));
       throw err;
     } finally {
       mutatingRef.current = false;
     }
   }, [user?.id, user?.schoolId, fetchTimetable]);
 
-  const deleteSlot = useCallback(async (id: string) => {
+  const deleteSlot = useCallback(async (id: string, slotData?: CreateSlotPayload) => {
     if (mutatingRef.current) {
       toast.error('Please wait for the current operation to complete');
       return;
@@ -139,16 +151,29 @@ export function useTeacherTimetableManager() {
     mutatingRef.current = true;
     try {
       await apiClient.delete(`/academic/timetable/${id}`);
-      toast.success('Timetable entry removed');
+      if (slotData) {
+        toast.success('Timetable entry removed', {
+          action: {
+            label: 'Undo',
+            onClick: () => {
+              createSlot(slotData).catch(() => {
+                /* error already toasted by createSlot */
+              });
+            },
+          },
+        });
+      } else {
+        toast.success('Timetable entry removed');
+      }
       await fetchTimetable();
     } catch (err: unknown) {
       console.error('Failed to delete slot', err);
-      toast.error('Failed to remove timetable entry.');
+      toast.error(getErrorMessage(err, 'Failed to remove timetable entry.'));
       throw err;
     } finally {
       mutatingRef.current = false;
     }
-  }, [fetchTimetable]);
+  }, [fetchTimetable, createSlot]);
 
   return {
     timetable, loading, config, configLoading, hasConfig,

@@ -50,6 +50,14 @@ export function getClassName(slot: TimetableSlot): string {
   return '';
 }
 
+/** Extract ID from a field that may be a populated object or a plain string. */
+export function resolveId(field: unknown): string {
+  if (typeof field === 'string') return field;
+  if (field && typeof field === 'object' && 'id' in field) return String((field as { id: string }).id);
+  if (field && typeof field === 'object' && '_id' in field) return String((field as { _id: string })._id);
+  return '';
+}
+
 export function parseTimeToMinutes(t: string): number {
   const [h, m] = t.split(':').map(Number);
   return h * 60 + m;

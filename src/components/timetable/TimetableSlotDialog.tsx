@@ -13,7 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Loader2, Trash2 } from 'lucide-react';
-import { DAY_LABELS } from '@/components/timetable/timetable-helpers';
+import { DAY_LABELS, resolveId } from '@/components/timetable/timetable-helpers';
 import type { TimetableSlot, Subject, SchoolClass, DayOfWeek } from '@/types';
 import type { PeriodTime } from '@/types/timetable-builder';
 import type { CreateSlotPayload } from '@/hooks/useTeacherTimetableManager';
@@ -38,14 +38,6 @@ interface Props {
   onSave: (data: CreateSlotPayload) => Promise<void>;
   onUpdate: (id: string, data: Partial<CreateSlotPayload>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
-}
-
-/** Extract ID from a field that may be a populated object or a plain string. */
-function resolveId(field: unknown): string {
-  if (typeof field === 'string') return field;
-  if (field && typeof field === 'object' && 'id' in field) return String((field as { id: string }).id);
-  if (field && typeof field === 'object' && '_id' in field) return String((field as { _id: string })._id);
-  return '';
 }
 
 export function TimetableSlotDialog({
