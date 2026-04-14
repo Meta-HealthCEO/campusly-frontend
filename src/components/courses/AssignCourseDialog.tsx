@@ -41,7 +41,7 @@ export function AssignCourseDialog({
   courseId,
   courseTitle,
 }: AssignCourseDialogProps) {
-  const { classes, entries, loading: classesLoading } = useTeacherClasses();
+  const { classes, loading: classesLoading } = useTeacherClasses();
   const { assignToClass } = useCourseAssign();
   const [selectedClassId, setSelectedClassId] = useState('');
   const [assigning, setAssigning] = useState(false);
@@ -54,10 +54,8 @@ export function AssignCourseDialog({
     }
   }, [open]);
 
-  // Count students in the selected class by finding the first matching
-  // entry in the teaching-load `entries` list.
-  const selectedEntry = entries.find((e) => e.class.id === selectedClassId);
-  const studentCount = selectedEntry?.students.length ?? 0;
+  const selectedClass = classes.find((c) => c.id === selectedClassId);
+  const studentCount = selectedClass?.studentCount ?? 0;
 
   const handleAssign = async () => {
     if (!selectedClassId) return;
