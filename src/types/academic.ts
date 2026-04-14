@@ -4,6 +4,8 @@
 
 import type { User, Teacher, Student } from './common';
 
+export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday';
+
 export interface Grade {
   id: string;
   name: string;
@@ -36,7 +38,7 @@ export interface Subject {
 
 export interface TimetableSlot {
   id: string;
-  day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday';
+  day: DayOfWeek;
   period: number;
   startTime: string;
   endTime: string;

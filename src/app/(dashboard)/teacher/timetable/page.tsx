@@ -4,8 +4,9 @@ import { useState, useMemo, useCallback } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { TableSkeleton } from '@/components/shared/skeletons';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { Button } from '@/components/ui/button';
-import { Calendar, Settings } from 'lucide-react';
+import { AlertCircle, Calendar, Settings } from 'lucide-react';
 import { useTeacherTimetableManager } from '@/hooks/useTeacherTimetableManager';
 import { useTeacherSubjects } from '@/hooks/useTeacherSubjects';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
@@ -13,10 +14,8 @@ import { TimetableGrid } from '@/components/timetable/TimetableGrid';
 import { TimetableMobileView } from '@/components/timetable/TimetableMobileView';
 import { PeriodConfigDialog } from '@/components/timetable/PeriodConfigDialog';
 import { TimetableSlotDialog } from '@/components/timetable/TimetableSlotDialog';
-import type { TimetableSlot } from '@/types';
+import type { TimetableSlot, DayOfWeek } from '@/types';
 import type { CreateSlotPayload } from '@/hooks/useTeacherTimetableManager';
-
-type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday';
 
 interface SlotDialogState {
   open: boolean;
@@ -28,11 +27,12 @@ interface SlotDialogState {
 export default function TeacherTimetablePage() {
   const {
     timetable, loading, config, configLoading, hasConfig,
+    configError, retryConfig,
     saveConfig, createSlot, updateSlot, deleteSlot,
   } = useTeacherTimetableManager();
 
-  const { subjects } = useTeacherSubjects();
-  const { classes } = useTeacherClasses();
+  const { subjects, loading: subjectsLoading } = useTeacherSubjects();
+  const { classes, loading: classesLoading } = useTeacherClasses();
 
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [slotDialog, setSlotDialog] = useState<SlotDialogState>({
@@ -93,7 +93,22 @@ export default function TeacherTimetablePage() {
     );
   }
 
-  // No config yet — prompt teacher to configure periods
+  // Config error
+  if (configError) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="My Timetable" description="Your weekly teaching schedule" />
+        <EmptyState
+          icon={AlertCircle}
+          title="Could not load configuration"
+          description="There was a problem loading your timetable settings. Please try again."
+          action={<Button onClick={retryConfig}>Retry</Button>}
+        />
+      </div>
+    );
+  }
+
+  // No config yet -- prompt teacher to configure periods
   if (!hasConfig) {
     return (
       <div className="space-y-6">
@@ -121,54 +136,58 @@ export default function TeacherTimetablePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="My Timetable" description="Your weekly teaching schedule">
-        <Button variant="outline" onClick={() => setConfigDialogOpen(true)}>
-          <Settings className="mr-2 h-4 w-4" />
-          Period Settings
-        </Button>
-      </PageHeader>
+    <ErrorBoundary>
+      <div className="space-y-6">
+        <PageHeader title="My Timetable" description="Your weekly teaching schedule">
+          <Button variant="outline" onClick={() => setConfigDialogOpen(true)}>
+            <Settings className="mr-2 h-4 w-4" />
+            Period Settings
+          </Button>
+        </PageHeader>
 
-      {/* Desktop grid */}
-      <div className="hidden lg:block">
-        <TimetableGrid
-          config={config!}
-          timetable={timetable}
-          onSlotClick={handleSlotClick}
+        {/* Desktop grid */}
+        <div className="hidden lg:block">
+          <TimetableGrid
+            config={config!}
+            timetable={timetable}
+            onSlotClick={handleSlotClick}
+          />
+        </div>
+
+        {/* Mobile view */}
+        <div className="lg:hidden">
+          <TimetableMobileView
+            config={config!}
+            timetable={timetable}
+            onSlotClick={handleSlotClick}
+          />
+        </div>
+
+        {/* Dialogs */}
+        <PeriodConfigDialog
+          open={configDialogOpen}
+          onOpenChange={setConfigDialogOpen}
+          config={config}
+          onSave={saveConfig}
+          maxExistingPeriod={maxExistingPeriod}
+        />
+
+        <TimetableSlotDialog
+          open={slotDialog.open}
+          onOpenChange={(open: boolean) => setSlotDialog((prev) => ({ ...prev, open }))}
+          day={slotDialog.day}
+          period={slotDialog.period}
+          periodTime={periodTime}
+          subjects={subjects}
+          classes={classes}
+          subjectsLoading={subjectsLoading}
+          classesLoading={classesLoading}
+          existingSlot={slotDialog.slot}
+          onSave={handleSlotSave}
+          onUpdate={handleSlotUpdate}
+          onDelete={handleSlotDelete}
         />
       </div>
-
-      {/* Mobile view */}
-      <div className="lg:hidden">
-        <TimetableMobileView
-          config={config!}
-          timetable={timetable}
-          onSlotClick={handleSlotClick}
-        />
-      </div>
-
-      {/* Dialogs */}
-      <PeriodConfigDialog
-        open={configDialogOpen}
-        onOpenChange={setConfigDialogOpen}
-        config={config}
-        onSave={saveConfig}
-        maxExistingPeriod={maxExistingPeriod}
-      />
-
-      <TimetableSlotDialog
-        open={slotDialog.open}
-        onOpenChange={(open: boolean) => setSlotDialog((prev) => ({ ...prev, open }))}
-        day={slotDialog.day}
-        period={slotDialog.period}
-        periodTime={periodTime}
-        subjects={subjects}
-        classes={classes}
-        existingSlot={slotDialog.slot}
-        onSave={handleSlotSave}
-        onUpdate={handleSlotUpdate}
-        onDelete={handleSlotDelete}
-      />
-    </div>
+    </ErrorBoundary>
   );
 }
