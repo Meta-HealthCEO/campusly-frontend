@@ -9,7 +9,7 @@ import {
   Compass, Target, Clipboard, Newspaper,
   CalendarCheck, CalendarCog, Crown, DoorOpen, UserPlus,
   AlertTriangle, Calculator, Library, PenTool, HelpCircle, Camera, Eye,
-  CheckSquare,
+  CheckSquare, Video, PlayCircle,
   type LucideIcon
 } from 'lucide-react';
 import type { PermissionFlag } from '@/types';
@@ -49,6 +49,23 @@ export const ROUTES = {
   ADMIN_SPORT: '/admin/sport',
   ADMIN_SPORT_PLAYER_CARDS: '/admin/sport/player-cards',
   ADMIN_SPORT_AI_ANALYTICS: '/admin/sport/ai-analytics',
+  ADMIN_SPORT_COACHES: '/admin/sport/coaches',
+
+  // Coach portal
+  COACH_DASHBOARD: '/coach',
+  COACH_ONBOARDING: '/coach/onboarding',
+  COACH_TEAMS: '/coach/teams',
+  COACH_FIXTURES: '/coach/fixtures',
+  COACH_SEASONS: '/coach/seasons',
+  COACH_RESULTS: '/coach/results',
+  COACH_TRAINING: '/coach/training',
+  COACH_DRILLS: '/coach/drills',
+  COACH_INJURIES: '/coach/injuries',
+  COACH_FITNESS: '/coach/fitness',
+  COACH_ANNOUNCEMENTS: '/coach/announcements',
+  COACH_PLAYERS: '/coach/players',
+  COACH_PLAYER_CARDS: '/coach/player-cards',
+  COACH_AI_ANALYTICS: '/coach/ai-analytics',
   ADMIN_WHATSAPP_SETTINGS: '/admin/settings/whatsapp',
   ADMIN_ACHIEVER: '/admin/achiever',
   ADMIN_ACHIEVER_HOUSES: '/admin/achiever/houses',
@@ -66,6 +83,7 @@ export const ROUTES = {
   ADMIN_RECEPTION: '/admin/reception',
   ADMIN_PERMISSIONS: '/admin/settings/permissions',
   ADMIN_LEAVE: '/admin/leave',
+  ADMIN_SUBSTITUTES: '/admin/substitutes',
   ADMIN_CONFERENCES: '/admin/conferences',
   ADMIN_COMM_CONFIG: '/admin/settings/communication',
   ADMIN_COMM_TEMPLATES: '/admin/settings/communication/templates',
@@ -183,6 +201,12 @@ export const ROUTES = {
   TEACHER_AI_CREATE_PAPER: '/teacher/ai-tools/create-paper',
   TEACHER_AI_GRADING: '/teacher/ai-tools/grading',
   TEACHER_AI_PAPERS: '/teacher/ai-tools/papers',
+  TEACHER_LESSON_PLANS: '/teacher/lesson-plans',
+  TEACHER_SUBSTITUTES: '/teacher/substitutes',
+
+  // Teacher — Virtual Classroom
+  TEACHER_CLASSROOM: '/teacher/classroom',
+  TEACHER_CLASSROOM_VIDEOS: '/teacher/classroom/videos',
 
   // Teacher — Permission-gated
   TEACHER_HOD: '/teacher/hod',
@@ -267,6 +291,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Academics', href: ROUTES.ADMIN_ACADEMICS, icon: BookOpen },
   { label: 'Timetable Builder', href: ROUTES.ADMIN_TIMETABLE_BUILDER, icon: CalendarCog },
   { label: 'Attendance', href: ROUTES.ADMIN_ATTENDANCE, icon: ClipboardList },
+  { label: 'Substitutes', href: ROUTES.ADMIN_SUBSTITUTES, icon: UserCheck },
   { label: 'Events', href: ROUTES.ADMIN_EVENTS, icon: CalendarDays, module: 'events' },
   { label: 'Transport', href: ROUTES.ADMIN_TRANSPORT, icon: Bus, module: 'transport' },
   {
@@ -292,6 +317,7 @@ export const ADMIN_NAV: NavItem[] = [
       { label: 'Overview', href: ROUTES.ADMIN_SPORT, icon: Trophy },
       { label: 'Player Cards', href: ROUTES.ADMIN_SPORT_PLAYER_CARDS, icon: Award },
       { label: 'AI Analytics', href: ROUTES.ADMIN_SPORT_AI_ANALYTICS, icon: Sparkles },
+      { label: 'Coach Assignments', href: ROUTES.ADMIN_SPORT_COACHES, icon: UserPlus },
     ],
   },
   {
@@ -408,6 +434,22 @@ export const SUPERADMIN_NAV: NavItem[] = [
   { label: 'Support', href: ROUTES.SUPERADMIN_SUPPORT, icon: HeadphonesIcon },
 ];
 
+export const COACH_NAV: NavItem[] = [
+  { label: 'Dashboard', href: ROUTES.COACH_DASHBOARD, icon: Home },
+  { label: 'Teams', href: ROUTES.COACH_TEAMS, icon: Users },
+  { label: 'Fixtures', href: ROUTES.COACH_FIXTURES, icon: CalendarDays },
+  { label: 'Training', href: ROUTES.COACH_TRAINING, icon: Target },
+  { label: 'Drill Library', href: ROUTES.COACH_DRILLS, icon: BookMarked },
+  { label: 'Injuries', href: ROUTES.COACH_INJURIES, icon: Heart },
+  { label: 'Fitness', href: ROUTES.COACH_FITNESS, icon: Target },
+  { label: 'Announcements', href: ROUTES.COACH_ANNOUNCEMENTS, icon: Megaphone },
+  { label: 'Seasons', href: ROUTES.COACH_SEASONS, icon: BarChart3 },
+  { label: 'Results', href: ROUTES.COACH_RESULTS, icon: ClipboardList },
+  { label: 'Players', href: ROUTES.COACH_PLAYERS, icon: Users },
+  { label: 'Player Cards', href: ROUTES.COACH_PLAYER_CARDS, icon: Award },
+  { label: 'AI Analytics', href: ROUTES.COACH_AI_ANALYTICS, icon: Sparkles, badge: 'AI' },
+];
+
 export const TEACHER_NAV: NavItem[] = [
   { label: 'Dashboard', href: ROUTES.TEACHER_DASHBOARD, icon: Home },
   {
@@ -421,6 +463,8 @@ export const TEACHER_NAV: NavItem[] = [
   },
   { label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
   { label: 'Attendance', href: ROUTES.TEACHER_ATTENDANCE, icon: ClipboardList },
+  { label: 'Lesson Plans', href: ROUTES.TEACHER_LESSON_PLANS, icon: BookOpen },
+  { label: 'Substitutes', href: ROUTES.TEACHER_SUBSTITUTES, icon: UserCheck },
   {
     label: 'Curriculum',
     href: ROUTES.TEACHER_CURRICULUM,
@@ -456,6 +500,15 @@ export const TEACHER_NAV: NavItem[] = [
       { label: 'Announcements', href: ROUTES.TEACHER_COMMUNICATION, icon: Megaphone, module: 'communication' },
       { label: 'Meetings', href: ROUTES.TEACHER_MEETINGS, icon: CalendarCheck },
       { label: 'Conferences', href: ROUTES.TEACHER_CONFERENCES, icon: Users, module: 'conference_booking' },
+    ],
+  },
+  {
+    label: 'Virtual Classroom',
+    href: ROUTES.TEACHER_CLASSROOM,
+    icon: Video,
+    children: [
+      { label: 'My Sessions', href: ROUTES.TEACHER_CLASSROOM, icon: Video },
+      { label: 'Video Library', href: ROUTES.TEACHER_CLASSROOM_VIDEOS, icon: PlayCircle },
     ],
   },
   {

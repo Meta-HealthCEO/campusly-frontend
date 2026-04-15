@@ -1,13 +1,16 @@
 'use client';
 
 import { useMemo } from 'react';
+import Link from 'next/link';
 import { DataTable } from '@/components/shared/DataTable';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { LeaveStatusBadge } from './LeaveStatusBadge';
 import { LeaveTypeBadge } from './LeaveTypeBadge';
-import { Eye, XCircle } from 'lucide-react';
+import { Eye, XCircle, UserCheck } from 'lucide-react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { LeaveRequest } from '@/types';
+import { ROUTES } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 
 interface LeaveRequestTableProps {
   requests: LeaveRequest[];
@@ -100,6 +103,15 @@ export function LeaveRequestTable({
                   <XCircle className="h-3.5 w-3.5 mr-1" />
                   Cancel
                 </Button>
+              )}
+              {r.status === 'approved' && !r.substituteTeacherId && (
+                <Link
+                  href={`${ROUTES.ADMIN_SUBSTITUTES}?date=${encodeURIComponent(r.startDate)}&teacherId=${r.staffId.id}&leaveRequestId=${r.id}`}
+                  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+                >
+                  <UserCheck className="h-3.5 w-3.5 mr-1" />
+                  Arrange Substitute
+                </Link>
               )}
             </div>
           );

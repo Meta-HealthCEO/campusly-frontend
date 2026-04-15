@@ -91,3 +91,56 @@ export interface AttendanceStats {
   isChronicAbsentee: boolean;
   updatedAt: string;
 }
+
+// ─── Substitutes ───────────────────────────────────────────────────────────
+
+export type SubstituteReasonCategory =
+  | 'sick'
+  | 'training'
+  | 'personal'
+  | 'family'
+  | 'emergency'
+  | 'other';
+
+export type SubstituteStatus = 'pending' | 'approved' | 'declined' | 'cancelled';
+
+interface PopulatedSubstituteUser {
+  _id: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+}
+
+interface PopulatedSubstituteClass {
+  _id: string;
+  name?: string;
+}
+
+export interface SubstituteTeacher {
+  _id: string;
+  schoolId: string;
+  originalTeacherId: string | PopulatedSubstituteUser;
+  substituteTeacherId: string | PopulatedSubstituteUser;
+  date: string;
+  periods: number[];
+  reason: string;
+  reasonCategory: SubstituteReasonCategory;
+  isFullDay: boolean;
+  classIds: Array<string | PopulatedSubstituteClass>;
+  status: SubstituteStatus;
+  approvedAt?: string;
+  declinedAt?: string;
+  declineReason?: string;
+  approvedBy?: string | PopulatedSubstituteUser;
+  leaveRequestId?: string;
+  createdAt: string;
+}
+
+export interface SuggestedSubstituteTeacher {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  preferred: boolean;
+  reason?: string;
+}
