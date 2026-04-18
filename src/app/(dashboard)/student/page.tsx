@@ -1,9 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { BookOpen, Calendar, Wallet, Trophy, Clock, Star } from 'lucide-react';
+import { BookOpen, Calendar, Wallet, Trophy, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { StatCard } from '@/components/shared/StatCard';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
