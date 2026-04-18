@@ -1,0 +1,245 @@
+<h2>One Gate — Point of Sale</h2>
+<p class="subtitle">Section 5 of 6 — POS interface for in-person transactions</p>
+
+<div class="mockup">
+  <div class="mockup-header">Point of Sale — Active Session</div>
+  <div class="mockup-body" style="padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; display: flex; min-height: 580px; background: #fafafa;">
+
+    <!-- Product Grid (Left) -->
+    <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+
+      <!-- POS Top Bar -->
+      <div style="height: 56px; background: #ffffff; border-bottom: 1px solid rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 28px; height: 28px; background: #171717; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 10px;">OG</div>
+          <span style="font-size: 14px; font-weight: 600; color: #0a0a0a;">Point of Sale</span>
+          <span style="background: rgba(34,197,94,0.1); color: #16a34a; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500;">Online</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="background: rgba(0,0,0,0.04); padding: 6px 12px; border-radius: 8px; font-size: 12px; color: #525252; min-width: 180px;">🔍 Search products...</div>
+          <div style="background: rgba(0,0,0,0.04); padding: 6px 12px; border-radius: 8px; font-size: 12px; color: #525252;">Till 1</div>
+          <div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(23,23,23,0.08); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #404040;">SS</div>
+        </div>
+      </div>
+
+      <!-- Category Tabs -->
+      <div style="padding: 12px 20px; background: #fff; border-bottom: 1px solid rgba(0,0,0,0.04); display: flex; gap: 6px; overflow-x: auto;">
+        <div style="padding: 6px 14px; background: #171717; color: #fff; border-radius: 6px; font-size: 12px; font-weight: 500; white-space: nowrap;">All Items</div>
+        <div style="padding: 6px 14px; background: rgba(0,0,0,0.04); color: #525252; border-radius: 6px; font-size: 12px; font-weight: 500; white-space: nowrap;">Beverages</div>
+        <div style="padding: 6px 14px; background: rgba(0,0,0,0.04); color: #525252; border-radius: 6px; font-size: 12px; font-weight: 500; white-space: nowrap;">Food</div>
+        <div style="padding: 6px 14px; background: rgba(0,0,0,0.04); color: #525252; border-radius: 6px; font-size: 12px; font-weight: 500; white-space: nowrap;">Electronics</div>
+        <div style="padding: 6px 14px; background: rgba(0,0,0,0.04); color: #525252; border-radius: 6px; font-size: 12px; font-weight: 500; white-space: nowrap;">Services</div>
+        <div style="padding: 6px 14px; background: rgba(0,0,0,0.04); color: #525252; border-radius: 6px; font-size: 12px; font-weight: 500; white-space: nowrap;">Custom</div>
+      </div>
+
+      <!-- Product Grid -->
+      <div style="flex: 1; padding: 16px 20px; overflow-y: auto;">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+
+          <div style="background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 10px; padding: 16px; cursor: pointer; text-align: center; transition: all 0.15s;">
+            <div style="width: 48px; height: 48px; background: rgba(23,23,23,0.04); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 22px;">☕</div>
+            <div style="font-size: 12px; font-weight: 500; color: #0a0a0a;">Americano</div>
+            <div style="font-size: 13px; font-weight: 600; color: #0a0a0a; margin-top: 4px;">R 35.00</div>
+            <div style="font-size: 10px; color: #a3a3a3; margin-top: 2px;">142 in stock</div>
+          </div>
+
+          <div style="background: #fff; border: 2px solid #171717; border-radius: 10px; padding: 16px; cursor: pointer; text-align: center; position: relative;">
+            <div style="position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; background: #171717; color: #fff; border-radius: 50%; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;">2</div>
+            <div style="width: 48px; height: 48px; background: rgba(23,23,23,0.04); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 22px;">🥐</div>
+            <div style="font-size: 12px; font-weight: 500; color: #0a0a0a;">Croissant</div>
+            <div style="font-size: 13px; font-weight: 600; color: #0a0a0a; margin-top: 4px;">R 28.00</div>
+            <div style="font-size: 10px; color: #a3a3a3; margin-top: 2px;">38 in stock</div>
+          </div>
+
+          <div style="background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 10px; padding: 16px; cursor: pointer; text-align: center;">
+            <div style="width: 48px; height: 48px; background: rgba(23,23,23,0.04); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 22px;">🥤</div>
+            <div style="font-size: 12px; font-weight: 500; color: #0a0a0a;">Fresh Juice</div>
+            <div style="font-size: 13px; font-weight: 600; color: #0a0a0a; margin-top: 4px;">R 45.00</div>
+            <div style="font-size: 10px; color: #a3a3a3; margin-top: 2px;">67 in stock</div>
+          </div>
+
+          <div style="background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 10px; padding: 16px; cursor: pointer; text-align: center;">
+            <div style="width: 48px; height: 48px; background: rgba(23,23,23,0.04); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 22px;">🥪</div>
+            <div style="font-size: 12px; font-weight: 500; color: #0a0a0a;">Club Sandwich</div>
+            <div style="font-size: 13px; font-weight: 600; color: #0a0a0a; margin-top: 4px;">R 65.00</div>
+            <div style="font-size: 10px; color: #a3a3a3; margin-top: 2px;">24 in stock</div>
+          </div>
+
+          <div style="background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 10px; padding: 16px; cursor: pointer; text-align: center;">
+            <div style="width: 48px; height: 48px; background: rgba(23,23,23,0.04); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 22px;">🍰</div>
+            <div style="font-size: 12px; font-weight: 500; color: #0a0a0a;">Cheesecake</div>
+            <div style="font-size: 13px; font-weight: 600; color: #0a0a0a; margin-top: 4px;">R 55.00</div>
+            <div style="font-size: 10px; color: #a3a3a3; margin-top: 2px;">12 in stock</div>
+          </div>
+
+          <div style="background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 10px; padding: 16px; cursor: pointer; text-align: center;">
+            <div style="width: 48px; height: 48px; background: rgba(23,23,23,0.04); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 22px;">🫖</div>
+            <div style="font-size: 12px; font-weight: 500; color: #0a0a0a;">Rooibos Tea</div>
+            <div style="font-size: 13px; font-weight: 600; color: #0a0a0a; margin-top: 4px;">R 25.00</div>
+            <div style="font-size: 10px; color: #a3a3a3; margin-top: 2px;">200+ in stock</div>
+          </div>
+
+          <div style="background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 10px; padding: 16px; cursor: pointer; text-align: center;">
+            <div style="width: 48px; height: 48px; background: rgba(23,23,23,0.04); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 22px;">🥗</div>
+            <div style="font-size: 12px; font-weight: 500; color: #0a0a0a;">Garden Salad</div>
+            <div style="font-size: 13px; font-weight: 600; color: #0a0a0a; margin-top: 4px;">R 48.00</div>
+            <div style="font-size: 10px; color: #a3a3a3; margin-top: 2px;">18 in stock</div>
+          </div>
+
+          <div style="background: #fff; border: 2px dashed rgba(0,0,0,0.1); border-radius: 10px; padding: 16px; cursor: pointer; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div style="font-size: 24px; color: #a3a3a3; margin-bottom: 6px;">+</div>
+            <div style="font-size: 12px; font-weight: 500; color: #a3a3a3;">Custom Item</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Cart Panel (Right) -->
+    <div style="width: 320px; background: #ffffff; border-left: 1px solid rgba(0,0,0,0.08); display: flex; flex-direction: column; flex-shrink: 0;">
+
+      <!-- Cart Header -->
+      <div style="padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.06);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-size: 14px; font-weight: 600; color: #0a0a0a;">Current Sale</div>
+          <div style="font-size: 11px; color: #a3a3a3;">Order #1042</div>
+        </div>
+        <!-- Customer -->
+        <div style="margin-top: 10px; padding: 8px 10px; background: rgba(0,0,0,0.02); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(23,23,23,0.08); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #404040;">TM</div>
+            <div>
+              <div style="font-size: 12px; font-weight: 500; color: #0a0a0a;">Thandi M.</div>
+              <div style="font-size: 10px; color: #a3a3a3;">Returning customer</div>
+            </div>
+          </div>
+          <div style="font-size: 11px; color: #525252; cursor: pointer;">Change</div>
+        </div>
+      </div>
+
+      <!-- Cart Items -->
+      <div style="flex: 1; padding: 12px 20px; overflow-y: auto;">
+
+        <div style="padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.04);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <div style="font-size: 13px; font-weight: 500; color: #0a0a0a;">Americano</div>
+              <div style="font-size: 11px; color: #a3a3a3; margin-top: 2px;">Large, Extra shot</div>
+            </div>
+            <div style="font-size: 13px; font-weight: 600; color: #0a0a0a;">R 42.00</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+            <div style="display: flex; align-items: center; border: 1px solid rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden;">
+              <div style="padding: 3px 8px; font-size: 12px; color: #525252; cursor: pointer;">−</div>
+              <div style="padding: 3px 10px; font-size: 12px; font-weight: 600; color: #0a0a0a; background: rgba(0,0,0,0.02);">1</div>
+              <div style="padding: 3px 8px; font-size: 12px; color: #525252; cursor: pointer;">+</div>
+            </div>
+            <div style="font-size: 11px; color: #dc2626; cursor: pointer;">Remove</div>
+          </div>
+        </div>
+
+        <div style="padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.04);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <div style="font-size: 13px; font-weight: 500; color: #0a0a0a;">Croissant</div>
+              <div style="font-size: 11px; color: #a3a3a3; margin-top: 2px;">Plain</div>
+            </div>
+            <div style="font-size: 13px; font-weight: 600; color: #0a0a0a;">R 56.00</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+            <div style="display: flex; align-items: center; border: 1px solid rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden;">
+              <div style="padding: 3px 8px; font-size: 12px; color: #525252; cursor: pointer;">−</div>
+              <div style="padding: 3px 10px; font-size: 12px; font-weight: 600; color: #0a0a0a; background: rgba(0,0,0,0.02);">2</div>
+              <div style="padding: 3px 8px; font-size: 12px; color: #525252; cursor: pointer;">+</div>
+            </div>
+            <div style="font-size: 11px; color: #dc2626; cursor: pointer;">Remove</div>
+          </div>
+        </div>
+
+        <!-- Discount -->
+        <div style="padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.04);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 12px; color: #16a34a;">✓</span>
+              <span style="font-size: 12px; color: #16a34a; font-weight: 500;">Loyalty discount (10%)</span>
+            </div>
+            <span style="font-size: 12px; color: #16a34a; font-weight: 500;">-R 9.80</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cart Footer / Totals -->
+      <div style="border-top: 1px solid rgba(0,0,0,0.08); padding: 16px 20px;">
+        <div style="display: flex; justify-content: space-between; font-size: 12px; color: #737373; margin-bottom: 6px;">
+          <span>Subtotal</span><span>R 98.00</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 12px; color: #16a34a; margin-bottom: 6px;">
+          <span>Discount</span><span>-R 9.80</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 12px; color: #737373; margin-bottom: 10px;">
+          <span>VAT (15%)</span><span>R 13.23</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; color: #0a0a0a; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.06); margin-bottom: 16px;">
+          <span>Total</span><span>R 101.43</span>
+        </div>
+
+        <!-- Payment Method Buttons -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px;">
+          <div style="padding: 8px; background: rgba(0,0,0,0.03); border-radius: 8px; text-align: center; cursor: pointer; border: 1px solid rgba(0,0,0,0.06);">
+            <div style="font-size: 14px;">💳</div>
+            <div style="font-size: 10px; color: #525252; margin-top: 2px;">Card</div>
+          </div>
+          <div style="padding: 8px; background: rgba(0,0,0,0.03); border-radius: 8px; text-align: center; cursor: pointer; border: 1px solid rgba(0,0,0,0.06);">
+            <div style="font-size: 14px;">🏦</div>
+            <div style="font-size: 10px; color: #525252; margin-top: 2px;">EFT</div>
+          </div>
+          <div style="padding: 8px; background: rgba(0,0,0,0.03); border-radius: 8px; text-align: center; cursor: pointer; border: 1px solid rgba(0,0,0,0.06);">
+            <div style="font-size: 14px;">💵</div>
+            <div style="font-size: 10px; color: #525252; margin-top: 2px;">Cash</div>
+          </div>
+          <div style="padding: 8px; background: rgba(0,0,0,0.03); border-radius: 8px; text-align: center; cursor: pointer; border: 1px solid rgba(0,0,0,0.06);">
+            <div style="font-size: 14px;">📱</div>
+            <div style="font-size: 10px; color: #525252; margin-top: 2px;">G Pay</div>
+          </div>
+          <div style="padding: 8px; background: rgba(0,0,0,0.03); border-radius: 8px; text-align: center; cursor: pointer; border: 1px solid rgba(0,0,0,0.06);">
+            <div style="font-size: 14px;">🍎</div>
+            <div style="font-size: 10px; color: #525252; margin-top: 2px;">Apple</div>
+          </div>
+          <div style="padding: 8px; background: rgba(0,0,0,0.03); border-radius: 8px; text-align: center; cursor: pointer; border: 1px solid rgba(0,0,0,0.06);">
+            <div style="font-size: 14px;">₿</div>
+            <div style="font-size: 10px; color: #525252; margin-top: 2px;">Crypto</div>
+          </div>
+        </div>
+
+        <div style="background: #171717; color: #fff; padding: 12px; border-radius: 10px; text-align: center; font-size: 14px; font-weight: 600; cursor: pointer;">
+          Charge R 101.43
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 16px; margin-top: 10px;">
+          <span style="font-size: 11px; color: #a3a3a3; cursor: pointer;">Hold Order</span>
+          <span style="font-size: 11px; color: #a3a3a3;">•</span>
+          <span style="font-size: 11px; color: #a3a3a3; cursor: pointer;">Split Payment</span>
+          <span style="font-size: 11px; color: #a3a3a3;">•</span>
+          <span style="font-size: 11px; color: #dc2626; cursor: pointer;">Void</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <h3>POS — Key Features</h3>
+  <ul>
+    <li><strong>PWA</strong> — works on tablets, laptops, phones. Offline-capable with sync</li>
+    <li><strong>Product grid</strong> with category tabs, search, custom items, stock counts</li>
+    <li><strong>Cart panel</strong> — quantity controls, modifiers (size, extras), item notes</li>
+    <li><strong>Customer linking</strong> — attach to existing customer for loyalty & history</li>
+    <li><strong>All payment methods</strong> — Card, EFT, Cash, Google Pay, Apple Pay, Crypto via One Gate gateway</li>
+    <li><strong>Loyalty discounts</strong> auto-applied based on customer history</li>
+    <li><strong>Split payments</strong> — split across multiple methods</li>
+    <li><strong>Hold orders</strong> — park and recall later</li>
+    <li><strong>Inventory auto-deduct</strong> — stock levels update in real-time</li>
+    <li><strong>Receipt</strong> — digital (email/SMS) or connected printer</li>
+  </ul>
+</div>

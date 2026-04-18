@@ -91,7 +91,22 @@ export function useTeacherDiscipline() {
     [schoolId, fetchRecords],
   );
 
-  return { records, students, loading, createRecord };
+  const updateRecord = useCallback(
+    async (id: string, data: Partial<DisciplineFormData & { status: string }>) => {
+      try {
+        await apiClient.put(`/attendance/discipline/${id}`, data);
+        toast.success('Discipline record updated');
+        await fetchRecords();
+        return true;
+      } catch {
+        toast.error('Failed to update discipline record');
+        return false;
+      }
+    },
+    [fetchRecords],
+  );
+
+  return { records, students, loading, createRecord, updateRecord };
 }
 
 export type { DisciplineRecord, DisciplineFormData };

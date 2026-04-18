@@ -2,14 +2,8 @@ import { useState, useEffect } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapList } from '@/lib/api-helpers';
 import { useCurrentParent } from './useCurrentParent';
+import { toISODate } from '@/lib/utils';
 import type { Attendance } from '@/types';
-
-function toISODate(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
 
 export interface ChildAttendance {
   childId: string;
@@ -27,26 +21,35 @@ export interface ChildAttendance {
 interface ParentAttendanceResult {
   childAttendance: ChildAttendance[];
   loading: boolean;
+  /** The month currently being viewed (year + month) */
+  selectedMonth: Date;
+  setSelectedMonth: (month: Date) => void;
 }
 
 export function useParentAttendance(): ParentAttendanceResult {
   const { children, loading: parentLoading } = useCurrentParent();
   const [childAttendance, setChildAttendance] = useState<ChildAttendance[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState<Date>(() => new Date());
 
   useEffect(() => {
     if (parentLoading) return;
     if (children.length === 0) { setLoading(false); return; }
 
+    let cancelled = false;
+
     async function fetchData() {
+      setLoading(true);
       try {
+        const year = selectedMonth.getFullYear();
+        const month = selectedMonth.getMonth();
+        const startDate = toISODate(new Date(year, month, 1));
+        const endDate = toISODate(new Date(year, month + 1, 0));
+
         const results: ChildAttendance[] = [];
         for (const child of children) {
           let records: Attendance[] = [];
           try {
-            const now = new Date();
-            const startDate = toISODate(new Date(now.getFullYear(), now.getMonth(), 1));
-            const endDate = toISODate(new Date(now.getFullYear(), now.getMonth() + 1, 0));
             const res = await apiClient.get(`/attendance/student/${child.id}`, {
               params: { startDate, endDate },
             });
@@ -54,10 +57,10 @@ export function useParentAttendance(): ParentAttendanceResult {
           } catch { /* no records */ }
 
           const total = records.length;
-          const present = records.filter((r) => r.status === 'present').length;
-          const absent = records.filter((r) => r.status === 'absent').length;
-          const late = records.filter((r) => r.status === 'late').length;
-          const excused = records.filter((r) => r.status === 'excused').length;
+          const present = records.filter((r: Attendance) => r.status === 'present').length;
+          const absent = records.filter((r: Attendance) => r.status === 'absent').length;
+          const late = records.filter((r: Attendance) => r.status === 'late').length;
+          const excused = records.filter((r: Attendance) => r.status === 'excused').length;
           const rate = total > 0 ? Math.round((present / total) * 100) : 0;
 
           const userId = child.userId as { firstName?: string; lastName?: string } | string | undefined;
@@ -70,15 +73,17 @@ export function useParentAttendance(): ParentAttendanceResult {
             records, total, present, absent, late, excused, rate,
           });
         }
-        setChildAttendance(results);
+        if (!cancelled) setChildAttendance(results);
       } catch {
         console.error('Failed to load attendance data');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     fetchData();
-  }, [parentLoading, children]);
 
-  return { childAttendance, loading: loading || parentLoading };
+    return () => { cancelled = true; };
+  }, [parentLoading, children, selectedMonth]);
+
+  return { childAttendance, loading: loading || parentLoading, selectedMonth, setSelectedMonth };
 }

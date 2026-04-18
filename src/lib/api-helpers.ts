@@ -4,6 +4,8 @@
  * and error extraction.
  */
 
+import type { PopulatedId } from '@/types';
+
 /** Map `_id` to `id` on a single record. */
 export function mapId<T extends Record<string, unknown>>(item: T): T & { id: string } {
   return { ...item, id: (item._id as string) ?? (item.id as string) ?? '' };
@@ -70,9 +72,7 @@ export function extractErrorMessage(
  *   resolveId(student.classId)      // { _id: '...' } → '...'
  *   resolveId(undefined)            // → ''
  */
-export function resolveId(
-  val: string | { id?: string; _id?: string } | null | undefined,
-): string {
+export function resolveId(val: PopulatedId): string {
   if (!val) return '';
   if (typeof val === 'string') return val;
   return val.id ?? val._id ?? '';

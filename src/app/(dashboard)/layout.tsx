@@ -13,6 +13,7 @@ import {
   STUDENT_NAV,
   TEACHER_NAV,
   SUPERADMIN_NAV,
+  COACH_NAV,
   type NavItem,
 } from '@/lib/constants';
 import { AuthGuard } from '@/components/auth/AuthGuard';
@@ -27,6 +28,8 @@ const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
   tuckshop: ADMIN_NAV,
   super_admin: SUPERADMIN_NAV,
   sgb_member: [],
+  coach: COACH_NAV,
+  sports_manager: COACH_NAV,
 };
 
 function filterByModule(items: NavItem[], enabledModules: string[]): NavItem[] {

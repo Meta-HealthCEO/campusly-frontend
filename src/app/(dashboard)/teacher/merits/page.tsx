@@ -1,16 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Plus } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Scale } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { MeritForm } from '@/components/attendance/MeritForm';
 import { useTeacherMerits } from '@/hooks/useTeacherMerits';
+import { getStudentDisplayName } from '@/lib/student-helpers';
 import type { MeritRecord } from '@/hooks/useTeacherMerits';
 
 function getStudentName(record: MeritRecord): string {
@@ -78,6 +80,7 @@ const meritColumns: ColumnDef<MeritRecord, unknown>[] = [
 
 export default function TeacherMeritsPage() {
   const [open, setOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState('all');
   const {
     records,
     students,
@@ -87,7 +90,20 @@ export default function TeacherMeritsPage() {
     setTypeFilter,
     setCategoryFilter,
     createMerit,
+    fetchBalance,
+    selectedStudentBalance,
   } = useTeacherMerits();
+
+  const handleStudentChange = useCallback(
+    (val: unknown) => {
+      const v = val as string;
+      setSelectedStudent(v);
+      if (v !== 'all') {
+        fetchBalance(v);
+      }
+    },
+    [fetchBalance],
+  );
 
   const handleSubmit = async (data: {
     studentId: string;
@@ -114,6 +130,74 @@ export default function TeacherMeritsPage() {
         </Button>
       </PageHeader>
 
+      {/* Student balance selector */}
+      <div className="flex flex-col gap-4">
+        <Select value={selectedStudent} onValueChange={handleStudentChange}>
+          <SelectTrigger className="w-full sm:w-64">
+            <SelectValue placeholder="Select a student to view balance" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Select a student...</SelectItem>
+            {students.map((s) => (
+              <SelectItem key={s.id || s._id} value={s.id || s._id || ''}>
+                {getStudentDisplayName(s).full}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {selectedStudent !== 'all' && selectedStudentBalance && (
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">Merit Points</p>
+                    <p className="text-2xl font-bold text-emerald-600">
+                      {selectedStudentBalance.meritPoints}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-emerald-100 p-3">
+                    <TrendingUp className="h-5 w-5 text-emerald-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">Demerit Points</p>
+                    <p className="text-2xl font-bold text-destructive">
+                      {selectedStudentBalance.demeritPoints}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-destructive/10 p-3">
+                    <TrendingDown className="h-5 w-5 text-destructive" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-muted-foreground">Net Points</p>
+                    <p className={`text-2xl font-bold ${selectedStudentBalance.netPoints >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+                      {selectedStudentBalance.netPoints}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-primary/10 p-3">
+                    <Scale className="h-5 w-5 text-primary" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+
+      {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <Select value={typeFilter} onValueChange={(val: unknown) => setTypeFilter((val as string) === 'all' ? '' : val as string)}>
           <SelectTrigger className="w-full sm:w-36">

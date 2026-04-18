@@ -46,7 +46,7 @@ export default function TeacherDisciplinePage() {
   const [severity, setSeverity] = useState('all');
   const [status, setStatus] = useState('all');
 
-  const { records, students, loading, createRecord } = useTeacherDiscipline();
+  const { records, students, loading, createRecord, updateRecord } = useTeacherDiscipline();
 
   const filteredRecords = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -60,6 +60,10 @@ export default function TeacherDisciplinePage() {
       return name.includes(q) || type.includes(q) || desc.includes(q);
     });
   }, [records, search, severity, status]);
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    await updateRecord(id, { status: newStatus });
+  };
 
   const handleSubmit = async (data: {
     studentId: string;
@@ -139,7 +143,7 @@ export default function TeacherDisciplinePage() {
           description="Try adjusting your filters or search query."
         />
       ) : (
-        <DisciplineTable records={filteredRecords} canDelete={false} />
+        <DisciplineTable records={filteredRecords} canDelete={false} onStatusChange={handleStatusChange} />
       )}
 
       <DisciplineForm

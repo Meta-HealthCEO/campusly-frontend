@@ -1,27 +1,29 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
-import { unwrapList, extractErrorMessage, resolveId } from '@/lib/api-helpers';
+import { unwrapList, unwrapResponse, extractErrorMessage, resolveId } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { toast } from 'sonner';
+import { toISODate } from '@/lib/utils';
 import type { Student, SchoolClass } from '@/types';
 
-export type AttendanceStatus = 'present' | 'absent' | 'late';
+export type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused';
+
+export interface AttendanceEntry {
+  status: AttendanceStatus;
+  note?: string;
+}
 
 interface AttendanceRecord {
   studentId: string;
   status: AttendanceStatus;
+  notes?: string;
 }
 
 interface RawAttendanceRecord {
   studentId: string | { id?: string; _id?: string };
   status: AttendanceStatus;
-}
-
-function toISODate(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+  notes?: string;
+  period?: number;
 }
 
 const today = toISODate(new Date());
@@ -31,87 +33,92 @@ export function useTeacherAttendance() {
   const [homeClass, setHomeClass] = useState<SchoolClass | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedDate, setSelectedDate] = useState(today);
-  const [attendance, setAttendance] = useState<Map<string, AttendanceStatus>>(new Map());
+  const [period, setPeriodState] = useState<number>(1);
+  const [allRecords, setAllRecords] = useState<RawAttendanceRecord[]>([]);
+  const [attendance, setAttendance] = useState<Map<string, AttendanceEntry>>(new Map());
   const [existingLoaded, setExistingLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // ── Initial load: find home class + fetch its students ──────────────────
-  useEffect(() => {
-    if (!user?.id) return;
-
-    async function init() {
-      setLoading(true);
-      try {
-        const classesRes = await apiClient.get('/academic/classes');
-        const allClasses = unwrapList<SchoolClass>(classesRes);
-        const mine = allClasses.find(
-          (c) => resolveId(c.teacherId as string | { id?: string; _id?: string } | undefined) === user!.id,
-        ) ?? null;
-        setHomeClass(mine);
-
-        if (!mine) return;
-
-        const studentsRes = await apiClient.get('/students');
-        const allStudents = unwrapList<Student>(studentsRes);
-        const homeStudents = allStudents.filter(
-          (s) => resolveId(s.classId as string | { id?: string; _id?: string } | undefined) === mine.id,
-        );
-        setStudents(homeStudents);
-
-        await loadExistingAttendance(mine.id, today, homeStudents);
-      } catch (err: unknown) {
-        console.error('Failed to load attendance data', err);
-        toast.error('Could not load attendance data. Please refresh.');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    init();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
-
   // ── Load existing attendance for a given date ────────────────────────────
+  // Fetches ALL records for the date (across periods), stores them, and
+  // filters by the currently-selected period to build the attendance Map.
   const loadExistingAttendance = useCallback(
     async (classId: string, date: string, homeStudents: Student[]) => {
       try {
         const res = await apiClient.get(`/attendance/class/${classId}`, {
           params: { date },
         });
-        const raw = res.data?.data ?? res.data;
-        const records: RawAttendanceRecord[] = Array.isArray(raw)
-          ? raw
-          : Array.isArray(raw?.records)
-          ? raw.records
-          : [];
+        const records = unwrapList<RawAttendanceRecord>(res);
+        setAllRecords(records);
 
-        if (records.length > 0) {
-          const map = new Map<string, AttendanceStatus>();
-          records.forEach((r) => {
+        // Filter by current period (default to 1 if records have no period)
+        const filtered = records.filter((r) => (r.period ?? 1) === period);
+
+        if (filtered.length > 0) {
+          const map = new Map<string, AttendanceEntry>();
+          filtered.forEach((r) => {
             const sid = resolveId(r.studentId);
-            if (sid) map.set(sid, r.status);
+            if (sid) map.set(sid, { status: r.status, note: r.notes });
           });
           setAttendance(map);
           setExistingLoaded(true);
         } else {
           // Default all to present
-          const map = new Map<string, AttendanceStatus>();
-          homeStudents.forEach((s) => map.set(s.id, 'present'));
+          const map = new Map<string, AttendanceEntry>();
+          homeStudents.forEach((s) => map.set(s.id, { status: 'present' }));
           setAttendance(map);
           setExistingLoaded(false);
         }
       } catch {
-        // If endpoint errors, default all to present
-        const map = new Map<string, AttendanceStatus>();
-        homeStudents.forEach((s) => map.set(s.id, 'present'));
+        toast.error('Could not load previous attendance — defaulting all to present');
+        setAllRecords([]);
+        // Default all to present
+        const map = new Map<string, AttendanceEntry>();
+        homeStudents.forEach((s) => map.set(s.id, { status: 'present' }));
         setAttendance(map);
         setExistingLoaded(false);
       }
     },
-    [],
+    [period],
   );
+
+  // ── Initial load: fetch teaching load, pick home class + its students ────
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+
+    async function init() {
+      setLoading(true);
+      try {
+        const res = await apiClient.get('/academic/teacher/me/teaching-load');
+        if (cancelled) return;
+        const data = unwrapResponse<{
+          homeroom: { class: SchoolClass; students: Student[] } | null;
+          subjectClasses: unknown[];
+        }>(res);
+
+        const mine = data.homeroom?.class ?? null;
+        const homeStudents = data.homeroom?.students ?? [];
+        setHomeClass(mine);
+
+        if (!mine) return;
+
+        setStudents(homeStudents);
+        await loadExistingAttendance(mine.id, today, homeStudents);
+      } catch (err: unknown) {
+        if (cancelled) return;
+        console.error('Failed to load attendance data', err);
+        toast.error('Could not load attendance data. Please refresh.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    init();
+    return () => { cancelled = true; };
+  }, [user?.id, loadExistingAttendance]);
 
   // ── Date change ─────────────────────────────────────────────────────────
   const changeDate = useCallback(
@@ -126,11 +133,49 @@ export function useTeacherAttendance() {
     [homeClass, students, loadExistingAttendance],
   );
 
+  // ── Period change (client-side filter of already-loaded records) ────────
+  const setPeriod = useCallback(
+    (nextPeriod: number) => {
+      setPeriodState(nextPeriod);
+      setSaved(false);
+      const filtered = allRecords.filter((r) => (r.period ?? 1) === nextPeriod);
+      if (filtered.length > 0) {
+        const map = new Map<string, AttendanceEntry>();
+        filtered.forEach((r) => {
+          const sid = resolveId(r.studentId);
+          if (sid) map.set(sid, { status: r.status, note: r.notes });
+        });
+        setAttendance(map);
+        setExistingLoaded(true);
+      } else {
+        const map = new Map<string, AttendanceEntry>();
+        students.forEach((s) => map.set(s.id, { status: 'present' }));
+        setAttendance(map);
+        setExistingLoaded(false);
+      }
+    },
+    [allRecords, students],
+  );
+
   // ── Status mutations ─────────────────────────────────────────────────────
   const updateStatus = useCallback((studentId: string, status: AttendanceStatus) => {
     setAttendance((prev) => {
       const next = new Map(prev);
-      next.set(studentId, status);
+      const existing = next.get(studentId);
+      next.set(studentId, { status, note: existing?.note });
+      return next;
+    });
+    setSaved(false);
+  }, []);
+
+  const updateNote = useCallback((studentId: string, note: string) => {
+    setAttendance((prev) => {
+      const next = new Map(prev);
+      const existing = next.get(studentId);
+      next.set(studentId, {
+        status: existing?.status ?? 'present',
+        note: note.trim() === '' ? undefined : note,
+      });
       return next;
     });
     setSaved(false);
@@ -139,7 +184,7 @@ export function useTeacherAttendance() {
   const markAllPresent = useCallback(() => {
     setAttendance((prev) => {
       const next = new Map(prev);
-      students.forEach((s) => next.set(s.id, 'present'));
+      students.forEach((s) => next.set(s.id, { status: 'present' }));
       return next;
     });
     setSaved(false);
@@ -164,42 +209,59 @@ export function useTeacherAttendance() {
       return;
     }
 
-    const records: AttendanceRecord[] = students.map((s) => ({
-      studentId: s.id,
-      status: attendance.get(s.id) ?? 'present',
-    }));
+    const records: AttendanceRecord[] = students.map((s) => {
+      const entry = attendance.get(s.id);
+      const record: AttendanceRecord = {
+        studentId: s.id,
+        status: entry?.status ?? 'present',
+      };
+      if (entry?.note) record.notes = entry.note;
+      return record;
+    });
 
+    const isUpdate = existingLoaded;
     setSaving(true);
     try {
+      // NOTE: schoolId is required by the backend `bulkAttendanceSchema` Zod
+      // validator and is used in the `upsert` filter in the service. The
+      // backend trusts the value from the JWT (`req.user.schoolId`) for
+      // authorization, but still expects it in the payload for validation.
       await apiClient.post('/attendance/bulk', {
         classId: homeClass.id,
         schoolId: user.schoolId,
         date: `${selectedDate}T00:00:00.000Z`,
-        period: 1,
+        period,
         records,
       });
       setSaved(true);
       setExistingLoaded(true);
-      toast.success(`Attendance saved for ${selectedDate}`);
+      toast.success(
+        isUpdate
+          ? `Attendance updated for ${selectedDate}`
+          : `Attendance saved for ${selectedDate}`,
+      );
     } catch (err: unknown) {
       const msg = extractErrorMessage(err, '');
       toast.error(msg || 'Failed to save attendance. Please try again.');
     } finally {
       setSaving(false);
     }
-  }, [user?.schoolId, homeClass, students, selectedDate, attendance]);
+  }, [user?.schoolId, homeClass, students, selectedDate, period, attendance, existingLoaded]);
 
   return {
     homeClass,
     students,
     selectedDate,
+    period,
     attendance,
     existingLoaded,
     saving,
     saved,
     loading,
     changeDate,
+    setPeriod,
     updateStatus,
+    updateNote,
     markAllPresent,
     saveAttendance,
   };

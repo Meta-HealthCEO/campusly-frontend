@@ -20,3 +20,6 @@ export { LivePollCreator } from './LivePollCreator';
 export { LivePollResponder } from './LivePollResponder';
 export { LivePollResults } from './LivePollResults';
 export { VideoRoom } from './VideoRoom';
+export { VideoLayout } from './VideoLayout';
+export { TranscriptView } from './TranscriptView';
+export { LessonNotesView } from './LessonNotesView';

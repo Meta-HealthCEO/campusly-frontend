@@ -10,7 +10,13 @@
       "mcp__ecomed-files__list_directory",
       "mcp__ecomed-files__directory_tree",
       "mcp__ecomed-files__read_text_file",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(grep -r \"useTeacher\" /c/Users/shaun/campusly-frontend/src/hooks/*.ts --include=\"useTeacher*.ts\")",
+      "mcp__ecomed-files__read_multiple_files",
+      "Bash(xargs cat *)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(grep -E \"^\\\\./[^/]+$|dashboard\")",
+      "Bash(find src/app/\\\\\\(dashboard\\\\\\)/teacher -name \"page.tsx\" -exec wc -l {} +)"
     ]
   }
 }

@@ -36,6 +36,18 @@ export function getInitials(firstName: string, lastName: string): string {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
 
+/**
+ * Format a Date as a local-timezone ISO date string (YYYY-MM-DD).
+ * Unlike `toISOString().slice(0,10)`, this respects the user's local timezone
+ * so it won't return yesterday's date near midnight in UTC+ timezones.
+ */
+export function toISODate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 /** Calculate percentage */
 export function calcPercentage(value: number, total: number): number {
   if (total === 0) return 0;

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
-import { unwrapResponse } from '@/lib/api-helpers';
+import { unwrapResponse, resolveId } from '@/lib/api-helpers';
 import type { Student, SchoolClass } from '@/types';
 
 export interface SubjectTaught {
@@ -43,10 +43,6 @@ interface AddStudentPayload {
   schoolId: string;
 }
 
-function getId(obj: unknown): string {
-  if (obj && typeof obj === 'object' && 'id' in obj) return String((obj as { id: string }).id);
-  return '';
-}
 
 export function useTeacherClasses() {
   const [entries, setEntries] = useState<TeacherClassEntry[]>([]);
@@ -110,7 +106,7 @@ export function useTeacherClasses() {
   const classes = useMemo(() => {
     const map = new Map<string, SchoolClass>();
     for (const entry of entries) {
-      const id = getId(entry.class);
+      const id = resolveId(entry.class);
       if (id && !map.has(id)) map.set(id, entry.class);
     }
     return Array.from(map.values());
@@ -121,7 +117,7 @@ export function useTeacherClasses() {
     const map = new Map<string, Student>();
     for (const entry of entries) {
       for (const s of entry.students) {
-        const sid = getId(s);
+        const sid = resolveId(s);
         if (sid && !map.has(sid)) map.set(sid, s);
       }
     }

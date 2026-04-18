@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
-import { unwrapList } from '@/lib/api-helpers';
+import { unwrapList, unwrapResponse } from '@/lib/api-helpers';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { Student } from '@/types';
@@ -30,6 +30,12 @@ interface MeritFormData {
   reason: string;
 }
 
+interface MeritBalance {
+  meritPoints: number;
+  demeritPoints: number;
+  netPoints: number;
+}
+
 export function useTeacherMerits() {
   const { user } = useAuthStore();
   const [records, setRecords] = useState<MeritRecord[]>([]);
@@ -37,6 +43,7 @@ export function useTeacherMerits() {
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [selectedStudentBalance, setSelectedStudentBalance] = useState<MeritBalance | null>(null);
 
   const fetchMerits = useCallback(async () => {
     try {
@@ -78,6 +85,22 @@ export function useTeacherMerits() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typeFilter, categoryFilter]);
 
+  const fetchBalance = useCallback(
+    async (studentId: string) => {
+      try {
+        const res = await apiClient.get(
+          `/attendance/merits/balance/${studentId}`,
+          { params: { schoolId: user?.schoolId ?? '' } },
+        );
+        setSelectedStudentBalance(unwrapResponse<MeritBalance>(res));
+      } catch {
+        toast.error('Failed to load merit balance');
+        setSelectedStudentBalance(null);
+      }
+    },
+    [user?.schoolId],
+  );
+
   const createMerit = useCallback(
     async (data: MeritFormData) => {
       try {
@@ -105,7 +128,9 @@ export function useTeacherMerits() {
     setTypeFilter,
     setCategoryFilter,
     createMerit,
+    fetchBalance,
+    selectedStudentBalance,
   };
 }
 
-export type { MeritRecord, MeritFormData };
+export type { MeritRecord, MeritFormData, MeritBalance };

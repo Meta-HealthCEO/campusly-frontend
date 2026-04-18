@@ -9,6 +9,10 @@ import type { Attendance } from '@/types';
 interface AttendanceCalendarProps {
   records: Attendance[];
   childName: string;
+  /** Externally controlled month (year + month) */
+  month?: Date;
+  /** Called when the user navigates months via the calendar arrows */
+  onMonthChange?: (month: Date) => void;
 }
 
 type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused';
@@ -63,33 +67,32 @@ function buildRecordMap(records: Attendance[]): Map<string, AttendanceStatus> {
   return map;
 }
 
-export function AttendanceCalendar({ records, childName }: AttendanceCalendarProps) {
+export function AttendanceCalendar({ records, childName, month: externalMonth, onMonthChange }: AttendanceCalendarProps) {
   const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth());
+  const [internalYear, setInternalYear] = useState(now.getFullYear());
+  const [internalMonth, setInternalMonth] = useState(now.getMonth());
+
+  // Use external month if provided, otherwise fall back to internal state
+  const year = externalMonth ? externalMonth.getFullYear() : internalYear;
+  const calMonth = externalMonth ? externalMonth.getMonth() : internalMonth;
 
   const recordMap = useMemo(() => buildRecordMap(records), [records]);
 
-  const daysInMonth = getDaysInMonth(year, month);
-  const firstDay = getFirstDayOfMonth(year, month);
+  const daysInMonth = getDaysInMonth(year, calMonth);
+  const firstDay = getFirstDayOfMonth(year, calMonth);
 
-  const goToPrevMonth = () => {
-    if (month === 0) {
-      setMonth(11);
-      setYear((y) => y - 1);
+  const navigateMonth = (delta: -1 | 1) => {
+    const newDate = new Date(year, calMonth + delta, 1);
+    if (onMonthChange) {
+      onMonthChange(newDate);
     } else {
-      setMonth((m) => m - 1);
+      setInternalYear(newDate.getFullYear());
+      setInternalMonth(newDate.getMonth());
     }
   };
 
-  const goToNextMonth = () => {
-    if (month === 11) {
-      setMonth(0);
-      setYear((y) => y + 1);
-    } else {
-      setMonth((m) => m + 1);
-    }
-  };
+  const goToPrevMonth = () => navigateMonth(-1);
+  const goToNextMonth = () => navigateMonth(1);
 
   const cells: React.ReactNode[] = [];
 
@@ -102,7 +105,7 @@ export function AttendanceCalendar({ records, childName }: AttendanceCalendarPro
   for (let day = 1; day <= daysInMonth; day++) {
     const dayOfWeek = (firstDay + day - 1) % 7;
     const weekend = isWeekend(dayOfWeek);
-    const key = `${year}-${month}-${day}`;
+    const key = `${year}-${calMonth}-${day}`;
     const status = recordMap.get(key);
 
     let cellClass = 'h-10 w-full rounded-md border text-xs font-medium flex items-center justify-center transition-colors';
@@ -138,7 +141,7 @@ export function AttendanceCalendar({ records, childName }: AttendanceCalendarPro
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-sm font-medium min-w-35 text-center">
-              {formatMonthYear(year, month)}
+              {formatMonthYear(year, calMonth)}
             </span>
             <Button variant="outline" size="icon" onClick={goToNextMonth} aria-label="Next month">
               <ChevronRight className="h-4 w-4" />

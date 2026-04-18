@@ -1,153 +1,74 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { StudentRow } from '@/components/attendance/StudentRow';
 import { useTeacherAttendance } from '@/hooks/useTeacherAttendance';
-import type { AttendanceStatus } from '@/hooks/useTeacherAttendance';
-import { CheckCircle2, XCircle, Clock, UserX, Save, Users } from 'lucide-react';
-import { useMemo } from 'react';
-import type { Student } from '@/types';
-
-function toISODate(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
+import { getStudentDisplayName } from '@/lib/student-helpers';
+import { toISODate } from '@/lib/utils';
+import { CheckCircle2, UserX, Save, Users, Info, Search } from 'lucide-react';
 
 const todayISO = toISODate(new Date());
-
-// ── Status toggle button ─────────────────────────────────────────────────────
-
-interface StatusButtonProps {
-  status: AttendanceStatus;
-  current: AttendanceStatus;
-  onClick: () => void;
-}
-
-function StatusButton({ status, current, onClick }: StatusButtonProps) {
-  const active = current === status;
-  const config: Record<AttendanceStatus, { label: string; icon: React.ReactNode; activeClass: string }> = {
-    present: {
-      label: 'Present',
-      icon: <CheckCircle2 className="h-4 w-4" />,
-      activeClass: 'bg-emerald-100 text-emerald-700 border-emerald-400 dark:bg-emerald-900/30 dark:text-emerald-400',
-    },
-    absent: {
-      label: 'Absent',
-      icon: <XCircle className="h-4 w-4" />,
-      activeClass: 'bg-destructive/10 text-destructive border-destructive/40',
-    },
-    late: {
-      label: 'Late',
-      icon: <Clock className="h-4 w-4" />,
-      activeClass: 'bg-amber-100 text-amber-700 border-amber-400 dark:bg-amber-900/30 dark:text-amber-400',
-    },
-  };
-  const { label, icon, activeClass } = config[status];
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={[
-        'flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-colors min-h-[44px]',
-        active ? activeClass : 'border-border text-muted-foreground hover:bg-muted',
-      ].join(' ')}
-      aria-pressed={active}
-    >
-      {icon}
-      <span className="hidden sm:inline">{label}</span>
-    </button>
-  );
-}
-
-// ── Student row ──────────────────────────────────────────────────────────────
-
-interface StudentRowProps {
-  student: Student;
-  status: AttendanceStatus;
-  onUpdate: (studentId: string, status: AttendanceStatus) => void;
-}
-
-function getStudentName(student: Student): string {
-  const userId = student.userId;
-  const first =
-    student.user?.firstName ??
-    (typeof userId === 'object' && userId !== null
-      ? (userId as { firstName?: string }).firstName
-      : undefined) ??
-    student.firstName ??
-    '';
-  const last =
-    student.user?.lastName ??
-    (typeof userId === 'object' && userId !== null
-      ? (userId as { lastName?: string }).lastName
-      : undefined) ??
-    student.lastName ??
-    '';
-  return `${first} ${last}`.trim() || 'Unknown';
-}
-
-function dotClass(status: AttendanceStatus): string {
-  if (status === 'present') return 'bg-emerald-500';
-  if (status === 'absent') return 'bg-destructive';
-  return 'bg-amber-500';
-}
-
-function StudentRow({ student, status, onUpdate }: StudentRowProps) {
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border p-3">
-      <div className="flex items-center gap-2 flex-1 min-w-0">
-        <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${dotClass(status)}`} />
-        <div className="min-w-0">
-          <p className="text-sm font-medium truncate">{getStudentName(student)}</p>
-          {student.admissionNumber && (
-            <p className="text-xs text-muted-foreground truncate">{student.admissionNumber}</p>
-          )}
-        </div>
-      </div>
-      <div className="flex gap-2 flex-shrink-0">
-        <StatusButton status="present" current={status} onClick={() => onUpdate(student.id, 'present')} />
-        <StatusButton status="absent" current={status} onClick={() => onUpdate(student.id, 'absent')} />
-        <StatusButton status="late" current={status} onClick={() => onUpdate(student.id, 'late')} />
-      </div>
-    </div>
-  );
-}
-
-// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TeacherAttendancePage() {
   const {
     homeClass,
     students,
     selectedDate,
+    period,
     attendance,
+    existingLoaded,
     saved,
     saving,
     loading,
     changeDate,
+    setPeriod,
     updateStatus,
+    updateNote,
     markAllPresent,
     saveAttendance,
   } = useTeacherAttendance();
+
+  const [search, setSearch] = useState('');
+
+  const isEditing = existingLoaded && !saved;
+  const isPastDate = selectedDate < todayISO;
 
   const stats = useMemo(() => {
     let present = 0;
     let absent = 0;
     let late = 0;
+    let excused = 0;
     students.forEach((s) => {
-      const st = attendance.get(s.id) ?? 'present';
+      const st = attendance.get(s.id)?.status ?? 'present';
       if (st === 'present') present++;
       else if (st === 'absent') absent++;
-      else late++;
+      else if (st === 'late') late++;
+      else excused++;
     });
-    return { present, absent, late };
+    return { present, absent, late, excused };
   }, [attendance, students]);
+
+  const filteredStudents = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return students;
+    return students.filter((s) => {
+      const name = getStudentDisplayName(s).full.toLowerCase();
+      return name.includes(q) || (s.admissionNumber ?? '').toLowerCase().includes(q);
+    });
+  }, [students, search]);
 
   if (loading) {
     return (
@@ -172,6 +93,7 @@ export default function TeacherAttendancePage() {
   }
 
   const classLabel = `${homeClass.grade?.name ?? homeClass.gradeName ?? ''} ${homeClass.name}`.trim();
+  const showFilteredCount = search.trim() !== '' && filteredStudents.length !== students.length;
 
   return (
     <div className="space-y-4">
@@ -179,20 +101,44 @@ export default function TeacherAttendancePage() {
 
       {/* Date picker + stats bar */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border bg-card p-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground whitespace-nowrap">Date:</span>
-          <Input
-            type="date"
-            value={selectedDate}
-            max={todayISO}
-            onChange={(e) => { void changeDate(e.target.value); }}
-            className="w-full sm:w-40"
-          />
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Date:</span>
+            <Input
+              type="date"
+              value={selectedDate}
+              max={todayISO}
+              onChange={(e) => { void changeDate(e.target.value); }}
+              className="w-full sm:w-40"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Period:</span>
+            <Select
+              value={String(period)}
+              onValueChange={(val: unknown) => setPeriod(Number(val as string))}
+            >
+              <SelectTrigger className="w-full sm:w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((p) => (
+                  <SelectItem key={p} value={String(p)}>
+                    Period {p}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <div className="flex flex-wrap gap-3 text-sm sm:ml-auto">
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
-            <span className="text-muted-foreground">{students.length} students</span>
+            <span className="text-muted-foreground">
+              {showFilteredCount
+                ? `${filteredStudents.length} / ${students.length} students`
+                : `${students.length} students`}
+            </span>
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -206,8 +152,24 @@ export default function TeacherAttendancePage() {
             <span className="h-2 w-2 rounded-full bg-amber-500" />
             <span className="text-amber-700 dark:text-amber-400 font-medium">{stats.late} Late</span>
           </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-blue-500" />
+            <span className="text-blue-700 dark:text-blue-400 font-medium">{stats.excused} Excused</span>
+          </span>
         </div>
       </div>
+
+      {/* Editing banner for existing records */}
+      {existingLoaded && (
+        <Alert className="border-sky-300 bg-sky-50 dark:border-sky-700 dark:bg-sky-950/30">
+          <Info className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+          <AlertDescription className="text-sky-800 dark:text-sky-300">
+            {isPastDate
+              ? `Viewing attendance for ${selectedDate}. You can update individual records.`
+              : `Attendance already recorded for today. You can update individual records.`}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Quick actions */}
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
@@ -227,10 +189,23 @@ export default function TeacherAttendancePage() {
             className="flex-1 sm:flex-none"
           >
             <Save className="mr-2 h-4 w-4" />
-            {saving ? 'Saving…' : saved ? 'Saved' : 'Save Attendance'}
+            {saving ? 'Saving...' : saved ? 'Saved' : isEditing ? 'Update Attendance' : 'Save Attendance'}
           </Button>
         </div>
       </div>
+
+      {/* Search filter */}
+      {students.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search students by name or admission number..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 w-full"
+          />
+        </div>
+      )}
 
       {/* Student list */}
       {students.length === 0 ? (
@@ -239,21 +214,32 @@ export default function TeacherAttendancePage() {
           title="No Students"
           description="No students are enrolled in this class yet."
         />
+      ) : filteredStudents.length === 0 ? (
+        <EmptyState
+          icon={Search}
+          title="No Matches"
+          description="No students match your search. Try a different query."
+        />
       ) : (
         <div className="space-y-2">
-          {students.map((student) => (
-            <StudentRow
-              key={student.id}
-              student={student}
-              status={attendance.get(student.id) ?? 'present'}
-              onUpdate={updateStatus}
-            />
-          ))}
+          {filteredStudents.map((student) => {
+            const entry = attendance.get(student.id);
+            return (
+              <StudentRow
+                key={student.id}
+                student={student}
+                status={entry?.status ?? 'present'}
+                note={entry?.note}
+                onUpdate={updateStatus}
+                onNoteChange={updateNote}
+              />
+            );
+          })}
         </div>
       )}
 
       {/* Bottom save button (mobile convenience) */}
-      {students.length > 5 && (
+      {filteredStudents.length > 5 && (
         <div className="flex justify-end pt-2 pb-4">
           <Button
             size="default"
@@ -262,7 +248,7 @@ export default function TeacherAttendancePage() {
             className="w-full sm:w-auto"
           >
             <Save className="mr-2 h-4 w-4" />
-            {saving ? 'Saving…' : saved ? 'Saved' : 'Save Attendance'}
+            {saving ? 'Saving...' : saved ? 'Saved' : isEditing ? 'Update Attendance' : 'Save Attendance'}
           </Button>
         </div>
       )}

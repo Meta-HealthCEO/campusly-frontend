@@ -4,17 +4,12 @@ import { useRef, useEffect, useState } from 'react';
 import { SendHorizontalIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-
-interface ChatMessage {
-  userId: string;
-  name: string;
-  text: string;
-  timestamp: string;
-}
+import type { ChatMessage } from '@/hooks/useClassroomSocket';
 
 interface SessionChatProps {
   messages: ChatMessage[];
-  onSend: (text: string) => void;
+  onSend: (message: string) => void;
+  currentUserId: string;
 }
 
 function formatTime(timestamp: string): string {
@@ -24,7 +19,7 @@ function formatTime(timestamp: string): string {
   });
 }
 
-export function SessionChat({ messages, onSend }: SessionChatProps) {
+export function SessionChat({ messages, onSend, currentUserId }: SessionChatProps) {
   const [draft, setDraft] = useState('');
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -58,15 +53,22 @@ export function SessionChat({ messages, onSend }: SessionChatProps) {
         {messages.length === 0 && (
           <p className="text-center text-xs text-muted-foreground py-6">No messages yet</p>
         )}
-        {messages.map((msg, idx) => (
-          <div key={idx} className="space-y-0.5">
-            <div className="flex items-baseline gap-2">
-              <span className="text-xs font-semibold truncate max-w-[120px]">{msg.name}</span>
-              <span className="text-xs text-muted-foreground shrink-0">{formatTime(msg.timestamp)}</span>
+        {messages.map((msg, idx) => {
+          const isOwn = msg.userId === currentUserId;
+          return (
+            <div key={idx} className="space-y-0.5">
+              <div className="flex items-baseline gap-2">
+                <span className={`text-xs font-semibold truncate max-w-30 ${isOwn ? 'text-primary' : ''}`}>
+                  {isOwn ? 'You' : msg.name}
+                </span>
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {formatTime(msg.timestamp)}
+                </span>
+              </div>
+              <p className="text-sm wrap-break-word">{msg.text}</p>
             </div>
-            <p className="text-sm break-words">{msg.text}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="border-t p-3 flex gap-2">
@@ -74,7 +76,7 @@ export function SessionChat({ messages, onSend }: SessionChatProps) {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type a message…"
+          placeholder="Type a message..."
           className="flex-1"
         />
         <Button size="icon" onClick={handleSend} disabled={!draft.trim()} aria-label="Send message">

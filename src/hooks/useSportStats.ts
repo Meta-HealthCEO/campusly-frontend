@@ -18,8 +18,17 @@ function unwrapArr<T>(res: { data: unknown }): T[] {
   const raw = res.data as Record<string, unknown>;
   const d = raw.data ?? raw;
   if (Array.isArray(d)) return d as T[];
-  const inner = (d as Record<string, unknown>).data;
-  return Array.isArray(inner) ? (inner as T[]) : [];
+  const obj = d as Record<string, unknown>;
+  // Try common nested keys (cards, teams, fixtures, items, results, data)
+  for (const key of ['data', 'cards', 'items', 'results', 'teams', 'fixtures', 'sessions']) {
+    const v = obj[key];
+    if (Array.isArray(v)) return v as T[];
+  }
+  // Last resort: first array-valued field
+  for (const v of Object.values(obj)) {
+    if (Array.isArray(v)) return v as T[];
+  }
+  return [];
 }
 
 export function useSportStats() {

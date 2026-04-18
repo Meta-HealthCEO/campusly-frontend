@@ -245,7 +245,7 @@ export interface MatchStats {
 
 export interface PlayerCard {
   id: string;
-  studentId: string;
+  studentId: string | { _id: string; admissionNumber?: string; userId?: { firstName?: string; lastName?: string } | null };
   studentName?: string;
   sportCode: string;
   seasonId?: string;

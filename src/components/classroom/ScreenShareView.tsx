@@ -1,29 +1,21 @@
 'use client';
 
-import { Monitor } from 'lucide-react';
+import { Track } from 'livekit-client';
+import { useTracks, VideoTrack } from '@livekit/components-react';
+import type { TrackReference } from '@livekit/components-react';
 
-interface ScreenShareViewProps {
-  isSharing: boolean;
-  sharerName?: string;
-}
+export function ScreenShareView() {
+  const screenTracks = useTracks([Track.Source.ScreenShare]);
+  const track = screenTracks[0] as TrackReference | undefined;
 
-export function ScreenShareView({ isSharing, sharerName }: ScreenShareViewProps) {
-  if (!isSharing) return null;
+  if (!track) return null;
 
   return (
-    <div className="flex w-full items-center justify-center rounded-lg border-2 border-dashed border-primary/40 bg-muted/30 aspect-video">
-      <div className="flex flex-col items-center gap-3 text-center p-6">
-        <div className="rounded-full bg-primary/10 p-4">
-          <Monitor className="h-8 w-8 text-primary" />
-        </div>
-        <p className="text-sm font-medium text-foreground">
-          Screen share from{' '}
-          <span className="text-primary">{sharerName ?? 'participant'}</span>
-        </p>
-        <p className="text-xs text-muted-foreground">
-          Integrate a WebRTC screen share stream here (e.g. Daily.co, LiveKit, Agora).
-        </p>
-      </div>
+    <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black">
+      <VideoTrack trackRef={track} className="w-full h-full object-contain" />
+      <span className="absolute top-2 left-2 rounded bg-black/60 px-2 py-0.5 text-xs text-white">
+        {track.participant.name ?? 'Participant'} — Screen Share
+      </span>
     </div>
   );
 }

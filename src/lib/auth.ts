@@ -27,6 +27,8 @@ export function getRoleDashboardPath(role: string): string {
     student: '/student',
     tuckshop: '/tuckshop',
     super_admin: '/superadmin',
+    coach: '/coach',
+    sports_manager: '/coach',
   };
   return paths[role] ?? '/login';
 }
@@ -40,6 +42,8 @@ export function getRoleLabel(role: UserRole): string {
     tuckshop: 'Tuck Shop',
     super_admin: 'Super Admin',
     sgb_member: 'SGB Member',
+    coach: 'Coach',
+    sports_manager: 'Sports Manager',
   };
   return labels[role];
 }

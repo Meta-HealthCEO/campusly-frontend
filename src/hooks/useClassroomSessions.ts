@@ -6,6 +6,16 @@ import type {
   ClassroomSessionFilters,
 } from '@/types';
 
+export interface JoinData {
+  token: string;
+  livekitUrl: string;
+  roomName: string;
+  participantName: string;
+  isTeacher: boolean;
+  livekitConfigured: boolean;
+  sessionId: string;
+}
+
 export function useClassroomSessions(initialFilters?: ClassroomSessionFilters) {
   const [sessions, setSessions] = useState<VirtualSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +24,7 @@ export function useClassroomSessions(initialFilters?: ClassroomSessionFilters) {
     setLoading(true);
     try {
       const params = filters ?? initialFilters ?? {};
-      const response = await apiClient.get('/classroom/sessions', { params });
+      const response = await apiClient.get('/classroom/sessions/upcoming', { params });
       const raw = response.data.data ?? response.data;
       setSessions(Array.isArray(raw) ? raw : raw.data ?? []);
     } catch (err: unknown) {
@@ -51,10 +61,10 @@ export function useClassroomSessions(initialFilters?: ClassroomSessionFilters) {
     return response.data.data ?? response.data;
   };
 
-  const getJoinToken = async (sessionId: string): Promise<string> => {
+  const getJoinToken = async (sessionId: string): Promise<JoinData> => {
     const response = await apiClient.get(`/classroom/sessions/${sessionId}/join`);
     const raw = response.data.data ?? response.data;
-    return typeof raw === 'string' ? raw : (raw.token as string);
+    return raw as JoinData;
   };
 
   useEffect(() => {

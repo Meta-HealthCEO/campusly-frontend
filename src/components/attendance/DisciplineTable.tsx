@@ -2,10 +2,12 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from '@/components/ui/select';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Trash2, Eye } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
-import { AttendanceStatusBadge } from './AttendanceStatusBadge';
 
 interface DisciplineRecord {
   _id: string;
@@ -27,11 +29,19 @@ interface DisciplineRecord {
   createdAt: string;
 }
 
+const DISCIPLINE_STATUS_OPTIONS = [
+  { value: 'reported', label: 'Reported' },
+  { value: 'investigating', label: 'Investigating' },
+  { value: 'resolved', label: 'Resolved' },
+  { value: 'escalated', label: 'Escalated' },
+];
+
 interface DisciplineTableProps {
   records: DisciplineRecord[];
   canDelete: boolean;
   onDelete?: (id: string) => void;
   onView?: (id: string) => void;
+  onStatusChange?: (id: string, status: string) => void;
 }
 
 const SEVERITY_STYLES: Record<string, string> = {
@@ -64,6 +74,7 @@ function buildColumns(
   canDelete: boolean,
   onDelete?: (id: string) => void,
   onView?: (id: string) => void,
+  onStatusChange?: (id: string, status: string) => void,
 ): ColumnDef<DisciplineRecord, unknown>[] {
   const cols: ColumnDef<DisciplineRecord, unknown>[] = [
     {
@@ -95,11 +106,30 @@ function buildColumns(
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => (
-        <Badge variant="secondary" className={STATUS_STYLES[row.original.status] ?? ''}>
-          {row.original.status}
-        </Badge>
-      ),
+      cell: ({ row }) =>
+        onStatusChange ? (
+          <Select
+            value={row.original.status}
+            onValueChange={(val: unknown) =>
+              onStatusChange(row.original._id, val as string)
+            }
+          >
+            <SelectTrigger className="h-8 w-full sm:w-32 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DISCIPLINE_STATUS_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <Badge variant="secondary" className={STATUS_STYLES[row.original.status] ?? ''}>
+            {row.original.status}
+          </Badge>
+        ),
     },
     {
       id: 'actions',
@@ -129,8 +159,8 @@ function buildColumns(
   return cols;
 }
 
-export function DisciplineTable({ records, canDelete, onDelete, onView }: DisciplineTableProps) {
-  const columns = buildColumns(canDelete, onDelete, onView);
+export function DisciplineTable({ records, canDelete, onDelete, onView, onStatusChange }: DisciplineTableProps) {
+  const columns = buildColumns(canDelete, onDelete, onView, onStatusChange);
 
   return (
     <DataTable

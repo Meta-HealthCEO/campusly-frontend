@@ -18,7 +18,7 @@ interface ChronicAbsenteeTableProps {
 }
 
 function TrendIcon({ trend }: { trend: ChronicAbsentee['trend'] }) {
-  if (trend === 'improving') return <TrendingUp className="h-4 w-4 text-green-600" />;
+  if (trend === 'improving') return <TrendingUp className="h-4 w-4 text-emerald-600" />;
   if (trend === 'declining') return <TrendingDown className="h-4 w-4 text-destructive" />;
   return <Minus className="h-4 w-4 text-muted-foreground" />;
 }

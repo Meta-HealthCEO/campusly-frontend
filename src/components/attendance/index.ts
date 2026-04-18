@@ -7,7 +7,6 @@ export { StatusButton } from './StatusButton';
 export { StudentRow } from './StudentRow';
 export { DisciplineForm } from './DisciplineForm';
 export { DisciplineTable } from './DisciplineTable';
-export { LessonPlanForm } from './LessonPlanForm';
 export { MeritForm } from './MeritForm';
 export { SubstituteForm } from './SubstituteForm';
 export { SuggestedTeachersList } from './SuggestedTeachersList';

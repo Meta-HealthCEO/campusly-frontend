@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Star, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PlayerCard } from '@/types/sport';
 
@@ -9,31 +9,49 @@ interface PlayerCardDisplayProps {
   className?: string;
 }
 
-const TIER_STYLES: Record<PlayerCard['tier'], { bg: string; border: string; text: string; accent: string }> = {
+const TIER_STYLES: Record<PlayerCard['tier'], {
+  bg: string; border: string; text: string; accent: string;
+  ring: string; label: string;
+}> = {
   bronze: {
-    bg: 'bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900/40 dark:to-amber-800/30',
-    border: 'border-amber-400/60',
-    text: 'text-amber-800 dark:text-amber-200',
-    accent: 'bg-amber-600',
+    bg: 'bg-gradient-to-br from-orange-700 via-amber-700 to-orange-900',
+    border: 'border-orange-900',
+    text: 'text-orange-50',
+    accent: 'bg-orange-950',
+    ring: 'ring-2 ring-orange-800/60',
+    label: 'bg-orange-950 text-orange-200',
   },
   silver: {
-    bg: 'bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700/40 dark:to-slate-600/30',
-    border: 'border-slate-400/60',
-    text: 'text-slate-700 dark:text-slate-200',
-    accent: 'bg-slate-500',
+    bg: 'bg-gradient-to-br from-slate-300 via-slate-400 to-slate-500',
+    border: 'border-slate-500',
+    text: 'text-slate-900',
+    accent: 'bg-slate-700',
+    ring: 'ring-2 ring-slate-400/60',
+    label: 'bg-slate-700 text-slate-100',
   },
   gold: {
-    bg: 'bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/40 dark:to-yellow-800/30',
-    border: 'border-yellow-500/60',
-    text: 'text-yellow-800 dark:text-yellow-200',
-    accent: 'bg-yellow-500',
+    bg: 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500',
+    border: 'border-yellow-600',
+    text: 'text-yellow-950',
+    accent: 'bg-yellow-700',
+    ring: 'ring-4 ring-yellow-400/60 shadow-lg shadow-yellow-500/30',
+    label: 'bg-yellow-700 text-yellow-50',
   },
   elite: {
-    bg: 'bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/40 dark:to-purple-800/30',
-    border: 'border-purple-500/60',
-    text: 'text-purple-800 dark:text-purple-200',
-    accent: 'bg-purple-600',
+    bg: 'bg-gradient-to-br from-fuchsia-500 via-purple-600 to-indigo-700',
+    border: 'border-purple-800',
+    text: 'text-white',
+    accent: 'bg-purple-900',
+    ring: 'ring-4 ring-purple-400/70 shadow-xl shadow-purple-500/40',
+    label: 'bg-purple-900 text-white',
   },
+};
+
+const TIER_ICON: Record<PlayerCard['tier'], React.ReactNode> = {
+  bronze: null,
+  silver: null,
+  gold: <Star className="h-3 w-3 fill-current" />,
+  elite: <Crown className="h-3 w-3 fill-current" />,
 };
 
 function FormIcon({ trend }: { trend: PlayerCard['formTrend'] }) {
@@ -50,7 +68,7 @@ export function PlayerCardDisplay({ card, className }: PlayerCardDisplayProps) {
     <div
       className={cn(
         'relative w-full max-w-[220px] rounded-xl border-2 p-4 shadow-md transition-transform hover:scale-105',
-        style.bg, style.border, className,
+        style.bg, style.border, style.ring, className,
       )}
     >
       {/* Rating + Position */}
@@ -63,9 +81,15 @@ export function PlayerCardDisplay({ card, className }: PlayerCardDisplayProps) {
             {card.position}
           </span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex flex-col items-end gap-1">
+          <span className={cn(
+            'flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+            style.label,
+          )}>
+            {TIER_ICON[card.tier]}
+            {card.tier}
+          </span>
           <FormIcon trend={card.formTrend} />
-          <span className="text-xs capitalize text-muted-foreground">{card.tier}</span>
         </div>
       </div>
 

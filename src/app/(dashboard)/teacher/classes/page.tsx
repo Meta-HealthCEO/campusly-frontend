@@ -1,71 +1,53 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PageHeader } from '@/components/shared/PageHeader';
-import { ClassroomCodeCard } from '@/components/shared/ClassroomCodeCard';
-import { CardGridSkeleton } from '@/components/shared/skeletons';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Users, BookOpen, Search } from 'lucide-react';
-import { cn, getInitials } from '@/lib/utils';
-import { resolveField } from '@/lib/api-helpers';
-import { useTeacherClasses } from '@/hooks/useTeacherClasses';
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { CardGridSkeleton } from '@/components/shared/skeletons';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
+import { ClassFormDialog } from '@/components/classes/ClassFormDialog';
+import { StudentAddDialog } from '@/components/classes/StudentAddDialog';
+import { AssignStudentDialog } from '@/components/classes/AssignStudentDialog';
+import { ClassRosterDialog } from '@/components/classes/ClassRosterDialog';
+import { InviteStudentDialog } from '@/components/classes/InviteStudentDialog';
+import { ClassCard } from '@/components/classes/ClassCard';
+import { BookOpen, Plus, Search } from 'lucide-react';
+import { resolveId } from '@/lib/api-helpers';
+import { useClassesPageState, entryKey } from '@/hooks/useClassesPageState';
 import type { Student } from '@/types';
 
-function getStudentName(student: Student): { first: string; last: string } {
-  const userObj = student.user ?? student.userId;
-  const first =
-    resolveField<string>(userObj, 'firstName')
-    ?? resolveField<string>(student, 'firstName')
-    ?? '';
-  const last =
-    resolveField<string>(userObj, 'lastName')
-    ?? resolveField<string>(student, 'lastName')
-    ?? '';
-  return { first, last };
-}
-
 export default function TeacherClassesPage() {
-  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
-  const [studentSearch, setStudentSearch] = useState('');
-  const { classes, students, loading } = useTeacherClasses();
-
-  const selectedClass = selectedClassId
-    ? classes.find((c) => c.id === selectedClassId)
-    : null;
-
-  const classStudents = useMemo(() => {
-    if (!selectedClassId) return [] as Student[];
-    return students.filter((s) => s.classId === selectedClassId);
-  }, [students, selectedClassId]);
-
-  const filteredStudents = useMemo(() => {
-    const q = studentSearch.trim().toLowerCase();
-    if (!q) return classStudents;
-    return classStudents.filter((s) => {
-      const { first, last } = getStudentName(s);
-      const full = `${first} ${last}`.toLowerCase();
-      return (
-        full.includes(q)
-        || (s.admissionNumber ?? '').toLowerCase().includes(q)
-      );
-    });
-  }, [classStudents, studentSearch]);
+  const {
+    entries, allStudents, loading, grades, description,
+    selectedEntry, distinctSubjects, filteredEntries,
+    showCreateDialog, setShowCreateDialog,
+    createLoading,
+    setSelectedKey,
+    showAddStudent, setShowAddStudent,
+    addStudentLoading,
+    deleteTarget, setDeleteTarget,
+    invitingId,
+    inviteTarget, setInviteTarget,
+    showAssignStudent, setShowAssignStudent,
+    editEntry, setEditEntry,
+    editLoading,
+    search, setSearch,
+    setSort,
+    setFilterGrade,
+    setFilterSubject,
+    handleCreateClass, handleDelete, handleAddStudent,
+    handleEditClass, handleRemoveStudent, handleInviteSubmit,
+    handleAssignStudent,
+  } = useClassesPageState();
 
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeader
-          title="My Classes"
-          description="View your assigned classes and student lists"
-        />
+        <PageHeader title="My Classes" description="Manage your classes and student rosters" />
         <CardGridSkeleton count={6} />
       </div>
     );
@@ -73,151 +55,105 @@ export default function TeacherClassesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="My Classes"
-        description="View your assigned classes and student lists"
-      />
+      <PageHeader title="My Classes" description={description}>
+        <Button onClick={() => setShowCreateDialog(true)} className="gap-1">
+          <Plus className="h-4 w-4" /> Create Class
+        </Button>
+      </PageHeader>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {classes.map((cls) => {
-          const studentCount = students.filter((s) => s.classId === cls.id).length;
-          const capacity = cls.capacity ?? 30;
-          const capacityPercentage = Math.round((studentCount / capacity) * 100);
-
-          return (
-            <Card
-              key={cls.id}
-              className="cursor-pointer transition-colors hover:bg-muted/50"
-              onClick={() => setSelectedClassId(cls.id)}
-            >
-              <CardContent className="p-5 space-y-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold">
-                      {cls.grade?.name ?? (cls as unknown as Record<string, unknown>).gradeName as string ?? ''} {cls.name}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {cls.grade?.name ?? (cls as unknown as Record<string, unknown>).gradeName as string ?? ''}
-                    </p>
-                  </div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <Users className="h-5 w-5 text-primary" />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Students</span>
-                    <span className="font-medium">{studentCount} / {capacity}</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-muted">
-                    <div
-                      className={cn(
-                        'h-full rounded-full transition-all',
-                        capacityPercentage > 90
-                          ? 'bg-destructive'
-                          : capacityPercentage > 75
-                          ? 'bg-amber-500'
-                          : 'bg-emerald-500'
-                      )}
-                      style={{ width: `${Math.min(capacityPercentage, 100)}%` }}
-                    />
-                  </div>
-                </div>
-
-                <Badge variant="secondary">{capacityPercentage}% capacity</Badge>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {classes.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-12">
-            <BookOpen className="h-12 w-12 text-muted-foreground" />
-            <h3 className="text-lg font-semibold">No Classes Assigned</h3>
-            <p className="text-sm text-muted-foreground">
-              You do not have any classes assigned to you yet.
-            </p>
-          </CardContent>
-        </Card>
+      {entries.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search classes..." className="pl-9" />
+          </div>
+          <Select onValueChange={(val: unknown) => setSort(val as string)} defaultValue="name-asc">
+            <SelectTrigger className="w-full sm:w-40">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name-asc">Name A-Z</SelectItem>
+              <SelectItem value="name-desc">Name Z-A</SelectItem>
+              <SelectItem value="students-desc">Most students</SelectItem>
+              <SelectItem value="students-asc">Least students</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select onValueChange={(val: unknown) => setFilterGrade(val as string)} defaultValue="all">
+            <SelectTrigger className="w-full sm:w-40">
+              <SelectValue placeholder="All grades" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All grades</SelectItem>
+              {grades.map((g) => (
+                <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select onValueChange={(val: unknown) => setFilterSubject(val as string)} defaultValue="all">
+            <SelectTrigger className="w-full sm:w-40">
+              <SelectValue placeholder="All subjects" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All subjects</SelectItem>
+              <SelectItem value="homeroom">Homeroom only</SelectItem>
+              {distinctSubjects.map((s) => (
+                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       )}
 
-      <Dialog
-        open={!!selectedClassId}
-        onOpenChange={(open) => {
-          if (!open) {
-            setSelectedClassId(null);
-            setStudentSearch('');
-          }
-        }}
-      >
-        <DialogContent className="flex flex-col max-h-[85vh] sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedClass
-                ? `${selectedClass.grade?.name ?? ''} ${selectedClass.name} - Student List`
-                : 'Student List'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 overflow-y-auto space-y-4">
-            {selectedClassId && selectedClass && (
-              <ClassroomCodeCard
-                classId={selectedClassId}
-                className={`${selectedClass.grade?.name ?? ''} ${selectedClass.name}`.trim()}
-              />
-            )}
+      {filteredEntries.length === 0 && entries.length === 0 ? (
+        <EmptyState icon={BookOpen} title="No classes yet" description="Create your first class to get started."
+          action={<Button onClick={() => setShowCreateDialog(true)}><Plus className="mr-1 h-4 w-4" /> Create Class</Button>} />
+      ) : filteredEntries.length === 0 ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">No classes match &quot;{search}&quot;</p>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredEntries.filter((e) => e.class && typeof e.class === 'object').map((entry) => (
+            <ClassCard
+              key={entryKey(entry)}
+              entry={entry}
+              entryKey={entryKey(entry)}
+              onClick={() => setSelectedKey(entryKey(entry))}
+              onEdit={() => setEditEntry(entry)}
+              onDelete={() => setDeleteTarget(resolveId(entry.class))}
+            />
+          ))}
+        </div>
+      )}
 
-            {classStudents.length > 0 && (
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={studentSearch}
-                  onChange={(e) => setStudentSearch(e.target.value)}
-                  placeholder="Search by name or admission number..."
-                  className="pl-9"
-                />
-              </div>
-            )}
+      <ClassRosterDialog entry={selectedEntry} onClose={() => setSelectedKey(null)}
+        onInvite={(student: Student) => setInviteTarget(student)} invitingId={invitingId}
+        onAddStudents={() => setShowAddStudent(true)} onAssignExisting={() => setShowAssignStudent(true)}
+        onRemoveStudent={handleRemoveStudent}
+      />
 
-            <div className="space-y-2">
-              {classStudents.length === 0 ? (
-                <p className="py-4 text-center text-sm text-muted-foreground">
-                  No students in this class.
-                </p>
-              ) : filteredStudents.length === 0 ? (
-                <p className="py-4 text-center text-sm text-muted-foreground">
-                  No students match &quot;{studentSearch}&quot;.
-                </p>
-              ) : (
-                filteredStudents.map((student, index) => {
-                  const { first, last } = getStudentName(student);
-                  return (
-                    <div
-                      key={student.id}
-                      className="flex items-center gap-3 rounded-lg border p-3"
-                    >
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                        {getInitials(first, last)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {first} {last}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {student.admissionNumber}
-                        </p>
-                      </div>
-                      <span className="text-xs text-muted-foreground">#{index + 1}</span>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <InviteStudentDialog student={inviteTarget} onClose={() => setInviteTarget(null)}
+        onInvite={handleInviteSubmit} isLoading={invitingId === inviteTarget?.id} />
+
+      <ClassFormDialog open={showCreateDialog} onOpenChange={setShowCreateDialog}
+        onSubmit={handleCreateClass} grades={grades} isLoading={createLoading} />
+
+      {editEntry && (
+        <ClassFormDialog open={!!editEntry} onOpenChange={(o) => { if (!o) setEditEntry(null); }}
+          onSubmit={handleEditClass}
+          grades={grades}
+          initialData={{ name: editEntry.class.name, gradeId: editEntry.class.gradeId ?? resolveId(editEntry.class.grade), capacity: editEntry.class.capacity ?? 35, subjectId: editEntry.subject?.id }}
+          isLoading={editLoading} />
+      )}
+
+      <StudentAddDialog open={showAddStudent} onOpenChange={setShowAddStudent} onAddStudent={handleAddStudent} isLoading={addStudentLoading} />
+
+      <AssignStudentDialog open={showAssignStudent} onOpenChange={setShowAssignStudent}
+        classId={resolveId(selectedEntry?.class)}
+        currentStudentIds={selectedEntry?.students.map((s: Student) => s.id) ?? []} allStudents={allStudents}
+        onAssign={handleAssignStudent} />
+
+      <ConfirmDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title="Delete Class" description="Are you sure you want to delete this class? This action cannot be undone."
+        confirmLabel="Delete" onConfirm={handleDelete} />
     </div>
   );
 }

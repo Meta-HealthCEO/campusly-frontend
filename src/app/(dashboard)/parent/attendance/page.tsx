@@ -8,8 +8,9 @@ import { StatCard } from '@/components/shared/StatCard';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { Button } from '@/components/ui/button';
 import {
-  CalendarCheck, CalendarX, Clock, UserCheck, BarChart3,
+  CalendarCheck, CalendarX, Clock, UserCheck, BarChart3, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { useCurrentParent } from '@/hooks/useCurrentParent';
@@ -34,15 +35,37 @@ const attendanceColumns: ColumnDef<Attendance, unknown>[] = [
   { accessorKey: 'note', header: 'Note', cell: ({ row }) => row.original.note || '-' },
 ];
 
+function formatMonthLabel(date: Date): string {
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
 export default function AttendancePage() {
   const { children } = useCurrentParent();
-  const { childAttendance, loading } = useParentAttendance();
+  const { childAttendance, loading, selectedMonth, setSelectedMonth } = useParentAttendance();
+
+  const goToPrevMonth = () => {
+    setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1, 1));
+  };
+  const goToNextMonth = () => {
+    setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 1));
+  };
 
   if (loading) return <LoadingSpinner />;
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Attendance" description="View your children's attendance records and statistics." />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <PageHeader title="Attendance" description="View your children's attendance records and statistics." />
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" onClick={goToPrevMonth} aria-label="Previous month">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm font-medium min-w-35 text-center">{formatMonthLabel(selectedMonth)}</span>
+          <Button variant="outline" size="icon" onClick={goToNextMonth} aria-label="Next month">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
 
       <Tabs defaultValue={children[0]?.id ?? ''}>
         <TabsList>
@@ -64,6 +87,8 @@ export default function AttendancePage() {
             <AttendanceCalendar
               records={ca.records}
               childName={ca.firstName}
+              month={selectedMonth}
+              onMonthChange={setSelectedMonth}
             />
 
             <Card>

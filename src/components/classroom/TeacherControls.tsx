@@ -1,83 +1,90 @@
 'use client';
 
-import { MonitorUpIcon, MicOffIcon, BarChart2Icon, CircleIcon, PhoneOffIcon } from 'lucide-react';
+import { useLocalParticipant } from '@livekit/components-react';
+import {
+  MicIcon, MicOffIcon, VideoIcon, VideoOffIcon,
+  MonitorUpIcon, BarChart2Icon, PhoneOffIcon, Circle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { VirtualSession } from '@/types';
+import { cn } from '@/lib/utils';
 
 interface TeacherControlsProps {
-  session: VirtualSession;
   onEnd: () => void;
-  onToggleMute?: () => void;
-  onShareScreen?: () => void;
   onCreatePoll?: () => void;
+  isRecording?: boolean;
+  recordingDuration?: string;
+  onStartRecording?: () => void;
+  onStopRecording?: () => void;
 }
 
 export function TeacherControls({
-  session,
   onEnd,
-  onToggleMute,
-  onShareScreen,
   onCreatePoll,
+  isRecording,
+  recordingDuration,
+  onStartRecording,
+  onStopRecording,
 }: TeacherControlsProps) {
+  const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled } =
+    useLocalParticipant();
+
   return (
-    <div className="flex flex-col gap-3 rounded-xl border bg-card p-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium">Host Controls</p>
-        {session.isRecorded && (
-          <div className="flex items-center gap-1.5 text-xs text-destructive">
-            <CircleIcon className="size-3 animate-pulse" />
-            Recording
-          </div>
-        )}
-      </div>
+    <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-3">
+      <Button
+        variant={isMicrophoneEnabled ? 'outline' : 'destructive'}
+        size="default"
+        onClick={() => localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled)}
+      >
+        {isMicrophoneEnabled ? <MicIcon className="size-4 mr-1.5" /> : <MicOffIcon className="size-4 mr-1.5" />}
+        {isMicrophoneEnabled ? 'Mute' : 'Unmute'}
+      </Button>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {onShareScreen && (
-          <Button
-            variant="outline"
-            size="default"
-            onClick={onShareScreen}
-            className="flex w-full flex-col gap-1 h-auto py-3"
-          >
-            <MonitorUpIcon className="size-5" />
-            <span className="text-xs">Share Screen</span>
-          </Button>
-        )}
+      <Button
+        variant={isCameraEnabled ? 'outline' : 'secondary'}
+        size="default"
+        onClick={() => localParticipant.setCameraEnabled(!isCameraEnabled)}
+      >
+        {isCameraEnabled ? <VideoIcon className="size-4 mr-1.5" /> : <VideoOffIcon className="size-4 mr-1.5" />}
+        {isCameraEnabled ? 'Stop Camera' : 'Start Camera'}
+      </Button>
 
-        {onCreatePoll && (
-          <Button
-            variant="outline"
-            size="default"
-            onClick={onCreatePoll}
-            className="flex w-full flex-col gap-1 h-auto py-3"
-          >
-            <BarChart2Icon className="size-5" />
-            <span className="text-xs">Create Poll</span>
-          </Button>
-        )}
+      <Button
+        variant={isScreenShareEnabled ? 'default' : 'outline'}
+        size="default"
+        onClick={() => localParticipant.setScreenShareEnabled(!isScreenShareEnabled)}
+      >
+        <MonitorUpIcon className="size-4 mr-1.5" />
+        {isScreenShareEnabled ? 'Stop Share' : 'Share Screen'}
+      </Button>
 
-        {onToggleMute && (
-          <Button
-            variant="outline"
-            size="default"
-            onClick={onToggleMute}
-            className="flex w-full flex-col gap-1 h-auto py-3"
-          >
-            <MicOffIcon className="size-5" />
-            <span className="text-xs">Mute All</span>
-          </Button>
-        )}
-
+      {onStartRecording && onStopRecording && (
         <Button
-          variant="destructive"
-          size="default"
-          onClick={onEnd}
-          className="flex w-full flex-col gap-1 h-auto py-3 col-span-2 sm:col-span-1"
+          variant={isRecording ? 'destructive' : 'secondary'}
+          size="icon"
+          onClick={isRecording ? onStopRecording : onStartRecording}
+          aria-label={isRecording ? 'Stop recording' : 'Start recording'}
+          className="relative"
         >
-          <PhoneOffIcon className="size-5" />
-          <span className="text-xs">End Session</span>
+          <Circle className={cn('h-5 w-5', isRecording && 'animate-pulse fill-current')} />
+          {isRecording && recordingDuration && (
+            <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] text-destructive font-mono whitespace-nowrap">
+              REC {recordingDuration}
+            </span>
+          )}
         </Button>
-      </div>
+      )}
+
+      {onCreatePoll && (
+        <Button variant="outline" size="default" onClick={onCreatePoll}>
+          <BarChart2Icon className="size-4 mr-1.5" />
+          Poll
+        </Button>
+      )}
+
+      <Button variant="destructive" size="default" onClick={onEnd}>
+        <PhoneOffIcon className="size-4 mr-1.5" />
+        End Session
+      </Button>
     </div>
   );
 }

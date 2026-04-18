@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { BookOpen } from 'lucide-react';
 import { VideoRoom } from '@/components/classroom/VideoRoom';
 import { SessionChat } from '@/components/classroom/SessionChat';
@@ -12,227 +12,194 @@ import { LivePollCreator } from '@/components/classroom/LivePollCreator';
 import { LivePollResponder } from '@/components/classroom/LivePollResponder';
 import { SharedWhiteboard } from '@/components/classroom/SharedWhiteboard';
 import { ParticipantGrid } from '@/components/classroom/ParticipantGrid';
-import { ScreenShareView } from '@/components/classroom/ScreenShareView';
-import { SessionStatusBadge } from '@/components/classroom/SessionStatusBadge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useClassroomSessions } from '@/hooks/useClassroomSessions';
+import type { JoinData } from '@/hooks/useClassroomSessions';
+import { useClassroomSocket } from '@/hooks/useClassroomSocket';
+import { useClassroomRecording } from '@/hooks/useClassroomRecording';
 import { useAuthStore } from '@/stores/useAuthStore';
-
-interface ChatMessage {
-  userId: string;
-  name: string;
-  text: string;
-  timestamp: string;
-}
-
-interface HandRaiseEntry {
-  userId: string;
-  name: string;
-  raisedAt: string;
-}
 
 export default function LiveClassroomPage() {
   const params = useParams();
+  const router = useRouter();
   const sessionId = typeof params.sessionId === 'string' ? params.sessionId : '';
 
   const { user } = useAuthStore();
-  const { sessions, loading, endSession, startSession } = useClassroomSessions();
-
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [hands, setHands] = useState<HandRaiseEntry[]>([]);
-  const [handRaised, setHandRaised] = useState(false);
-  const [audioMuted, setAudioMuted] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
-  const [pollOpen, setPollOpen] = useState(false);
-  const [respondedPolls, setRespondedPolls] = useState<Set<string>>(new Set());
-  const [activeTab, setActiveTab] = useState<'whiteboard' | 'participants'>('participants');
-
-  const session = useMemo(
-    () => sessions.find((s) => s.id === sessionId) ?? null,
-    [sessions, sessionId],
-  );
-
+  const { endSession, getJoinToken } = useClassroomSessions();
   const isTeacher = user?.role === 'teacher' || user?.role === 'admin';
 
-  const handleSendMessage = useCallback((text: string) => {
-    if (!user) return;
-    setMessages((prev) => [
-      ...prev,
-      {
-        userId: user.id,
-        name: `${user.firstName} ${user.lastName}`,
-        text,
-        timestamp: new Date().toISOString(),
-      },
-    ]);
-  }, [user]);
+  const [joinData, setJoinData] = useState<JoinData | null>(null);
+  const [sidebarTab, setSidebarTab] = useState('chat');
+  const [handRaised, setHandRaised] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pollCreatorOpen, setPollCreatorOpen] = useState(false);
 
-  const handleRaiseHand = useCallback(() => {
-    if (!user) return;
-    if (handRaised) {
-      setHands((prev) => prev.filter((h) => h.userId !== user.id));
-      setHandRaised(false);
-    } else {
-      setHands((prev) => [
-        ...prev,
-        { userId: user.id, name: `${user.firstName} ${user.lastName}`, raisedAt: new Date().toISOString() },
-      ]);
-      setHandRaised(true);
+  /* Socket connection — only active once we have join data */
+  const socket = useClassroomSocket(joinData ? sessionId : null);
+
+  /* Recording controls — only relevant for teacher */
+  const {
+    isRecording,
+    formattedDuration,
+    startRecording,
+    stopRecording,
+  } = useClassroomRecording(joinData && isTeacher ? sessionId : null);
+
+  /* Fetch join data on mount */
+  useEffect(() => {
+    if (!sessionId) return;
+    let cancelled = false;
+
+    async function fetchJoinData() {
+      try {
+        const data = await getJoinToken(sessionId);
+        if (!cancelled) setJoinData(data);
+      } catch (err: unknown) {
+        console.error('Failed to fetch join data', err);
+        if (!cancelled) setError('Unable to join this session. It may have ended or you lack permission.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
-  }, [handRaised, user]);
 
-  const handleLowerHand = useCallback((userId: string) => {
-    setHands((prev) => prev.filter((h) => h.userId !== userId));
-  }, []);
+    fetchJoinData();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]);
 
-  const handleCreatePoll = useCallback(async (_question: string, _options: string[]) => {
-    // Integrate with backend poll creation via sessions API
-  }, []);
-
-  const handleRespondPoll = useCallback(async (pollId: string, _answer: number) => {
-    setRespondedPolls((prev) => new Set(prev).add(pollId));
-  }, []);
+  /* Track local hand-raise state from socket */
+  useEffect(() => {
+    if (!user?.id) return;
+    const raised = socket.raisedHands.some((h) => h.userId === user.id);
+    setHandRaised(raised);
+  }, [socket.raisedHands, user?.id]);
 
   const handleEnd = useCallback(async () => {
-    if (!session) return;
-    try { await endSession(session.id); } catch (err: unknown) {
+    try {
+      await endSession(sessionId);
+      router.push('/teacher/classroom');
+    } catch (err: unknown) {
       console.error('Failed to end session', err);
     }
-  }, [session, endSession]);
+  }, [sessionId, endSession, router]);
 
-  const handleStart = useCallback(async () => {
-    if (!session) return;
-    try { await startSession(session.id); } catch (err: unknown) {
-      console.error('Failed to start session', err);
-    }
-  }, [session, startSession]);
+  const handleCreatePoll = useCallback(
+    (question: string, options: string[]) => {
+      socket.createPoll(question, options);
+      setPollCreatorOpen(false);
+    },
+    [socket],
+  );
 
   if (loading) return <LoadingSpinner />;
 
-  if (!session) {
+  if (error || !joinData) {
     return (
       <EmptyState
         icon={BookOpen}
-        title="Session not found"
-        description="This classroom session does not exist or has been removed."
+        title="Cannot join session"
+        description={error ?? 'Session data could not be loaded.'}
       />
     );
   }
 
-  const activePoll = session.polls[session.polls.length - 1] ?? null;
-
   return (
     <div className="flex flex-col gap-4 h-full">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 justify-between">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-lg font-semibold truncate">{session.title}</h1>
-            <SessionStatusBadge status={session.status} />
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {session.subjectId.name} · {session.classId.name}
-          </p>
-        </div>
-        {isTeacher && session.status === 'scheduled' && (
-          <button
-            onClick={handleStart}
-            className="self-start sm:self-auto rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            Start Session
-          </button>
-        )}
-      </div>
-
-      {/* Main content */}
+      {/* Main content — two columns on desktop, stacked on mobile */}
       <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
         {/* Left — video + controls */}
         <div className="flex flex-col gap-4 flex-1 min-w-0">
-          {isSharing ? (
-            <ScreenShareView
-              isSharing={isSharing}
-              sharerName={`${session.teacherId.firstName} ${session.teacherId.lastName}`}
-            />
-          ) : (
-            <VideoRoom
-              session={session}
-              isTeacher={isTeacher}
-              participantCount={0}
-            />
-          )}
+          <VideoRoom
+            token={joinData.token}
+            serverUrl={joinData.livekitUrl}
+            isTeacher={isTeacher}
+            onDisconnected={() => router.push('/teacher/classroom')}
+          />
 
-          {/* Tab toggle: whiteboard / participants */}
-          <div className="flex gap-2 flex-wrap">
-            {(['participants', 'whiteboard'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
-                  activeTab === tab
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          {activeTab === 'participants' && (
-            <ParticipantGrid participants={[]} />
-          )}
-          {activeTab === 'whiteboard' && (
-            <SharedWhiteboard sessionId={session.id} />
-          )}
-
-          {/* Controls */}
+          {/* Controls bar */}
           {isTeacher ? (
             <TeacherControls
-              session={session}
               onEnd={handleEnd}
-              onToggleMute={() => setAudioMuted((v) => !v)}
-              onShareScreen={() => setIsSharing((v) => !v)}
-              onCreatePoll={() => setPollOpen(true)}
+              onCreatePoll={() => setPollCreatorOpen(true)}
+              isRecording={isRecording}
+              recordingDuration={formattedDuration}
+              onStartRecording={startRecording}
+              onStopRecording={stopRecording}
             />
           ) : (
             <StudentControls
               handRaised={handRaised}
-              audioMuted={audioMuted}
-              onRaiseHand={handleRaiseHand}
-              onToggleAudio={() => setAudioMuted((v) => !v)}
-            />
-          )}
-
-          {/* Active poll for student */}
-          {!isTeacher && activePoll && (
-            <LivePollResponder
-              poll={activePoll}
-              responded={respondedPolls.has(activePoll._id)}
-              onRespond={(answer) => handleRespondPoll(activePoll._id, answer)}
+              onRaiseHand={socket.raiseHand}
+              onLowerHand={socket.lowerHand}
             />
           )}
         </div>
 
-        {/* Right sidebar — chat + hand queue */}
-        <div className="flex flex-col gap-4 w-full lg:w-80 shrink-0">
-          <div className="flex-1 min-h-[300px]">
-            <SessionChat messages={messages} onSend={handleSendMessage} />
-          </div>
-          {isTeacher && (
-            <HandRaiseQueue hands={hands} onLower={handleLowerHand} />
-          )}
+        {/* Right sidebar — tabbed panels */}
+        <div className="flex flex-col gap-2 w-full lg:w-80 shrink-0 min-h-0">
+          <Tabs value={sidebarTab} onValueChange={setSidebarTab}>
+            <TabsList className="w-full flex-wrap">
+              <TabsTrigger value="chat">Chat</TabsTrigger>
+              <TabsTrigger value="people">People</TabsTrigger>
+              <TabsTrigger value="board">Board</TabsTrigger>
+              <TabsTrigger value="polls">Polls</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="chat" className="min-h-[300px]">
+              <SessionChat
+                messages={socket.messages}
+                onSend={socket.sendMessage}
+                currentUserId={user?.id ?? ''}
+              />
+            </TabsContent>
+
+            <TabsContent value="people">
+              <ParticipantGrid />
+              <HandRaiseQueue
+                hands={socket.raisedHands}
+                isTeacher={isTeacher}
+                onLower={socket.lowerHand}
+              />
+            </TabsContent>
+
+            <TabsContent value="board" className="min-h-[400px]">
+              <SharedWhiteboard sessionId={sessionId} readOnly={!isTeacher} />
+            </TabsContent>
+
+            <TabsContent value="polls">
+              {isTeacher && !pollCreatorOpen && !socket.activePoll && (
+                <button
+                  onClick={() => setPollCreatorOpen(true)}
+                  className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  Create Poll
+                </button>
+              )}
+              {pollCreatorOpen && isTeacher && (
+                <LivePollCreator onCreatePoll={handleCreatePoll} />
+              )}
+              {socket.activePoll && (
+                <LivePollResponder
+                  poll={socket.activePoll}
+                  responses={socket.pollResponses}
+                  currentUserId={user?.id ?? ''}
+                  onRespond={socket.respondPoll}
+                  isTeacher={isTeacher}
+                  onEndPoll={isTeacher ? socket.endPoll : undefined}
+                />
+              )}
+              {!pollCreatorOpen && !socket.activePoll && !isTeacher && (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  No active poll right now.
+                </p>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
-
-      {/* Poll creator dialog (teacher only) */}
-      {isTeacher && (
-        <LivePollCreator
-          open={pollOpen}
-          onOpenChange={setPollOpen}
-          onSubmit={handleCreatePoll}
-        />
-      )}
     </div>
   );
 }

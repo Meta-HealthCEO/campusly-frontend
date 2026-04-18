@@ -120,6 +120,12 @@ export default function LoginPage() {
               Join your class
             </Link>
           </p>
+          <p>
+            Are you a coach?{' '}
+            <Link href="/signup/coach" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
+              Sign up for free
+            </Link>
+          </p>
         </div>
       </AuthCard>
     </AuthLayout>

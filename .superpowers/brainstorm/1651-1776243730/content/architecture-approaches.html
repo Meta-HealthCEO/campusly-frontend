@@ -1,0 +1,83 @@
+<h2>One Gate — Architecture Approaches</h2>
+<p class="subtitle">How should the platform be structured behind the scenes?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Modular Monolith</h3>
+      <p>Single Node.js backend with well-separated internal modules (payments, BI, integrations, etc.). Python AI engine as one separate service. Shared Postgres database with schema-per-module.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4>
+          <ul>
+            <li>Simplest to develop and deploy initially</li>
+            <li>Easy debugging — everything in one process</li>
+            <li>Can extract microservices later if needed</li>
+            <li>Single deployment pipeline</li>
+          </ul>
+        </div>
+        <div class="cons"><h4>Cons</h4>
+          <ul>
+            <li>Harder to scale individual modules independently</li>
+            <li>Risk of modules becoming coupled over time</li>
+            <li>Single point of failure</li>
+          </ul>
+        </div>
+      </div>
+      <p><strong>Best for:</strong> Getting to market efficiently, small-to-mid team, proven path to scale</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Microservices from Day 1</h3>
+      <p>Each domain as its own service: Payment Orchestrator, BI Engine, Integration Hub, Reconciliation Service, POS Service, Inventory Service. Each with its own DB. Event-driven communication via Redis/RabbitMQ.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4>
+          <ul>
+            <li>Independent scaling per service</li>
+            <li>Teams can work independently</li>
+            <li>Technology flexibility per service</li>
+            <li>Fault isolation</li>
+          </ul>
+        </div>
+        <div class="cons"><h4>Cons</h4>
+          <ul>
+            <li>Massive upfront complexity</li>
+            <li>Distributed systems headaches (consistency, debugging, deployment)</li>
+            <li>Needs DevOps maturity from day 1</li>
+            <li>Slower initial development</li>
+          </ul>
+        </div>
+      </div>
+      <p><strong>Best for:</strong> Large teams (10+), enterprise-grade from launch, unlimited budget</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Service-Oriented (Hybrid) — <em>Recommended</em></h3>
+      <p>3-4 core services split by clear domain boundaries: <strong>API Gateway</strong> (Node — auth, routing, rate limiting), <strong>Core Platform</strong> (Node — merchants, transactions, reconciliation, integrations), <strong>AI/Analytics Engine</strong> (Python — BI, predictions, insights), and <strong>Developer Portal</strong> (standalone React app). Communication via Redis pub/sub + REST. Shared Postgres with logical separation.</p>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4>
+          <ul>
+            <li>Natural split: Node for API/business logic, Python for AI/ML</li>
+            <li>AI engine scales independently (compute-heavy)</li>
+            <li>Manageable number of services (3-4, not 15)</li>
+            <li>Can further decompose later as team grows</li>
+            <li>API Gateway gives single entry point for all clients</li>
+          </ul>
+        </div>
+        <div class="cons"><h4>Cons</h4>
+          <ul>
+            <li>Slightly more complex than a monolith</li>
+            <li>Need inter-service communication patterns</li>
+          </ul>
+        </div>
+      </div>
+      <p><strong>Best for:</strong> The sweet spot — manageable complexity, natural language boundaries, scales when you need it</p>
+    </div>
+  </div>
+</div>

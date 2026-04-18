@@ -1,0 +1,92 @@
+<h2>One Gate — System Architecture Overview</h2>
+<p class="subtitle">Section 1 of 6 — High-level service topology</p>
+
+<div class="mockup">
+  <div class="mockup-header">System Architecture</div>
+  <div class="mockup-body" style="padding: 24px; font-family: system-ui;">
+
+    <!-- Clients Row -->
+    <div style="display: flex; justify-content: center; gap: 16px; margin-bottom: 12px; flex-wrap: wrap;">
+      <div style="background: #3b82f6; color: white; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;">Merchant Dashboard<br><span style="font-weight: 400; font-size: 11px;">React + shadcn</span></div>
+      <div style="background: #3b82f6; color: white; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;">Developer Portal<br><span style="font-weight: 400; font-size: 11px;">React + shadcn</span></div>
+      <div style="background: #3b82f6; color: white; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;">POS App<br><span style="font-weight: 400; font-size: 11px;">React (PWA)</span></div>
+      <div style="background: #64748b; color: white; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;">3rd Party Apps<br><span style="font-weight: 400; font-size: 11px;">REST/Webhooks</span></div>
+    </div>
+
+    <div style="text-align: center; color: #94a3b8; font-size: 20px;">▼</div>
+
+    <!-- API Gateway -->
+    <div style="background: #f59e0b; color: #1a1a1a; padding: 14px; border-radius: 8px; text-align: center; margin: 8px 0; font-weight: 700;">
+      API Gateway <span style="font-weight: 400; font-size: 12px;">(Node.js — Auth, Rate Limiting, Routing, API Keys)</span>
+    </div>
+
+    <div style="text-align: center; color: #94a3b8; font-size: 20px;">▼</div>
+
+    <!-- Core Services Row -->
+    <div style="display: flex; gap: 12px; margin: 8px 0; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 200px; background: #10b981; color: white; padding: 14px; border-radius: 8px;">
+        <div style="font-weight: 700; margin-bottom: 6px;">Core Platform Service</div>
+        <div style="font-size: 12px; opacity: 0.9;">Node.js + Express + TypeScript</div>
+        <ul style="font-size: 11px; margin: 8px 0 0; padding-left: 16px; opacity: 0.9;">
+          <li>Merchant management</li>
+          <li>Transaction orchestration</li>
+          <li>Reconciliation engine</li>
+          <li>Integration hub (Xero, Sage, ERPs)</li>
+          <li>Inventory management</li>
+          <li>POS backend</li>
+          <li>Webhook delivery</li>
+        </ul>
+      </div>
+      <div style="flex: 1; min-width: 200px; background: #8b5cf6; color: white; padding: 14px; border-radius: 8px;">
+        <div style="font-weight: 700; margin-bottom: 6px;">AI & Analytics Engine</div>
+        <div style="font-size: 12px; opacity: 0.9;">Python + FastAPI</div>
+        <ul style="font-size: 11px; margin: 8px 0 0; padding-left: 16px; opacity: 0.9;">
+          <li>Business intelligence dashboards</li>
+          <li>Predictive analytics (cash flow, demand)</li>
+          <li>Anomaly & fraud detection</li>
+          <li>Smart recommendations</li>
+          <li>Report generation</li>
+          <li>Data pipeline & ETL</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="text-align: center; color: #94a3b8; font-size: 20px;">▼</div>
+
+    <!-- Data Layer -->
+    <div style="display: flex; gap: 12px; margin: 8px 0; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 120px; background: #1e293b; color: #e2e8f0; padding: 12px; border-radius: 8px; text-align: center;">
+        <div style="font-weight: 700;">PostgreSQL</div>
+        <div style="font-size: 11px; opacity: 0.7;">Transactions, accounts, ledger, reconciliation, inventory</div>
+      </div>
+      <div style="flex: 1; min-width: 120px; background: #1e293b; color: #e2e8f0; padding: 12px; border-radius: 8px; text-align: center;">
+        <div style="font-weight: 700;">MongoDB</div>
+        <div style="font-size: 11px; opacity: 0.7;">Integration configs, webhook logs, audit trails, templates</div>
+      </div>
+      <div style="flex: 1; min-width: 120px; background: #1e293b; color: #e2e8f0; padding: 12px; border-radius: 8px; text-align: center;">
+        <div style="font-weight: 700;">Redis</div>
+        <div style="font-size: 11px; opacity: 0.7;">Cache, sessions, pub/sub, rate limiting, queues</div>
+      </div>
+    </div>
+
+    <div style="text-align: center; color: #94a3b8; font-size: 20px;">▼</div>
+
+    <!-- External -->
+    <div style="background: #991b1b; color: #fecaca; padding: 12px; border-radius: 8px; text-align: center;">
+      <div style="font-weight: 700;">Existing Laravel Payment Gateway</div>
+      <div style="font-size: 12px; opacity: 0.8;">REST API — Card, EFT, Google Pay, Apple Pay, Crypto | Tokenized transactions</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <h3>Key Design Decisions</h3>
+  <ul>
+    <li><strong>API Gateway</strong> is the single entry point — handles auth (JWT + API keys), rate limiting, request routing, and tenant isolation</li>
+    <li><strong>Core Platform</strong> handles all business logic — talks to the Laravel gateway via REST for payment operations</li>
+    <li><strong>AI Engine</strong> is stateless — pulls data from Postgres, runs analysis, returns results. Scales horizontally</li>
+    <li><strong>POS as PWA</strong> — works offline, syncs when connected. No native app needed initially</li>
+    <li><strong>Redis pub/sub</strong> for real-time events between Core and AI (e.g., "new transaction" triggers fraud check)</li>
+  </ul>
+</div>

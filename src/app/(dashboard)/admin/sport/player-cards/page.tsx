@@ -18,7 +18,10 @@ export default function PlayerCardsPage() {
   }, [loadPlayerCards, loadSportConfigs]);
 
   const handleSelect = (card: PlayerCard) => {
-    router.push(`/admin/sport/player/${card.studentId}?sport=${card.sportCode}`);
+    const sid = typeof card.studentId === 'string'
+      ? card.studentId
+      : (card.studentId as { _id: string })._id;
+    router.push(`/admin/sport/player/${sid}?sport=${card.sportCode}`);
   };
 
   if (loading && playerCards.length === 0) return <LoadingSpinner />;

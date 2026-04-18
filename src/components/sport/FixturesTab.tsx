@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Plus, Pencil, Trash2, Calendar, Eye, Home, Plane } from 'lucide-react';
+import { Plus, Pencil, Trash2, Calendar, Eye, Home, Plane, ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
+import apiClient from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
@@ -97,6 +98,9 @@ export function FixturesTab({ fixtures, teams, loading, schoolId, onRefresh }: F
         <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openDetail(row.original); }} aria-label="View fixture">
           <Eye className="h-4 w-4" />
         </Button>
+        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); generateTeamSheet(row.original); }} aria-label="Publish team sheet">
+          <ClipboardList className="h-4 w-4" />
+        </Button>
         <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }} aria-label="Edit fixture">
           <Pencil className="h-4 w-4" />
         </Button>
@@ -106,6 +110,19 @@ export function FixturesTab({ fixtures, teams, loading, schoolId, onRefresh }: F
       </div>
     )},
   ];
+
+  async function generateTeamSheet(fixture: SportFixture) {
+    if (!confirm(`Publish a team sheet for ${getTeamName(fixture.teamId)} vs ${fixture.opponent}?`)) return;
+    try {
+      await apiClient.post(`/sports/fixtures/${fixture.id}/team-sheet`);
+      toast.success('Team sheet published');
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+        ?? 'Failed to publish team sheet';
+      toast.error(message);
+    }
+  }
 
   if (loading) return <LoadingSpinner />;
 

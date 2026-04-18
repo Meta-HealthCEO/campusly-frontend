@@ -6,7 +6,22 @@ import type { Wallet } from './wallet';
 import type { House } from './achiever';
 import type { Grade, SchoolClass } from './academic';
 
-export type UserRole = 'admin' | 'teacher' | 'parent' | 'student' | 'tuckshop' | 'super_admin' | 'sgb_member';
+export type UserRole =
+  | 'admin'
+  | 'teacher'
+  | 'parent'
+  | 'student'
+  | 'tuckshop'
+  | 'super_admin'
+  | 'sgb_member'
+  | 'coach'
+  | 'sports_manager';
+
+/**
+ * A reference field that might be either a raw ObjectId string or a populated
+ * object containing `id` / `_id`. Matches the shape `resolveId` accepts.
+ */
+export type PopulatedId = string | { id?: string; _id?: string } | null | undefined;
 
 export interface User {
   id: string;
@@ -18,6 +33,8 @@ export interface User {
   phone?: string;
   schoolId: string;
   isActive: boolean;
+  isStandaloneTeacher?: boolean;
+  isStandaloneCoach?: boolean;
   createdAt: string;
   updatedAt: string;
 }

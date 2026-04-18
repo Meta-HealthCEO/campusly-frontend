@@ -1,0 +1,261 @@
+<h2>One Gate — Developer Portal</h2>
+<p class="subtitle">Section 6 of 6 — API docs, sandbox, and integration tools for developers</p>
+
+<div class="mockup">
+  <div class="mockup-header">Developer Portal — API Documentation</div>
+  <div class="mockup-body" style="padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; display: flex; min-height: 640px; background: #fafafa;">
+
+    <!-- Dev Portal Sidebar -->
+    <div style="width: 240px; background: #ffffff; border-right: 1px solid rgba(0,0,0,0.08); display: flex; flex-direction: column; flex-shrink: 0;">
+
+      <!-- Logo -->
+      <div style="padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.06); display: flex; align-items: center; gap: 10px; height: 56px;">
+        <div style="width: 28px; height: 28px; background: #171717; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 10px;">OG</div>
+        <div>
+          <div style="font-size: 13px; font-weight: 700; color: #0a0a0a; letter-spacing: -0.3px;">One Gate</div>
+          <div style="font-size: 9px; color: #a3a3a3; letter-spacing: 0.5px;">DEVELOPER DOCS</div>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div style="padding: 12px 16px;">
+        <div style="background: rgba(0,0,0,0.03); padding: 7px 10px; border-radius: 8px; font-size: 12px; color: #a3a3a3;">🔍 Search docs...</div>
+      </div>
+
+      <!-- Nav -->
+      <div style="flex: 1; padding: 0 12px; overflow-y: auto; font-size: 13px;">
+        <div style="padding: 6px 12px; font-size: 10px; color: #a3a3a3; font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px;">Getting Started</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Introduction</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Authentication</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Quickstart</div>
+
+        <div style="padding: 6px 12px; font-size: 10px; color: #a3a3a3; font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 12px;">Payments</div>
+        <div style="padding: 7px 12px; background: rgba(23,23,23,0.08); border-radius: 6px; color: #171717; font-weight: 500;">Create Payment</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Payment Status</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Refunds</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Recurring</div>
+
+        <div style="padding: 6px 12px; font-size: 10px; color: #a3a3a3; font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 12px;">Commerce</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Products</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Inventory</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Orders</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Customers</div>
+
+        <div style="padding: 6px 12px; font-size: 10px; color: #a3a3a3; font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 12px;">Analytics</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Reports</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Insights</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Forecasts</div>
+
+        <div style="padding: 6px 12px; font-size: 10px; color: #a3a3a3; font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 12px;">Webhooks</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Events</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Signatures</div>
+
+        <div style="padding: 6px 12px; font-size: 10px; color: #a3a3a3; font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 12px;">SDKs</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Node.js</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Python</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">PHP</div>
+        <div style="padding: 7px 12px; border-radius: 6px; color: #737373;">Ruby</div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+
+      <!-- Top Bar -->
+      <div style="height: 56px; background: #ffffff; border-bottom: 1px solid rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0;">
+        <div style="display: flex; gap: 6px;">
+          <div style="padding: 5px 12px; background: #171717; color: #fff; border-radius: 6px; font-size: 12px; font-weight: 500;">Docs</div>
+          <div style="padding: 5px 12px; background: rgba(0,0,0,0.04); color: #525252; border-radius: 6px; font-size: 12px; font-weight: 500;">API Reference</div>
+          <div style="padding: 5px 12px; background: rgba(0,0,0,0.04); color: #525252; border-radius: 6px; font-size: 12px; font-weight: 500;">Sandbox</div>
+          <div style="padding: 5px 12px; background: rgba(0,0,0,0.04); color: #525252; border-radius: 6px; font-size: 12px; font-weight: 500;">Changelog</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="padding: 5px 12px; background: rgba(0,0,0,0.04); border-radius: 6px; font-size: 12px; color: #525252; font-weight: 500;">Dashboard →</div>
+          <div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(23,23,23,0.08); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #404040;">D</div>
+        </div>
+      </div>
+
+      <!-- Content Area -->
+      <div style="flex: 1; display: flex; overflow-y: auto;">
+
+        <!-- Doc Content -->
+        <div style="flex: 1; padding: 32px; max-width: 640px;">
+
+          <!-- Breadcrumb -->
+          <div style="font-size: 12px; color: #a3a3a3; margin-bottom: 16px;">
+            Payments <span style="color: #d4d4d4; margin: 0 4px;">›</span> <span style="color: #525252;">Create Payment</span>
+          </div>
+
+          <h1 style="font-size: 24px; font-weight: 700; color: #0a0a0a; letter-spacing: -0.5px; margin: 0 0 8px;">Create a Payment</h1>
+          <p style="font-size: 14px; color: #525252; line-height: 1.6; margin: 0 0 24px;">
+            Initiate a payment through any supported channel. One Gate automatically routes to the optimal processor and returns a unified response regardless of payment method.
+          </p>
+
+          <!-- Endpoint -->
+          <div style="background: #171717; border-radius: 10px; overflow: hidden; margin-bottom: 24px;">
+            <div style="padding: 12px 16px; display: flex; align-items: center; gap: 10px;">
+              <span style="background: #16a34a; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; font-family: monospace;">POST</span>
+              <span style="font-family: monospace; font-size: 13px; color: #e5e5e5;">/v1/payments</span>
+            </div>
+          </div>
+
+          <!-- Parameters -->
+          <h3 style="font-size: 15px; font-weight: 600; color: #0a0a0a; margin: 0 0 12px;">Request Body</h3>
+
+          <div style="border: 1px solid rgba(0,0,0,0.06); border-radius: 10px; overflow: hidden; margin-bottom: 24px;">
+            <div style="display: grid; grid-template-columns: 140px 80px 1fr; padding: 10px 16px; font-size: 11px; color: #a3a3a3; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(0,0,0,0.04); background: rgba(0,0,0,0.015);">
+              <span>Parameter</span><span>Type</span><span>Description</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 140px 80px 1fr; padding: 12px 16px; font-size: 13px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+              <span style="font-family: monospace; font-size: 12px; color: #0a0a0a; font-weight: 500;">amount <span style="color: #dc2626; font-size: 10px;">*</span></span>
+              <span style="font-family: monospace; font-size: 11px; color: #737373;">integer</span>
+              <span style="color: #525252;">Amount in cents. e.g. 10000 = R 100.00</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 140px 80px 1fr; padding: 12px 16px; font-size: 13px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+              <span style="font-family: monospace; font-size: 12px; color: #0a0a0a; font-weight: 500;">currency <span style="color: #dc2626; font-size: 10px;">*</span></span>
+              <span style="font-family: monospace; font-size: 11px; color: #737373;">string</span>
+              <span style="color: #525252;">ISO 4217 code. Default: <span style="font-family: monospace; background: rgba(0,0,0,0.04); padding: 1px 4px; border-radius: 3px; font-size: 11px;">ZAR</span></span>
+            </div>
+            <div style="display: grid; grid-template-columns: 140px 80px 1fr; padding: 12px 16px; font-size: 13px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+              <span style="font-family: monospace; font-size: 12px; color: #0a0a0a; font-weight: 500;">channel <span style="color: #dc2626; font-size: 10px;">*</span></span>
+              <span style="font-family: monospace; font-size: 11px; color: #737373;">string</span>
+              <span style="color: #525252;"><span style="font-family: monospace; background: rgba(0,0,0,0.04); padding: 1px 4px; border-radius: 3px; font-size: 11px;">card</span> <span style="font-family: monospace; background: rgba(0,0,0,0.04); padding: 1px 4px; border-radius: 3px; font-size: 11px;">eft</span> <span style="font-family: monospace; background: rgba(0,0,0,0.04); padding: 1px 4px; border-radius: 3px; font-size: 11px;">google_pay</span> <span style="font-family: monospace; background: rgba(0,0,0,0.04); padding: 1px 4px; border-radius: 3px; font-size: 11px;">apple_pay</span> <span style="font-family: monospace; background: rgba(0,0,0,0.04); padding: 1px 4px; border-radius: 3px; font-size: 11px;">crypto</span></span>
+            </div>
+            <div style="display: grid; grid-template-columns: 140px 80px 1fr; padding: 12px 16px; font-size: 13px; border-bottom: 1px solid rgba(0,0,0,0.04);">
+              <span style="font-family: monospace; font-size: 12px; color: #0a0a0a; font-weight: 500;">reference</span>
+              <span style="font-family: monospace; font-size: 11px; color: #737373;">string</span>
+              <span style="color: #525252;">Your internal reference for this payment</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 140px 80px 1fr; padding: 12px 16px; font-size: 13px;">
+              <span style="font-family: monospace; font-size: 12px; color: #0a0a0a; font-weight: 500;">metadata</span>
+              <span style="font-family: monospace; font-size: 11px; color: #737373;">object</span>
+              <span style="color: #525252;">Key-value pairs for your own use</span>
+            </div>
+          </div>
+
+          <!-- Response -->
+          <h3 style="font-size: 15px; font-weight: 600; color: #0a0a0a; margin: 0 0 12px;">Response</h3>
+          <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+            <span style="background: rgba(34,197,94,0.1); color: #16a34a; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">200</span>
+            <span style="font-size: 12px; color: #737373;">Payment created successfully</span>
+          </div>
+
+        </div>
+
+        <!-- Code Panel (Right) -->
+        <div style="width: 340px; background: #171717; border-left: 1px solid rgba(255,255,255,0.06); padding: 32px 20px; overflow-y: auto; flex-shrink: 0;">
+
+          <!-- Language tabs -->
+          <div style="display: flex; gap: 4px; margin-bottom: 16px;">
+            <div style="padding: 4px 10px; background: rgba(255,255,255,0.1); color: #fff; border-radius: 5px; font-size: 11px; font-weight: 500;">cURL</div>
+            <div style="padding: 4px 10px; color: #737373; border-radius: 5px; font-size: 11px; font-weight: 500;">Node.js</div>
+            <div style="padding: 4px 10px; color: #737373; border-radius: 5px; font-size: 11px; font-weight: 500;">Python</div>
+            <div style="padding: 4px 10px; color: #737373; border-radius: 5px; font-size: 11px; font-weight: 500;">PHP</div>
+          </div>
+
+          <!-- Request Example -->
+          <div style="font-size: 10px; color: #a3a3a3; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 500;">Request</div>
+          <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 14px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; line-height: 1.7; color: #e5e5e5; margin-bottom: 20px; overflow-x: auto;">
+            <div><span style="color: #a78bfa;">curl</span> -X POST \</div>
+            <div>&nbsp;&nbsp;https://api.onegate.co.za/v1/payments \</div>
+            <div>&nbsp;&nbsp;-H <span style="color: #86efac;">"Authorization: Bearer sk_live_..."</span> \</div>
+            <div>&nbsp;&nbsp;-H <span style="color: #86efac;">"Content-Type: application/json"</span> \</div>
+            <div>&nbsp;&nbsp;-d <span style="color: #86efac;">'{</span></div>
+            <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #93c5fd;">"amount"</span>: <span style="color: #fde68a;">10000</span>,</div>
+            <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #93c5fd;">"currency"</span>: <span style="color: #86efac;">"ZAR"</span>,</div>
+            <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #93c5fd;">"channel"</span>: <span style="color: #86efac;">"card"</span>,</div>
+            <div>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #93c5fd;">"reference"</span>: <span style="color: #86efac;">"order_1042"</span></div>
+            <div>&nbsp;&nbsp;<span style="color: #86efac;">}'</span></div>
+          </div>
+
+          <!-- Response Example -->
+          <div style="font-size: 10px; color: #a3a3a3; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 500;">Response · <span style="color: #86efac;">200</span></div>
+          <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 14px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; line-height: 1.7; color: #e5e5e5; overflow-x: auto;">
+            <div>{</div>
+            <div>&nbsp;&nbsp;<span style="color: #93c5fd;">"id"</span>: <span style="color: #86efac;">"pay_9f8g7h6j5k4l"</span>,</div>
+            <div>&nbsp;&nbsp;<span style="color: #93c5fd;">"status"</span>: <span style="color: #86efac;">"pending"</span>,</div>
+            <div>&nbsp;&nbsp;<span style="color: #93c5fd;">"amount"</span>: <span style="color: #fde68a;">10000</span>,</div>
+            <div>&nbsp;&nbsp;<span style="color: #93c5fd;">"currency"</span>: <span style="color: #86efac;">"ZAR"</span>,</div>
+            <div>&nbsp;&nbsp;<span style="color: #93c5fd;">"channel"</span>: <span style="color: #86efac;">"card"</span>,</div>
+            <div>&nbsp;&nbsp;<span style="color: #93c5fd;">"reference"</span>: <span style="color: #86efac;">"order_1042"</span>,</div>
+            <div>&nbsp;&nbsp;<span style="color: #93c5fd;">"checkout_url"</span>: <span style="color: #86efac;">"https://pay.onegate.co.za/c/..."</span>,</div>
+            <div>&nbsp;&nbsp;<span style="color: #93c5fd;">"created_at"</span>: <span style="color: #86efac;">"2026-04-15T10:30:00Z"</span>,</div>
+            <div>&nbsp;&nbsp;<span style="color: #93c5fd;">"metadata"</span>: {}</div>
+            <div>}</div>
+          </div>
+
+          <!-- Try it -->
+          <div style="margin-top: 20px; background: rgba(255,255,255,0.08); border-radius: 8px; padding: 14px; text-align: center;">
+            <div style="font-size: 12px; color: #e5e5e5; font-weight: 500; margin-bottom: 6px;">Try it in Sandbox</div>
+            <div style="font-size: 11px; color: #737373;">Test with sk_test_... keys — no real charges</div>
+            <div style="margin-top: 10px; background: rgba(255,255,255,0.12); padding: 8px 16px; border-radius: 6px; font-size: 12px; color: #fff; font-weight: 500; display: inline-block; cursor: pointer;">Send Request →</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <h3>Developer Portal — Key Features</h3>
+  <ul>
+    <li><strong>Three-panel layout</strong> — nav sidebar, doc content, live code examples (like Stripe docs)</li>
+    <li><strong>Multi-language code samples</strong> — cURL, Node.js, Python, PHP, Ruby with one-click copy</li>
+    <li><strong>Interactive sandbox</strong> — test API calls with sandbox keys directly from docs</li>
+    <li><strong>API Reference</strong> — auto-generated from OpenAPI spec, always in sync</li>
+    <li><strong>Webhook events</strong> — full event catalog with signature verification docs</li>
+    <li><strong>SDKs</strong> — official libraries for Node.js, Python, PHP, Ruby</li>
+    <li><strong>Changelog</strong> — versioned API changes, deprecation notices</li>
+    <li><strong>Developer dashboard</strong> — manage API keys, view request logs, set webhook URLs</li>
+    <li><strong>OAuth 2.0</strong> — for third-party integrations connecting on behalf of merchants</li>
+  </ul>
+</div>
+
+<div class="section" style="margin-top: 16px;">
+  <h3>API Surface — Full Scope</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 13px;">
+    <div>
+      <h4 style="color: #0a0a0a; margin: 0 0 8px;">Payments</h4>
+      <ul style="color: #525252; margin: 0; padding-left: 18px; line-height: 1.8;">
+        <li>POST /v1/payments — Create payment</li>
+        <li>GET /v1/payments/:id — Get status</li>
+        <li>POST /v1/payments/:id/refund — Refund</li>
+        <li>POST /v1/payments/:id/capture — Capture auth</li>
+        <li>GET /v1/payments — List payments</li>
+        <li>POST /v1/subscriptions — Recurring</li>
+      </ul>
+    </div>
+    <div>
+      <h4 style="color: #0a0a0a; margin: 0 0 8px;">Commerce</h4>
+      <ul style="color: #525252; margin: 0; padding-left: 18px; line-height: 1.8;">
+        <li>CRUD /v1/products — Product catalog</li>
+        <li>CRUD /v1/inventory — Stock management</li>
+        <li>CRUD /v1/orders — Order management</li>
+        <li>CRUD /v1/customers — Customer records</li>
+        <li>GET /v1/customers/:id/history — Purchase history</li>
+      </ul>
+    </div>
+    <div>
+      <h4 style="color: #0a0a0a; margin: 0 0 8px;">Analytics</h4>
+      <ul style="color: #525252; margin: 0; padding-left: 18px; line-height: 1.8;">
+        <li>GET /v1/reports/revenue — Revenue reports</li>
+        <li>GET /v1/reports/reconciliation — Recon status</li>
+        <li>GET /v1/insights — AI recommendations</li>
+        <li>GET /v1/forecasts/cashflow — Cash flow predictions</li>
+        <li>GET /v1/forecasts/demand — Demand predictions</li>
+      </ul>
+    </div>
+    <div>
+      <h4 style="color: #0a0a0a; margin: 0 0 8px;">Integrations</h4>
+      <ul style="color: #525252; margin: 0; padding-left: 18px; line-height: 1.8;">
+        <li>POST /v1/integrations/xero/sync — Sync to Xero</li>
+        <li>POST /v1/integrations/sage/sync — Sync to Sage</li>
+        <li>GET /v1/webhooks — List webhooks</li>
+        <li>POST /v1/webhooks — Register webhook</li>
+        <li>GET /v1/webhooks/events — Event types</li>
+      </ul>
+    </div>
+  </div>
+</div>
