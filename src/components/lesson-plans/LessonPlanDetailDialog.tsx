@@ -1,11 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Printer } from 'lucide-react';
+import { Download } from 'lucide-react';
+import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
 import {
   getLessonPlanSubjectName,
@@ -13,7 +15,8 @@ import {
   getLessonPlanTopicName,
   getLessonPlanTeacherName,
 } from '@/lib/lesson-plan-helpers';
-import type { LessonPlan } from '@/hooks/useTeacherLessonPlans';
+import { useTeacherLessonPlans } from '@/hooks/useTeacherLessonPlans';
+import type { LessonPlan, Homework } from '@/types';
 
 interface LessonPlanDetailDialogProps {
   plan: LessonPlan | null;
@@ -21,7 +24,23 @@ interface LessonPlanDetailDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const HOMEWORK_TYPES = ['quiz', 'reading', 'exercise'] as const;
+
+function isPopulatedHomeworkList(
+  homeworkIds: LessonPlan['homeworkIds'],
+): homeworkIds is Homework[] {
+  return (
+    Array.isArray(homeworkIds)
+    && homeworkIds.length > 0
+    && typeof homeworkIds[0] === 'object'
+    && homeworkIds[0] !== null
+  );
+}
+
 export function LessonPlanDetailDialog({ plan, open, onOpenChange }: LessonPlanDetailDialogProps) {
+  const { downloadLessonPlanPdf } = useTeacherLessonPlans();
+  const [downloading, setDownloading] = useState(false);
+
   if (!plan) return null;
 
   const subjectName = getLessonPlanSubjectName(plan);
@@ -29,14 +48,28 @@ export function LessonPlanDetailDialog({ plan, open, onOpenChange }: LessonPlanD
   const topicName = getLessonPlanTopicName(plan);
   const teacherName = getLessonPlanTeacherName(plan);
 
+  const handleDownload = async (): Promise<void> => {
+    if (!plan._id) return;
+    setDownloading(true);
+    try {
+      await downloadLessonPlanPdf(plan._id);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to download PDF');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const populatedHomework = isPopulatedHomeworkList(plan.homeworkIds) ? plan.homeworkIds : null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex flex-col max-h-[85vh] sm:max-w-2xl print:max-h-none print:max-w-none print:shadow-none">
-        <DialogHeader className="print:mb-4">
+      <DialogContent className="flex flex-col max-h-[85vh] sm:max-w-2xl">
+        <DialogHeader>
           <DialogTitle className="text-lg">{plan.topic}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto py-4 space-y-6 print:overflow-visible">
+        <div className="flex-1 overflow-y-auto py-4 space-y-6">
           {/* Meta row */}
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline">{formatDate(plan.date)}</Badge>
@@ -82,11 +115,28 @@ export function LessonPlanDetailDialog({ plan, open, onOpenChange }: LessonPlanD
             </section>
           )}
 
-          {/* Homework */}
-          {plan.homework && (
+          {/* Homework — grouped by type */}
+          {populatedHomework && (
             <section>
               <h3 className="text-sm font-semibold mb-2">Homework</h3>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{plan.homework}</p>
+              {HOMEWORK_TYPES.map((type) => {
+                const items = populatedHomework.filter((h: Homework) => h.type === type);
+                if (items.length === 0) return null;
+                return (
+                  <div key={type} className="mb-3">
+                    <h4 className="text-sm font-medium capitalize">{type}</h4>
+                    <ul className="list-disc pl-5 text-sm text-muted-foreground">
+                      {items.map((h: Homework) => (
+                        <li key={h._id}>
+                          {h.title}
+                          {h.type === 'reading' && h.pageRange ? ` — pp. ${h.pageRange}` : ''}
+                          {h.type === 'exercise' ? ` — ${h.exerciseQuestionIds.length} question(s)` : ''}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
             </section>
           )}
 
@@ -99,13 +149,13 @@ export function LessonPlanDetailDialog({ plan, open, onOpenChange }: LessonPlanD
           )}
         </div>
 
-        <DialogFooter className="print:hidden">
+        <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
-          <Button onClick={() => window.print()}>
-            <Printer className="mr-2 h-4 w-4" />
-            Print
+          <Button onClick={handleDownload} disabled={downloading}>
+            <Download className="mr-2 h-4 w-4" />
+            {downloading ? 'Downloading...' : 'Download PDF'}
           </Button>
         </DialogFooter>
       </DialogContent>
