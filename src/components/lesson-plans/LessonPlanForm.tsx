@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,30 +9,37 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
-} from '@/components/ui/select';
-import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { toISODate } from '@/lib/utils';
-import type { SchoolClass, Subject } from '@/types';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { TopicCascadePicker } from './TopicCascadePicker';
+import { HomeworkBuilder } from './HomeworkBuilder';
+import type {
+  SchoolClass,
+  Subject,
+  AIGeneratedLessonDraft,
+  StagedHomework,
+} from '@/types';
 import type {
   AIGenerateInput,
-  AIGeneratedDraft,
   CurriculumTopicOption,
 } from '@/hooks/useTeacherLessonPlans';
 
 const lessonPlanSchema = z.object({
   classId: z.string().min(1, 'Class is required'),
   subjectId: z.string().min(1, 'Subject is required'),
-  curriculumTopicId: z.string().optional(),
+  curriculumTopicId: z.string().min(1, 'Curriculum topic is required'),
   date: z.string().min(1, 'Date is required'),
-  topic: z.string().min(1, 'Topic is required'),
+  topic: z.string().min(1, 'Lesson title is required').max(200),
+  durationMinutes: z.number().int().min(5).max(240),
   objectives: z.string().optional(),
   activities: z.string().optional(),
   resources: z.string().optional(),
-  homework: z.string().optional(),
   reflectionNotes: z.string().optional(),
 });
 
@@ -44,23 +51,24 @@ interface LessonPlanFormInitialData {
   curriculumTopicId?: string;
   date?: string;
   topic?: string;
+  durationMinutes?: number;
   objectives?: string[];
   activities?: string[];
   resources?: string[];
-  homework?: string;
   reflectionNotes?: string;
 }
 
 interface LessonPlanFormSubmitData {
   classId: string;
   subjectId: string;
-  curriculumTopicId?: string;
+  curriculumTopicId: string;
   date: string;
   topic: string;
+  durationMinutes: number;
   objectives: string[];
   activities: string[];
   resources: string[];
-  homework?: string;
+  stagedHomework?: StagedHomework[];
   reflectionNotes?: string;
   aiGenerated?: boolean;
 }
@@ -74,7 +82,7 @@ interface LessonPlanFormProps {
   topicsLoading: boolean;
   onSubjectChange: (subjectId: string) => void;
   onSubmit: (data: LessonPlanFormSubmitData) => void;
-  onAIGenerate?: (input: AIGenerateInput) => Promise<AIGeneratedDraft | null>;
+  onAIGenerate?: (input: AIGenerateInput) => Promise<AIGeneratedLessonDraft | null>;
   aiGenerating?: boolean;
   initialData?: LessonPlanFormInitialData;
   title?: string;
@@ -89,10 +97,10 @@ function buildDefaults(initial?: LessonPlanFormInitialData): LessonPlanFormValue
       ? toISODate(new Date(initial.date))
       : toISODate(new Date()),
     topic: initial?.topic ?? '',
+    durationMinutes: initial?.durationMinutes ?? 45,
     objectives: initial?.objectives?.join(', ') ?? '',
     activities: initial?.activities?.join(', ') ?? '',
     resources: initial?.resources?.join(', ') ?? '',
-    homework: initial?.homework ?? '',
     reflectionNotes: initial?.reflectionNotes ?? '',
   };
 }
@@ -101,6 +109,9 @@ export function LessonPlanForm({
   open, onOpenChange, classes, subjects, topics, topicsLoading, onSubjectChange,
   onSubmit, onAIGenerate, aiGenerating, initialData, title,
 }: LessonPlanFormProps) {
+  const { user } = useAuthStore();
+  const schoolId = user?.schoolId ?? '';
+
   const {
     register, handleSubmit, setValue, watch, reset, formState: { errors },
   } = useForm<LessonPlanFormValues>({
@@ -112,14 +123,23 @@ export function LessonPlanForm({
   const classId = watch('classId');
   const date = watch('date');
   const curriculumTopicId = watch('curriculumTopicId');
+  const durationMinutes = watch('durationMinutes');
 
   const [wasAIGenerated, setWasAIGenerated] = useState(false);
+  const [stagedHomework, setStagedHomework] = useState<StagedHomework[]>([]);
+
+  // Refs track whether a change is user-initiated (skip first render).
+  const classIdInitRef = useRef(true);
+  const subjectIdInitRef = useRef(true);
 
   // Reset form when dialog opens (so state doesn't persist across reopens).
   useEffect(() => {
     if (open) {
       reset(buildDefaults(initialData));
       setWasAIGenerated(false);
+      setStagedHomework([]);
+      classIdInitRef.current = true;
+      subjectIdInitRef.current = true;
       if (initialData?.subjectId) {
         onSubjectChange(initialData.subjectId);
       }
@@ -127,12 +147,26 @@ export function LessonPlanForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const handleSubjectSelect = (val: string) => {
-    setValue('subjectId', val);
-    // Clear topic when subject changes (topic list will be refreshed).
+  // Class change → clear subject + topic + staged homework (skip first run).
+  useEffect(() => {
+    if (classIdInitRef.current) {
+      classIdInitRef.current = false;
+      return;
+    }
+    setValue('subjectId', '');
     setValue('curriculumTopicId', '');
-    onSubjectChange(val);
-  };
+    setStagedHomework([]);
+  }, [classId, setValue]);
+
+  // Subject change → clear topic + reload topic list (skip first run).
+  useEffect(() => {
+    if (subjectIdInitRef.current) {
+      subjectIdInitRef.current = false;
+      return;
+    }
+    setValue('curriculumTopicId', '');
+    if (subjectId) onSubjectChange(subjectId);
+  }, [subjectId, setValue, onSubjectChange]);
 
   const handleAIGenerate = async () => {
     if (!onAIGenerate || !curriculumTopicId || !classId || !subjectId || !date) return;
@@ -141,13 +175,13 @@ export function LessonPlanForm({
       classId,
       subjectId,
       date,
+      durationMinutes,
     });
     if (!draft) return;
     setValue('topic', draft.topic);
     setValue('objectives', draft.objectives.join(', '));
     setValue('activities', draft.activities.join(', '));
     setValue('resources', draft.resources.join(', '));
-    setValue('homework', draft.homework ?? '');
     setWasAIGenerated(true);
   };
 
@@ -158,63 +192,49 @@ export function LessonPlanForm({
     onSubmit({
       classId: data.classId,
       subjectId: data.subjectId,
-      curriculumTopicId: data.curriculumTopicId || undefined,
+      curriculumTopicId: data.curriculumTopicId,
       date: new Date(data.date).toISOString(),
       topic: data.topic,
+      durationMinutes: data.durationMinutes,
       objectives: splitToArray(data.objectives),
       activities: splitToArray(data.activities),
       resources: splitToArray(data.resources),
-      homework: data.homework || undefined,
+      stagedHomework: stagedHomework.length > 0 ? stagedHomework : undefined,
       reflectionNotes: data.reflectionNotes || undefined,
       aiGenerated: wasAIGenerated,
     });
   };
 
-  const canAIGenerate = !!(onAIGenerate && curriculumTopicId && classId && subjectId && date);
+  const canAIGenerate = Boolean(
+    onAIGenerate && classId && subjectId && curriculumTopicId && date,
+  );
   const dialogTitle = title ?? (initialData ? 'Edit Lesson Plan' : 'Create Lesson Plan');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex flex-col max-h-[85vh] sm:max-w-lg">
+      <DialogContent className="flex flex-col max-h-[85vh] sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{dialogTitle}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col flex-1 overflow-hidden">
           <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Class <span className="text-destructive">*</span></Label>
-                <Select
-                  value={classId || ''}
-                  onValueChange={(val: unknown) => setValue('classId', val as string)}
-                >
-                  <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-                  <SelectContent>
-                    {classes.map((c: SchoolClass) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.grade?.name ?? c.gradeName ?? ''} {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.classId && <p className="text-xs text-destructive">{errors.classId.message}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label>Subject <span className="text-destructive">*</span></Label>
-                <Select
-                  value={subjectId || ''}
-                  onValueChange={(val: unknown) => handleSubjectSelect(val as string)}
-                >
-                  <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
-                  <SelectContent>
-                    {subjects.map((s: Subject) => (
-                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.subjectId && <p className="text-xs text-destructive">{errors.subjectId.message}</p>}
-              </div>
-            </div>
+            <TopicCascadePicker
+              classes={classes}
+              subjects={subjects}
+              topics={topics}
+              topicsLoading={topicsLoading}
+              classId={classId}
+              subjectId={subjectId}
+              curriculumTopicId={curriculumTopicId}
+              onClassChange={(v: string) => setValue('classId', v, { shouldDirty: true })}
+              onSubjectChange={(v: string) => setValue('subjectId', v, { shouldDirty: true })}
+              onTopicChange={(v: string) => setValue('curriculumTopicId', v, { shouldDirty: true })}
+              errors={{
+                classId: errors.classId?.message,
+                subjectId: errors.subjectId?.message,
+                curriculumTopicId: errors.curriculumTopicId?.message,
+              }}
+            />
 
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
               <div className="space-y-2">
@@ -223,65 +243,62 @@ export function LessonPlanForm({
                 {errors.date && <p className="text-xs text-destructive">{errors.date.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label>Curriculum Topic</Label>
-                <Select
-                  value={curriculumTopicId || ''}
-                  onValueChange={(val: unknown) => setValue('curriculumTopicId', val as string)}
-                  disabled={!subjectId || topicsLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={
-                      !subjectId ? 'Select subject first'
-                        : topicsLoading ? 'Loading topics...'
-                          : topics.length === 0 ? 'No topics available'
-                            : 'Select topic (optional)'
-                    } />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {topics.map((t: CurriculumTopicOption) => (
-                      <SelectItem key={t._id} value={t._id}>
-                        {t.code ? `${t.code} — ` : ''}{t.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="durationMinutes">Duration (minutes)</Label>
+                <Input
+                  id="durationMinutes"
+                  type="number"
+                  min={5}
+                  max={240}
+                  placeholder="45"
+                  {...register('durationMinutes', { valueAsNumber: true })}
+                />
+                {errors.durationMinutes && (
+                  <p className="text-xs text-destructive">{errors.durationMinutes.message}</p>
+                )}
               </div>
             </div>
 
             {onAIGenerate && (
-              <div className="rounded-lg border bg-muted/30 p-3">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium flex items-center gap-2">
-                      <Sparkles className="h-4 w-4" />
-                      AI-assisted drafting
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {canAIGenerate
-                        ? 'Generate a draft from the selected curriculum topic. You can edit before saving.'
-                        : 'Select class, subject, date, and a curriculum topic to enable AI drafting.'}
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAIGenerate}
-                    disabled={!canAIGenerate || aiGenerating}
-                    className="shrink-0"
-                  >
-                    {aiGenerating ? (
-                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
-                    ) : (
-                      <><Sparkles className="mr-2 h-4 w-4" /> Generate with AI</>
-                    )}
-                  </Button>
+              <div className="rounded-lg border bg-muted/30 p-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" /> AI-assisted drafting
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Generate a draft from the selected curriculum topic. You can edit before saving.
+                  </p>
                 </div>
+                <TooltipProvider delay={200}>
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <span className="shrink-0 inline-flex">
+                          <Button
+                            type="button" variant="outline" size="sm"
+                            onClick={handleAIGenerate}
+                            disabled={!canAIGenerate || aiGenerating}
+                          >
+                            {aiGenerating ? (
+                              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
+                            ) : (
+                              <><Sparkles className="mr-2 h-4 w-4" /> Generate with AI</>
+                            )}
+                          </Button>
+                        </span>
+                      }
+                    />
+                    {!canAIGenerate && (
+                      <TooltipContent>
+                        Select class, subject, date, and curriculum topic to enable AI.
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="topic">Topic <span className="text-destructive">*</span></Label>
+              <Label htmlFor="topic">Lesson Title <span className="text-destructive">*</span></Label>
               <Input id="topic" placeholder="e.g., Quadratic Equations" {...register('topic')} />
               {errors.topic && <p className="text-xs text-destructive">{errors.topic.message}</p>}
             </div>
@@ -302,8 +319,15 @@ export function LessonPlanForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="homework">Homework</Label>
-              <Input id="homework" placeholder="Optional homework assignment" {...register('homework')} />
+              <Label>Homework</Label>
+              <HomeworkBuilder
+                stagedHomework={stagedHomework}
+                setStagedHomework={setStagedHomework}
+                plan={initialData}
+                classId={classId}
+                subjectId={subjectId}
+                schoolId={schoolId}
+              />
             </div>
 
             <div className="space-y-2">

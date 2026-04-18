@@ -22,32 +22,33 @@ import {
   getLessonPlanSubjectName,
   getLessonPlanClassName,
 } from '@/lib/lesson-plan-helpers';
-import type { LessonPlan } from '@/hooks/useTeacherLessonPlans';
+import type { LessonPlan, StagedHomework } from '@/types';
 
 interface EditingPlanData {
   id: string;
   classId: string;
   subjectId: string;
-  curriculumTopicId?: string;
+  curriculumTopicId: string;
   date: string;
   topic: string;
+  durationMinutes: number;
   objectives: string[];
   activities: string[];
   resources: string[];
-  homework?: string;
   reflectionNotes?: string;
 }
 
 interface PlanSubmitData {
   classId: string;
   subjectId: string;
-  curriculumTopicId?: string;
+  curriculumTopicId: string;
   date: string;
   topic: string;
+  durationMinutes: number;
   objectives: string[];
   activities: string[];
   resources: string[];
-  homework?: string;
+  stagedHomework?: StagedHomework[];
   reflectionNotes?: string;
   aiGenerated?: boolean;
 }
@@ -56,9 +57,7 @@ function planToEditingData(plan: LessonPlan): EditingPlanData {
   const subjectId = typeof plan.subjectId === 'string' ? plan.subjectId : plan.subjectId._id;
   const classId = typeof plan.classId === 'string' ? plan.classId : plan.classId._id;
   const topicId =
-    plan.curriculumTopicId === undefined
-      ? undefined
-      : typeof plan.curriculumTopicId === 'string'
+    typeof plan.curriculumTopicId === 'string'
       ? plan.curriculumTopicId
       : plan.curriculumTopicId._id;
   return {
@@ -68,10 +67,10 @@ function planToEditingData(plan: LessonPlan): EditingPlanData {
     curriculumTopicId: topicId,
     date: toISODate(new Date(plan.date)),
     topic: plan.topic,
+    durationMinutes: plan.durationMinutes ?? 45,
     objectives: plan.objectives,
     activities: plan.activities,
     resources: plan.resources,
-    homework: plan.homework,
     reflectionNotes: plan.reflectionNotes,
   };
 }

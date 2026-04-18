@@ -1,4 +1,4 @@
-import type { LessonPlan } from '@/hooks/useTeacherLessonPlans';
+import type { LessonPlan } from '@/types';
 
 /**
  * Resolve a populated reference field on a lesson plan.
@@ -9,11 +9,12 @@ export function resolvePopulated(
   val:
     | string
     | {
-        _id: string;
+        _id?: string;
         name?: string;
         title?: string;
         firstName?: string;
         lastName?: string;
+        email?: string;
         code?: string;
       }
     | null
