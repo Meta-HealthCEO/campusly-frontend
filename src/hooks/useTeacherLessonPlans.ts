@@ -3,36 +3,26 @@ import apiClient from '@/lib/api-client';
 import { unwrapList, unwrapResponse } from '@/lib/api-helpers';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/useAuthStore';
-import type { SchoolClass, Subject } from '@/types';
-
-interface LessonPlan {
-  _id: string;
-  teacherId: string | { _id: string; firstName?: string; lastName?: string };
-  schoolId: string;
-  subjectId: string | { _id: string; name?: string; code?: string };
-  classId: string | { _id: string; name?: string };
-  curriculumTopicId?: string | { _id: string; title?: string };
-  date: string;
-  topic: string;
-  objectives: string[];
-  activities: string[];
-  resources: string[];
-  homework?: string;
-  reflectionNotes?: string;
-  aiGenerated?: boolean;
-  createdAt: string;
-}
+import type {
+  SchoolClass,
+  Subject,
+  LessonPlan,
+  AIGeneratedLessonDraft,
+  StagedHomework,
+  Homework,
+} from '@/types';
 
 interface LessonPlanFormData {
   classId: string;
   subjectId: string;
-  curriculumTopicId?: string;
+  curriculumTopicId: string;
   date: string;
   topic: string;
+  durationMinutes?: number;
   objectives: string[];
   activities: string[];
   resources: string[];
-  homework?: string;
+  stagedHomework?: StagedHomework[];
   reflectionNotes?: string;
   aiGenerated?: boolean;
 }
@@ -43,14 +33,6 @@ interface AIGenerateInput {
   subjectId: string;
   date: string;
   durationMinutes?: number;
-}
-
-interface AIGeneratedDraft {
-  topic: string;
-  objectives: string[];
-  activities: string[];
-  resources: string[];
-  homework?: string;
 }
 
 interface CurriculumTopicOption {
@@ -104,7 +86,8 @@ export function useTeacherLessonPlans() {
         setTotal(payload.total ?? 0);
         setTotalPages(payload.totalPages ?? 0);
       }
-    } catch {
+    } catch (err: unknown) {
+      console.error('Failed to load lesson plans', err);
       toast.error('Failed to load lesson plans');
     }
   }, [page, limit, filterSubjectId, filterClassId]);
@@ -125,7 +108,8 @@ export function useTeacherLessonPlans() {
         if (subjectsRes.status === 'fulfilled') {
           setSubjects(unwrapList<Subject>(subjectsRes.value));
         }
-      } catch {
+      } catch (err: unknown) {
+        console.error('Failed to load lesson plan data', err);
         if (!cancelled) toast.error('Failed to load lesson plan data');
       } finally {
         if (!cancelled) setLoading(false);
@@ -150,7 +134,8 @@ export function useTeacherLessonPlans() {
       const res = await apiClient.get(`/lesson-plans/${id}`);
       const plan = unwrapResponse<LessonPlan>(res);
       setSelectedPlan(plan);
-    } catch {
+    } catch (err: unknown) {
+      console.error('Failed to load lesson plan details', err);
       toast.error('Failed to load lesson plan details');
     }
   }, []);
@@ -166,7 +151,8 @@ export function useTeacherLessonPlans() {
         params: { type: 'topic', subjectId },
       });
       setCurriculumTopics(unwrapList<CurriculumTopicOption>(res));
-    } catch {
+    } catch (err: unknown) {
+      console.error('Could not load curriculum topics', err);
       setCurriculumTopics([]);
       toast.error('Could not load curriculum topics');
     } finally {
@@ -184,7 +170,8 @@ export function useTeacherLessonPlans() {
         toast.success('Lesson plan created');
         await fetchPlans();
         return true;
-      } catch {
+      } catch (err: unknown) {
+        console.error('Failed to create lesson plan', err);
         toast.error('Failed to create lesson plan');
         return false;
       }
@@ -199,7 +186,8 @@ export function useTeacherLessonPlans() {
         toast.success('Lesson plan updated');
         await fetchPlans();
         return true;
-      } catch {
+      } catch (err: unknown) {
+        console.error('Failed to update lesson plan', err);
         toast.error('Failed to update lesson plan');
         return false;
       }
@@ -213,7 +201,8 @@ export function useTeacherLessonPlans() {
         await apiClient.delete(`/lesson-plans/${id}`);
         toast.success('Lesson plan deleted');
         await fetchPlans();
-      } catch {
+      } catch (err: unknown) {
+        console.error('Failed to delete lesson plan', err);
         toast.error('Failed to delete lesson plan');
       }
     },
@@ -221,7 +210,7 @@ export function useTeacherLessonPlans() {
   );
 
   const aiGenerate = useCallback(
-    async (input: AIGenerateInput): Promise<AIGeneratedDraft | null> => {
+    async (input: AIGenerateInput): Promise<AIGeneratedLessonDraft | null> => {
       if (!user?.schoolId) {
         toast.error('School information not available');
         return null;
@@ -233,10 +222,11 @@ export function useTeacherLessonPlans() {
           schoolId: user.schoolId,
           date: new Date(input.date).toISOString(),
         });
-        const draft = unwrapResponse<AIGeneratedDraft>(res);
+        const draft = unwrapResponse<AIGeneratedLessonDraft>(res);
         toast.success('Draft generated — review and save');
         return draft;
-      } catch {
+      } catch (err: unknown) {
+        console.error('AI generation failed', err);
         toast.error('AI generation failed. Please try again.');
         return null;
       } finally {
@@ -244,6 +234,63 @@ export function useTeacherLessonPlans() {
       }
     },
     [user?.schoolId],
+  );
+
+  const downloadLessonPlanPdf = useCallback(async (id: string): Promise<void> => {
+    try {
+      const response = await apiClient.get(`/lesson-plans/${id}/pdf`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(
+        new Blob([response.data], { type: 'application/pdf' }),
+      );
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lesson-plan-${id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      console.error('Failed to download lesson plan PDF', err);
+      toast.error('Failed to download PDF');
+    }
+  }, []);
+
+  const attachHomework = useCallback(
+    async (planId: string, input: StagedHomework): Promise<Homework | null> => {
+      try {
+        const response = await apiClient.post(
+          `/lesson-plans/${planId}/homework`,
+          input,
+        );
+        const created = unwrapResponse<Homework>(response);
+        toast.success('Homework attached');
+        await fetchPlans();
+        return created;
+      } catch (err: unknown) {
+        console.error('Failed to attach homework', err);
+        toast.error('Failed to attach homework');
+        return null;
+      }
+    },
+    [fetchPlans],
+  );
+
+  const detachHomework = useCallback(
+    async (planId: string, homeworkId: string): Promise<boolean> => {
+      try {
+        await apiClient.delete(`/lesson-plans/${planId}/homework/${homeworkId}`);
+        toast.success('Homework removed');
+        await fetchPlans();
+        return true;
+      } catch (err: unknown) {
+        console.error('Failed to detach homework', err);
+        toast.error('Failed to remove homework');
+        return false;
+      }
+    },
+    [fetchPlans],
   );
 
   return {
@@ -259,6 +306,9 @@ export function useTeacherLessonPlans() {
     deletePlan,
     aiGenerate,
     aiGenerating,
+    downloadLessonPlanPdf,
+    attachHomework,
+    detachHomework,
     // Pagination + filters
     page,
     setPage,
@@ -276,10 +326,4 @@ export function useTeacherLessonPlans() {
   };
 }
 
-export type {
-  LessonPlan,
-  LessonPlanFormData,
-  AIGenerateInput,
-  AIGeneratedDraft,
-  CurriculumTopicOption,
-};
+export type { LessonPlanFormData, AIGenerateInput, CurriculumTopicOption };
