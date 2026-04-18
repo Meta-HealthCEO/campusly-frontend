@@ -37,7 +37,7 @@ export function useStudentDashboard(): StudentDashboardResult {
 
       if (results[0].status === 'fulfilled') {
         const arr = unwrapList<Homework>(results[0].value, 'homework');
-        setHomework(arr.filter((h) => h.status === 'published'));
+        setHomework(arr.filter((h) => h.status === 'assigned'));
       }
       if (results[1].status === 'fulfilled') {
         setSubmissions(unwrapList<HomeworkSubmission>(results[1].value, 'submissions'));

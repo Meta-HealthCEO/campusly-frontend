@@ -176,9 +176,9 @@ export const mockStudentGrades: StudentGrade[] = mockStudents.slice(0, 5).flatMa
 
 // ============== Homework ==============
 export const mockHomework: Homework[] = [
-  { id: 'hw1', title: 'Quadratic Equations Worksheet', description: 'Complete exercises 1-20 on quadratic equations. Show all working.', subjectId: 'sub1', subject: mockSubjects[0], classId: 'c1', teacherId: 't1', teacher: mockTeachers[0], dueDate: '2025-03-25', attachments: [], status: 'published', createdAt: '2025-03-18T08:00:00Z' },
-  { id: 'hw2', title: 'Creative Writing: Short Story', description: 'Write a 500-word short story on the theme "Ubuntu". Use descriptive language.', subjectId: 'sub2', subject: mockSubjects[1], classId: 'c1', teacherId: 't2', teacher: mockTeachers[1], dueDate: '2025-03-28', attachments: [], status: 'published', createdAt: '2025-03-20T10:00:00Z' },
-  { id: 'hw3', title: 'Newton Laws Summary', description: 'Summarize all three of Newton\'s Laws with real-world examples.', subjectId: 'sub3', subject: mockSubjects[2], classId: 'c1', teacherId: 't1', teacher: mockTeachers[0], dueDate: '2025-04-01', attachments: [], status: 'published', createdAt: '2025-03-22T09:00:00Z' },
+  { _id: 'hw1', type: 'exercise', exerciseQuestionIds: [], title: 'Quadratic Equations Worksheet', subjectId: 'sub1', classId: 'c1', schoolId: 'school1', teacherId: 't1', dueDate: '2025-03-25', totalMarks: 100, attachments: [], status: 'assigned', isDeleted: false, createdAt: '2025-03-18T08:00:00Z', updatedAt: '2025-03-18T08:00:00Z' },
+  { _id: 'hw2', type: 'exercise', exerciseQuestionIds: [], title: 'Creative Writing: Short Story', subjectId: 'sub2', classId: 'c1', schoolId: 'school1', teacherId: 't2', dueDate: '2025-03-28', totalMarks: 100, attachments: [], status: 'assigned', isDeleted: false, createdAt: '2025-03-20T10:00:00Z', updatedAt: '2025-03-20T10:00:00Z' },
+  { _id: 'hw3', type: 'exercise', exerciseQuestionIds: [], title: 'Newton Laws Summary', subjectId: 'sub3', classId: 'c1', schoolId: 'school1', teacherId: 't1', dueDate: '2025-04-01', totalMarks: 100, attachments: [], status: 'assigned', isDeleted: false, createdAt: '2025-03-22T09:00:00Z', updatedAt: '2025-03-22T09:00:00Z' },
 ];
 
 export const mockSubmissions: HomeworkSubmission[] = mockStudents.slice(0, 3).map((student, i) => ({

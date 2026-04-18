@@ -7,10 +7,8 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { BookOpen, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
-import { RESOURCE_TYPE_LABELS } from '@/lib/design-system';
 import { useStudentHomeworkList } from '@/hooks/useStudentHomework';
 import Link from 'next/link';
-import type { ResourceType } from '@/types';
 
 const statusConfig: Record<
   string,
@@ -48,7 +46,7 @@ export default function StudentHomeworkPage() {
         : 'submitted';
     }
 
-    const homework = homeworkList.find((h) => h.id === homeworkId);
+    const homework = homeworkList.find((h) => h._id === homeworkId);
     if (homework && new Date(homework.dueDate) < new Date()) {
       return 'overdue';
     }
@@ -71,12 +69,12 @@ export default function StudentHomeworkPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {homeworkList.map((hw) => {
-            const status = getHomeworkStatus(hw.id);
+            const status = getHomeworkStatus(hw._id);
             const config = statusConfig[status];
             const StatusIcon = config.icon;
 
             return (
-              <Link key={hw.id} href={`/student/homework/${hw.id}`}>
+              <Link key={hw._id} href={`/student/homework/${hw._id}`}>
                 <Card className="h-full transition-colors hover:bg-muted/50">
                   <CardContent className="p-5 space-y-3">
                     <div className="flex items-start justify-between">
@@ -84,9 +82,7 @@ export default function StudentHomeworkPage() {
                         <h3 className="font-semibold text-sm leading-tight">
                           {hw.title}
                         </h3>
-                        <p className="text-xs text-muted-foreground">
-                          {hw.subject?.name ?? hw.subjectName ?? ''}
-                        </p>
+                        {/* TODO: lookup subject name via useSubjects(hw.subjectId) */}
                       </div>
                       <Badge variant={config.variant}>
                         <StatusIcon className="mr-1 h-3 w-3" />
@@ -94,20 +90,13 @@ export default function StudentHomeworkPage() {
                       </Badge>
                     </div>
 
-                    {hw.resource && (
-                      <Badge variant="outline" className="w-fit">
-                        {RESOURCE_TYPE_LABELS[hw.resource.type as ResourceType] ?? hw.resource.type}
-                      </Badge>
-                    )}
-
-                    <p className="text-xs text-muted-foreground line-clamp-2">
-                      {hw.description}
-                    </p>
+                    <Badge variant="outline" className="w-fit capitalize">
+                      {hw.type}
+                    </Badge>
 
                     <div className="flex items-center justify-between border-t pt-3">
-                      <span className="text-xs text-muted-foreground">
-                        {hw.teacher?.user?.firstName ?? ''}{' '}
-                        {hw.teacher?.user?.lastName ?? ''}
+                      <span className="text-xs text-muted-foreground capitalize">
+                        {hw.type} assignment
                       </span>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Clock className="h-3 w-3" />

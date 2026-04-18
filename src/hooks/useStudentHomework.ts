@@ -38,10 +38,7 @@ export function useStudentHomeworkList(): StudentHomeworkListResult {
           const arr = unwrapList<Record<string, unknown>>(hwRes.value);
           const normalized = (arr as unknown[]).map((raw) => normalizeHomework(raw as Parameters<typeof normalizeHomework>[0]));
           setHomeworkList(
-            normalized.filter(
-              (hw) =>
-                hw.status === 'published' || hw.status === ('assigned' as Homework['status'])
-            )
+            normalized.filter((hw) => hw.status === 'assigned')
           );
         }
 

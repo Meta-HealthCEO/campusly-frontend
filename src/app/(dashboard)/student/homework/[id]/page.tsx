@@ -12,8 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { BookOpen, Calendar, User, Paperclip, CheckCircle, Clock, Send, ArrowLeft } from 'lucide-react';
-import { ResourceHomeworkViewer } from '@/components/homework/ResourceHomeworkViewer';
+import { BookOpen, Calendar, Paperclip, CheckCircle, Clock, Send, ArrowLeft } from 'lucide-react';
 import { useStudentHomeworkDetail } from '@/hooks/useStudentHomework';
 import { formatDate } from '@/lib/utils';
 
@@ -38,11 +37,10 @@ export default function HomeworkDetailPage() {
   const hasSubmission = !!submission;
 
   const handleSubmit = async () => {
-    const hasResource = homework?.resource && homework.resource.blocks.length > 0;
-    if (!hasResource && !content.trim()) return;
+    if (!content.trim()) return;
     setSubmitting(true);
     try {
-      await submitHomework(hasResource ? 'Resource completed' : content);
+      await submitHomework(content);
       toast.success('Homework submitted!');
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to submit homework');
@@ -51,24 +49,21 @@ export default function HomeworkDetailPage() {
     }
   };
 
-  const teacherName = homework.teacher?.user
-    ? `${homework.teacher.user.firstName} ${homework.teacher.user.lastName}`
-    : '';
-
   return (
     <div className="space-y-6">
       <Link href="/student/homework" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" />Back to Homework
       </Link>
 
-      <PageHeader title={homework.title} description={homework.subject?.name ?? homework.subjectName ?? ''} />
+      {/* TODO: lookup subject name via useSubjects(homework.subjectId) */}
+      <PageHeader title={homework.title} description="" />
 
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="space-y-1">
               <CardTitle className="text-xl">{homework.title}</CardTitle>
-              <p className="text-sm text-muted-foreground">{homework.subject?.name ?? homework.subjectName ?? ''}</p>
+              {/* TODO: lookup subject name via useSubjects(homework.subjectId) */}
             </div>
             <Badge variant={hasSubmission ? 'default' : isOverdue ? 'destructive' : 'outline'}>
               {hasSubmission ? 'Submitted' : isOverdue ? 'Overdue' : 'Pending'}
@@ -76,12 +71,7 @@ export default function HomeworkDetailPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-3">
-            {teacherName && (
-              <div className="flex items-center gap-2 text-sm">
-                <User className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">Teacher:</span><span>{teacherName}</span>
-              </div>
-            )}
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4 text-muted-foreground" /><span className="text-muted-foreground">Due:</span><span>{formatDate(homework.dueDate)}</span>
             </div>
@@ -90,10 +80,6 @@ export default function HomeworkDetailPage() {
             </div>
           </div>
           <Separator />
-          <div>
-            <h3 className="mb-2 text-sm font-medium">Description</h3>
-            <p className="text-sm text-muted-foreground">{homework.description}</p>
-          </div>
           {homework.attachments?.length > 0 && (
             <div>
               <h3 className="mb-2 text-sm font-medium">Attachments</h3>
@@ -131,14 +117,6 @@ export default function HomeworkDetailPage() {
             )}
           </CardContent>
         </Card>
-      ) : homework.resource && homework.resource.blocks.length > 0 ? (
-        <ResourceHomeworkViewer
-          resource={homework.resource}
-          submitted={false}
-          isOverdue={isOverdue}
-          submitting={submitting}
-          onSubmit={() => handleSubmit()}
-        />
       ) : (
         <Card>
           <CardHeader><CardTitle className="text-lg">Submit Your Work</CardTitle></CardHeader>

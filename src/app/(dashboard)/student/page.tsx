@@ -21,7 +21,7 @@ export default function StudentDashboard() {
 
   const firstName = student?.user?.firstName ?? student?.firstName ?? 'Student';
   const pendingHomework = homework.filter((hw) => {
-    const submitted = submissions.find((s) => s.homeworkId === hw.id);
+    const submitted = submissions.find((s) => s.homeworkId === hw._id);
     return !submitted;
   });
 
@@ -56,10 +56,11 @@ export default function StudentDashboard() {
               <p className="text-sm text-muted-foreground">No pending homework. You are all caught up!</p>
             ) : (
               pendingHomework.slice(0, 3).map((hw) => (
-                <Link key={hw.id} href={`/student/homework/${hw.id}`} className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
+                <Link key={hw._id} href={`/student/homework/${hw._id}`} className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
                   <div className="space-y-1">
                     <p className="text-sm font-medium">{hw.title}</p>
-                    <p className="text-xs text-muted-foreground">{hw.subject?.name ?? hw.subjectName ?? ''}</p>
+                    {/* TODO: lookup subject name via useSubjects(hw.subjectId) */}
+                    <p className="text-xs text-muted-foreground capitalize">{hw.type}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-3 w-3 text-muted-foreground" />

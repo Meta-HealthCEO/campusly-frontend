@@ -121,7 +121,7 @@ export default function TeacherLearningPage() {
               }}>
                 <SelectTrigger className="w-64"><SelectValue placeholder="Select homework..." /></SelectTrigger>
                 <SelectContent>
-                  {homework.map((h) => <SelectItem key={h.id} value={h.id}>{h.title}</SelectItem>)}
+                  {homework.map((h) => <SelectItem key={h._id} value={h._id}>{h.title}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

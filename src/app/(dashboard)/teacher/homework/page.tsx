@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/dialog';
 import { Plus, BookOpen, Users, Calendar, FileText, Trash2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
-import { RESOURCE_TYPE_LABELS } from '@/lib/design-system';
 import { HomeworkForm } from '@/components/homework/HomeworkForm';
 import { TemplateSelector } from '@/components/homework/TemplateSelector';
 import { SaveAsTemplateButton } from '@/components/homework/SaveAsTemplateButton';
@@ -117,11 +116,11 @@ export default function TeacherHomeworkPage() {
       ) : (
         <div className="space-y-3">
           {teacherHomework.map((hw) => {
-            const counts = submissionCounts[hw.id] ?? { total: 0, graded: 0 };
-            const displayStatus = hw.status === 'published' ? 'assigned' : hw.status;
+            const counts = submissionCounts[hw._id] ?? { total: 0, graded: 0 };
+            const displayStatus = hw.status;
 
             return (
-              <Link key={hw.id} href={`/teacher/homework/${hw.id}`}>
+              <Link key={hw._id} href={`/teacher/homework/${hw._id}`}>
                 <Card className="transition-colors hover:bg-muted/50">
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
@@ -132,15 +131,11 @@ export default function TeacherHomeworkPage() {
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold">{hw.title}</h3>
-                            {hw.resource && (
-                              <Badge variant="secondary" className="shrink-0">
-                                {RESOURCE_TYPE_LABELS[hw.resource.type] ?? hw.resource.type}
-                              </Badge>
-                            )}
+                            <Badge variant="secondary" className="shrink-0 capitalize">
+                              {hw.type}
+                            </Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            {hw.subject?.name ?? hw.subjectName ?? ''}
-                          </p>
+                          {/* TODO: lookup subject name via useSubjects(hw.subjectId) */}
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
@@ -158,9 +153,7 @@ export default function TeacherHomeworkPage() {
                           variant={
                             displayStatus === 'assigned'
                               ? 'default'
-                              : displayStatus === 'closed'
-                                ? 'secondary'
-                                : 'outline'
+                              : 'secondary'
                           }
                         >
                           {displayStatus}
@@ -171,7 +164,7 @@ export default function TeacherHomeworkPage() {
                           </Badge>
                         )}
                         <SaveAsTemplateButton
-                          onSave={() => saveAsTemplate(hw.id)}
+                          onSave={() => saveAsTemplate(hw._id)}
                         />
                         <Button
                           variant="ghost"
@@ -179,9 +172,9 @@ export default function TeacherHomeworkPage() {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            setPendingDelete({ id: hw.id, title: hw.title });
+                            setPendingDelete({ id: hw._id, title: hw.title });
                           }}
-                          disabled={deleting === hw.id}
+                          disabled={deleting === hw._id}
                           aria-label="Delete homework"
                         >
                           <Trash2 className="h-4 w-4 text-muted-foreground" />

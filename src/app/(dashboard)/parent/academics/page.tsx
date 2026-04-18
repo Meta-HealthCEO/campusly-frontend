@@ -52,13 +52,14 @@ const assessmentColumns: ColumnDef<StudentGrade, unknown>[] = [
 
 const homeworkColumns: ColumnDef<Homework, unknown>[] = [
   { accessorKey: 'title', header: 'Title', cell: ({ row }) => <span className="font-medium">{row.original.title}</span> },
-  { accessorKey: 'subjectName', header: 'Subject', cell: ({ row }) => row.original.subject?.name ?? row.original.subjectName ?? '-' },
+  // TODO: lookup subject name via useSubjects(row.original.subjectId)
+  { accessorKey: 'type', header: 'Type', cell: ({ row }) => <span className="capitalize">{row.original.type}</span> },
   { accessorKey: 'dueDate', header: 'Due Date', cell: ({ row }) => formatDate(row.original.dueDate) },
   {
     accessorKey: 'status', header: 'Status',
     cell: ({ row }) => {
       const status = row.original.status;
-      const styles: Record<string, string> = { published: 'bg-blue-100 text-blue-800', closed: 'bg-gray-100 text-gray-800', draft: 'bg-amber-100 text-amber-800' };
+      const styles: Record<string, string> = { assigned: 'bg-blue-100 text-blue-800', closed: 'bg-gray-100 text-gray-800' };
       return <Badge variant="secondary" className={styles[status] ?? ''}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
     },
   },

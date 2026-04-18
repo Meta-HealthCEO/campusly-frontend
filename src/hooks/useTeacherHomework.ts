@@ -28,14 +28,14 @@ export function useTeacherHomework() {
       const counts: Record<string, SubmissionCounts> = {};
       const requests = hwList.map(async (hw) => {
         try {
-          const res = await apiClient.get(`/homework/${hw.id}/submissions`);
+          const res = await apiClient.get(`/homework/${hw._id}/submissions`);
           const subs = unwrapList<{ mark?: number | null }>(res);
           const graded = subs.filter(
             (s) => s.mark !== null && s.mark !== undefined,
           ).length;
-          counts[hw.id] = { total: subs.length, graded };
+          counts[hw._id] = { total: subs.length, graded };
         } catch {
-          counts[hw.id] = { total: 0, graded: 0 };
+          counts[hw._id] = { total: 0, graded: 0 };
         }
       });
       await Promise.allSettled(requests);
@@ -102,7 +102,7 @@ export function useTeacherHomework() {
         setHomeworkList((prev) => [newHw, ...prev]);
         setSubmissionCounts((prev) => ({
           ...prev,
-          [newHw.id]: { total: 0, graded: 0 },
+          [newHw._id]: { total: 0, graded: 0 },
         }));
         toast.success('Homework created successfully');
         return true;
@@ -119,7 +119,7 @@ export function useTeacherHomework() {
       setDeleting(hwId);
       try {
         await apiClient.delete(`/homework/${hwId}`);
-        setHomeworkList((prev) => prev.filter((hw) => hw.id !== hwId));
+        setHomeworkList((prev) => prev.filter((hw) => hw._id !== hwId));
         toast.success('Homework deleted');
       } catch (err: unknown) {
         toast.error(extractErrorMessage(err, 'Failed to delete homework'));

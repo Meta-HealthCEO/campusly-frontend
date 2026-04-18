@@ -77,7 +77,7 @@ export function useTeacherDashboard(): DashboardData {
 
         const submissionResults = await Promise.allSettled(
           myHomework.map((hw) =>
-            apiClient.get(`/homework/${hw.id}/submissions`),
+            apiClient.get(`/homework/${hw._id}/submissions`),
           ),
         );
 
@@ -96,9 +96,10 @@ export function useTeacherDashboard(): DashboardData {
           totalUngraded += submitted;
           if (submitted > 0) {
             withCounts.push({
-              id: hw.id,
+              id: hw._id,
               title: hw.title,
-              subjectName: hw.subject?.name ?? hw.subjectName ?? '',
+              // TODO: lookup subject name via useSubjects(hw.subjectId)
+              subjectName: '',
               totalSubmissions: subs.length,
               gradedCount: graded,
             });

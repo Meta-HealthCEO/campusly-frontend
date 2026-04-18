@@ -1,28 +1,23 @@
-import type { Homework, HomeworkSubmission, HomeworkResource } from '@/types';
-
-interface RawResource {
-  _id?: string;
-  id?: string;
-  title?: string;
-  type?: string;
-  status?: string;
-  blocks?: unknown[];
-}
+import type { Homework, HomeworkSubmission, HomeworkType } from '@/types';
 
 interface RawHomework {
   _id?: string;
   id?: string;
   title: string;
-  description: string;
-  subjectId: string | { _id: string; name: string; code?: string };
-  classId: string | { _id: string; name: string };
+  type?: HomeworkType;
+  quizId?: string | { _id: string } | null;
+  contentResourceId?: string | { _id: string } | null;
+  pageRange?: string | null;
+  exerciseQuestionIds?: Array<string | { _id: string }>;
+  subjectId: string | { _id: string; name?: string; code?: string };
+  classId: string | { _id: string; name?: string };
   teacherId: string | { _id: string; firstName?: string; lastName?: string; email?: string };
-  resourceId?: string | RawResource | null;
   schoolId?: string;
   dueDate: string;
   attachments?: string[];
   totalMarks?: number;
-  status?: string;
+  status?: 'assigned' | 'closed' | string;
+  isDeleted?: boolean;
   createdAt?: string;
   updatedAt?: string;
   [key: string]: unknown;
@@ -56,49 +51,50 @@ export function normalizeHomework(raw: RawHomework): Homework {
     ? raw.teacherId
     : undefined;
 
-  // Map backend 'assigned' to frontend-compatible status
-  const backendStatus = (raw.status ?? 'assigned') as string;
-  const status = backendStatus === 'assigned' ? 'published' : backendStatus;
+  const status: 'assigned' | 'closed' =
+    raw.status === 'closed' ? 'closed' : 'assigned';
 
-  // Resolve resourceId — may be a string ID or populated object
-  let resourceId: string | undefined;
-  let resource: HomeworkResource | undefined;
-  if (raw.resourceId && typeof raw.resourceId === 'object') {
-    const resObj = raw.resourceId as RawResource;
-    resourceId = resObj._id ?? resObj.id;
-    resource = {
-      id: resObj._id ?? resObj.id ?? '',
-      title: resObj.title ?? '',
-      type: (resObj.type ?? 'lesson') as HomeworkResource['type'],
-      status: (resObj.status ?? 'draft') as HomeworkResource['status'],
-      blocks: (resObj.blocks ?? []) as HomeworkResource['blocks'],
-    };
-  } else if (typeof raw.resourceId === 'string') {
-    resourceId = raw.resourceId;
+  const base = {
+    _id: raw._id ?? raw.id ?? '',
+    title: raw.title,
+    subjectId: typeof raw.subjectId === 'string' ? raw.subjectId : (subjectObj?._id ?? ''),
+    classId: typeof raw.classId === 'string' ? raw.classId : ((raw.classId as { _id: string })?._id ?? ''),
+    schoolId: raw.schoolId ?? '',
+    teacherId: typeof raw.teacherId === 'string' ? raw.teacherId : (teacherObj?._id ?? ''),
+    dueDate: raw.dueDate,
+    totalMarks: raw.totalMarks ?? 0,
+    status,
+    attachments: raw.attachments ?? [],
+    isDeleted: raw.isDeleted ?? false,
+    createdAt: raw.createdAt ?? '',
+    updatedAt: raw.updatedAt ?? '',
+  };
+
+  const type: HomeworkType = raw.type ?? 'exercise';
+
+  if (type === 'quiz') {
+    const quizId = typeof raw.quizId === 'string'
+      ? raw.quizId
+      : (raw.quizId?._id ?? '');
+    return { ...base, type: 'quiz', quizId };
   }
 
-  return {
-    id: raw._id ?? raw.id ?? '',
-    title: raw.title,
-    description: raw.description,
-    subjectId: typeof raw.subjectId === 'string' ? raw.subjectId : (subjectObj?._id ?? ''),
-    subject: subjectObj ? { id: subjectObj._id, name: subjectObj.name, code: subjectObj.code ?? '' } as Homework['subject'] : undefined,
-    subjectName: subjectObj?.name,
-    classId: typeof raw.classId === 'string' ? raw.classId : ((raw.classId as { _id: string })?._id ?? ''),
-    teacherId: typeof raw.teacherId === 'string' ? raw.teacherId : (teacherObj?._id ?? ''),
-    teacher: teacherObj
-      ? ({
-          id: teacherObj._id,
-          user: { firstName: teacherObj.firstName ?? '', lastName: teacherObj.lastName ?? '' },
-        } as unknown as Homework['teacher'])
-      : undefined,
-    resourceId,
-    resource,
-    dueDate: raw.dueDate,
-    attachments: raw.attachments ?? [],
-    status: status as Homework['status'],
-    createdAt: raw.createdAt ?? '',
-  };
+  if (type === 'reading') {
+    const contentResourceId = typeof raw.contentResourceId === 'string'
+      ? raw.contentResourceId
+      : (raw.contentResourceId?._id ?? '');
+    return {
+      ...base,
+      type: 'reading',
+      contentResourceId,
+      pageRange: raw.pageRange ?? null,
+    };
+  }
+
+  const exerciseQuestionIds = (raw.exerciseQuestionIds ?? []).map((q) =>
+    typeof q === 'string' ? q : q._id,
+  );
+  return { ...base, type: 'exercise', exerciseQuestionIds };
 }
 
 /** Normalize a raw submission from the API to the frontend HomeworkSubmission shape. */
@@ -114,14 +110,27 @@ export function normalizeSubmission(raw: RawSubmission): HomeworkSubmission {
     derivedStatus = 'late';
   }
 
+  const homework = typeof raw.homeworkId === 'object' && raw.homeworkId !== null
+    ? (() => {
+        const h = normalizeHomework(raw.homeworkId as RawHomework);
+        return {
+          _id: h._id,
+          title: h.title,
+          subjectId: h.subjectId,
+          classId: h.classId,
+          dueDate: h.dueDate,
+          totalMarks: h.totalMarks,
+          status: h.status,
+        };
+      })()
+    : undefined;
+
   return {
     id: raw._id ?? raw.id ?? '',
     homeworkId: typeof raw.homeworkId === 'string'
       ? raw.homeworkId
       : (raw.homeworkId as RawHomework)?._id ?? (raw.homeworkId as RawHomework)?.id ?? '',
-    homework: typeof raw.homeworkId === 'object' && raw.homeworkId !== null
-      ? normalizeHomework(raw.homeworkId as RawHomework)
-      : ({} as Homework),
+    homework,
     studentId: typeof raw.studentId === 'string'
       ? raw.studentId
       : (raw.studentId as { _id: string })?._id ?? '',
