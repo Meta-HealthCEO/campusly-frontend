@@ -5,23 +5,22 @@ import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
+import { DataTable } from '@/components/shared/DataTable';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
-import { Plus, Trash2, Eye, Pencil, BookOpen } from 'lucide-react';
-import { formatDate, toISODate } from '@/lib/utils';
+import { Plus, Trash2, BookOpen, GraduationCap } from 'lucide-react';
+import Link from 'next/link';
+import { toISODate } from '@/lib/utils';
 import {
   LessonPlanForm,
   LessonPlanDetailDialog,
   LessonPlanFilters,
   LessonPlanPagination,
+  buildLessonPlanColumns,
 } from '@/components/lesson-plans';
 import { useTeacherLessonPlans } from '@/hooks/useTeacherLessonPlans';
-import {
-  getLessonPlanSubjectName,
-  getLessonPlanClassName,
-} from '@/lib/lesson-plan-helpers';
+import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import type { LessonPlan, StagedHomework } from '@/types';
 
 interface EditingPlanData {
@@ -90,6 +89,8 @@ export default function TeacherLessonPlansPage() {
     curriculumTopics, topicsLoading, loadTopicsForSubject,
   } = useTeacherLessonPlans();
 
+  const { classes: teacherClasses, loading: classesLoading } = useTeacherClasses();
+
   const handleViewPlan = (plan: LessonPlan) => {
     fetchPlan(plan._id);
     setDetailOpen(true);
@@ -134,81 +135,39 @@ export default function TeacherLessonPlansPage() {
 
   const hasFilters = !!(filterSubjectId || filterClassId);
 
-  const columns = useMemo<ColumnDef<LessonPlan, unknown>[]>(() => [
-    {
-      accessorKey: 'date',
-      header: 'Date',
-      cell: ({ row }) => formatDate(row.original.date),
-    },
-    {
-      accessorKey: 'topic',
-      header: 'Topic',
-      cell: ({ row }) => (
-        <span className="font-medium truncate block max-w-[200px]">{row.original.topic}</span>
-      ),
-    },
-    {
-      accessorKey: 'subjectId',
-      header: 'Subject',
-      cell: ({ row }) => (
-        <span className="truncate block max-w-[200px]">{getLessonPlanSubjectName(row.original)}</span>
-      ),
-    },
-    {
-      accessorKey: 'classId',
-      header: 'Class',
-      cell: ({ row }) => (
-        <span className="truncate block max-w-[200px]">{getLessonPlanClassName(row.original)}</span>
-      ),
-    },
-    {
-      accessorKey: 'objectives',
-      header: 'Objectives',
-      cell: ({ row }) => (
-        <span className="text-sm text-muted-foreground">
-          {row.original.objectives.length} objective(s)
-        </span>
-      ),
-    },
-    {
-      id: 'actions',
-      header: '',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-1">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-11 w-11 sm:h-9 sm:w-9"
-            onClick={(e) => { e.stopPropagation(); handleViewPlan(row.original); }}
-            aria-label="View lesson plan"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-11 w-11 sm:h-9 sm:w-9"
-            onClick={(e) => { e.stopPropagation(); handleEditPlan(row.original); }}
-            aria-label="Edit lesson plan"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-11 w-11 sm:h-9 sm:w-9 text-destructive hover:text-destructive"
-            onClick={(e) => { e.stopPropagation(); setDeleteTargetId(row.original._id); }}
-            aria-label="Delete lesson plan"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
+  const columns = useMemo(
+    () =>
+      buildLessonPlanColumns({
+        onView: handleViewPlan,
+        onEdit: handleEditPlan,
+        onDelete: (id: string) => setDeleteTargetId(id),
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], []);
+    [],
+  );
 
-  if (loading) return <LoadingSpinner />;
+  if (loading || classesLoading) return <LoadingSpinner />;
+
+  if ((teacherClasses?.length ?? 0) === 0) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Lesson Plans"
+          description="Plan and manage your lessons"
+        />
+        <EmptyState
+          icon={GraduationCap}
+          title="No classes yet"
+          description="Create a class before planning lessons."
+          action={
+            <Link href="/teacher/classes" className="inline-block">
+              <Button>Create your first class</Button>
+            </Link>
+          }
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -239,7 +198,19 @@ export default function TeacherLessonPlansPage() {
           description={
             hasFilters
               ? 'No plans match the current filters. Try clearing them.'
-              : "Click 'New Lesson Plan' to create your first plan"
+              : 'Plan your first lesson to get started.'
+          }
+          action={
+            hasFilters ? (
+              <Button variant="outline" onClick={resetFilters}>
+                Clear filters
+              </Button>
+            ) : (
+              <Button onClick={handleNewPlan}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create your first lesson plan
+              </Button>
+            )
           }
         />
       ) : (
