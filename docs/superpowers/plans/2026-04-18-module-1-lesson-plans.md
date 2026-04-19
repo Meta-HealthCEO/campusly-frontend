@@ -240,9 +240,9 @@ const baseHomeworkFields = {
   subjectId: objectIdSchema,
   classId: objectIdSchema,
   schoolId: objectIdSchema,
-  dueDate: z.string().datetime(),
+  dueDate: z.iso.datetime(),
   totalMarks: z.number().int().min(0).max(1000),
-  attachments: z.array(z.string().url()).max(20).optional(),
+  attachments: z.array(z.url()).max(20).optional(),
   peerReviewEnabled: z.boolean().optional(),
   groupAssignment: z.boolean().optional(),
   allowedFileTypes: z.array(z.string()).optional(),
@@ -276,7 +276,7 @@ export const createHomeworkSchema = z.discriminatedUnion('type', [
 
 export const updateHomeworkSchema = z.object({
   title: z.string().min(1).max(200).optional(),
-  dueDate: z.string().datetime().optional(),
+  dueDate: z.iso.datetime().optional(),
   totalMarks: z.number().int().min(0).max(1000).optional(),
   status: z.enum(['assigned', 'closed']).optional(),
   pageRange: z.string().max(50).optional(),
@@ -485,6 +485,8 @@ to structured Homework records."
 **Files:**
 - Modify: `campusly-backend/src/modules/LessonPlan/service.ts`
 
+**NOTE on helper signatures (clarification after Task 3 landed):** the `assertLessonPlanAccess` helper was extracted in Task 3 with the real signature `(plan, actorId, actorRole, action)` — primitives, not a `user` object. The existing `updateLessonPlan` / `deleteLessonPlan` / new service functions in this task should all take `actorId: string, actorRole: string` primitives (matching the existing module convention), not an `AuthenticatedUser` object. Wherever this task's code snippets show `assertLessonPlanAccess(plan, user)`, call it as `assertLessonPlanAccess(plan, actorId, actorRole, '<action-verb>')` instead — action is one of `'update' | 'delete' | 'attach' | 'detach' | 'access'`.
+
 - [ ] **Step 1: Update `createLessonPlan` to remove `homework` references**
 
 In `createLessonPlan`, remove any `homework: input.homework` line. Accept `durationMinutes` and `homeworkIds` from input. Example of the create body:
@@ -680,7 +682,7 @@ const stagedHomeworkSchema = z.discriminatedUnion('type', [
     type: z.literal('quiz'),
     title: z.string().min(1).max(200),
     quizId: objectIdSchema,
-    dueDate: z.string().datetime(),
+    dueDate: z.iso.datetime(),
     totalMarks: z.number().int().min(0).max(1000),
   }),
   z.object({
@@ -688,14 +690,14 @@ const stagedHomeworkSchema = z.discriminatedUnion('type', [
     title: z.string().min(1).max(200),
     contentResourceId: objectIdSchema,
     pageRange: z.string().max(50).optional(),
-    dueDate: z.string().datetime(),
+    dueDate: z.iso.datetime(),
     totalMarks: z.number().int().min(0).max(1000).default(0),
   }),
   z.object({
     type: z.literal('exercise'),
     title: z.string().min(1).max(200),
     exerciseQuestionIds: z.array(objectIdSchema).min(1).max(100),
-    dueDate: z.string().datetime(),
+    dueDate: z.iso.datetime(),
     totalMarks: z.number().int().min(0).max(1000),
   }),
 ]);
@@ -705,7 +707,7 @@ export const createLessonPlanSchema = z.object({
   subjectId: objectIdSchema,
   classId: objectIdSchema,
   curriculumTopicId: objectIdSchema, // REQUIRED
-  date: z.string().datetime(),
+  date: z.iso.datetime(),
   topic: z.string().min(1).max(200),
   durationMinutes: z.number().int().min(5).max(240).default(45),
   objectives: z.array(z.string().min(1).max(500)).max(20).optional(),
@@ -723,7 +725,7 @@ export const aiGenerateLessonPlanSchema = z.object({
   classId: objectIdSchema,
   subjectId: objectIdSchema,
   schoolId: objectIdSchema,
-  date: z.string().datetime(),
+  date: z.iso.datetime(),
   durationMinutes: z.number().int().min(5).max(240).optional(),
 });
 
@@ -969,6 +971,8 @@ resources, grouped homework. Reflection notes excluded. No HTML-to-PDF."
 - Modify: `campusly-backend/src/modules/LessonPlan/controller.ts`
 - Modify: `campusly-backend/src/modules/LessonPlan/routes.ts`
 - Modify: `campusly-backend/src/modules/LessonPlan/service.ts`
+
+**NOTE on helper signatures (from Task 3):** `assertLessonPlanAccess(plan, actorId, actorRole, action)` — primitives, not a user object. New service functions (`getLessonPlanPdfBuffer`, `attachHomeworkToLessonPlan`, `detachHomeworkFromLessonPlan`) should take `actorId: string, actorRole: string` primitives matching the existing module convention. Replace the snippets' `user: AuthenticatedUser` parameter with `actorId, actorRole`, and call the helper as `assertLessonPlanAccess(plan, actorId, actorRole, 'access')` for PDF, `'attach'` for attach, `'detach'` for detach.
 
 - [ ] **Step 1: Add service-level helpers**
 
