@@ -1,7 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import type { StagedHomework, Homework, HomeworkType } from '@/types';
+import type {
+  StagedHomework,
+  Homework,
+  HomeworkType,
+  HomeworkSuggestion,
+} from '@/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -32,6 +37,8 @@ interface HomeworkBuilderProps {
   classId: string;
   subjectId: string;
   schoolId: string;
+  pendingSuggestions?: HomeworkSuggestion[];
+  onSuggestionResolved?: (s: HomeworkSuggestion) => void;
 }
 
 function getPlanId(plan: PlanLike | null | undefined): string | undefined {
@@ -57,9 +64,14 @@ export function HomeworkBuilder({
   classId,
   subjectId,
   schoolId,
+  pendingSuggestions,
+  onSuggestionResolved,
 }: HomeworkBuilderProps) {
   const [isOpen, setOpen] = useState(false);
   const [pickedType, setPickedType] = useState<HomeworkType | null>(null);
+  const [seedTitle, setSeedTitle] = useState<string>('');
+  const [resolvingSuggestion, setResolvingSuggestion] =
+    useState<HomeworkSuggestion | null>(null);
   const { attachHomework, detachHomework } = useTeacherLessonPlans();
 
   const planId = getPlanId(plan);
@@ -73,6 +85,8 @@ export function HomeworkBuilder({
   const resetDialog = (): void => {
     setOpen(false);
     setPickedType(null);
+    setSeedTitle('');
+    setResolvingSuggestion(null);
   };
 
   const handleAdd = async (hw: StagedHomework): Promise<void> => {
@@ -81,7 +95,17 @@ export function HomeworkBuilder({
     } else {
       setStagedHomework([...stagedHomework, hw]);
     }
+    if (resolvingSuggestion && onSuggestionResolved) {
+      onSuggestionResolved(resolvingSuggestion);
+    }
     resetDialog();
+  };
+
+  const handleCompleteSuggestion = (s: HomeworkSuggestion): void => {
+    setResolvingSuggestion(s);
+    setPickedType(s.type);
+    setSeedTitle(s.title);
+    setOpen(true);
   };
 
   const handleRemoveStaged = (index: number): void => {
@@ -127,6 +151,37 @@ export function HomeworkBuilder({
 
   return (
     <div className="space-y-2">
+      {pendingSuggestions && pendingSuggestions.length > 0 && (
+        <div className="rounded-md border border-primary/40 bg-primary/5 p-3">
+          <p className="text-sm font-medium mb-2">
+            AI suggestions ({pendingSuggestions.length})
+          </p>
+          {pendingSuggestions.map((s: HomeworkSuggestion, i: number) => (
+            <div
+              key={`${s.type}-${i}`}
+              className="flex items-center justify-between py-1 gap-2"
+            >
+              <div className="text-sm min-w-0">
+                <span className="capitalize font-medium">{s.type}:</span>{' '}
+                <span className="truncate">{s.title}</span>
+                <span className="text-xs text-muted-foreground ml-2">
+                  {s.topicHint}
+                </span>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => handleCompleteSuggestion(s)}
+                disabled={!canAdd}
+              >
+                Complete
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {attached.length === 0 && (
         <p className="text-sm text-muted-foreground">
           No homework attached yet.
@@ -138,7 +193,11 @@ export function HomeworkBuilder({
         open={isOpen}
         onOpenChange={(open: boolean) => {
           setOpen(open);
-          if (!open) setPickedType(null);
+          if (!open) {
+            setPickedType(null);
+            setSeedTitle('');
+            setResolvingSuggestion(null);
+          }
         }}
       >
         <DialogTrigger
@@ -177,6 +236,7 @@ export function HomeworkBuilder({
                 classId={classId}
                 subjectId={subjectId}
                 schoolId={schoolId}
+                initialTitle={seedTitle}
                 onPicked={handleAdd}
               />
             )}
@@ -185,6 +245,7 @@ export function HomeworkBuilder({
                 classId={classId}
                 subjectId={subjectId}
                 schoolId={schoolId}
+                initialTitle={seedTitle}
                 onPicked={handleAdd}
               />
             )}
@@ -193,6 +254,7 @@ export function HomeworkBuilder({
                 classId={classId}
                 subjectId={subjectId}
                 schoolId={schoolId}
+                initialTitle={seedTitle}
                 onPicked={handleAdd}
               />
             )}

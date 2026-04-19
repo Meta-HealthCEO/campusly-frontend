@@ -11,6 +11,7 @@ interface ReadingPickerProps {
   classId: string;
   subjectId: string;
   schoolId: string;
+  initialTitle?: string;
   onPicked: (hw: StagedReadingHomework) => void;
 }
 
@@ -18,6 +19,7 @@ export function ReadingPicker({
   classId,
   subjectId,
   schoolId,
+  initialTitle,
   onPicked,
 }: ReadingPickerProps) {
   const [search, setSearch] = useState<string>('');
@@ -27,7 +29,7 @@ export function ReadingPicker({
     q: search,
   });
   const [selectedId, setSelectedId] = useState<string>('');
-  const [title, setTitle] = useState<string>('');
+  const [title, setTitle] = useState<string>(initialTitle ?? '');
   const [pageRange, setPageRange] = useState<string>('');
   const [dueDate, setDueDate] = useState<string>('');
 

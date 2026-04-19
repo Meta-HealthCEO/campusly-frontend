@@ -12,6 +12,7 @@ interface ExercisePickerProps {
   classId: string;
   subjectId: string;
   schoolId: string;
+  initialTitle?: string;
   onPicked: (hw: StagedExerciseHomework) => void;
 }
 
@@ -19,6 +20,7 @@ export function ExercisePicker({
   classId,
   subjectId,
   schoolId,
+  initialTitle,
   onPicked,
 }: ExercisePickerProps) {
   const [search, setSearch] = useState<string>('');
@@ -27,7 +29,7 @@ export function ExercisePicker({
     q: search,
   });
   const [selected, setSelected] = useState<string[]>([]);
-  const [title, setTitle] = useState<string>('');
+  const [title, setTitle] = useState<string>(initialTitle ?? '');
   const [dueDate, setDueDate] = useState<string>('');
 
   const selectedQuestions = questions.filter((q) => selected.includes(q._id));

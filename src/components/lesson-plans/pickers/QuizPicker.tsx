@@ -11,6 +11,7 @@ interface QuizPickerProps {
   classId: string;
   subjectId: string;
   schoolId: string;
+  initialTitle?: string;
   onPicked: (hw: StagedQuizHomework) => void;
 }
 
@@ -18,11 +19,12 @@ export function QuizPicker({
   classId,
   subjectId,
   schoolId,
+  initialTitle,
   onPicked,
 }: QuizPickerProps) {
   const { quizzes, loading } = useQuizLibrary({ classId, subjectId });
   const [selectedQuizId, setSelectedQuizId] = useState<string>('');
-  const [title, setTitle] = useState<string>('');
+  const [title, setTitle] = useState<string>(initialTitle ?? '');
   const [dueDate, setDueDate] = useState<string>('');
 
   const selectedQuiz = quizzes.find((q) => q._id === selectedQuizId);

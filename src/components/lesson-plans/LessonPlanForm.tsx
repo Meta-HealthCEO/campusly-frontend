@@ -15,6 +15,7 @@ import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Sparkles, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { toISODate } from '@/lib/utils';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { TopicCascadePicker } from './TopicCascadePicker';
@@ -24,6 +25,7 @@ import type {
   Subject,
   AIGeneratedLessonDraft,
   StagedHomework,
+  HomeworkSuggestion,
 } from '@/types';
 import type {
   AIGenerateInput,
@@ -127,6 +129,7 @@ export function LessonPlanForm({
 
   const [wasAIGenerated, setWasAIGenerated] = useState(false);
   const [stagedHomework, setStagedHomework] = useState<StagedHomework[]>([]);
+  const [pendingSuggestions, setPendingSuggestions] = useState<HomeworkSuggestion[]>([]);
 
   // Refs track whether a change is user-initiated (skip first render).
   const classIdInitRef = useRef(true);
@@ -138,6 +141,7 @@ export function LessonPlanForm({
       reset(buildDefaults(initialData));
       setWasAIGenerated(false);
       setStagedHomework([]);
+      setPendingSuggestions([]);
       classIdInitRef.current = true;
       subjectIdInitRef.current = true;
       if (initialData?.subjectId) {
@@ -183,6 +187,13 @@ export function LessonPlanForm({
     setValue('activities', draft.activities.join(', '));
     setValue('resources', draft.resources.join(', '));
     setWasAIGenerated(true);
+    const suggestions = draft.homeworkSuggestions ?? [];
+    setPendingSuggestions(suggestions);
+    toast.success(`AI draft ready${suggestions.length ? ` — ${suggestions.length} homework suggestion(s) to review` : ''}`);
+  };
+
+  const handleSuggestionResolved = (s: HomeworkSuggestion): void => {
+    setPendingSuggestions((prev: HomeworkSuggestion[]) => prev.filter((x: HomeworkSuggestion) => x !== s));
   };
 
   const handleFormSubmit = (data: LessonPlanFormValues) => {
@@ -244,14 +255,8 @@ export function LessonPlanForm({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="durationMinutes">Duration (minutes)</Label>
-                <Input
-                  id="durationMinutes"
-                  type="number"
-                  min={5}
-                  max={240}
-                  placeholder="45"
-                  {...register('durationMinutes', { valueAsNumber: true })}
-                />
+                <Input id="durationMinutes" type="number" min={5} max={240} placeholder="45"
+                  {...register('durationMinutes', { valueAsNumber: true })} />
                 {errors.durationMinutes && (
                   <p className="text-xs text-destructive">{errors.durationMinutes.message}</p>
                 )}
@@ -270,27 +275,19 @@ export function LessonPlanForm({
                 </div>
                 <TooltipProvider delay={200}>
                   <Tooltip>
-                    <TooltipTrigger
-                      render={
-                        <span className="shrink-0 inline-flex">
-                          <Button
-                            type="button" variant="outline" size="sm"
-                            onClick={handleAIGenerate}
-                            disabled={!canAIGenerate || aiGenerating}
-                          >
-                            {aiGenerating ? (
-                              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
-                            ) : (
-                              <><Sparkles className="mr-2 h-4 w-4" /> Generate with AI</>
-                            )}
-                          </Button>
-                        </span>
-                      }
-                    />
+                    <TooltipTrigger render={
+                      <span className="shrink-0 inline-flex">
+                        <Button type="button" variant="outline" size="sm" onClick={handleAIGenerate} disabled={!canAIGenerate || aiGenerating}>
+                          {aiGenerating ? (
+                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...</>
+                          ) : (
+                            <><Sparkles className="mr-2 h-4 w-4" /> Generate with AI</>
+                          )}
+                        </Button>
+                      </span>
+                    } />
                     {!canAIGenerate && (
-                      <TooltipContent>
-                        Select class, subject, date, and curriculum topic to enable AI.
-                      </TooltipContent>
+                      <TooltipContent>Select class, subject, date, and curriculum topic to enable AI.</TooltipContent>
                     )}
                   </Tooltip>
                 </TooltipProvider>
@@ -327,6 +324,8 @@ export function LessonPlanForm({
                 classId={classId}
                 subjectId={subjectId}
                 schoolId={schoolId}
+                pendingSuggestions={pendingSuggestions}
+                onSuggestionResolved={handleSuggestionResolved}
               />
             </div>
 
