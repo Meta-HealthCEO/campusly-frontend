@@ -33,6 +33,11 @@ export interface User {
   phone?: string;
   schoolId: string;
   isActive: boolean;
+  isSchoolPrincipal?: boolean;
+  isHOD?: boolean;
+  isBursar?: boolean;
+  isCounselor?: boolean;
+  isReceptionist?: boolean;
   isStandaloneTeacher?: boolean;
   isStandaloneCoach?: boolean;
   createdAt: string;
