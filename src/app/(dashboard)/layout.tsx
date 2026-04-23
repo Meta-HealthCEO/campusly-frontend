@@ -17,6 +17,7 @@ import {
   type NavItem,
 } from '@/lib/constants';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { composeNav } from './nav-config';
 import { useNotificationPoller } from '@/hooks/useNotificationPoller';
 import type { UserRole, PermissionFlag } from '@/types';
 
@@ -72,8 +73,9 @@ export default function DashboardLayout({
 
   const navItems = useMemo(() => {
     if (!user) return ADMIN_NAV;
-    const roleNav = NAV_BY_ROLE[user.role] ?? ADMIN_NAV;
-    const moduleFiltered = school ? filterByModule(roleNav, school.modulesEnabled) : roleNav;
+    const roleBaseline = NAV_BY_ROLE[user.role] ?? ADMIN_NAV;
+    const composed = composeNav(user, roleBaseline);
+    const moduleFiltered = school ? filterByModule(composed, school.modulesEnabled) : composed;
     return filterByPermission(moduleFiltered, hasPermission);
   }, [user, school, hasPermission]);
 
