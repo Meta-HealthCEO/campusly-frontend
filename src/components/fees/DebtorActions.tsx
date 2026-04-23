@@ -23,9 +23,10 @@ interface DebtorActionsProps {
   studentId: string;
   schoolId: string;
   onSuccess: () => void;
+  canManage?: boolean;
 }
 
-export function DebtorActions({ studentName, studentId, schoolId, onSuccess }: DebtorActionsProps) {
+export function DebtorActions({ studentName, studentId, schoolId, onSuccess, canManage = false }: DebtorActionsProps) {
   const [actionType, setActionType] = useState<'escalate' | 'write_off' | null>(null);
   const [selectDialogOpen, setSelectDialogOpen] = useState(false);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState('');
@@ -49,10 +50,10 @@ export function DebtorActions({ studentName, studentId, schoolId, onSuccess }: D
   return (
     <>
       <div className="flex gap-1">
-        <Button size="sm" variant="outline" onClick={() => openAction('escalate')} title="Escalate">
+        <Button size="sm" variant="outline" disabled={!canManage} onClick={() => openAction('escalate')} title="Escalate">
           <ArrowUpCircle className="h-3.5 w-3.5" />
         </Button>
-        <Button size="sm" variant="outline" onClick={() => openAction('write_off')} title="Write Off">
+        <Button size="sm" variant="outline" disabled={!canManage} onClick={() => openAction('write_off')} title="Write Off">
           <XCircle className="h-3.5 w-3.5" />
         </Button>
       </div>

@@ -9,10 +9,12 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import { CollectionStageBadge } from '@/components/fees/FeeStatusBadge';
 import { DebtorActions } from '@/components/fees/DebtorActions';
 import { useDebtors } from '@/hooks/useDebtors';
+import { useCan } from '@/hooks/useCan';
 import type { DebtorEntry } from '@/types';
 
 export default function DebtorsPage() {
   const { data, actions, loading, refetch: fetchData, schoolId } = useDebtors();
+  const canManage = useCan('manage_fees');
 
   const columns: ColumnDef<DebtorEntry & { studentId: string }>[] = [
     { accessorKey: 'parentName', header: 'Parent Name' },
@@ -41,6 +43,7 @@ export default function DebtorsPage() {
           studentId={row.original.studentId}
           schoolId={schoolId}
           onSuccess={fetchData}
+          canManage={canManage}
         />
       ),
     },

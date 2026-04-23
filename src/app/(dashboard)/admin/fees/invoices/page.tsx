@@ -11,6 +11,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ExportButton } from '@/components/shared/ExportButton';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useInvoices } from '@/hooks/useAdminFees';
+import { useCan } from '@/hooks/useCan';
 import { CreateInvoiceDialog } from '@/components/fees/CreateInvoiceDialog';
 import { BulkInvoiceDialog } from '@/components/fees/BulkInvoiceDialog';
 import { RecordPaymentDialog } from '@/components/fees/RecordPaymentDialog';
@@ -32,6 +33,7 @@ const statusOptions = ['all', 'pending', 'sent', 'paid', 'partial', 'overdue', '
 export default function InvoicesPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const { invoices: data, loading, refetch: fetchData, schoolId } = useInvoices(statusFilter);
+  const canManage = useCan('manage_fees');
   const [createOpen, setCreateOpen] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [paymentInvoice, setPaymentInvoice] = useState<Invoice | null>(null);
@@ -89,12 +91,12 @@ export default function InvoicesPage() {
         return (
           <div className="flex gap-1">
             {inv.balanceDue > 0 && (
-              <Button variant="outline" size="sm" onClick={() => setPaymentInvoice(inv)}>
+              <Button variant="outline" size="sm" disabled={!canManage} onClick={() => setPaymentInvoice(inv)}>
                 <CreditCard className="mr-1 h-3 w-3" />
                 Pay
               </Button>
             )}
-            <Button size="sm" variant="outline" onClick={() => setDiscountInvoice(inv)} title="Apply Discount">
+            <Button size="sm" variant="outline" disabled={!canManage} onClick={() => setDiscountInvoice(inv)} title="Apply Discount">
               <Percent className="mr-1 h-3.5 w-3.5" />
               Discount
             </Button>
@@ -111,11 +113,11 @@ export default function InvoicesPage() {
       <PageHeader title="Invoices" description="View and manage all student invoices" />
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={() => setCreateOpen(true)}>
+        <Button disabled={!canManage} onClick={() => setCreateOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Create Invoice
         </Button>
-        <Button variant="outline" onClick={() => setBulkOpen(true)}>
+        <Button variant="outline" disabled={!canManage} onClick={() => setBulkOpen(true)}>
           <Users className="mr-2 h-4 w-4" />
           Bulk Generate
         </Button>

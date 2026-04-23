@@ -27,6 +27,7 @@ export interface FeeSchedule {
 interface FeeScheduleSectionProps {
   schoolId: string;
   feeTypes: FeeType[];
+  canManage?: boolean;
 }
 
 const scopeLabels: Record<string, string> = {
@@ -35,7 +36,7 @@ const scopeLabels: Record<string, string> = {
   student: 'Student',
 };
 
-export function FeeScheduleSection({ schoolId, feeTypes }: FeeScheduleSectionProps) {
+export function FeeScheduleSection({ schoolId, feeTypes, canManage = false }: FeeScheduleSectionProps) {
   const { schedules: rawSchedules, grades, loading, refetch: fetchSchedules } = useFeeSchedules(schoolId);
   const schedules = rawSchedules as unknown as FeeSchedule[];
   const [createOpen, setCreateOpen] = useState(false);
@@ -84,10 +85,10 @@ export function FeeScheduleSection({ schoolId, feeTypes }: FeeScheduleSectionPro
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex gap-1">
-          <Button variant="ghost" size="sm" onClick={() => setEditSchedule(row.original)}>
+          <Button variant="ghost" size="sm" disabled={!canManage} onClick={() => setEditSchedule(row.original)}>
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setDeleteSchedule(row.original)}>
+          <Button variant="ghost" size="sm" disabled={!canManage} onClick={() => setDeleteSchedule(row.original)}>
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         </div>
@@ -99,10 +100,12 @@ export function FeeScheduleSection({ schoolId, feeTypes }: FeeScheduleSectionPro
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Fee Schedules</h2>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Schedule
-        </Button>
+        {canManage && (
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Schedule
+          </Button>
+        )}
       </div>
 
       {loading ? (

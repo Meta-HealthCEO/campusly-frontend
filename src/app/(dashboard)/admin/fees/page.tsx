@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { formatCurrency } from '@/lib/utils';
 import { useFeeOverview } from '@/hooks/useAdminFees';
+import { useCan } from '@/hooks/useCan';
 import { CreateFeeTypeDialog } from '@/components/fees/CreateFeeTypeDialog';
 import { EditFeeTypeDialog } from '@/components/fees/EditFeeTypeDialog';
 import { DeleteFeeTypeDialog } from '@/components/fees/DeleteFeeTypeDialog';
@@ -35,6 +36,7 @@ const categoryLabels: Record<string, string> = {
 
 export default function FeesPage() {
   const { feeTypes, invoices, loading, refetchFeeTypes, schoolId } = useFeeOverview();
+  const canManage = useCan('manage_fees');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editFeeType, setEditFeeType] = useState<FeeType | null>(null);
   const [deleteFeeType, setDeleteFeeType] = useState<FeeType | null>(null);
@@ -66,10 +68,10 @@ export default function FeesPage() {
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex gap-1">
-          <Button variant="ghost" size="sm" onClick={() => setEditFeeType(row.original)}>
+          <Button variant="ghost" size="sm" disabled={!canManage} onClick={() => setEditFeeType(row.original)}>
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setDeleteFeeType(row.original)}>
+          <Button variant="ghost" size="sm" disabled={!canManage} onClick={() => setDeleteFeeType(row.original)}>
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         </div>
@@ -106,12 +108,14 @@ export default function FeesPage() {
 
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Fee Types</h2>
-        <CreateFeeTypeDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          schoolId={schoolId ?? ''}
-          onSuccess={refetchFeeTypes}
-        />
+        {canManage && (
+          <CreateFeeTypeDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            schoolId={schoolId ?? ''}
+            onSuccess={refetchFeeTypes}
+          />
+        )}
       </div>
 
       <DataTable columns={feeTypeColumns} data={feeTypes} searchKey="name" searchPlaceholder="Search fee types..." />
@@ -119,7 +123,7 @@ export default function FeesPage() {
       <hr className="my-4" />
 
       {schoolId && (
-        <FeeScheduleSection schoolId={schoolId} feeTypes={feeTypes} />
+        <FeeScheduleSection schoolId={schoolId} feeTypes={feeTypes} canManage={canManage} />
       )}
 
       <EditFeeTypeDialog
