@@ -25,7 +25,7 @@ function formatTime(iso: string | null | undefined): string {
 
 interface VisitorLogTableProps {
   visitors: VisitorRecord[];
-  onCheckOut: (visitor: VisitorRecord) => void;
+  onCheckOut?: (visitor: VisitorRecord) => void;
 }
 
 export function VisitorLogTable({ visitors, onCheckOut }: VisitorLogTableProps) {
@@ -87,7 +87,7 @@ export function VisitorLogTable({ visitors, onCheckOut }: VisitorLogTableProps) 
       header: '',
       cell: ({ row }) =>
         row.original.status === 'checked_in' ? (
-          <Button size="sm" variant="outline" onClick={() => onCheckOut(row.original)}>
+          <Button size="sm" variant="outline" onClick={() => onCheckOut?.(row.original)} disabled={!onCheckOut}>
             <LogOut className="h-3.5 w-3.5 mr-1" /> Check Out
           </Button>
         ) : null,

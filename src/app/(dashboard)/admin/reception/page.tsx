@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useCan } from '@/hooks/useCan';
 import { useVisitors } from '@/hooks/useVisitors';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -38,6 +39,7 @@ function toLocalDate(): string {
 export default function AdminReceptionPage() {
   const user = useAuthStore((s) => s.user);
   const schoolId = user?.schoolId ?? '';
+  const canManage = useCan('manage_visitors');
 
   const {
     visitors, visitorsMeta, visitorsLoading, fetchVisitors,
@@ -176,9 +178,11 @@ export default function AdminReceptionPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Visitor Management" description="Gate control, visitor log, and student movement tracking">
-        <Button onClick={() => setRegisterOpen(true)}>
-          <UserPlus className="mr-2 h-4 w-4" /> Check In Visitor
-        </Button>
+        {canManage && (
+          <Button onClick={() => setRegisterOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" /> Check In Visitor
+          </Button>
+        )}
       </PageHeader>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -211,25 +215,27 @@ export default function AdminReceptionPage() {
           {visitorsLoading ? <LoadingSpinner /> : visitors.length === 0 ? (
             <EmptyState icon={DoorOpen} title="No visitors" description="No visitor records for the selected filters." />
           ) : (
-            <VisitorLogTable visitors={visitors} onCheckOut={(v: VisitorRecord) => setCheckOutTarget(v)} />
+            <VisitorLogTable visitors={visitors} onCheckOut={canManage ? (v: VisitorRecord) => setCheckOutTarget(v) : undefined} />
           )}
         </TabsContent>
 
         {/* ── Pre-Registration ───────────────────────────────────── */}
         <TabsContent value="pre-reg" className="space-y-4 mt-4">
-          <div className="flex justify-end">
-            <Button onClick={() => setPreRegOpen(true)}><UserPlus className="mr-2 h-4 w-4" /> Pre-Register</Button>
-          </div>
+          {canManage && (
+            <div className="flex justify-end">
+              <Button onClick={() => setPreRegOpen(true)}><UserPlus className="mr-2 h-4 w-4" /> Pre-Register</Button>
+            </div>
+          )}
           {preRegLoading ? <LoadingSpinner /> : preRegistrations.length === 0 ? (
             <EmptyState icon={DoorOpen} title="No pre-registrations" description="No expected visitors." />
           ) : (
-            <PreRegistrationTable items={preRegistrations} onCancel={handleCancelPreReg} />
+            <PreRegistrationTable items={preRegistrations} onCancel={canManage ? handleCancelPreReg : undefined} />
           )}
         </TabsContent>
 
         {/* ── Late Arrivals ──────────────────────────────────────── */}
         <TabsContent value="late" className="space-y-4 mt-4">
-          <LateArrivalForm onSubmit={handleLateArrival} schoolId={schoolId} saving={saving} />
+          <LateArrivalForm onSubmit={canManage ? handleLateArrival : undefined} schoolId={schoolId} saving={saving} />
           {lateLoading ? <LoadingSpinner /> : lateArrivals.length === 0 ? (
             <EmptyState icon={Clock} title="No late arrivals today" description="No students have been logged late." />
           ) : (
@@ -239,7 +245,7 @@ export default function AdminReceptionPage() {
 
         {/* ── Early Departures ───────────────────────────────────── */}
         <TabsContent value="early" className="space-y-4 mt-4">
-          <EarlyDepartureForm onSubmit={handleEarlyDeparture} schoolId={schoolId} saving={saving} />
+          <EarlyDepartureForm onSubmit={canManage ? handleEarlyDeparture : undefined} schoolId={schoolId} saving={saving} />
           {earlyLoading ? <LoadingSpinner /> : earlyDepartures.length === 0 ? (
             <EmptyState icon={LogOutIcon} title="No early departures today" description="No early departures logged." />
           ) : (

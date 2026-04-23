@@ -18,7 +18,7 @@ const STATUS_STYLES: Record<PreRegistrationStatus, { label: string; className: s
 
 interface PreRegistrationTableProps {
   items: PreRegistration[];
-  onCancel: (id: string) => void;
+  onCancel?: (id: string) => void;
 }
 
 export function PreRegistrationTable({ items, onCancel }: PreRegistrationTableProps) {
@@ -70,7 +70,8 @@ export function PreRegistrationTable({ items, onCancel }: PreRegistrationTablePr
           <Button
             size="sm"
             variant="outline"
-            onClick={() => onCancel(row.original.id ?? row.original._id ?? '')}
+            onClick={() => onCancel?.(row.original.id ?? row.original._id ?? '')}
+            disabled={!onCancel}
           >
             <X className="h-3.5 w-3.5 mr-1" /> Cancel
           </Button>

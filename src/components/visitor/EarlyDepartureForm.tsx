@@ -28,7 +28,7 @@ function toLocalISOTime(): string {
 }
 
 interface EarlyDepartureFormProps {
-  onSubmit: (data: RecordEarlyDeparturePayload) => Promise<void>;
+  onSubmit?: (data: RecordEarlyDeparturePayload) => Promise<void>;
   schoolId: string;
   saving: boolean;
 }
@@ -66,7 +66,7 @@ export function EarlyDepartureForm({ onSubmit, schoolId, saving }: EarlyDepartur
     const [h, m] = departureTime.split(':').map(Number);
     const dt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
 
-    await onSubmit({
+    await onSubmit?.({
       schoolId,
       studentId: studentName,
       departureTime: dt.toISOString(),
@@ -158,7 +158,7 @@ export function EarlyDepartureForm({ onSubmit, schoolId, saving }: EarlyDepartur
           <Label className="text-sm">Notify parent</Label>
         </div>
 
-        <Button onClick={handleSubmit} disabled={saving || !studentName.trim() || !collectedBy.trim()}>
+        <Button onClick={handleSubmit} disabled={saving || !onSubmit || !studentName.trim() || !collectedBy.trim()}>
           {saving ? 'Recording...' : 'Record Early Departure'}
         </Button>
       </CardContent>
