@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useStandings } from '@/hooks/useSport';
 import { deleteSeason } from '@/hooks/useSportMutations';
+import { useCan } from '@/hooks/useCan';
 import { SeasonFormDialog } from './SeasonFormDialog';
 import { StandingsTable } from './StandingsTable';
 import type { Season } from '@/types/sport';
@@ -27,6 +28,7 @@ function formatDate(d: string): string {
 }
 
 export function SeasonsTab({ seasons, loading, schoolId, onRefresh }: SeasonsTabProps) {
+  const canManage = useCan('manage_sport_config');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Season | null>(null);
   const [activeSeason, setActiveSeason] = useState<Season | null>(null);
@@ -74,10 +76,10 @@ export function SeasonsTab({ seasons, loading, schoolId, onRefresh }: SeasonsTab
         <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); viewStandings(row.original); }} aria-label="View standings">
           <BarChart3 className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }} aria-label="Edit season">
+        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }} aria-label="Edit season" disabled={!canManage}>
           <Pencil className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); handleDelete(row.original); }} aria-label="Delete season">
+        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); handleDelete(row.original); }} aria-label="Delete season" disabled={!canManage}>
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
       </div>
@@ -88,11 +90,13 @@ export function SeasonsTab({ seasons, loading, schoolId, onRefresh }: SeasonsTab
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" /> New Season
-        </Button>
-      </div>
+      {canManage && (
+        <div className="flex justify-end">
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" /> New Season
+          </Button>
+        </div>
+      )}
 
       {seasons.length === 0 ? (
         <EmptyState icon={BarChart3} title="No seasons" description="Create a season to track standings." />

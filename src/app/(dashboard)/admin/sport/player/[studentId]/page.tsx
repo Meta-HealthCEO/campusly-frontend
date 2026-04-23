@@ -15,10 +15,12 @@ import { AIReportGenerator } from '@/components/sport/AIReportGenerator';
 import { AIReportView } from '@/components/sport/AIReportView';
 import { useSportStats } from '@/hooks/useSportStats';
 import { useAISports } from '@/hooks/useAISports';
+import { useCan } from '@/hooks/useCan';
 import type { RecordPersonalBestPayload } from '@/types/sport';
 import type { AIPerformanceReport } from '@/types/ai-sports';
 
 export default function PlayerDetailPage() {
+  const canManage = useCan('manage_sport_config');
   const params = useParams();
   const searchParams = useSearchParams();
   const studentId = params.studentId as string;
@@ -135,7 +137,7 @@ export default function PlayerDetailPage() {
               ) : (
                 <p className="text-sm text-muted-foreground">No card available for this sport.</p>
               )}
-              <Button variant="outline" size="sm" onClick={handleRecalculate} disabled={recalculating || !activeSport}>
+              <Button variant="outline" size="sm" onClick={handleRecalculate} disabled={recalculating || !activeSport || !canManage}>
                 <RefreshCw className={`mr-1 h-4 w-4 ${recalculating ? 'animate-spin' : ''}`} />
                 Recalculate Card
               </Button>
@@ -143,9 +145,11 @@ export default function PlayerDetailPage() {
             <div className="lg:col-span-2 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Personal Bests</h3>
-                <Button size="sm" onClick={() => setPbDialogOpen(true)}>
-                  <Plus className="mr-1 h-4 w-4" /> Record PB
-                </Button>
+                {canManage && (
+                  <Button size="sm" onClick={() => setPbDialogOpen(true)}>
+                    <Plus className="mr-1 h-4 w-4" /> Record PB
+                  </Button>
+                )}
               </div>
               <PersonalBestTable bests={personalBests} />
             </div>
@@ -153,12 +157,14 @@ export default function PlayerDetailPage() {
         </TabsContent>
 
         <TabsContent value="ai-reports" className="space-y-6 mt-4">
-          <AIReportGenerator
-            studentId={studentId}
-            sportCode={activeSport}
-            generating={aiGenerating}
-            onGenerate={handleGenerateReport}
-          />
+          {canManage && (
+            <AIReportGenerator
+              studentId={studentId}
+              sportCode={activeSport}
+              generating={aiGenerating}
+              onGenerate={handleGenerateReport}
+            />
+          )}
           {latestAIReport && <AIReportView report={latestAIReport} />}
           {aiReports.length > 0 && !latestAIReport && (
             <div className="space-y-3">

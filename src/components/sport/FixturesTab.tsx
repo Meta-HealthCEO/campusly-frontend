@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import { Plus, Pencil, Trash2, Calendar, Eye, Home, Plane, ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
@@ -12,7 +11,8 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
-import { deleteFixture } from '@/hooks/useSportMutations';
+import { deleteFixture, generateTeamSheet } from '@/hooks/useSportMutations';
+import { useCan } from '@/hooks/useCan';
 import { FixtureFormDialog } from './FixtureFormDialog';
 import { FixtureDetailPanel } from './FixtureDetailPanel';
 import { FixtureCalendarView } from './FixtureCalendarView';
@@ -43,6 +43,7 @@ function getPlayersForFixture(fixture: SportFixture, teams: SportTeam[]): SportP
 }
 
 export function FixturesTab({ fixtures, teams, loading, schoolId, onRefresh }: FixturesTabProps) {
+  const canManage = useCan('manage_sport_config');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<SportFixture | null>(null);
   const [detailFixture, setDetailFixture] = useState<SportFixture | null>(null);
@@ -98,23 +99,23 @@ export function FixturesTab({ fixtures, teams, loading, schoolId, onRefresh }: F
         <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openDetail(row.original); }} aria-label="View fixture">
           <Eye className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); generateTeamSheet(row.original); }} aria-label="Publish team sheet">
+        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); handleGenerateTeamSheet(row.original); }} aria-label="Publish team sheet" disabled={!canManage}>
           <ClipboardList className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }} aria-label="Edit fixture">
+        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }} aria-label="Edit fixture" disabled={!canManage}>
           <Pencil className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); handleDelete(row.original); }} aria-label="Delete fixture">
+        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); handleDelete(row.original); }} aria-label="Delete fixture" disabled={!canManage}>
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
       </div>
     )},
   ];
 
-  async function generateTeamSheet(fixture: SportFixture) {
+  async function handleGenerateTeamSheet(fixture: SportFixture) {
     if (!confirm(`Publish a team sheet for ${getTeamName(fixture.teamId)} vs ${fixture.opponent}?`)) return;
     try {
-      await apiClient.post(`/sports/fixtures/${fixture.id}/team-sheet`);
+      await generateTeamSheet(fixture.id);
       toast.success('Team sheet published');
     } catch (err: unknown) {
       const message =
@@ -149,9 +150,11 @@ export function FixturesTab({ fixtures, teams, loading, schoolId, onRefresh }: F
             {viewMode === 'list' ? 'Calendar' : 'List'}
           </Button>
         </div>
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" /> New Fixture
-        </Button>
+        {canManage && (
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" /> New Fixture
+          </Button>
+        )}
       </div>
 
       {filtered.length === 0 ? (

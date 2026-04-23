@@ -15,9 +15,11 @@ import { TalentFlagCard } from '@/components/sport/TalentFlagCard';
 import { AIReportView } from '@/components/sport/AIReportView';
 import { useAISports } from '@/hooks/useAISports';
 import { useSportStats } from '@/hooks/useSportStats';
+import { useCan } from '@/hooks/useCan';
 import type { TalentFlagStatus } from '@/types/ai-sports';
 
 export default function AISportsAnalyticsPage() {
+  const canManage = useCan('manage_sport_config');
   const {
     talentFlags, reports, currentReport, generating, loading,
     runTalentIdentification, loadTalentFlags, reviewTalentFlag,
@@ -70,7 +72,7 @@ export default function AISportsAnalyticsPage() {
       <section className="space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-semibold">Talent Identification</h2>
-          <Button onClick={handleRunTalentId} disabled={generating}>
+          <Button onClick={handleRunTalentId} disabled={generating || !canManage}>
             <Play className="mr-1 h-4 w-4" />
             {generating ? 'Running...' : 'Run Talent ID'}
           </Button>

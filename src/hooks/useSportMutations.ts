@@ -152,6 +152,12 @@ export async function castMvpVote(
   await apiClient.post(`/sports/fixtures/${fixtureId}/mvp`, payload);
 }
 
+// --- Team sheet ---
+
+export async function generateTeamSheet(fixtureId: string): Promise<void> {
+  await apiClient.post(`/sports/fixtures/${fixtureId}/team-sheet`);
+}
+
 // --- Availability mutations ---
 
 export async function setPlayerAvailability(

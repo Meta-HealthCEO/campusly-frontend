@@ -9,6 +9,7 @@ import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { deleteTeam } from '@/hooks/useSportMutations';
+import { useCan } from '@/hooks/useCan';
 import { TeamFormDialog } from './TeamFormDialog';
 import type { SportTeam, SportCoach } from '@/types/sport';
 
@@ -26,6 +27,7 @@ function getCoachName(coachId: SportCoach | string | null | undefined): string {
 }
 
 export function TeamsTab({ teams, loading, schoolId, onRefresh }: TeamsTabProps) {
+  const canManage = useCan('manage_sport_config');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<SportTeam | null>(null);
 
@@ -77,10 +79,10 @@ export function TeamsTab({ teams, loading, schoolId, onRefresh }: TeamsTabProps)
     { id: 'actions', header: 'Actions', enableSorting: false,
       cell: ({ row }) => (
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }} aria-label="Edit team">
+          <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }} aria-label="Edit team" disabled={!canManage}>
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); handleDelete(row.original); }} aria-label="Delete team">
+          <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); handleDelete(row.original); }} aria-label="Delete team" disabled={!canManage}>
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         </div>
@@ -91,11 +93,13 @@ export function TeamsTab({ teams, loading, schoolId, onRefresh }: TeamsTabProps)
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" /> New Team
-        </Button>
-      </div>
+      {canManage && (
+        <div className="flex justify-end">
+          <Button onClick={openCreate}>
+            <Plus className="mr-2 h-4 w-4" /> New Team
+          </Button>
+        </div>
+      )}
 
       {teams.length === 0 ? (
         <EmptyState icon={Users} title="No teams" description="Create your first sport team to get started." />

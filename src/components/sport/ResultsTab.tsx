@@ -8,6 +8,7 @@ import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { useFixtureResults } from '@/hooks/useSport';
+import { useCan } from '@/hooks/useCan';
 import { ResultFormDialog } from './ResultFormDialog';
 import type { SportFixture, SportTeam, SportTeamRef, MatchResult, SportPlayer } from '@/types/sport';
 
@@ -40,6 +41,7 @@ function getPlayersForFixture(fixture: SportFixture, teams: SportTeam[]): SportP
 }
 
 export function ResultsTab({ fixtures, teams, loading, schoolId, onRefresh }: ResultsTabProps) {
+  const canManage = useCan('manage_sport_config');
   const fixtureRefs = useMemo(() => fixtures.map((f) => ({ id: f.id })), [fixtures]);
   const { results: rawResults, loading: loadingResults, refetch: fetchResults } = useFixtureResults(fixtureRefs);
   const results = rawResults as unknown as Map<string, MatchResult>;
@@ -79,7 +81,7 @@ export function ResultsTab({ fixtures, teams, loading, schoolId, onRefresh }: Re
       );
     }},
     { id: 'actions', header: 'Actions', enableSorting: false, cell: ({ row }) => (
-      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openResult(row.original); }}>
+      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openResult(row.original); }} disabled={!canManage}>
         <Pencil className="mr-1 h-3 w-3" />
         {row.original.matchResult ? 'Edit Result' : 'Record Result'}
       </Button>

@@ -2,7 +2,7 @@ import type { Capability } from '@/lib/permissions';
 import { can } from '@/lib/permissions';
 import type { User } from '@/types';
 import type { NavItem } from '@/lib/constants';
-import { Settings, GraduationCap, Users, BookMarked, DoorOpen, ScrollText, DollarSign, AlertTriangle, Heart, BookOpen, CalendarCog } from 'lucide-react';
+import { Settings, GraduationCap, Users, BookMarked, DoorOpen, ScrollText, DollarSign, AlertTriangle, Heart, BookOpen, CalendarCog, Trophy } from 'lucide-react';
 
 /**
  * Nav items that appear for any user who has the given capability,
@@ -38,6 +38,9 @@ export const NAV_BY_CAPABILITY: Partial<Record<Capability, NavItem[]>> = {
   manage_academic_setup: [
     { label: 'Academics', href: '/admin/academics', icon: BookOpen },
     { label: 'Timetable Builder', href: '/admin/timetable-builder', icon: CalendarCog },
+  ],
+  manage_sport_config: [
+    { label: 'Sport', href: '/admin/sport', icon: Trophy },
   ],
 };
 
