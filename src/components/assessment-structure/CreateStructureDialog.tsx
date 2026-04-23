@@ -45,7 +45,7 @@ interface Props {
 
 export function CreateStructureDialog({ open, onClose, onCreate }: Props) {
   const user = useAuthStore((s) => s.user);
-  const isStandalone = (user as unknown as { isStandaloneTeacher?: boolean })?.isStandaloneTeacher === true;
+  const isStandalone = user?.isStandaloneTeacher === true;
 
   const { classes } = useTeacherClasses();
   const { subjects } = useTeacherSubjects();
