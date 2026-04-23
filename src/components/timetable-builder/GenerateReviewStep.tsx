@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useCan } from '@/hooks/useCan';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +42,7 @@ export function GenerateReviewStep({
 }: GenerateReviewStepProps) {
   const [selectedClassId, setSelectedClassId] = useState('');
   const [committing, setCommitting] = useState(false);
+  const canManage = useCan('manage_academic_setup');
 
   const classEntries = useMemo((): TbTimetableEntry[] => {
     if (!generation?.result) return [];
@@ -82,7 +84,7 @@ export function GenerateReviewStep({
           description="Review your configuration, then click generate to create the timetable."
         />
         <div className="flex justify-center">
-          <Button size="lg" onClick={handleGenerate}>
+          <Button size="lg" onClick={handleGenerate} disabled={!canManage}>
             <PlayCircle className="mr-2 h-5 w-5" /> Generate Timetable
           </Button>
         </div>
@@ -115,7 +117,7 @@ export function GenerateReviewStep({
           </CardContent>
         </Card>
         <div className="flex justify-center">
-          <Button onClick={handleGenerate}>
+          <Button onClick={handleGenerate} disabled={!canManage}>
             <RefreshCw className="mr-1 h-4 w-4" /> Regenerate
           </Button>
         </div>
@@ -202,10 +204,10 @@ export function GenerateReviewStep({
 
       {/* Action buttons */}
       <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
-        <Button variant="outline" onClick={handleGenerate}>
+        <Button variant="outline" onClick={handleGenerate} disabled={!canManage}>
           <RefreshCw className="mr-1 h-4 w-4" /> Regenerate
         </Button>
-        <Button onClick={handleCommit} disabled={committing}>
+        <Button onClick={handleCommit} disabled={committing || !canManage}>
           <CheckCircle className="mr-1 h-4 w-4" />
           {committing ? 'Committing...' : 'Accept & Commit'}
         </Button>

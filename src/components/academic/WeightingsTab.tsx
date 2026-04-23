@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { useSubjects, useGrades, useWeightings } from '@/hooks/useAcademics';
 import { useWeightingMutations } from '@/hooks/useAcademicMutationsExtended';
+import { useCan } from '@/hooks/useCan';
 import type { Weighting } from '@/hooks/useAcademics';
 
 const ASSESSMENT_TYPES = ['test', 'exam', 'assignment', 'practical', 'project'] as const;
@@ -27,6 +28,7 @@ export function WeightingsTab() {
   const { grades } = useGrades();
   const { weightings, loading, refetch: fetchWeightings } = useWeightings();
   const { createWeighting, deleteWeighting } = useWeightingMutations();
+  const canManage = useCan('manage_academic_setup');
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({
@@ -68,11 +70,11 @@ export function WeightingsTab() {
     { accessorKey: 'term', header: 'Term' },
     {
       id: 'actions', header: '',
-      cell: ({ row }) => (
+      cell: ({ row }) => canManage ? (
         <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(row.original.id)} aria-label="Delete weighting">
           <Trash2 className="h-3 w-3 text-destructive" />
         </Button>
-      ),
+      ) : null,
     },
   ];
 
@@ -81,9 +83,11 @@ export function WeightingsTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button size="sm" onClick={() => { setForm({ subjectId: '', gradeId: '', assessmentType: 'test', weightPercentage: '20', term: '1' }); setDialogOpen(true); }}>
-          <Plus className="mr-1 h-4 w-4" /> Add Weighting
-        </Button>
+        {canManage && (
+          <Button size="sm" onClick={() => { setForm({ subjectId: '', gradeId: '', assessmentType: 'test', weightPercentage: '20', term: '1' }); setDialogOpen(true); }}>
+            <Plus className="mr-1 h-4 w-4" /> Add Weighting
+          </Button>
+        )}
       </div>
 
       {weightings.length === 0 ? (

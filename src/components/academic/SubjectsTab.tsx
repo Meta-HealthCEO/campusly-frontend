@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { useSubjects, useGrades } from '@/hooks/useAcademics';
 import { useSubjectMutations } from '@/hooks/useAcademicMutations';
+import { useCan } from '@/hooks/useCan';
 import type { Subject, Grade } from '@/types';
 
 interface SubjectRow {
@@ -47,6 +48,7 @@ export function SubjectsTab() {
   const { subjects, loading, refetch } = useSubjects();
   const { grades } = useGrades();
   const { createSubject, updateSubject, deleteSubject } = useSubjectMutations();
+  const canManage = useCan('manage_academic_setup');
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<SubjectRow | null>(null);
@@ -121,7 +123,7 @@ export function SubjectsTab() {
     {
       id: 'actions',
       header: '',
-      cell: ({ row }) => (
+      cell: ({ row }) => canManage ? (
         <div className="flex gap-1">
           <Button variant="ghost" size="icon-sm" onClick={() => openEdit(row.original)} aria-label="Edit subject">
             <Pencil className="h-3 w-3" />
@@ -130,7 +132,7 @@ export function SubjectsTab() {
             <Trash2 className="h-3 w-3 text-destructive" />
           </Button>
         </div>
-      ),
+      ) : null,
     },
   ];
 
@@ -139,9 +141,11 @@ export function SubjectsTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button onClick={openCreate} size="sm">
-          <Plus className="mr-1 h-4 w-4" /> Add Subject
-        </Button>
+        {canManage && (
+          <Button onClick={openCreate} size="sm">
+            <Plus className="mr-1 h-4 w-4" /> Add Subject
+          </Button>
+        )}
       </div>
 
       <DataTable columns={columns} data={rows} searchKey="name" searchPlaceholder="Search subjects..." />

@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/select';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Plus, Trash2, BookOpen } from 'lucide-react';
+import { useCan } from '@/hooks/useCan';
 import type { TbSubjectRequirement, Grade, Subject, Teacher } from '@/types';
 
 function teacherName(t: Teacher): string {
@@ -53,6 +54,7 @@ export function SubjectRequirementsStep({
 }: SubjectRequirementsStepProps) {
   const [draft, setDraft] = useState<DraftRow>(EMPTY_DRAFT);
   const [adding, setAdding] = useState(false);
+  const canManage = useCan('manage_academic_setup');
 
   const gradeRequirements = requirements.filter((r) => r.gradeId === selectedGradeId);
   const usedSubjectIds = new Set(gradeRequirements.map((r) => r.subjectId));
@@ -173,9 +175,11 @@ export function SubjectRequirementsStep({
                       </Select>
                     </td>
                     <td className="p-2">
-                      <Button variant="ghost" size="icon" onClick={() => onDelete(req.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      {canManage && (
+                        <Button variant="ghost" size="icon" onClick={() => onDelete(req.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -248,7 +252,7 @@ export function SubjectRequirementsStep({
                       variant="outline"
                       size="icon"
                       onClick={handleAdd}
-                      disabled={!draft.subjectId || adding}
+                      disabled={!draft.subjectId || adding || !canManage}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>

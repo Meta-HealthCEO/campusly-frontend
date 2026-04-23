@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { useClasses, useSubjects, useStaff, useTimetable } from '@/hooks/useAcademics';
 import { useTimetableMutations } from '@/hooks/useAcademicMutations';
+import { useCan } from '@/hooks/useCan';
 import { useTimetableClashes } from '@/hooks/useTimetableClashes';
 import { ClashDetector } from '@/components/academic/ClashDetector';
 import type { TimetableSlot } from '@/types';
@@ -38,6 +39,7 @@ export function TimetableTab() {
   const { staff } = useStaff();
   const { createSlot, deleteSlot } = useTimetableMutations();
   const { clashes, loading: clashLoading, hasChecked, checkClashes } = useTimetableClashes();
+  const canManage = useCan('manage_academic_setup');
 
   const [selectedClassId, setSelectedClassId] = useState('');
   const { entries, loading, refetch } = useTimetable(selectedClassId || undefined);
@@ -117,7 +119,7 @@ export function TimetableTab() {
             </SelectContent>
           </Select>
         </div>
-        {selectedClassId && (
+        {selectedClassId && canManage && (
           <Button size="sm" onClick={() => openCreate()}>
             <Plus className="mr-1 h-4 w-4" /> Add Slot
           </Button>
@@ -155,10 +157,14 @@ export function TimetableTab() {
                       const slot = getSlot(day, period);
                       if (!slot) return (
                         <td key={day} className="p-1">
-                          <button
-                            onClick={() => openCreate(day, period)}
-                            className="w-full rounded border border-dashed p-2 text-xs text-muted-foreground hover:bg-muted/50"
-                          >+</button>
+                          {canManage ? (
+                            <button
+                              onClick={() => openCreate(day, period)}
+                              className="w-full rounded border border-dashed p-2 text-xs text-muted-foreground hover:bg-muted/50"
+                            >+</button>
+                          ) : (
+                            <div className="w-full rounded border border-dashed p-2 text-xs text-muted-foreground/40" />
+                          )}
                         </td>
                       );
                       return (
@@ -167,12 +173,14 @@ export function TimetableTab() {
                             <p className="text-xs font-medium">{getSubjectName(slot)}</p>
                             <p className="text-xs text-muted-foreground">{slot.startTime}-{slot.endTime}</p>
                             {slot.room && <p className="text-xs text-muted-foreground">{slot.room}</p>}
-                            <button
-                              onClick={() => handleDelete(slot.id)}
-                              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <Trash2 className="h-3 w-3 text-destructive" />
-                            </button>
+                            {canManage && (
+                              <button
+                                onClick={() => handleDelete(slot.id)}
+                                className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Trash2 className="h-3 w-3 text-destructive" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       );

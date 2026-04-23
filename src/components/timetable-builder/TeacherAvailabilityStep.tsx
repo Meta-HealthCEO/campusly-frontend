@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import { useCan } from '@/hooks/useCan';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -39,6 +40,7 @@ export function TeacherAvailabilityStep({
   const [localUnavailable, setLocalUnavailable] = useState<Map<string, TeacherAvailabilityEntry[]>>(
     new Map(),
   );
+  const canManage = useCan('manage_academic_setup');
 
   const maxPeriods = useMemo(() => {
     if (!config) return 7;
@@ -184,12 +186,14 @@ export function TeacherAvailabilityStep({
                         return (
                           <td key={`${day}-${p}`} className="p-0">
                             <button
-                              onClick={() => toggleCell(teacher.id, day, p)}
+                              onClick={() => canManage && toggleCell(teacher.id, day, p)}
+                              disabled={!canManage}
                               className={cn(
                                 'w-full h-8 border transition-colors',
                                 unavail
                                   ? 'bg-destructive/20 border-destructive/30 hover:bg-destructive/30'
                                   : 'bg-background hover:bg-muted/50 border-transparent',
+                                !canManage && 'cursor-not-allowed opacity-70',
                               )}
                               aria-label={`${teacherName(teacher)} ${day} period ${p}: ${unavail ? 'unavailable' : 'available'}`}
                             />
@@ -198,7 +202,7 @@ export function TeacherAvailabilityStep({
                       }),
                     )}
                     <td className="p-1">
-                      {hasChanges && (
+                      {hasChanges && canManage && (
                         <Button
                           variant="outline"
                           size="sm"

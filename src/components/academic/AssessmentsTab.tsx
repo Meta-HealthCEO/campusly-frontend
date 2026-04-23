@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { useClasses, useSubjects, useAssessments } from '@/hooks/useAcademics';
 import { useAssessmentMutations } from '@/hooks/useAcademicMutations';
+import { useCan } from '@/hooks/useCan';
 import { formatDate } from '@/lib/utils';
 import type { Assessment } from '@/types';
 
@@ -40,6 +41,7 @@ export function AssessmentsTab() {
   const { classes } = useClasses();
   const { subjects } = useSubjects();
   const { createAssessment, updateAssessment, deleteAssessment } = useAssessmentMutations();
+  const canManage = useCan('manage_academic_setup');
 
   const [filterClassId, setFilterClassId] = useState('');
   const [filterTerm, setFilterTerm] = useState('');
@@ -137,12 +139,12 @@ export function AssessmentsTab() {
     },
     {
       id: 'actions', header: '',
-      cell: ({ row }) => (
+      cell: ({ row }) => canManage ? (
         <div className="flex gap-1">
           <Button variant="ghost" size="icon-sm" onClick={() => openEdit(row.original)} aria-label="Edit assessment"><Pencil className="h-3 w-3" /></Button>
           <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(row.original.id)} aria-label="Delete assessment"><Trash2 className="h-3 w-3 text-destructive" /></Button>
         </div>
-      ),
+      ) : null,
     },
   ];
 
@@ -165,7 +167,7 @@ export function AssessmentsTab() {
             {[1, 2, 3, 4].map((t) => <SelectItem key={t} value={String(t)}>Term {t}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Button size="sm" onClick={openCreate}><Plus className="mr-1 h-4 w-4" /> Add Assessment</Button>
+        {canManage && <Button size="sm" onClick={openCreate}><Plus className="mr-1 h-4 w-4" /> Add Assessment</Button>}
       </div>
 
       <DataTable columns={columns} data={assessments} searchKey="name" searchPlaceholder="Search assessments..." />

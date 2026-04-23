@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { useGrades, useClasses, useStaff } from '@/hooks/useAcademics';
 import { useGradeMutations, useClassMutations } from '@/hooks/useAcademicMutations';
+import { useCan } from '@/hooks/useCan';
 import type { Grade, SchoolClass } from '@/types';
 import type { StaffMember } from '@/hooks/useAcademics';
 
@@ -31,6 +32,7 @@ export function GradeClassesTab() {
   const { staff } = useStaff();
   const { createGrade, updateGrade, deleteGrade } = useGradeMutations();
   const { createClass, updateClass, deleteClass } = useClassMutations();
+  const canManage = useCan('manage_academic_setup');
 
   const [expandedGrade, setExpandedGrade] = useState<string | null>(null);
   const [gradeDialogOpen, setGradeDialogOpen] = useState(false);
@@ -144,9 +146,11 @@ export function GradeClassesTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button onClick={openGradeCreate} size="sm">
-          <Plus className="mr-1 h-4 w-4" /> Add Grade
-        </Button>
+        {canManage && (
+          <Button onClick={openGradeCreate} size="sm">
+            <Plus className="mr-1 h-4 w-4" /> Add Grade
+          </Button>
+        )}
       </div>
 
       {grades.length === 0 ? (
@@ -168,6 +172,7 @@ export function GradeClassesTab() {
                 grade={grade}
                 gradeClasses={gradeClasses}
                 isExpanded={isExpanded}
+                canManage={canManage}
                 onToggle={() => setExpandedGrade(isExpanded ? null : grade.id)}
                 onEditGrade={() => openGradeEdit(grade)}
                 onDeleteGrade={() => handleGradeDelete(grade.id)}
@@ -243,6 +248,7 @@ interface GradeCardItemProps {
   grade: Grade;
   gradeClasses: SchoolClass[];
   isExpanded: boolean;
+  canManage: boolean;
   onToggle: () => void;
   onEditGrade: () => void;
   onDeleteGrade: () => void;
@@ -252,7 +258,7 @@ interface GradeCardItemProps {
   getTeacherName: (cls: SchoolClass) => string;
 }
 
-function GradeCardItem({ grade, gradeClasses, isExpanded, onToggle, onEditGrade, onDeleteGrade, onAddClass, onEditClass, onDeleteClass, getTeacherName }: GradeCardItemProps) {
+function GradeCardItem({ grade, gradeClasses, isExpanded, canManage, onToggle, onEditGrade, onDeleteGrade, onAddClass, onEditClass, onDeleteClass, getTeacherName }: GradeCardItemProps) {
   return (
     <Card>
       <CardHeader className="cursor-pointer" onClick={onToggle}>
@@ -262,17 +268,21 @@ function GradeCardItem({ grade, gradeClasses, isExpanded, onToggle, onEditGrade,
             <span>{grade.name}</span>
             <Badge variant="secondary">{gradeClasses.length} classes</Badge>
           </div>
-          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-            <Button variant="ghost" size="icon-sm" onClick={onEditGrade} aria-label="Edit grade"><Pencil className="h-3 w-3" /></Button>
-            <Button variant="ghost" size="icon-sm" onClick={onDeleteGrade} aria-label="Delete grade"><Trash2 className="h-3 w-3 text-destructive" /></Button>
-          </div>
+          {canManage && (
+            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+              <Button variant="ghost" size="icon-sm" onClick={onEditGrade} aria-label="Edit grade"><Pencil className="h-3 w-3" /></Button>
+              <Button variant="ghost" size="icon-sm" onClick={onDeleteGrade} aria-label="Delete grade"><Trash2 className="h-3 w-3 text-destructive" /></Button>
+            </div>
+          )}
         </CardTitle>
       </CardHeader>
       {isExpanded && (
         <CardContent>
-          <div className="mb-3 flex justify-end">
-            <Button variant="outline" size="sm" onClick={onAddClass}><Plus className="mr-1 h-3 w-3" /> Add Class</Button>
-          </div>
+          {canManage && (
+            <div className="mb-3 flex justify-end">
+              <Button variant="outline" size="sm" onClick={onAddClass}><Plus className="mr-1 h-3 w-3" /> Add Class</Button>
+            </div>
+          )}
           {gradeClasses.length === 0 ? (
             <p className="text-sm text-muted-foreground">No classes in this grade.</p>
           ) : (
@@ -284,10 +294,12 @@ function GradeCardItem({ grade, gradeClasses, isExpanded, onToggle, onEditGrade,
                     <Badge variant="outline" className="text-xs">{cls.studentCount ?? 0}/{cls.capacity}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">{getTeacherName(cls) || 'No teacher assigned'}</p>
-                  <div className="flex gap-1 pt-1">
-                    <Button variant="ghost" size="icon-sm" onClick={() => onEditClass(cls)} aria-label="Edit class"><Pencil className="h-3 w-3" /></Button>
-                    <Button variant="ghost" size="icon-sm" onClick={() => onDeleteClass(cls.id)} aria-label="Delete class"><Trash2 className="h-3 w-3 text-destructive" /></Button>
-                  </div>
+                  {canManage && (
+                    <div className="flex gap-1 pt-1">
+                      <Button variant="ghost" size="icon-sm" onClick={() => onEditClass(cls)} aria-label="Edit class"><Pencil className="h-3 w-3" /></Button>
+                      <Button variant="ghost" size="icon-sm" onClick={() => onDeleteClass(cls.id)} aria-label="Delete class"><Trash2 className="h-3 w-3 text-destructive" /></Button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useCan } from '@/hooks/useCan';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +36,7 @@ export function SubjectLinesStep({
   const [newLineName, setNewLineName] = useState('');
   const [newSubjects, setNewSubjects] = useState<string[]>([]);
   const [suggesting, setSuggesting] = useState(false);
+  const canManage = useCan('manage_academic_setup');
 
   if (!isFET) {
     return (
@@ -92,7 +94,7 @@ export function SubjectLinesStep({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <Button variant="outline" size="sm" onClick={handleSuggest} disabled={suggesting}>
+        <Button variant="outline" size="sm" onClick={handleSuggest} disabled={suggesting || !canManage}>
           <Sparkles className="mr-1 h-4 w-4" />
           {suggesting ? 'Suggesting...' : 'Suggest Optimal Lines'}
         </Button>
@@ -115,9 +117,11 @@ export function SubjectLinesStep({
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm">{line.lineName}</CardTitle>
-                <Button variant="ghost" size="icon" onClick={() => onDelete(line.id)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                {canManage && (
+                  <Button variant="ghost" size="icon" onClick={() => onDelete(line.id)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>
@@ -200,7 +204,7 @@ export function SubjectLinesStep({
           <Button
             size="sm"
             onClick={handleAddLine}
-            disabled={!newLineName.trim() || newSubjects.length === 0}
+            disabled={!newLineName.trim() || newSubjects.length === 0 || !canManage}
           >
             <Plus className="mr-1 h-4 w-4" /> Add Line
           </Button>

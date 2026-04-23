@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { useSubjects, useRemedials } from '@/hooks/useAcademics';
 import { useRemedialMutations } from '@/hooks/useAcademicMutationsExtended';
+import { useCan } from '@/hooks/useCan';
 import type { RemedialRecord } from '@/hooks/useAcademics';
 import { formatDate } from '@/lib/utils';
 import type { Student } from '@/types';
@@ -32,6 +33,7 @@ export function RemedialsTab() {
   const { subjects } = useSubjects();
   const { records, students, loading, refetch: fetchRecords } = useRemedials();
   const { createRemedial, updateRemedial, deleteRemedial } = useRemedialMutations();
+  const canManage = useCan('manage_academic_setup');
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<RemedialRecord | null>(null);
@@ -103,12 +105,12 @@ export function RemedialsTab() {
     { id: 'date', header: 'Identified', accessorFn: (r) => { try { return formatDate(r.identifiedDate); } catch { return ''; } } },
     { id: 'status', header: 'Status', cell: ({ row }) => <Badge variant={STATUS_VARIANTS[row.original.status] ?? 'secondary'}>{row.original.status.replace('_', ' ')}</Badge> },
     { id: 'areas', header: 'Areas', accessorFn: (r) => r.areas.length },
-    { id: 'actions', header: '', cell: ({ row }) => (
+    { id: 'actions', header: '', cell: ({ row }) => canManage ? (
       <div className="flex gap-1">
         <Button variant="ghost" size="icon-sm" onClick={() => openEdit(row.original)} aria-label="Edit remedial"><Pencil className="h-3 w-3" /></Button>
         <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(row.original.id)} aria-label="Delete remedial"><Trash2 className="h-3 w-3 text-destructive" /></Button>
       </div>
-    )},
+    ) : null },
   ];
 
   if (loading) return <LoadingSpinner />;
@@ -116,7 +118,7 @@ export function RemedialsTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button size="sm" onClick={openCreate}><Plus className="mr-1 h-4 w-4" /> Add Remedial</Button>
+        {canManage && <Button size="sm" onClick={openCreate}><Plus className="mr-1 h-4 w-4" /> Add Remedial</Button>}
       </div>
       {records.length === 0 ? (
         <EmptyState icon={AlertTriangle} title="No remedial records" description="No remedial tracking records exist." />

@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { useGrades, useSubjects, useStaff, useExams, useExamSlots } from '@/hooks/useAcademics';
 import { useExamMutations, useExamSlotMutations } from '@/hooks/useAcademicMutationsExtended';
+import { useCan } from '@/hooks/useCan';
 import type { Exam, ExamSlot } from '@/hooks/useAcademics';
 import { formatDate } from '@/lib/utils';
 
@@ -33,6 +34,7 @@ export function ExamsTab() {
   const { staff } = useStaff();
   const { createExam, updateExam, deleteExam } = useExamMutations();
   const { createExamSlot, deleteExamSlot } = useExamSlotMutations();
+  const canManage = useCan('manage_academic_setup');
 
   const { exams, loading, refetch: fetchExams } = useExams();
   const [examDialogOpen, setExamDialogOpen] = useState(false);
@@ -111,18 +113,20 @@ export function ExamsTab() {
       { accessorKey: 'venue', header: 'Venue' },
       { accessorKey: 'invigilatorName', header: 'Invigilator' },
       { id: 'dur', header: 'Duration', accessorFn: (r) => `${r.duration} min` },
-      { id: 'actions', header: '', cell: ({ row }) => (
+      { id: 'actions', header: '', cell: ({ row }) => canManage ? (
         <Button variant="ghost" size="icon-sm" onClick={() => handleSlotDelete(row.original.id)} aria-label="Delete slot"><Trash2 className="h-3 w-3 text-destructive" /></Button>
-      )},
+      ) : null },
     ];
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setSelectedExam(null)}>Back</Button>
           <h3 className="text-lg font-semibold">{selectedExam.name} - Exam Timetable</h3>
-          <Button size="sm" onClick={() => { setSlotForm({ subjectId: '', gradeId: '', date: '', startTime: '09:00', endTime: '11:00', venue: '', invigilator: '', duration: '120' }); setSlotDialogOpen(true); }}>
-            <Plus className="mr-1 h-4 w-4" /> Add Slot
-          </Button>
+          {canManage && (
+            <Button size="sm" onClick={() => { setSlotForm({ subjectId: '', gradeId: '', date: '', startTime: '09:00', endTime: '11:00', venue: '', invigilator: '', duration: '120' }); setSlotDialogOpen(true); }}>
+              <Plus className="mr-1 h-4 w-4" /> Add Slot
+            </Button>
+          )}
         </div>
         {slotsLoading ? <LoadingSpinner /> : <DataTable columns={slotCols} data={slots} />}
         <Dialog open={slotDialogOpen} onOpenChange={setSlotDialogOpen}>
@@ -152,9 +156,11 @@ export function ExamsTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button size="sm" onClick={() => { setEditingExam(null); setExamForm({ name: '', term: '1', year: '2026', startDate: '', endDate: '', status: 'scheduled' }); setExamDialogOpen(true); }}>
-          <Plus className="mr-1 h-4 w-4" /> Add Exam
-        </Button>
+        {canManage && (
+          <Button size="sm" onClick={() => { setEditingExam(null); setExamForm({ name: '', term: '1', year: '2026', startDate: '', endDate: '', status: 'scheduled' }); setExamDialogOpen(true); }}>
+            <Plus className="mr-1 h-4 w-4" /> Add Exam
+          </Button>
+        )}
       </div>
       {exams.length === 0 ? (
         <EmptyState icon={BookOpen} title="No exams" description="No exam periods have been created." />
@@ -175,8 +181,12 @@ export function ExamsTab() {
                 </p>
                 <div className="flex gap-1 pt-1">
                   <Button variant="outline" size="sm" onClick={() => { setSelectedExam(exam); }}><Eye className="mr-1 h-3 w-3" /> Timetable</Button>
-                  <Button variant="ghost" size="icon-sm" onClick={() => { setEditingExam(exam); setExamForm({ name: exam.name, term: String(exam.term), year: String(exam.year), startDate: exam.startDate?.substring(0, 10) ?? '', endDate: exam.endDate?.substring(0, 10) ?? '', status: exam.status }); setExamDialogOpen(true); }} aria-label="Edit exam"><Pencil className="h-3 w-3" /></Button>
-                  <Button variant="ghost" size="icon-sm" onClick={() => handleExamDelete(exam.id)} aria-label="Delete exam"><Trash2 className="h-3 w-3 text-destructive" /></Button>
+                  {canManage && (
+                    <>
+                      <Button variant="ghost" size="icon-sm" onClick={() => { setEditingExam(exam); setExamForm({ name: exam.name, term: String(exam.term), year: String(exam.year), startDate: exam.startDate?.substring(0, 10) ?? '', endDate: exam.endDate?.substring(0, 10) ?? '', status: exam.status }); setExamDialogOpen(true); }} aria-label="Edit exam"><Pencil className="h-3 w-3" /></Button>
+                      <Button variant="ghost" size="icon-sm" onClick={() => handleExamDelete(exam.id)} aria-label="Delete exam"><Trash2 className="h-3 w-3 text-destructive" /></Button>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>

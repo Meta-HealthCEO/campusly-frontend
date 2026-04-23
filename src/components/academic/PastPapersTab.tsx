@@ -19,12 +19,14 @@ import { toast } from 'sonner';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { useSubjects, useGrades, usePastPapers } from '@/hooks/useAcademics';
 import { usePastPaperMutations } from '@/hooks/useAcademicMutationsExtended';
+import { useCan } from '@/hooks/useCan';
 
 export function PastPapersTab() {
   const { subjects } = useSubjects();
   const { grades } = useGrades();
   const { papers, loading, refetch: fetchPapers } = usePastPapers();
   const { createPastPaper, deletePastPaper } = usePastPaperMutations();
+  const canManage = useCan('manage_academic_setup');
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({
@@ -63,21 +65,23 @@ export function PastPapersTab() {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button
-          size="sm"
-          onClick={() => {
-            setForm({
-              subjectId: '',
-              gradeId: '',
-              year: '2025',
-              term: '1',
-              fileUrl: '',
-            });
-            setDialogOpen(true);
-          }}
-        >
-          <Plus className="mr-1 h-4 w-4" /> Upload Past Paper
-        </Button>
+        {canManage && (
+          <Button
+            size="sm"
+            onClick={() => {
+              setForm({
+                subjectId: '',
+                gradeId: '',
+                year: '2025',
+                term: '1',
+                fileUrl: '',
+              });
+              setDialogOpen(true);
+            }}
+          >
+            <Plus className="mr-1 h-4 w-4" /> Upload Past Paper
+          </Button>
+        )}
       </div>
 
       {papers.length === 0 ? (
@@ -115,14 +119,16 @@ export function PastPapersTab() {
                   >
                     <ExternalLink className="mr-1 h-3 w-3" /> View
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => handleDelete(paper.id)}
-                    aria-label="Delete paper"
-                  >
-                    <Trash2 className="h-3 w-3 text-destructive" />
-                  </Button>
+                  {canManage && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => handleDelete(paper.id)}
+                      aria-label="Delete paper"
+                    >
+                      <Trash2 className="h-3 w-3 text-destructive" />
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
