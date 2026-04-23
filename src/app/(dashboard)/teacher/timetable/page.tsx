@@ -10,6 +10,7 @@ import { AlertCircle, Calendar, Printer, Settings } from 'lucide-react';
 import { useTeacherTimetableManager } from '@/hooks/useTeacherTimetableManager';
 import { useTeacherSubjects } from '@/hooks/useTeacherSubjects';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
+import { useCan } from '@/hooks/useCan';
 import { TimetableGrid } from '@/components/timetable/TimetableGrid';
 import { TimetableMobileView } from '@/components/timetable/TimetableMobileView';
 import { resolveId } from '@/components/timetable/timetable-helpers';
@@ -34,6 +35,8 @@ export default function TeacherTimetablePage() {
 
   const { subjects, loading: subjectsLoading } = useTeacherSubjects();
   const { classes, loading: classesLoading } = useTeacherClasses();
+
+  const canConfigure = useCan('manage_school_config');
 
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [slotDialog, setSlotDialog] = useState<SlotDialogState>({
@@ -127,21 +130,29 @@ export default function TeacherTimetablePage() {
         <EmptyState
           icon={Calendar}
           title="No period configuration"
-          description="Set up your school's period times before building your timetable."
+          description={
+            canConfigure
+              ? "Set up your school's period times before building your timetable."
+              : 'Your school admin has not configured periods yet. Please check back later.'
+          }
           action={
-            <Button onClick={() => setConfigDialogOpen(true)}>
-              <Settings className="mr-2 h-4 w-4" />
-              Configure Periods
-            </Button>
+            canConfigure ? (
+              <Button onClick={() => setConfigDialogOpen(true)}>
+                <Settings className="mr-2 h-4 w-4" />
+                Configure Periods
+              </Button>
+            ) : undefined
           }
         />
-        <PeriodConfigDialog
-          open={configDialogOpen}
-          onOpenChange={setConfigDialogOpen}
-          config={config}
-          onSave={saveConfig}
-          maxExistingPeriod={maxExistingPeriod}
-        />
+        {canConfigure && (
+          <PeriodConfigDialog
+            open={configDialogOpen}
+            onOpenChange={setConfigDialogOpen}
+            config={config}
+            onSave={saveConfig}
+            maxExistingPeriod={maxExistingPeriod}
+          />
+        )}
       </div>
     );
   }
@@ -155,10 +166,12 @@ export default function TeacherTimetablePage() {
               <Printer className="mr-2 h-4 w-4" />
               Print
             </Button>
-            <Button variant="outline" onClick={() => setConfigDialogOpen(true)}>
-              <Settings className="mr-2 h-4 w-4" />
-              Period Settings
-            </Button>
+            {canConfigure && (
+              <Button variant="outline" onClick={() => setConfigDialogOpen(true)}>
+                <Settings className="mr-2 h-4 w-4" />
+                Period Settings
+              </Button>
+            )}
           </div>
         </PageHeader>
 
@@ -182,13 +195,15 @@ export default function TeacherTimetablePage() {
 
         {/* Dialogs */}
         <div className="print:hidden">
-        <PeriodConfigDialog
-          open={configDialogOpen}
-          onOpenChange={setConfigDialogOpen}
-          config={config}
-          onSave={saveConfig}
-          maxExistingPeriod={maxExistingPeriod}
-        />
+        {canConfigure && (
+          <PeriodConfigDialog
+            open={configDialogOpen}
+            onOpenChange={setConfigDialogOpen}
+            config={config}
+            onSave={saveConfig}
+            maxExistingPeriod={maxExistingPeriod}
+          />
+        )}
 
         <TimetableSlotDialog
           open={slotDialog.open}
