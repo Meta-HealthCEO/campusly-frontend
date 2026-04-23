@@ -68,7 +68,7 @@ The JWT payload — already populated in `campusly-backend/src/middleware/auth.t
 | `manage_visitors` | super / school_admin / principal / receptionist |
 | `view_audit_log` | super / school_admin / principal |
 
-**Standalone handling:** `isStandaloneTeacher` is treated as an admin for their own school for capabilities that make sense solo (settings, config, academic setup, sport for coaches). Standalones are deliberately excluded from `manage_users` and `manage_fees` because those are multi-tenant concepts on a standalone "classroom of one" account.
+**Standalone handling:** `isStandaloneTeacher` is treated as an admin for their own school for capabilities that make sense solo (settings, config, academic setup, sport for coaches). Standalones are deliberately excluded from `manage_users` and `manage_fees` at the capability-rule level. Note this is belt-and-braces: the standalone signup flow (`src/modules/Auth/standalone.service.ts`) only enables a limited set of modules (`academic`, `ai_tools`, `teacher_workbench`, `learning`, `homework`, `attendance`, `incident_wellbeing`, `communication`), so `requireModule('fee')` and `requireModule('users')`-guarded routes already 403 before the capability check runs. The explicit rule exclusion is kept so that if a standalone plan ever enables those modules, the capability layer still says no.
 
 **Super admin:** bypasses every capability; mirrors existing `authorize()` behaviour.
 
@@ -192,21 +192,40 @@ export function canUser(user: CapabilityUser | undefined, cap: Capability): bool
 
 ```ts
 import type { Request, Response, NextFunction } from 'express';
-import { ForbiddenError, UnauthorizedError } from '../common/errors.js';
+import { UnauthorizedError } from '../common/errors.js';
 import { canUser, type Capability } from '../common/permissions.js';
 
+const CAPABILITY_MESSAGES: Record<Capability, string> = {
+  manage_school_settings:  'You do not have permission to manage school settings.',
+  manage_school_config:    'You do not have permission to manage school configuration.',
+  manage_academic_setup:   'You do not have permission to manage academic setup.',
+  manage_users:            'You do not have permission to manage users.',
+  manage_fees:             'You do not have permission to manage fees.',
+  manage_pastoral:         'You do not have permission to manage pastoral cases.',
+  manage_sport_config:     'You do not have permission to manage sport configuration.',
+  manage_library:          'You do not have permission to manage the library.',
+  manage_visitors:         'You do not have permission to manage visitors.',
+  view_audit_log:          'You do not have permission to view the audit log.',
+};
+
 export function requireCapability(cap: Capability) {
-  return (req: Request, _res: Response, next: NextFunction): void => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) throw new UnauthorizedError('Authentication is required');
     if (!canUser(req.user, cap)) {
-      throw new ForbiddenError(`You do not have permission: ${cap}`);
+      res.status(403).json({
+        success: false,
+        code: 'FORBIDDEN_CAPABILITY',
+        capability: cap,
+        error: CAPABILITY_MESSAGES[cap],
+      });
+      return;
     }
     next();
   };
 }
 ```
 
-Error string includes the capability name so dev/ops can diagnose denied requests from logs alone.
+The response body carries a machine-readable `code` + `capability` pair for log diagnostics and a human-readable `error` string for toasts. Frontend axios interceptor prefers `error` over the generic fallback.
 
 ## Usage Patterns
 
@@ -265,50 +284,120 @@ Any inline `if (user.role === 'teacher' && !user.isSchoolPrincipal) → 403` ins
 - **`requireModule(moduleName)`** — runs before capability checks. A disabled module short-circuits with its own 403; capabilities do not override module gates.
 - **`validateSchoolScope(paramName)`** — orthogonal. Capabilities answer "what can you do", scope answers "in whose tenancy". Both run for admin operations on specific schools.
 
-### Nav filtering
+### Scope vs. capability (migration guidance)
 
-The dashboard layout at `campusly-frontend/src/app/(dashboard)/layout.tsx` currently stacks `filterByModule(roleNav, modulesEnabled)` then `filterByPermission(... , hasPermission)`. Add a separate `filterByCapability` step (not folded into `filterByPermission`):
+Grepping the backend reveals that `user.role === 'teacher'` is used for *two distinct* reasons, and **only one of them migrates to capabilities**:
+
+1. **Authorization** — controller-level gates that end in `res.status(403)` or throw `ForbiddenError`. Example:
+   ```ts
+   if (user.role === 'teacher' && !user.isSchoolPrincipal) {
+     res.status(403).json(...); return;
+   }
+   ```
+   *These migrate.* They are replaced by a `requireCapability(...)` middleware on the route, and the controller-level check is deleted.
+
+2. **Resource scoping** — defaults or filters that constrain the query to the user's own data. Example:
+   ```ts
+   const teacherId = user.role === 'teacher' ? user.id : req.params.teacherId;
+   ```
+   or
+   ```ts
+   if (user.role === 'teacher' && !data.teacherId) data.teacherId = user.id;
+   ```
+   *These stay as-is.* They define what the teacher can see, not whether they can access the route.
+
+The implementation plan enforces the distinction with a concrete grep: **only migrate occurrences where the check is followed by a 403 response or a `ForbiddenError` throw.** Scope defaults stay in the controller.
+
+### Nav composition
+
+The dashboard layout at `campusly-frontend/src/app/(dashboard)/layout.tsx` currently stacks `filterByModule(roleNav, modulesEnabled)` then `filterByPermission(... , hasPermission)`. The existing `NAV_BY_ROLE` is keyed on `role` alone — which means a `teacher + isBursar` gets only teacher nav and never sees fee admin items, even though their capability grants them `manage_fees`. Filtering cannot add items, only remove them, so a simple `filterByCapability` step is insufficient.
+
+Instead, compose the nav from two sources:
+
+1. `NAV_BY_ROLE` — the baseline nav for every user of that role.
+2. `NAV_BY_CAPABILITY` — nav items that appear *if* the user has a particular capability, regardless of their base role.
 
 ```ts
-const navItems = useMemo(() => {
-  if (!user) return ADMIN_NAV;
-  const roleNav = NAV_BY_ROLE[user.role] ?? ADMIN_NAV;
-  const moduleFiltered = school ? filterByModule(roleNav, school.modulesEnabled) : roleNav;
-  const capFiltered = filterByCapability(moduleFiltered, user);
-  return filterByPermission(capFiltered, hasPermission);
-}, [user, school, hasPermission]);
+// src/app/(dashboard)/nav-config.ts
+const NAV_BY_CAPABILITY: Partial<Record<Capability, NavItem[]>> = {
+  manage_school_config:  [{ label: 'School Config', href: '/admin/school-config', icon: Settings }],
+  manage_fees:           [{ label: 'Fees', href: '/admin/fees', icon: CreditCard }],
+  manage_pastoral:       [{ label: 'Pastoral', href: '/admin/pastoral', icon: Heart }],
+  // ...
+};
+
+function composeNav(
+  user: User,
+  modulesEnabled: string[],
+  hasPermission: (perm: string) => boolean,
+): NavItem[] {
+  const baseline = NAV_BY_ROLE[user.role] ?? ADMIN_NAV;
+  const capabilityItems = (Object.keys(NAV_BY_CAPABILITY) as Capability[])
+    .filter((cap) => can(user, cap))
+    .flatMap((cap) => NAV_BY_CAPABILITY[cap] ?? []);
+  const merged = dedupeByHref([...baseline, ...capabilityItems]);
+  return filterByPermission(filterByModule(merged, modulesEnabled), hasPermission);
+}
 ```
 
-Nav items may declare an optional `requiresCapability?: Capability` alongside existing `requiresPermission`. Items without it are unaffected.
+`dedupeByHref` prevents double-listing when an item legitimately appears in both the role baseline and a capability slot (e.g. school_admin's baseline already includes fee admin, and `manage_fees` capability also claims it).
+
+This replaces the current `navItems` `useMemo` in `layout.tsx`.
 
 ## Frontend / Backend Synchronisation
 
-The risk with two parallel files is drift. Mitigations:
+Two parallel files mean drift is possible. We layer three defences, each honest about what it catches and what it doesn't.
 
-1. **File header comments** on both sides pointing to the other path, stating "keep in lockstep".
-2. **Snapshot test** in each repo:
-   - A canonical JSON fixture (`permissions.snapshot.json`) committed in both repos.
-   - Contains a truth table: for every capability × every archetype user, the expected boolean.
-   - Unit test asserts `canUser(archetype, cap) === snapshot[cap][archetype]`.
-   - Diff in either repo flags the change; both must be updated together or CI fails.
-3. **Archetypes** covered by the snapshot:
-   - `super_admin`
-   - `school_admin`
-   - `teacher` (plain, no flags)
-   - `teacher + isSchoolPrincipal`
-   - `teacher + isStandaloneTeacher + isSchoolPrincipal`
-   - `teacher + isHOD`
-   - `teacher + isBursar`
-   - `teacher + isCounselor`
-   - `teacher + isReceptionist`
-   - `parent`
-   - `student`
-   - `sports_manager`
-   - `coach + isStandaloneCoach`
+### Defence 1 — Intra-repo snapshot test (automated)
 
-~10 capabilities × 13 archetypes ≈ 130 rows. Easy to review; catches every rule drift.
+A canonical JSON fixture (`permissions.snapshot.json`) is committed in each repo. A unit test asserts `canUser(archetype, cap) === snapshot[cap][archetype]` for every archetype × capability pair. This catches the case where a dev modifies the rule table but forgets to update the snapshot *within a single repo* — CI fails, they fix it.
 
-4. **Failure mode if drift occurs:** snapshot test in the repo that diverged fails with a diff showing which capability/archetype moved. Fixing requires updating both the code and the snapshot file — and by convention the same snapshot file is committed in the other repo in the same PR.
+**Archetypes** covered by the snapshot:
+
+- `super_admin`
+- `school_admin`
+- `teacher` (plain, no flags)
+- `teacher + isSchoolPrincipal`
+- `teacher + isStandaloneTeacher + isSchoolPrincipal`
+- `teacher + isHOD`
+- `teacher + isBursar`
+- `teacher + isCounselor`
+- `teacher + isReceptionist`
+- `parent`
+- `student`
+- `sports_manager`
+- `coach + isStandaloneCoach`
+
+10 capabilities × 13 archetypes ≈ 130 rows. Easy to review in diffs.
+
+### Defence 2 — Cross-repo byte-identity check (manual + scripted)
+
+The `permissions.snapshot.json` file must be **byte-identical** in both repos. This is not enforceable by either repo's CI alone (neither CI knows about the other checkout). Instead:
+
+- Each repo ships a script at `scripts/check-permissions-sync.sh` that accepts a sibling repo path:
+  ```bash
+  # From campusly-frontend:
+  ./scripts/check-permissions-sync.sh ../campusly-backend
+  # Exits 0 if the two permissions.snapshot.json files are byte-identical.
+  # Exits 1 and prints a diff if they differ.
+  ```
+- The snapshot file carries a short SHA-256 in a comment at the top of each side's `permissions.ts`:
+  ```ts
+  // permissions.snapshot.json sha256: a1b2c3...
+  ```
+  The hash is regenerated any time the snapshot changes. Divergent hashes between the two `permissions.ts` files are visible at a glance in a PR diff (both files are typically opened side by side during review of a rules change).
+
+### Defence 3 — PR discipline (documented)
+
+Both repos' `CLAUDE.md` gets one line added under "Pre-commit checklist":
+
+> **Permissions rule change?** Update BOTH `campusly-frontend/src/lib/permissions.ts` AND `campusly-backend/src/common/permissions.ts`. Regenerate both `permissions.snapshot.json` files. Run `scripts/check-permissions-sync.sh` against the sibling checkout before opening the PR.
+
+### Failure modes we accept
+
+- A dev changes one repo's rule + snapshot + hash, ships a PR, merges before the other repo's matching PR. Window of inconsistency exists until the matching PR lands.
+- Drift is only fully closed when both PRs merge. Tolerable because the window is a few hours and both PRs must be opened together by convention.
+- If the two truly get out of sync in production, users hit a 403-on-click (the same failure mode as today, bounded by the capability surface, not a data-integrity risk).
 
 ## Rollout Plan
 
@@ -319,10 +408,12 @@ Four phases, each independently shippable and reviewable.
 - Frontend:
   - Extend the `User` interface at `src/types/common.ts` to declare the missing JWT flags — `isSchoolPrincipal?`, `isHOD?`, `isBursar?`, `isCounselor?`, `isReceptionist?` (the backend already populates them; only `isStandaloneTeacher` and `isStandaloneCoach` are typed today, which is why existing code uses `as unknown as {...}` casts — see `src/hooks/useIsStandalone.ts`, `src/components/assessment-structure/CreateStructureDialog.tsx`).
   - Drop the `as unknown as {...}` casts in those two files once the type is fixed.
-  - Add `src/lib/permissions.ts`, `src/hooks/useCan.ts`, `permissions.snapshot.json`, unit test.
+  - Add `src/lib/permissions.ts`, `src/hooks/useCan.ts`, `permissions.snapshot.json`, unit test, `scripts/check-permissions-sync.sh`.
 - Backend:
-  - Add `src/common/permissions.ts`, `src/middleware/capability.ts`, `permissions.snapshot.json`, unit test.
+  - Add `src/common/permissions.ts`, `src/middleware/capability.ts`, `permissions.snapshot.json`, unit test, `scripts/check-permissions-sync.sh`.
   - The `req.user` type at `src/types/express.d.ts` already declares all the flags — no type changes needed.
+- Both:
+  - Add a line to `CLAUDE.md` Pre-commit checklist: "Permissions rule change? Update both repos; run `scripts/check-permissions-sync.sh` against the sibling checkout."
 - No routes wired. No UI gated. Fully backwards-compatible.
 
 ### Phase 2 — Fix the trigger (timetable config)
@@ -333,21 +424,36 @@ Four phases, each independently shippable and reviewable.
 
 ### Phase 3 — Audit pass, module by module
 
-One PR per capability. Each follows the same pattern: replace `authorize()` on affected write routes with `requireCapability(...)`; delete any overlapping inline role checks in controllers; gate corresponding frontend buttons, nav items, and page actions; verify with two archetypes (granted vs denied).
+One PR per capability. Each follows the same pattern below.
 
-| Capability | Backend route files | Frontend surfaces |
+**Per-PR migration checklist:**
+
+1. **Find authorization checks, not scope logic.** Grep the target module for `res.status(403)` and `ForbiddenError` occurrences that are guarded by `user.role === '...'` or `user.is<Flag>`. Only those migrate. Default-assignment patterns (`teacherId = user.role === 'teacher' ? user.id : ...`) stay untouched.
+2. **Replace route middleware.** On the relevant write routes, replace `authorize('school_admin', ...)` or bespoke inline guards with `requireCapability('<cap>')`.
+3. **Delete the now-redundant controller-level auth check.** Keep scope logic.
+4. **Verify downstream scope.** Where the capability grants a flag-bearing role (HOD, counselor, bursar), confirm the controller enforces per-resource scope *below* the capability check (e.g. HOD can only write subjects in their `departmentId`, counselor can only write cases for assigned students). If scope is missing, add it in the same PR — **do not widen the door without scope.**
+5. **Gate the frontend.** Add `useCan('<cap>')` checks to buttons, dialog triggers, empty-state CTAs, page-level redirects where applicable. Update empty-state copy for the denied case.
+6. **Add to `NAV_BY_CAPABILITY`.** Any admin nav items the capability should surface to non-`school_admin` users (e.g. `isBursar` teacher seeing Fees) get declared in `NAV_BY_CAPABILITY`.
+7. **Verify with two archetypes** — one granted, one denied — via manual login or integration test.
+
+**Audit surface:**
+
+| Capability | Backend files | Frontend surfaces |
 |---|---|---|
 | `manage_school_settings` | `School/routes.ts` (PUT, PATCH settings, DELETE) | `SchoolGeneralTab`, `SchoolModulesTab`, admin school page |
-| `manage_academic_setup` | `Academic/routes.ts`, `TimetableBuilder/routes.ts` (requirements, lines, availability), `AssessmentStructure/routes.ts` | Grade/class/subject admin pages, assessment structure builder |
+| `manage_school_config` | `TimetableBuilder/routes.ts` (PUT /config) — covered by Phase 2 | — (covered by Phase 2) |
+| `manage_academic_setup` | `Academic/routes.ts`, `Department/routes.ts` (has bespoke inline teacher+flag check at line 34), `TimetableBuilder/routes.ts` (requirements, lines, availability), `AssessmentStructure/routes.ts`, `ContentLibrary/controller.ts` (line 116 inline `isSchoolPrincipal` check) | Grade/class/subject admin, assessment structure builder, content library admin |
 | `manage_users` | `Staff/routes.ts`, `Student/routes.ts`, `Parent/routes.ts` (writes) | Staff/student/parent management pages |
 | `manage_fees` | `Fee/routes.ts` (types, invoices, debtors — writes) | Fee admin pages, invoice creation |
-| `manage_pastoral` | `Incident/routes.ts`, `Wellbeing/routes.ts` (writes) | Case management UI |
+| `manage_pastoral` | `Incident/routes.ts` (lines 30-39 bespoke `isCounselor` inline checks), `Wellbeing/routes.ts` (writes) | Case management UI |
 | `manage_sport_config` | `Sport/routes.ts` (teams, fixtures, seasons — writes) | Sport admin pages |
 | `manage_library` | `Library/routes.ts` (writes) | Library admin UI |
 | `manage_visitors` | `Visitor/routes.ts` (writes) | Visitor/gate pass admin UI |
 | `view_audit_log` | `Audit/routes.ts` | Audit log page |
 
-The implementation plan (writing-plans output) will expand each row into concrete file-level tasks.
+Specifically-named files (`Department/routes.ts:34`, `ContentLibrary/controller.ts:116`, `Incident/routes.ts:30-39`) carry pre-existing bespoke inline guards that must be migrated — they are easy to miss in a pure route-file sweep.
+
+The implementation plan will expand each row into concrete file-level tasks with the exact lines to delete.
 
 ### Phase 4 — Cleanup
 
@@ -357,9 +463,21 @@ The implementation plan (writing-plans output) will expand each row into concret
 
 ## Error UX
 
-- Backend 403 response body: `{ success: false, error: 'You do not have permission: <capability>' }`.
-- Frontend axios interceptor already surfaces server errors as toasts — no new work.
-- Because UI is gated up-front, users should rarely see these toasts. When they do (e.g. a race where their flags changed mid-session), the capability name in the error aids debugging.
+Backend 403 response body for capability denials:
+
+```json
+{
+  "success": false,
+  "code": "FORBIDDEN_CAPABILITY",
+  "capability": "manage_school_config",
+  "error": "You do not have permission to manage school configuration."
+}
+```
+
+- `error` is the human-readable string the axios interceptor surfaces as a toast.
+- `code` and `capability` are machine-readable; used by log search and by any future client-side mapping.
+- Because UI is gated up-front, users should rarely see these toasts. When they do (e.g. a race where their flags changed mid-session), the structured fields aid diagnosis.
+- The frontend axios interceptor is updated (if not already) to prefer `error` over a generic "Request failed" fallback when the response body carries it.
 
 ## Testing
 
@@ -373,9 +491,25 @@ The implementation plan (writing-plans output) will expand each row into concret
 **Manual (Phase 2 and each Phase 3 PR):**
 - Three-archetype smoke test per affected screen.
 
+## Decisions Taken During Review
+
+An initial self-review understated the risks; a deeper critical review surfaced issues below, each resolved in this revision.
+
+1. **Scope-vs-authorization ambiguity in controllers.** `user.role === 'teacher'` is used both for scope-defaulting (`teacherId = user.id`) and for authorization guards. A naïve sweep would accidentally rip out scope logic. **Decision:** migrate only occurrences that end in `res.status(403)` / `ForbiddenError`; scope defaults stay. Encoded in the Phase 3 per-PR checklist.
+
+2. **Nav filtering cannot add items.** `NAV_BY_ROLE` is keyed on role alone; a `teacher + isBursar` would never see Fees nav even with `manage_fees` capability. **Decision:** introduce `NAV_BY_CAPABILITY` alongside `NAV_BY_ROLE` and compose the final tree by union + dedupe, rather than filtering.
+
+3. **Cross-repo snapshot sync is not fully enforceable from one repo.** Snapshot tests catch intra-repo drift but cannot verify the sibling repo. **Decision:** layer three defences (intra-repo snapshot test, `scripts/check-permissions-sync.sh` with SHA comment, and `CLAUDE.md` PR discipline). Accept a bounded inconsistency window between paired PRs merging.
+
+4. **Downstream scope guarantees for flag-gated roles.** Granting HOD/counselor/bursar a capability could widen the door if controllers lack department/student scope checks. **Decision:** the Phase 3 checklist requires verifying (and adding if missing) per-resource scope in the same PR as the capability migration. No capability-migration PR is allowed to widen access.
+
+5. **Bespoke inline auth in additional files.** `Incident/routes.ts`, `Department/routes.ts`, `ContentLibrary/controller.ts` have pre-existing inline guards (`isCounselor`, `isSchoolPrincipal`). **Decision:** named explicitly in the Phase 3 audit surface table so they cannot be missed in a pure route-file sweep.
+
+6. **Capability names in error toasts.** `"You do not have permission: manage_school_config"` is unfriendly. **Decision:** backend returns a structured body (`code`, `capability`, `error`) with a human-readable `error` string; client prefers that over generic fallbacks.
+
 ## Open Questions
 
-None at design time. The matrix, file layout, middleware, hook, snapshot discipline, and rollout order are all pinned.
+None remaining.
 
 ## Out-of-Scope Follow-ups
 
