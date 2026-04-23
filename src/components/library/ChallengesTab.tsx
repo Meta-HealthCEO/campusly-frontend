@@ -29,6 +29,7 @@ interface ChallengeFormData {
 interface ChallengesTabProps {
   challenges: ReadingChallengeRecord[];
   loading: boolean;
+  canManage: boolean;
   leaderboard: LeaderboardEntry[];
   leaderboardLoading: boolean;
   onCreateChallenge: (data: ChallengeFormData) => Promise<void>;
@@ -53,7 +54,7 @@ function getChallengeStatus(c: ReadingChallengeRecord): 'active' | 'upcoming' | 
 }
 
 export function ChallengesTab({
-  challenges, loading, leaderboard, leaderboardLoading,
+  challenges, loading, canManage, leaderboard, leaderboardLoading,
   onCreateChallenge, onUpdateChallenge, onDeleteChallenge,
   onFetchLeaderboard, onRefresh,
 }: ChallengesTabProps) {
@@ -162,7 +163,7 @@ export function ChallengesTab({
                     <Button variant="ghost" size="icon-sm" onClick={() => openEdit(c)} aria-label="Edit challenge">
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(c)} aria-label="Delete challenge">
+                    <Button variant="ghost" size="icon-sm" disabled={!canManage} onClick={() => handleDelete(c)} aria-label="Delete challenge">
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>

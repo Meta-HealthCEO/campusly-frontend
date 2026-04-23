@@ -49,6 +49,7 @@ function getStudentName(loan: BookLoanRecord): string {
 interface LoansTabProps {
   loans: BookLoanRecord[];
   loading: boolean;
+  canManage: boolean;
   books: LibraryBookRecord[];
   students: Student[];
   onIssueLoan: (data: { bookId: string; studentId: string; dueDate: string }) => Promise<void>;
@@ -58,7 +59,7 @@ interface LoansTabProps {
 }
 
 export function LoansTab({
-  loans, loading, books, students,
+  loans, loading, canManage, books, students,
   onIssueLoan, onReturnLoan, onMarkLost, onRefresh,
 }: LoansTabProps) {
   const [issueOpen, setIssueOpen] = useState(false);
@@ -160,7 +161,7 @@ export function LoansTab({
             <Button variant="outline" size="sm" onClick={() => { setReturnLoan(row.original); setFineAmount('0'); }}>
               <RotateCcw className="mr-1 h-3 w-3" /> Return
             </Button>
-            <Button variant="outline" size="sm" onClick={() => { setLostLoan(row.original); setFineAmount('0'); }}>
+            <Button variant="outline" size="sm" disabled={!canManage} onClick={() => { setLostLoan(row.original); setFineAmount('0'); }}>
               <AlertTriangle className="mr-1 h-3 w-3" /> Lost
             </Button>
           </div>

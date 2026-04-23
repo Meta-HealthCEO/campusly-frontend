@@ -11,10 +11,11 @@ import type { FineConfig } from '@/hooks/useLibraryFines';
 interface FineConfigFormProps {
   config: FineConfig;
   loading: boolean;
+  canManage: boolean;
   onSave: (data: Partial<FineConfig>) => Promise<void>;
 }
 
-export function FineConfigForm({ config, loading, onSave }: FineConfigFormProps) {
+export function FineConfigForm({ config, loading, canManage, onSave }: FineConfigFormProps) {
   const [finePerDay, setFinePerDay] = useState('');
   const [maxFine, setMaxFine] = useState('');
   const [saving, setSaving] = useState(false);
@@ -73,7 +74,7 @@ export function FineConfigForm({ config, loading, onSave }: FineConfigFormProps)
             />
           </div>
         </div>
-        <Button onClick={handleSave} disabled={saving || !finePerDay}>
+        <Button onClick={handleSave} disabled={saving || !finePerDay || !canManage}>
           {saving ? 'Saving...' : 'Save Configuration'}
         </Button>
       </CardContent>

@@ -15,6 +15,7 @@ import type { LibraryBookRecord } from '@/hooks/useLibrary';
 interface BooksTabProps {
   books: LibraryBookRecord[];
   loading: boolean;
+  canManage: boolean;
   onCreateBook: (data: {
     title: string; author: string; category: string;
     copies: number; availableCopies: number;
@@ -30,7 +31,7 @@ interface BooksTabProps {
 }
 
 export function BooksTab({
-  books, loading, onCreateBook, onUpdateBook, onDeleteBook,
+  books, loading, canManage, onCreateBook, onUpdateBook, onDeleteBook,
   onRefresh, search, onSearchChange, categoryFilter, onCategoryChange,
 }: BooksTabProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -104,10 +105,10 @@ export function BooksTab({
       id: 'actions', header: 'Actions',
       cell: ({ row }) => (
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon-sm" onClick={() => { setEditBook(row.original); setDialogOpen(true); }} aria-label="Edit book">
+          <Button variant="ghost" size="icon-sm" disabled={!canManage} onClick={() => { setEditBook(row.original); setDialogOpen(true); }} aria-label="Edit book">
             <Pencil className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(row.original)} aria-label="Delete book">
+          <Button variant="ghost" size="icon-sm" disabled={!canManage} onClick={() => handleDelete(row.original)} aria-label="Delete book">
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         </div>
@@ -140,7 +141,7 @@ export function BooksTab({
             ))}
           </SelectContent>
         </Select>
-        <Button onClick={() => { setEditBook(null); setDialogOpen(true); }}>
+        <Button disabled={!canManage} onClick={() => { setEditBook(null); setDialogOpen(true); }}>
           <Plus className="mr-2 h-4 w-4" /> Add Book
         </Button>
       </div>

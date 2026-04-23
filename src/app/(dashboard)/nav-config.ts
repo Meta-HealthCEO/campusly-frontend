@@ -2,7 +2,7 @@ import type { Capability } from '@/lib/permissions';
 import { can } from '@/lib/permissions';
 import type { User } from '@/types';
 import type { NavItem } from '@/lib/constants';
-import { Settings, GraduationCap, Users } from 'lucide-react';
+import { Settings, GraduationCap, Users, BookMarked } from 'lucide-react';
 
 /**
  * Nav items that appear for any user who has the given capability,
@@ -18,6 +18,9 @@ export const NAV_BY_CAPABILITY: Partial<Record<Capability, NavItem[]>> = {
   manage_users: [
     { label: 'Students', href: '/admin/students', icon: GraduationCap },
     { label: 'Staff', href: '/admin/staff', icon: Users },
+  ],
+  manage_library: [
+    { label: 'Library', href: '/admin/library', icon: BookMarked },
   ],
 };
 

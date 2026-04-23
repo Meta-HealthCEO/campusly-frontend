@@ -12,6 +12,7 @@ import { formatDate } from '@/lib/utils';
 interface OverdueFinesTableProps {
   fines: OverdueFineEntry[];
   loading: boolean;
+  canManage: boolean;
   uninvoicedCount: number;
   totalAmountCents: number;
   generating: boolean;
@@ -24,7 +25,7 @@ function formatRands(cents: number): string {
 }
 
 export function OverdueFinesTable({
-  fines, loading, uninvoicedCount, totalAmountCents,
+  fines, loading, canManage, uninvoicedCount, totalAmountCents,
   generating, onGenerateInvoices, onRefresh,
 }: OverdueFinesTableProps) {
   if (loading) return <LoadingSpinner />;
@@ -44,7 +45,7 @@ export function OverdueFinesTable({
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onRefresh}>Refresh</Button>
           {uninvoicedCount > 0 && (
-            <Button size="sm" onClick={onGenerateInvoices} disabled={generating}>
+            <Button size="sm" onClick={onGenerateInvoices} disabled={generating || !canManage}>
               <Receipt className="h-4 w-4 mr-1" />
               {generating ? 'Generating...' : `Generate ${uninvoicedCount} Invoice(s)`}
             </Button>

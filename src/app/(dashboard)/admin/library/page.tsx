@@ -8,6 +8,7 @@ import { BookOpen, BookCopy, AlertTriangle, Trophy, Banknote } from 'lucide-reac
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useLibrary } from '@/hooks/useLibrary';
 import { useLibraryFines } from '@/hooks/useLibraryFines';
+import { useCan } from '@/hooks/useCan';
 import { BooksTab } from '@/components/library/BooksTab';
 import { LoansTab } from '@/components/library/LoansTab';
 import { ChallengesTab } from '@/components/library/ChallengesTab';
@@ -19,6 +20,7 @@ export default function AdminLibraryPage() {
   const schoolId = user?.schoolId ?? '';
   const lib = useLibrary(schoolId);
   const finesHook = useLibraryFines();
+  const canManage = useCan('manage_library');
 
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -130,6 +132,7 @@ export default function AdminLibraryPage() {
           <BooksTab
             books={lib.books}
             loading={lib.booksLoading}
+            canManage={canManage}
             onCreateBook={lib.createBook}
             onUpdateBook={lib.updateBook}
             onDeleteBook={lib.deleteBook}
@@ -145,6 +148,7 @@ export default function AdminLibraryPage() {
           <LoansTab
             loans={lib.overdueLoans}
             loading={lib.overdueLoading}
+            canManage={canManage}
             books={lib.books}
             students={lib.libraryStudents}
             onIssueLoan={lib.issueLoan}
@@ -159,6 +163,7 @@ export default function AdminLibraryPage() {
             <OverdueFinesTable
               fines={finesHook.fines}
               loading={finesHook.finesLoading}
+              canManage={canManage}
               uninvoicedCount={finesHook.uninvoicedFines.length}
               totalAmountCents={finesHook.totalFineAmountCents}
               generating={finesHook.generating}
@@ -168,6 +173,7 @@ export default function AdminLibraryPage() {
             <FineConfigForm
               config={finesHook.config}
               loading={finesHook.configLoading}
+              canManage={canManage}
               onSave={finesHook.updateConfig}
             />
           </div>
@@ -177,6 +183,7 @@ export default function AdminLibraryPage() {
           <ChallengesTab
             challenges={lib.challenges}
             loading={lib.challengesLoading}
+            canManage={canManage}
             leaderboard={lib.leaderboard}
             leaderboardLoading={lib.leaderboardLoading}
             onCreateChallenge={lib.createChallenge}
