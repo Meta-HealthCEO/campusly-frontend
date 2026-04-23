@@ -14,10 +14,12 @@ import { AlertTriangle, Plus, ShieldAlert, Search as SearchIcon, CheckCircle } f
 import { useIncidents } from '@/hooks/useIncidents';
 import { useIncidentReports } from '@/hooks/useIncidentReports';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useCan } from '@/hooks/useCan';
 import type { Incident, CreateIncidentPayload } from '@/types';
 
 export default function AdminIncidentsPage() {
   const router = useRouter();
+  const canManage = useCan('manage_pastoral');
   const { user } = useAuthStore();
   const { incidents, total, loading, fetchIncidents, createIncident } = useIncidents();
   const { summary, fetchSummary } = useIncidentReports();

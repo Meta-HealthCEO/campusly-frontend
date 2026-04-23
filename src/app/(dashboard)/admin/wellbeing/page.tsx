@@ -18,9 +18,11 @@ import { SurveyBuilder } from '@/components/wellbeing/SurveyBuilder';
 import { SurveyResultsView } from '@/components/wellbeing/SurveyResultsView';
 import { useWellbeingSurveys } from '@/hooks/useWellbeingSurveys';
 import { useMoodDashboard } from '@/hooks/useMoodDashboard';
+import { useCan } from '@/hooks/useCan';
 import type { CreateSurveyPayload, WellbeingSurvey } from '@/types';
 
 export default function AdminWellbeingPage() {
+  const canManage = useCan('manage_pastoral');
   const { surveys, results, loading, fetchSurveys, createSurvey, fetchResults, updateSurvey } = useWellbeingSurveys();
   const { data: moodData, loading: moodLoading, fetchDashboard } = useMoodDashboard();
 
@@ -57,9 +59,11 @@ export default function AdminWellbeingPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Wellbeing" description="Student mood tracking and surveys">
-        <Button onClick={() => setBuilderOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Create Survey
-        </Button>
+        {canManage && (
+          <Button onClick={() => setBuilderOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Create Survey
+          </Button>
+        )}
       </PageHeader>
 
       <Tabs defaultValue="dashboard">
@@ -123,7 +127,7 @@ export default function AdminWellbeingPage() {
                     <p className="text-xs">Grades: {s.targetGrades.join(', ')}</p>
                     <p className="text-xs">{s.responseCount ?? 0} responses</p>
                     <div className="flex gap-2 pt-1">
-                      {s.status === 'draft' && (
+                      {canManage && s.status === 'draft' && (
                         <Button size="sm" variant="outline" onClick={() => handleActivateSurvey(s.id)}>
                           Activate
                         </Button>
