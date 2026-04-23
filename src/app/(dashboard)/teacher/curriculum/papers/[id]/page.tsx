@@ -15,11 +15,12 @@ import type { GeneratedPaper, PaperSection } from '@/components/ai-tools/types';
 export default function PaperDetailPage() {
   const params = useParams();
   const paperId = params.id as string;
-  const { loadPaperById, savePaper, regenerateQuestion } = useAITools();
+  const { loadPaperById, savePaper, regenerateQuestion, downloadPaperPdf, downloadMemoPdf } = useAITools();
   const [paper, setPaper] = useState<GeneratedPaper | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [regeneratingKey, setRegeneratingKey] = useState<string | null>(null);
+  const [editedKeys, setEditedKeys] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function load() {
@@ -33,6 +34,12 @@ export default function PaperDetailPage() {
   const handleEditQuestion = useCallback(
     (sectionIndex: number, questionIndex: number, text: string) => {
       if (!paper) return;
+      const key = `${sectionIndex}:${questionIndex}`;
+      setEditedKeys((prev) => {
+        const next = new Set(prev);
+        next.add(key);
+        return next;
+      });
       const newSections = paper.sections.map((sec, sIdx) => {
         if (sIdx !== sectionIndex) return sec;
         return {
@@ -50,9 +57,17 @@ export default function PaperDetailPage() {
   const handleRegenerateQuestion = useCallback(
     async (sectionIndex: number, questionIndex: number) => {
       if (!paper) return;
-      setRegeneratingKey(`${sectionIndex}:${questionIndex}`);
+      const key = `${sectionIndex}:${questionIndex}`;
+      setRegeneratingKey(key);
       const updated = await regenerateQuestion(paper.id, sectionIndex, questionIndex);
-      if (updated) setPaper(updated);
+      if (updated) {
+        setPaper(updated);
+        setEditedKeys((prev) => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
+      }
       setRegeneratingKey(null);
     },
     [paper, regenerateQuestion],
@@ -68,6 +83,16 @@ export default function PaperDetailPage() {
     },
     [paper, savePaper],
   );
+
+  const handleDownloadPaper = useCallback(() => {
+    if (!paper) return;
+    void downloadPaperPdf(paper.id, `${paper.subject}-G${paper.grade}-T${paper.term}-paper.pdf`);
+  }, [paper, downloadPaperPdf]);
+
+  const handleDownloadMemo = useCallback(() => {
+    if (!paper) return;
+    void downloadMemoPdf(paper.id, `${paper.subject}-G${paper.grade}-T${paper.term}-memo.pdf`);
+  }, [paper, downloadMemoPdf]);
 
   if (loading) {
     return (
@@ -109,9 +134,12 @@ export default function PaperDetailPage() {
         paper={paper}
         regeneratingKey={regeneratingKey}
         saving={saving}
+        editedKeys={editedKeys}
         onEditQuestion={handleEditQuestion}
         onRegenerateQuestion={handleRegenerateQuestion}
         onSave={handleSave}
+        onDownloadPaper={handleDownloadPaper}
+        onDownloadMemo={handleDownloadMemo}
       />
     </div>
   );

@@ -21,13 +21,14 @@ import type { GeneratedPaper, SectionConfig, PaperSection } from '@/components/a
 
 export default function CreatePaperPage() {
   const { user } = useAuthStore();
-  const { generatePaper, savePaper, regenerateQuestion } = useAITools();
+  const { generatePaper, savePaper, regenerateQuestion, downloadPaperPdf, downloadMemoPdf } = useAITools();
 
   const [step, setStep] = useState(1);
   const [generating, setGenerating] = useState(false);
   const [paper, setPaper] = useState<GeneratedPaper | null>(null);
   const [saving, setSaving] = useState(false);
   const [regeneratingKey, setRegeneratingKey] = useState<string | null>(null);
+  const [editedKeys, setEditedKeys] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
   // Form state
@@ -90,9 +91,17 @@ export default function CreatePaperPage() {
     sectionIndex: number, questionIndex: number,
   ) => {
     if (!paper) return;
-    setRegeneratingKey(`${sectionIndex}:${questionIndex}`);
+    const key = `${sectionIndex}:${questionIndex}`;
+    setRegeneratingKey(key);
     const updated = await regenerateQuestion(paper.id, sectionIndex, questionIndex);
-    if (updated) setPaper(updated);
+    if (updated) {
+      setPaper(updated);
+      setEditedKeys((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+    }
     setRegeneratingKey(null);
   }, [paper, regenerateQuestion]);
 
@@ -100,6 +109,12 @@ export default function CreatePaperPage() {
     sectionIndex: number, questionIndex: number, text: string,
   ) => {
     if (!paper) return;
+    const key = `${sectionIndex}:${questionIndex}`;
+    setEditedKeys((prev) => {
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
     const newSections = paper.sections.map((sec, sIdx) => {
       if (sIdx !== sectionIndex) return sec;
       return {
@@ -118,6 +133,16 @@ export default function CreatePaperPage() {
     await savePaper(paper.id, { sections: updatedSections });
     setSaving(false);
   }, [paper, savePaper]);
+
+  const handleDownloadPaper = useCallback(() => {
+    if (!paper) return;
+    void downloadPaperPdf(paper.id, `${paper.subject}-G${paper.grade}-T${paper.term}-paper.pdf`);
+  }, [paper, downloadPaperPdf]);
+
+  const handleDownloadMemo = useCallback(() => {
+    if (!paper) return;
+    void downloadMemoPdf(paper.id, `${paper.subject}-G${paper.grade}-T${paper.term}-memo.pdf`);
+  }, [paper, downloadMemoPdf]);
 
   const canProceed = () => {
     if (step === 1) return subject && grade && term && topic;
@@ -190,9 +215,12 @@ export default function CreatePaperPage() {
       {step === 5 && paper && (
         <PaperPreview
           paper={paper} regeneratingKey={regeneratingKey}
-          saving={saving} onEditQuestion={handleEditQuestion}
+          saving={saving} editedKeys={editedKeys}
+          onEditQuestion={handleEditQuestion}
           onRegenerateQuestion={handleRegenerateQuestion}
           onSave={handleSave}
+          onDownloadPaper={handleDownloadPaper}
+          onDownloadMemo={handleDownloadMemo}
         />
       )}
     </div>
