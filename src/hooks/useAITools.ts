@@ -44,6 +44,24 @@ function mapJob(raw: Record<string, unknown>): GradingJob {
   return { ...raw, id: (raw._id as string) ?? (raw.id as string) } as GradingJob;
 }
 
+function extractApiError(err: unknown, fallback: string): string {
+  type ErrShape = { response?: { data?: { error?: string; message?: string } } };
+  return (err as ErrShape)?.response?.data?.error
+    ?? (err as ErrShape)?.response?.data?.message
+    ?? fallback;
+}
+
+function triggerBlobDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export function useAITools() {
   const [loading, setLoading] = useState(false);
   const [papers, setPapers] = useState<GeneratedPaper[]>([]);
@@ -63,10 +81,7 @@ export function useAITools() {
       toast.success('Paper generated successfully!');
       return paper;
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to generate paper. Please try again.';
-      toast.error(msg);
+      toast.error(extractApiError(err, 'Failed to generate paper. Please try again.'));
       return null;
     } finally {
       setLoading(false);
@@ -87,15 +102,10 @@ export function useAITools() {
       const response = await apiClient.get('/ai-tools/papers', { params });
       const raw = unwrapResponse(response);
       const papersData = raw.papers ?? (Array.isArray(raw) ? raw : []);
-      setPapers(
-        (papersData as Record<string, unknown>[]).map(mapPaper),
-      );
+      setPapers((papersData as Record<string, unknown>[]).map(mapPaper));
       setPapersTotal(typeof raw.total === 'number' ? raw.total : papersData.length);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to load papers';
-      toast.error(msg);
+      toast.error(extractApiError(err, 'Failed to load papers'));
     } finally {
       setLoading(false);
     }
@@ -110,10 +120,7 @@ export function useAITools() {
       setCurrentPaper(paper);
       return paper;
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to load paper';
-      toast.error(msg);
+      toast.error(extractApiError(err, 'Failed to load paper'));
       return null;
     } finally {
       setLoading(false);
@@ -133,10 +140,7 @@ export function useAITools() {
       toast.success('Paper saved successfully!');
       return paper;
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to save paper';
-      toast.error(msg);
+      toast.error(extractApiError(err, 'Failed to save paper'));
       return null;
     }
   }, []);
@@ -147,10 +151,7 @@ export function useAITools() {
       setPapers(prev => prev.filter(p => p.id !== id));
       toast.success('Paper deleted');
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to delete paper';
-      toast.error(msg);
+      toast.error(extractApiError(err, 'Failed to delete paper'));
     }
   }, []);
 
@@ -170,11 +171,28 @@ export function useAITools() {
       toast.success('Question regenerated!');
       return paper;
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to regenerate question';
-      toast.error(msg);
+      toast.error(extractApiError(err, 'Failed to regenerate question'));
       return null;
+    }
+  }, []);
+
+  const downloadPaperPdf = useCallback(async (id: string, filename?: string) => {
+    try {
+      const response = await apiClient.get(`/ai-tools/papers/${id}/pdf`, { responseType: 'blob' });
+      triggerBlobDownload(response.data as Blob, filename ?? `paper-${id}.pdf`);
+      toast.success('Paper downloaded');
+    } catch (err: unknown) {
+      toast.error(extractApiError(err, 'Failed to download paper'));
+    }
+  }, []);
+
+  const downloadMemoPdf = useCallback(async (id: string, filename?: string) => {
+    try {
+      const response = await apiClient.get(`/ai-tools/papers/${id}/memo-pdf`, { responseType: 'blob' });
+      triggerBlobDownload(response.data as Blob, filename ?? `memo-${id}.pdf`);
+      toast.success('Memo downloaded');
+    } catch (err: unknown) {
+      toast.error(extractApiError(err, 'Failed to download memo'));
     }
   }, []);
 
@@ -186,10 +204,7 @@ export function useAITools() {
       setGradingJobs(prev => [...prev, job]);
       return job;
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to submit for grading';
-      toast.error(msg);
+      toast.error(extractApiError(err, 'Failed to submit for grading'));
       return null;
     }
   }, []);
@@ -204,10 +219,7 @@ export function useAITools() {
       setGradingJobs(prev => [...prev, ...jobs]);
       return jobs;
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to submit bulk grading';
-      toast.error(msg);
+      toast.error(extractApiError(err, 'Failed to submit bulk grading'));
       return [];
     }
   }, []);
@@ -250,10 +262,7 @@ export function useAITools() {
       toast.success('Grade reviewed successfully');
       return job;
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to review grade';
-      toast.error(msg);
+      toast.error(extractApiError(err, 'Failed to review grade'));
       return null;
     }
   }, []);
@@ -267,10 +276,7 @@ export function useAITools() {
       toast.success('Grade published');
       return job;
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to publish grade';
-      toast.error(msg);
+      toast.error(extractApiError(err, 'Failed to publish grade'));
       return null;
     }
   }, []);
@@ -283,10 +289,7 @@ export function useAITools() {
       toast.success('Paper marked successfully!');
       return raw as MarkPaperResult;
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
-        ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Failed to mark paper. Please try again.';
-      toast.error(msg);
+      toast.error(extractApiError(err, 'Failed to mark paper. Please try again.'));
       return null;
     } finally {
       setLoading(false);
@@ -322,6 +325,8 @@ export function useAITools() {
     savePaper,
     deletePaper,
     regenerateQuestion,
+    downloadPaperPdf,
+    downloadMemoPdf,
     submitGrade,
     submitBulkGrade,
     pollGradingJob,
