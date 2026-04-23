@@ -17,6 +17,7 @@ interface QuestionCardProps {
   sectionIndex: number;
   questionIndex: number;
   regeneratingKey: string | null;
+  isEdited?: boolean;
   onEdit: (sectionIndex: number, questionIndex: number, text: string) => void;
   onRegenerate: (sectionIndex: number, questionIndex: number) => void;
   showModelAnswer?: boolean;
@@ -27,6 +28,7 @@ export function QuestionCard({
   sectionIndex,
   questionIndex,
   regeneratingKey,
+  isEdited = false,
   onEdit,
   onRegenerate,
   showModelAnswer = false,
@@ -57,6 +59,9 @@ export function QuestionCard({
               <Badge variant="secondary" className="text-xs">
                 {question.marks} {question.marks === 1 ? 'mark' : 'marks'}
               </Badge>
+              {isEdited && (
+                <Badge variant="secondary" className="text-xs">Edited</Badge>
+              )}
             </div>
             {editing ? (
               <div className="space-y-2">
