@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/dialog';
 import { staffSchema, type StaffFormData } from '@/lib/validations';
 import { useStaff } from '@/hooks/useStaff';
+import { useCan } from '@/hooks/useCan';
 import type { Teacher } from '@/types';
 
 const columns: ColumnDef<Teacher>[] = [
@@ -69,6 +70,7 @@ const columns: ColumnDef<Teacher>[] = [
 
 export default function StaffPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const canManage = useCan('manage_users');
   const { staffList, fetchStaff, createStaff } = useStaff();
   const {
     register,
@@ -92,6 +94,7 @@ export default function StaffPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Staff" description="Manage teachers and staff members">
+        {canManage && (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger render={<Button />}>
             <Plus className="mr-2 h-4 w-4" />
@@ -148,6 +151,7 @@ export default function StaffPage() {
             </form>
           </DialogContent>
         </Dialog>
+        )}
       </PageHeader>
 
       <DataTable columns={columns} data={staffList} searchKey="name" searchPlaceholder="Search staff..." />

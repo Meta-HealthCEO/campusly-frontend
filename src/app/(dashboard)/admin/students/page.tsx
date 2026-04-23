@@ -13,6 +13,7 @@ import { StudentAvatar } from '@/components/students/StudentAvatar';
 import { BulkImportDialog } from '@/components/students/BulkImportDialog';
 import { useStudents } from '@/hooks/useStudents';
 import { useStudentBulkImport } from '@/hooks/useStudentBulkImport';
+import { useCan } from '@/hooks/useCan';
 import type { Student } from '@/types';
 
 function getStudentName(row: Student): string {
@@ -81,6 +82,7 @@ const columns: ColumnDef<Student>[] = [
 
 export default function StudentsPage() {
   const router = useRouter();
+  const canManage = useCan('manage_users');
   const { students, loading, refetch } = useStudents();
   const { uploadAndValidate, confirmImport, downloadTemplate, validating, importing } =
     useStudentBulkImport();
@@ -90,21 +92,25 @@ export default function StudentsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Students" description="Manage student enrolments and profiles">
-        <BulkImportDialog
-          onDownloadTemplate={downloadTemplate}
-          onValidate={uploadAndValidate}
-          onImport={confirmImport}
-          validating={validating}
-          importing={importing}
-          onSuccess={refetch}
-        />
+        {canManage && (
+          <BulkImportDialog
+            onDownloadTemplate={downloadTemplate}
+            onValidate={uploadAndValidate}
+            onImport={confirmImport}
+            validating={validating}
+            importing={importing}
+            onSuccess={refetch}
+          />
+        )}
         <ExportButton endpoint="/students/export" filename="students.csv" />
-        <Link href="/admin/students/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Student
-          </Button>
-        </Link>
+        {canManage && (
+          <Link href="/admin/students/new">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Student
+            </Button>
+          </Link>
+        )}
       </PageHeader>
 
       <DataTable
