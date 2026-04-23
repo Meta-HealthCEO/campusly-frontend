@@ -2,6 +2,7 @@ import type { Capability } from '@/lib/permissions';
 import { can } from '@/lib/permissions';
 import type { User } from '@/types';
 import type { NavItem } from '@/lib/constants';
+import { Settings } from 'lucide-react';
 
 /**
  * Nav items that appear for any user who has the given capability,
@@ -11,7 +12,9 @@ import type { NavItem } from '@/lib/constants';
  * Phase 3 capability migrations add entries here as they land.
  */
 export const NAV_BY_CAPABILITY: Partial<Record<Capability, NavItem[]>> = {
-  // Populated incrementally by Phase 3 capability-migration PRs.
+  manage_school_settings: [
+    { label: 'Settings', href: '/admin/settings', icon: Settings },
+  ],
 };
 
 function dedupeByHref(items: NavItem[]): NavItem[] {

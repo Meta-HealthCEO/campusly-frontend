@@ -30,9 +30,10 @@ type SettingsFormData = z.infer<typeof settingsSchema>;
 interface SchoolSettingsFormProps {
   school: SchoolDocument;
   onSave: (data: UpdateSettingsInput) => Promise<void>;
+  canManage?: boolean;
 }
 
-export function SchoolSettingsForm({ school, onSave }: SchoolSettingsFormProps) {
+export function SchoolSettingsForm({ school, onSave, canManage = true }: SchoolSettingsFormProps) {
   const {
     register,
     handleSubmit,
@@ -116,7 +117,7 @@ export function SchoolSettingsForm({ school, onSave }: SchoolSettingsFormProps) 
         <CardFooter>
           <Button
             type="submit"
-            disabled={isSubmitting}
+            disabled={!canManage || isSubmitting}
             className="bg-blue-600 hover:bg-blue-700"
           >
             {isSubmitting ? 'Saving...' : 'Save Settings'}

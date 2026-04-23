@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { ModuleToggleList } from './ModuleToggleList';
 import { useSchoolData } from '@/hooks/useSchoolData';
+import { useCan } from '@/hooks/useCan';
 import type { SchoolDocument } from '@/types';
 
 interface SchoolModulesTabProps {
@@ -16,6 +17,7 @@ export function SchoolModulesTab({ school }: SchoolModulesTabProps) {
     school.modulesEnabled,
   );
   const { updateSchool } = useSchoolData();
+  const canManage = useCan('manage_school_settings');
 
   const handleToggle = async (moduleId: string, enabled: boolean) => {
     const newModules = enabled
@@ -41,7 +43,7 @@ export function SchoolModulesTab({ school }: SchoolModulesTabProps) {
     <ModuleToggleList
       enabledModules={optimisticModules}
       onToggle={handleToggle}
-      disabled={toggling}
+      disabled={!canManage || toggling}
     />
   );
 }
