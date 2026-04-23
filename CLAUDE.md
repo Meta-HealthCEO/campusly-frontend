@@ -351,6 +351,7 @@ Before considering ANY file done, verify:
 8. **File is under 350 lines**
 9. **API paths match backend exactly** — check `campusly-backend/src/app.ts` if unsure
 10. **Empty state + loading state** exist for every data view
+11. **Permissions rule change?** Update BOTH `campusly-frontend/src/lib/permissions.ts` AND `campusly-backend/src/common/permissions.ts`. Update both `permissions.snapshot.json` files to remain byte-identical. Run `scripts/check-permissions-sync.sh ../campusly-backend` before opening the PR.
 
 ---
 
