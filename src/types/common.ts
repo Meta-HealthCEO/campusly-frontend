@@ -8,6 +8,7 @@ import type { Grade, SchoolClass } from './academic';
 
 export type UserRole =
   | 'admin'
+  | 'school_admin'
   | 'teacher'
   | 'parent'
   | 'student'

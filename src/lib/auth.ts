@@ -36,6 +36,7 @@ export function getRoleDashboardPath(role: string): string {
 export function getRoleLabel(role: UserRole): string {
   const labels: Record<UserRole, string> = {
     admin: 'Administrator',
+    school_admin: 'School Admin',
     teacher: 'Teacher',
     parent: 'Parent',
     student: 'Student',

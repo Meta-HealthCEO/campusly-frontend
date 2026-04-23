@@ -22,6 +22,7 @@ import type { UserRole, PermissionFlag } from '@/types';
 
 const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
   admin: ADMIN_NAV,
+  school_admin: ADMIN_NAV,
   parent: PARENT_NAV,
   student: STUDENT_NAV,
   teacher: TEACHER_NAV,
