@@ -55,7 +55,7 @@ export function StepBasicInfo({ subject, setSubject, grade, setGrade, term, setT
       <CardContent className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>Subject</Label>
+            <Label htmlFor="subject">Subject <span className="text-destructive">*</span></Label>
             <Select value={subject} onValueChange={(v: unknown) => v && setSubject(v as string)}>
               <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
               <SelectContent>
@@ -64,7 +64,7 @@ export function StepBasicInfo({ subject, setSubject, grade, setGrade, term, setT
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Grade</Label>
+            <Label htmlFor="grade">Grade <span className="text-destructive">*</span></Label>
             <Select value={grade} onValueChange={(v: unknown) => v && setGrade(v as string)}>
               <SelectTrigger><SelectValue placeholder="Select grade" /></SelectTrigger>
               <SelectContent>
@@ -75,7 +75,7 @@ export function StepBasicInfo({ subject, setSubject, grade, setGrade, term, setT
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Term</Label>
+            <Label htmlFor="term">Term <span className="text-destructive">*</span></Label>
             <Select value={term} onValueChange={(v: unknown) => v && setTerm(v as string)}>
               <SelectTrigger><SelectValue placeholder="Select term" /></SelectTrigger>
               <SelectContent>
@@ -84,7 +84,7 @@ export function StepBasicInfo({ subject, setSubject, grade, setGrade, term, setT
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="topic">Topic</Label>
+            <Label htmlFor="topic">Topic <span className="text-destructive">*</span></Label>
             <Input id="topic" placeholder="e.g. Chemical Reactions" value={topic} onChange={(e) => setTopic(e.target.value)} />
           </div>
         </div>
@@ -110,7 +110,7 @@ export function StepConfig({ duration, setDuration, totalMarks, setTotalMarks, d
       <CardContent className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>Duration (minutes)</Label>
+            <Label htmlFor="duration">Duration (minutes) <span className="text-destructive">*</span></Label>
             <Select value={duration} onValueChange={(v: unknown) => v && setDuration(v as string)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -119,12 +119,12 @@ export function StepConfig({ duration, setDuration, totalMarks, setTotalMarks, d
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="totalMarks">Total Marks</Label>
+            <Label htmlFor="totalMarks">Total Marks <span className="text-destructive">*</span></Label>
             <Input id="totalMarks" type="number" value={totalMarks} onChange={(e) => setTotalMarks(e.target.value)} />
           </div>
         </div>
         <div className="space-y-2">
-          <Label>Difficulty</Label>
+          <Label>Difficulty <span className="text-destructive">*</span></Label>
           <div className="flex gap-2">
             {(['easy', 'medium', 'hard', 'mixed'] as const).map(d => (
               <Button key={d} type="button" variant={difficulty === d ? 'default' : 'outline'} size="sm" onClick={() => setDifficulty(d)} className="capitalize">{d}</Button>
