@@ -76,7 +76,7 @@ export interface GradingJob {
   rubric: RubricCriterion[];
   aiResult: AIResult | null;
   teacherOverride: TeacherOverride | null;
-  status: 'queued' | 'grading' | 'completed' | 'reviewed' | 'published';
+  status: 'queued' | 'grading' | 'completed' | 'reviewed' | 'published' | 'failed';
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;

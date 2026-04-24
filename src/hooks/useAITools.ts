@@ -11,56 +11,22 @@ import type {
   BulkGradePayload,
   PaperSection,
 } from '@/components/ai-tools/types';
+import {
+  mapPaper,
+  mapJob,
+  extractApiError,
+  triggerBlobDownload,
+} from './ai-tools-helpers';
+import type {
+  MarkPaperPayload,
+  MarkPaperResult,
+} from './ai-tools-helpers';
 
-export interface MarkPaperQuestionResult {
-  questionNumber: number;
-  studentAnswer: string;
-  correctAnswer: string;
-  marksAwarded: number;
-  maxMarks: number;
-  feedback: string;
-}
-
-export interface MarkPaperResult {
-  studentName: string;
-  totalMarks: number;
-  maxMarks: number;
-  percentage: number;
-  questions: MarkPaperQuestionResult[];
-}
-
-interface MarkPaperPayload {
-  paperId: string;
-  studentName: string;
-  image: string;
-  imageType: 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
-}
-
-function mapPaper(raw: Record<string, unknown>): GeneratedPaper {
-  return { ...raw, id: (raw._id as string) ?? (raw.id as string) } as GeneratedPaper;
-}
-
-function mapJob(raw: Record<string, unknown>): GradingJob {
-  return { ...raw, id: (raw._id as string) ?? (raw.id as string) } as GradingJob;
-}
-
-function extractApiError(err: unknown, fallback: string): string {
-  type ErrShape = { response?: { data?: { error?: string; message?: string } } };
-  return (err as ErrShape)?.response?.data?.error
-    ?? (err as ErrShape)?.response?.data?.message
-    ?? fallback;
-}
-
-function triggerBlobDownload(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
+export type {
+  MarkPaperQuestionResult,
+  MarkPaperResult,
+  MarkPaperPayload,
+} from './ai-tools-helpers';
 
 export function useAITools() {
   const [loading, setLoading] = useState(false);
@@ -232,7 +198,7 @@ export function useAITools() {
         const raw = unwrapResponse(response);
         const job = mapJob(raw as Record<string, unknown>);
         setGradingJobs(prev => prev.map(j => j.id === jobId ? job : j));
-        if (['completed', 'reviewed', 'published'].includes(job.status)) {
+        if (['completed', 'reviewed', 'published', 'failed'].includes(job.status)) {
           clearInterval(interval);
           pollingRefs.current.delete(jobId);
           onComplete?.(job);
@@ -267,17 +233,50 @@ export function useAITools() {
     }
   }, []);
 
-  const publishGrade = useCallback(async (jobId: string) => {
+  const publishGrade = useCallback(async (jobId: string, assessmentId: string, comment?: string) => {
     try {
-      const response = await apiClient.post(`/ai-tools/grade/${jobId}/publish`);
+      const response = await apiClient.post(`/ai-tools/grade/${jobId}/publish`, { assessmentId, comment });
       const raw = unwrapResponse(response);
       const job = mapJob(raw as Record<string, unknown>);
       setGradingJobs(prev => prev.map(j => j.id === jobId ? job : j));
-      toast.success('Grade published');
+      toast.success('Grade published to gradebook');
       return job;
     } catch (err: unknown) {
       toast.error(extractApiError(err, 'Failed to publish grade'));
       return null;
+    }
+  }, []);
+
+  const retryGrade = useCallback(async (jobId: string) => {
+    try {
+      const response = await apiClient.post(`/ai-tools/grade/${jobId}/retry`);
+      const raw = unwrapResponse(response);
+      const job = mapJob(raw as Record<string, unknown>);
+      setGradingJobs(prev => prev.map(j => j.id === jobId ? job : j));
+      toast.success('Grade re-queued');
+      return job;
+    } catch (err: unknown) {
+      toast.error(extractApiError(err, 'Failed to retry grade'));
+      return null;
+    }
+  }, []);
+
+  const loadIncompleteGradingJobs = useCallback(async (assignmentId?: string) => {
+    try {
+      const response = await apiClient.get('/ai-tools/grade', {
+        params: { assignmentId, status: 'queued,grading,completed,reviewed' },
+      });
+      const raw = unwrapResponse(response);
+      const jobs = (Array.isArray(raw) ? raw : (raw as Record<string, unknown>).jobs ?? []) as Record<string, unknown>[];
+      const mapped = jobs.map(mapJob);
+      setGradingJobs(mapped);
+      return mapped;
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status !== 404) {
+        toast.error(extractApiError(err, 'Failed to load grading jobs'));
+      }
+      return [];
     }
   }, []);
 
@@ -333,6 +332,8 @@ export function useAITools() {
     stopAllPolling,
     reviewGrade,
     publishGrade,
+    retryGrade,
+    loadIncompleteGradingJobs,
     loadUsageStats,
   };
 }

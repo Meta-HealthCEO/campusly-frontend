@@ -101,8 +101,28 @@ export function useTeacherMarking() {
     }
   }, []);
 
-  const publishMarking = useCallback(async (_id: string): Promise<void> => {
-    toast.info('Publishing to gradebook is coming in a future release.');
+  const publishMarking = useCallback(async (
+    id: string,
+    assessmentId: string,
+    studentId?: string,
+    comment?: string,
+  ): Promise<PaperMarking | null> => {
+    try {
+      const res = await apiClient.post(`/ai-tools/markings/${id}/publish`, {
+        assessmentId,
+        studentId,
+        comment,
+      });
+      const updated = unwrapResponse<PaperMarking>(res);
+      setCurrentMarking(updated);
+      setMarkings((prev) => prev.map((m) => (m.id === id ? updated : m)));
+      toast.success('Marks published to gradebook');
+      return updated;
+    } catch (err: unknown) {
+      console.error('Failed to publish marking', err);
+      toast.error('Failed to publish marks.');
+      return null;
+    }
   }, []);
 
   const fetchPapers = useCallback(async () => {
