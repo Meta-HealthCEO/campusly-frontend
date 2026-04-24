@@ -24,7 +24,8 @@ import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
 import { StatusBadge, ChannelBadge } from '@/components/communication/MessageBadges';
 import { ParentRecipientPicker } from '@/components/communication/ParentRecipientPicker';
-import { useBulkMessages, useParentsList } from '@/hooks/useCommunication';
+import { TeacherMessageTemplatePicker } from '@/components/communication/TeacherMessageTemplatePicker';
+import { useBulkMessages, useParentsList, useTemplates } from '@/hooks/useCommunication';
 import type { ChannelType } from '@/components/communication/types';
 import type { BulkMessageSender } from '@/components/communication/types';
 
@@ -43,13 +44,18 @@ export default function TeacherCommunicationPage() {
 
   const { messages, loading, sendMessage } = useBulkMessages();
   const { parents, loading: parentsLoading } = useParentsList();
+  const { templates, createTemplate } = useTemplates();
 
   const {
-    register, handleSubmit, setValue, reset, formState: { errors },
+    register, handleSubmit, setValue, watch, reset, formState: { errors },
   } = useForm<TeacherComposeValues>({
     resolver: zodResolver(teacherComposeSchema),
     defaultValues: { channel: 'all' },
   });
+
+  const watchSubject = watch('subject') ?? '';
+  const watchBody = watch('body') ?? '';
+  const watchChannel = watch('channel') ?? 'all';
 
   const onSubmit = async (data: TeacherComposeValues) => {
     if (selectedRecipients.length === 0) {
@@ -78,6 +84,29 @@ export default function TeacherCommunicationPage() {
       toast.error(msg);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleTemplateSelect = (tpl: { subject: string; body: string; channel: ChannelType }) => {
+    setValue('subject', tpl.subject);
+    setValue('body', tpl.body);
+    setValue('channel', tpl.channel);
+  };
+
+  const handleSaveTemplate = async (data: {
+    name: string;
+    subject: string;
+    body: string;
+    channel: ChannelType;
+  }) => {
+    try {
+      await createTemplate({ name: data.name, type: 'general', subject: data.subject, body: data.body, channel: data.channel });
+      toast.success('Template saved');
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+        ?? 'Failed to save template';
+      toast.error(msg);
+      throw err;
     }
   };
 
@@ -125,8 +154,8 @@ export default function TeacherCommunicationPage() {
                     </div>
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-medium">{message.subject}</h3>
-                        <div className="flex items-center gap-2">
+                        <h3 className="font-medium truncate">{message.subject}</h3>
+                        <div className="flex items-center gap-2 shrink-0">
                           <ChannelBadge channel={message.channel} />
                           <StatusBadge status={message.status} />
                         </div>
@@ -160,70 +189,80 @@ export default function TeacherCommunicationPage() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="flex flex-col max-h-[90vh] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Compose Message</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <ParentRecipientPicker
-              parents={parents}
-              selectedIds={selectedRecipients}
-              onChange={setSelectedRecipients}
-              loading={parentsLoading}
-            />
-            {selectedRecipients.length === 0 && (
-              <p className="text-xs text-destructive">At least one recipient is required</p>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="subject">Subject</Label>
-              <Input id="subject" placeholder="Message subject" {...register('subject')} />
-              {errors.subject && (
-                <p className="text-xs text-destructive">{errors.subject.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Channel</Label>
-              <Select
-                defaultValue="all"
-                onValueChange={(val: unknown) => setValue('channel', val as ChannelType)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Channel" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Channels</SelectItem>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="sms">SMS</SelectItem>
-                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="body">Message</Label>
-              <Textarea
-                id="body"
-                placeholder="Type your message..."
-                className="min-h-[120px]"
-                {...register('body')}
+          <div className="flex-1 overflow-y-auto py-1">
+            <form id="teacher-compose-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <TeacherMessageTemplatePicker
+                templates={templates}
+                currentSubject={watchSubject}
+                currentBody={watchBody}
+                currentChannel={watchChannel as ChannelType}
+                onTemplateSelect={handleTemplateSelect}
+                onSaveTemplate={handleSaveTemplate}
               />
-              {errors.body && (
-                <p className="text-xs text-destructive">{errors.body.message}</p>
-              )}
-            </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={submitting}>
-                <Send className="mr-2 h-4 w-4" />
-                {submitting ? 'Sending...' : 'Send Message'}
-              </Button>
-            </DialogFooter>
-          </form>
+              <ParentRecipientPicker
+                parents={parents}
+                selectedIds={selectedRecipients}
+                onChange={setSelectedRecipients}
+                loading={parentsLoading}
+              />
+              {selectedRecipients.length === 0 && (
+                <p className="text-xs text-destructive">At least one recipient is required</p>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="subject">Subject</Label>
+                <Input id="subject" placeholder="Message subject" {...register('subject')} />
+                {errors.subject && (
+                  <p className="text-xs text-destructive">{errors.subject.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Channel</Label>
+                <Select
+                  defaultValue="all"
+                  onValueChange={(val: unknown) => setValue('channel', val as ChannelType)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Channel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Channels</SelectItem>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="sms">SMS</SelectItem>
+                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="body">Message</Label>
+                <Textarea
+                  id="body"
+                  placeholder="Type your message..."
+                  className="min-h-30"
+                  {...register('body')}
+                />
+                {errors.body && (
+                  <p className="text-xs text-destructive">{errors.body.message}</p>
+                )}
+              </div>
+            </form>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" form="teacher-compose-form" disabled={submitting}>
+              <Send className="mr-2 h-4 w-4" />
+              {submitting ? 'Sending...' : 'Send Message'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
