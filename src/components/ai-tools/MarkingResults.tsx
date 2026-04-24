@@ -7,11 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { RotateCcw, Send, ListOrdered, Save, AlertTriangle } from 'lucide-react';
 import type { PaperMarking, MarkingQuestion } from '@/hooks/useTeacherMarking';
+import { PublishToGradebookDialog } from './PublishToGradebookDialog';
 
 interface MarkingResultsProps {
   marking: PaperMarking;
   onUpdateMarks: (questions: MarkingQuestion[]) => Promise<void>;
-  onPublish: () => Promise<void>;
+  onPublish: (assessmentId: string, comment?: string) => Promise<void>;
   onMarkNext: () => void;
   onViewAll: () => void;
   isLoading: boolean;
@@ -33,6 +34,8 @@ export function MarkingResults({
 }: MarkingResultsProps) {
   const [questions, setQuestions] = useState<MarkingQuestion[]>(marking.questions);
   const [dirty, setDirty] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
   const adjustedTotal = useMemo(
     () => questions.reduce((sum, q) => sum + q.marksAwarded, 0),
@@ -154,8 +157,8 @@ export function MarkingResults({
         )}
         <Button
           variant={marking.status === 'published' || downrankAccept ? 'outline' : 'default'}
-          onClick={onPublish}
-          disabled={isLoading || marking.status === 'published'}
+          onClick={() => setPublishOpen(true)}
+          disabled={isLoading || marking.status === 'published' || publishing}
         >
           <Send className="mr-2 h-4 w-4" />
           Publish to gradebook
@@ -169,6 +172,19 @@ export function MarkingResults({
           View all results
         </Button>
       </div>
+
+      <PublishToGradebookDialog
+        open={publishOpen}
+        onOpenChange={setPublishOpen}
+        title="Publish to Gradebook"
+        description={`Publishing marks for ${marking.studentName}`}
+        submitting={publishing}
+        onConfirm={async (assessmentId, comment) => {
+          setPublishing(true);
+          await onPublish(assessmentId, comment);
+          setPublishing(false);
+        }}
+      />
     </div>
   );
 }

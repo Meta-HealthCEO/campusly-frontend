@@ -7,14 +7,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ChevronDown, ChevronUp, Check, Send } from 'lucide-react';
+import { ChevronDown, ChevronUp, Check, Send, RotateCcw } from 'lucide-react';
 import { GradingJobStatusBadge } from './GradingJobStatusBadge';
+import { PublishToGradebookDialog } from './PublishToGradebookDialog';
 import type { GradingJob } from './types';
 
 interface SubmissionCardProps {
   job: GradingJob;
   onReview: (jobId: string, finalMark: number, notes: string) => void;
-  onPublish: (jobId: string) => void;
+  onPublish: (jobId: string, assessmentId: string, comment?: string) => Promise<void>;
+  onRetry: (jobId: string) => void;
 }
 
 function getStudentName(job: GradingJob): string {
@@ -24,7 +26,7 @@ function getStudentName(job: GradingJob): string {
   return String(job.studentId);
 }
 
-export function SubmissionCard({ job, onReview, onPublish }: SubmissionCardProps) {
+export function SubmissionCard({ job, onReview, onPublish, onRetry }: SubmissionCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [finalMark, setFinalMark] = useState(
     job.teacherOverride?.finalMark ?? job.aiResult?.totalMark ?? 0,
@@ -32,6 +34,8 @@ export function SubmissionCard({ job, onReview, onPublish }: SubmissionCardProps
   const [teacherNotes, setTeacherNotes] = useState(
     job.teacherOverride?.teacherNotes ?? '',
   );
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
   const result = job.aiResult;
   const percentage = result && result.maxMark > 0
@@ -170,7 +174,7 @@ export function SubmissionCard({ job, onReview, onPublish }: SubmissionCardProps
                       </Button>
                     )}
                     {(job.status === 'completed' || job.status === 'reviewed') && (
-                      <Button size="sm" variant="outline" onClick={() => onPublish(job.id)}>
+                      <Button size="sm" variant="outline" onClick={() => setPublishOpen(true)}>
                         <Send className="mr-2 h-4 w-4" /> Publish
                       </Button>
                     )}
@@ -187,8 +191,30 @@ export function SubmissionCard({ job, onReview, onPublish }: SubmissionCardProps
                 : 'AI is currently grading this submission...'}
             </div>
           )}
+
+          {job.status === 'failed' && (
+            <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+              <p className="text-sm text-destructive">Grading failed. You can retry this submission.</p>
+              <Button size="sm" variant="outline" onClick={() => onRetry(job.id)}>
+                <RotateCcw className="mr-2 h-4 w-4" /> Retry
+              </Button>
+            </div>
+          )}
         </div>
       )}
+
+      <PublishToGradebookDialog
+        open={publishOpen}
+        onOpenChange={setPublishOpen}
+        title="Publish to Gradebook"
+        description={`Publishing grade for ${getStudentName(job)}`}
+        submitting={publishing}
+        onConfirm={async (assessmentId, comment) => {
+          setPublishing(true);
+          await onPublish(job.id, assessmentId, comment);
+          setPublishing(false);
+        }}
+      />
     </Card>
   );
 }
