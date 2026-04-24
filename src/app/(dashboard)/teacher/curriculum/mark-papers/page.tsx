@@ -13,7 +13,6 @@ import { MarkingResults } from '@/components/ai-tools/MarkingResults';
 import { MarkingHistoryTable } from '@/components/ai-tools/MarkingHistoryTable';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
-import { toast } from 'sonner';
 import { ROUTES } from '@/lib/constants';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useTeacherMarking } from '@/hooks/useTeacherMarking';
@@ -75,11 +74,10 @@ export default function MarkPapersPage() {
     await updateMarking(currentMarking.id, questions);
   }, [currentMarking, updateMarking]);
 
-  // Publish current marking
-  const handlePublish = useCallback(async () => {
+  // Publish current marking — called by MarkingResults dialog
+  const handlePublish = useCallback(async (assessmentId: string, comment?: string) => {
     if (!currentMarking) return;
-    await publishMarking(currentMarking.id);
-    toast.success('Published to gradebook');
+    await publishMarking(currentMarking.id, assessmentId, currentMarking.studentId, comment);
   }, [currentMarking, publishMarking]);
 
   // Mark next student — loop back to step 2, keep paper
@@ -103,13 +101,18 @@ export default function MarkPapersPage() {
     setView('wizard');
   }, [getMarking]);
 
-  // Publish from history table
-  const handlePublishFromHistory = useCallback(async (id: string) => {
-    await publishMarking(id);
+  // Publish from history table — called by MarkingHistoryTable dialog
+  const handlePublishFromHistory = useCallback(async (
+    id: string,
+    assessmentId: string,
+    comment?: string,
+  ) => {
+    const marking = markings.find((m) => m.id === id);
+    await publishMarking(id, assessmentId, marking?.studentId, comment);
     if (selectedPaper) {
       await getMarkings(selectedPaper.id);
     }
-  }, [publishMarking, selectedPaper, getMarkings]);
+  }, [publishMarking, selectedPaper, getMarkings, markings]);
 
   // Back from history to wizard
   const handleBackFromHistory = useCallback(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,7 @@ export default function GradingPage() {
     submitGrade, submitBulkGrade,
     pollGradingJob, stopAllPolling,
     reviewGrade, publishGrade,
+    retryGrade, loadIncompleteGradingJobs,
   } = useAITools();
   const { assignments, loadingAssignments } = useTeacherGradingAssignments();
 
@@ -55,6 +56,24 @@ export default function GradingPage() {
   const [bulkTotal, setBulkTotal] = useState(0);
   const [bulkCompleted, setBulkCompleted] = useState(0);
   const [bulkGrading, setBulkGrading] = useState(false);
+
+  // Restore incomplete grading jobs when assignment changes (session-safe)
+  useEffect(() => {
+    if (!selectedAssignment) return;
+    let cancelled = false;
+    loadIncompleteGradingJobs(selectedAssignment).then((jobs) => {
+      if (cancelled) return;
+      jobs.forEach((job) => {
+        if (job.status === 'queued' || job.status === 'grading') {
+          pollGradingJob(job.id);
+        }
+      });
+    });
+    return () => {
+      cancelled = true;
+      stopAllPolling();
+    };
+  }, [selectedAssignment, loadIncompleteGradingJobs, pollGradingJob, stopAllPolling]);
 
   const handleSubmitSingle = async () => {
     if (!user?.schoolId || !selectedAssignment || !studentId || !submissionText) return;
@@ -120,9 +139,16 @@ export default function GradingPage() {
     await reviewGrade(jobId, finalMark, notes);
   }, [reviewGrade]);
 
-  const handlePublish = useCallback(async (jobId: string) => {
-    await publishGrade(jobId);
+  const handlePublish = useCallback(async (jobId: string, assessmentId: string, comment?: string) => {
+    await publishGrade(jobId, assessmentId, comment);
   }, [publishGrade]);
+
+  const handleRetry = useCallback(async (jobId: string) => {
+    const job = await retryGrade(jobId);
+    if (job) {
+      pollGradingJob(job.id);
+    }
+  }, [retryGrade, pollGradingJob]);
 
   const handleApproveAll = useCallback(async () => {
     const completedJobs = gradingJobs.filter(j => j.status === 'completed');
@@ -252,6 +278,7 @@ export default function GradingPage() {
               job={job}
               onReview={handleReview}
               onPublish={handlePublish}
+              onRetry={handleRetry}
             />
           ))}
         </div>
