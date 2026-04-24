@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { toast } from 'sonner';
 import {
   mapTemplate, mapBulkMessage, mapDeliveryStat, mapMessageLog, mapId, extractArray,
 } from '@/components/communication/mappers';
@@ -119,7 +120,63 @@ export function useBulkMessages() {
     return mapped;
   };
 
-  return { messages, total, page, totalPages, loading, fetchMessages, sendMessage, scheduleMessage, setPage };
+  const cancelScheduledMessage = useCallback(async (id: string): Promise<boolean> => {
+    try {
+      await apiClient.post(`/communication/scheduled/${id}/cancel`);
+      setMessages((prev) => prev.filter((m) => m.id !== id));
+      toast.success('Scheduled message cancelled');
+      return true;
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+        ?? 'Failed to cancel scheduled message';
+      toast.error(msg);
+      return false;
+    }
+  }, []);
+
+  return { messages, total, page, totalPages, loading, fetchMessages, sendMessage, scheduleMessage, cancelScheduledMessage, setPage };
+}
+
+// ============== useScheduledMessages ==============
+export function useScheduledMessages() {
+  const user = useAuthStore((s) => s.user);
+  const schoolId = user?.schoolId ?? '';
+  const [scheduled, setScheduled] = useState<import('@/components/communication/types').BulkMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchScheduled = useCallback(async () => {
+    if (!schoolId) return;
+    try {
+      setLoading(true);
+      const res = await apiClient.get('/communication/messages', {
+        params: { schoolId, status: 'scheduled', limit: 50 },
+      });
+      const raw = unwrapResponse(res);
+      setScheduled(extractArray(raw).map(mapBulkMessage));
+    } catch {
+      console.error('Failed to load scheduled messages');
+    } finally {
+      setLoading(false);
+    }
+  }, [schoolId]);
+
+  useEffect(() => { fetchScheduled(); }, [fetchScheduled]);
+
+  const cancel = useCallback(async (id: string): Promise<boolean> => {
+    try {
+      await apiClient.post(`/communication/scheduled/${id}/cancel`);
+      setScheduled((prev) => prev.filter((m) => m.id !== id));
+      toast.success('Scheduled message cancelled');
+      return true;
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+        ?? 'Failed to cancel scheduled message';
+      toast.error(msg);
+      return false;
+    }
+  }, []);
+
+  return { scheduled, loading, fetchScheduled, cancel };
 }
 
 // ============== useMessageDetail ==============

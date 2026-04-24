@@ -19,13 +19,17 @@ import {
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
-import { MessageSquare, Send, Mail, Clock, ArrowRight } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { MessageSquare, Send, Mail, Clock, ArrowRight, CalendarClock } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
 import { StatusBadge, ChannelBadge } from '@/components/communication/MessageBadges';
 import { ParentRecipientPicker } from '@/components/communication/ParentRecipientPicker';
 import { TeacherMessageTemplatePicker } from '@/components/communication/TeacherMessageTemplatePicker';
-import { useBulkMessages, useParentsList, useTemplates } from '@/hooks/useCommunication';
+import { ScheduledMessagesList } from '@/components/communication/ScheduledMessagesList';
+import {
+  useBulkMessages, useParentsList, useTemplates, useScheduledMessages,
+} from '@/hooks/useCommunication';
 import type { ChannelType } from '@/components/communication/types';
 import type { BulkMessageSender } from '@/components/communication/types';
 
@@ -41,10 +45,13 @@ export default function TeacherCommunicationPage() {
   const [open, setOpen] = useState(false);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [sendLater, setSendLater] = useState(false);
+  const [scheduledFor, setScheduledFor] = useState('');
 
-  const { messages, loading, sendMessage } = useBulkMessages();
+  const { messages, loading, sendMessage, scheduleMessage } = useBulkMessages();
   const { parents, loading: parentsLoading } = useParentsList();
   const { templates, createTemplate } = useTemplates();
+  const { scheduled, loading: scheduledLoading, cancel: cancelScheduled } = useScheduledMessages();
 
   const {
     register, handleSubmit, setValue, watch, reset, formState: { errors },
@@ -57,26 +64,46 @@ export default function TeacherCommunicationPage() {
   const watchBody = watch('body') ?? '';
   const watchChannel = watch('channel') ?? 'all';
 
+  // Minimum datetime-local value (current time + 2 minutes)
+  const minDatetime = (() => {
+    const d = new Date(Date.now() + 2 * 60 * 1000);
+    const y = d.getFullYear();
+    const mo = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const h = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${y}-${mo}-${day}T${h}:${min}`;
+  })();
+
   const onSubmit = async (data: TeacherComposeValues) => {
     if (selectedRecipients.length === 0) {
       toast.error('Please select at least one recipient');
       return;
     }
+    if (sendLater && !scheduledFor) {
+      toast.error('Please select a scheduled date and time');
+      return;
+    }
     setSubmitting(true);
     try {
-      await sendMessage({
+      const payload = {
         subject: data.subject,
         body: data.body,
         channel: data.channel,
-        recipients: {
-          type: 'custom',
-          targetIds: selectedRecipients,
-        },
-      });
-      toast.success('Message sent successfully!');
+        recipients: { type: 'custom' as const, targetIds: selectedRecipients },
+      };
+      if (sendLater) {
+        await scheduleMessage({ ...payload, scheduledFor: new Date(scheduledFor).toISOString() });
+        toast.success('Message scheduled successfully!');
+      } else {
+        await sendMessage(payload);
+        toast.success('Message sent successfully!');
+      }
       setOpen(false);
       reset();
       setSelectedRecipients([]);
+      setSendLater(false);
+      setScheduledFor('');
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
         ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
@@ -94,10 +121,7 @@ export default function TeacherCommunicationPage() {
   };
 
   const handleSaveTemplate = async (data: {
-    name: string;
-    subject: string;
-    body: string;
-    channel: ChannelType;
+    name: string; subject: string; body: string; channel: ChannelType;
   }) => {
     try {
       await createTemplate({ name: data.name, type: 'general', subject: data.subject, body: data.body, channel: data.channel });
@@ -111,6 +135,8 @@ export default function TeacherCommunicationPage() {
   };
 
   if (loading) return <LoadingSpinner />;
+
+  const sentMessages = messages.filter((m) => m.status !== 'scheduled');
 
   return (
     <div className="space-y-6">
@@ -132,7 +158,17 @@ export default function TeacherCommunicationPage() {
         <ArrowRight className="h-4 w-4 text-primary" />
       </Link>
 
-      {messages.length === 0 ? (
+      {/* Scheduled messages */}
+      {(scheduled.length > 0 || scheduledLoading) && (
+        <ScheduledMessagesList
+          messages={scheduled}
+          loading={scheduledLoading}
+          onCancel={cancelScheduled}
+        />
+      )}
+
+      {/* Sent message history */}
+      {sentMessages.length === 0 ? (
         <EmptyState
           icon={MessageSquare}
           title="No Messages"
@@ -140,7 +176,7 @@ export default function TeacherCommunicationPage() {
         />
       ) : (
         <div className="space-y-3">
-          {messages.map((message) => {
+          {sentMessages.map((message) => {
             const senderName = typeof message.sentBy === 'string'
               ? message.sentBy
               : `${(message.sentBy as BulkMessageSender).firstName} ${(message.sentBy as BulkMessageSender).lastName}`.trim();
@@ -149,21 +185,19 @@ export default function TeacherCommunicationPage() {
               <Card key={message.id}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
                       <Mail className="h-5 w-5 text-primary" />
                     </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between">
+                    <div className="flex-1 space-y-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
                         <h3 className="font-medium truncate">{message.subject}</h3>
                         <div className="flex items-center gap-2 shrink-0">
                           <ChannelBadge channel={message.channel} />
                           <StatusBadge status={message.status} />
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {message.body}
-                      </p>
-                      <div className="flex items-center gap-2 pt-1">
+                      <p className="text-sm text-muted-foreground line-clamp-2">{message.body}</p>
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
                         <span className="text-xs text-muted-foreground">
                           To: {message.totalRecipients} recipient{message.totalRecipients !== 1 ? 's' : ''}
                         </span>
@@ -188,7 +222,7 @@ export default function TeacherCommunicationPage() {
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setSendLater(false); setScheduledFor(''); } }}>
         <DialogContent className="flex flex-col max-h-[90vh] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Compose Message</DialogTitle>
@@ -252,15 +286,59 @@ export default function TeacherCommunicationPage() {
                   <p className="text-xs text-destructive">{errors.body.message}</p>
                 )}
               </div>
+
+              {/* Send later toggle */}
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <Checkbox
+                  id="send-later"
+                  checked={sendLater}
+                  onCheckedChange={(checked) => {
+                    setSendLater(Boolean(checked));
+                    if (!checked) setScheduledFor('');
+                  }}
+                />
+                <Label htmlFor="send-later" className="flex items-center gap-2 cursor-pointer">
+                  <CalendarClock className="h-4 w-4 text-amber-600" />
+                  Send later
+                </Label>
+              </div>
+
+              {sendLater && (
+                <div className="space-y-2">
+                  <Label htmlFor="scheduled-for">
+                    Schedule date &amp; time <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="scheduled-for"
+                    type="datetime-local"
+                    min={minDatetime}
+                    value={scheduledFor}
+                    onChange={(e) => setScheduledFor(e.target.value)}
+                    className="w-full"
+                  />
+                  {sendLater && !scheduledFor && (
+                    <p className="text-xs text-destructive">Scheduled date and time is required</p>
+                  )}
+                </div>
+              )}
             </form>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => { setOpen(false); setSendLater(false); setScheduledFor(''); }}>
               Cancel
             </Button>
             <Button type="submit" form="teacher-compose-form" disabled={submitting}>
-              <Send className="mr-2 h-4 w-4" />
-              {submitting ? 'Sending...' : 'Send Message'}
+              {sendLater ? (
+                <>
+                  <CalendarClock className="mr-2 h-4 w-4" />
+                  {submitting ? 'Scheduling...' : 'Schedule'}
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  {submitting ? 'Sending...' : 'Send Message'}
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

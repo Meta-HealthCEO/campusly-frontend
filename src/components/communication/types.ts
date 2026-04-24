@@ -3,7 +3,7 @@
 export type TemplateType = 'fee_reminder' | 'absence' | 'general' | 'event' | 'emergency';
 export type ChannelType = 'email' | 'sms' | 'whatsapp' | 'all';
 export type RecipientScopeType = 'school' | 'grade' | 'class' | 'custom';
-export type MessageStatus = 'draft' | 'queued' | 'sending' | 'sent' | 'failed';
+export type MessageStatus = 'draft' | 'scheduled' | 'queued' | 'sending' | 'sent' | 'partial' | 'failed' | 'cancelled';
 export type LogStatus = 'queued' | 'sent' | 'delivered' | 'failed' | 'read';
 
 export interface MessageTemplate {
@@ -47,6 +47,7 @@ export interface BulkMessage {
   delivered: number;
   failed: number;
   status: MessageStatus;
+  scheduledFor?: string;
   sentAt?: string;
   isDeleted: boolean;
   createdAt: string;

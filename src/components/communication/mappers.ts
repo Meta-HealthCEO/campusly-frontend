@@ -66,6 +66,7 @@ export function mapBulkMessage(item: Record<string, unknown>): BulkMessage {
     delivered: (item.delivered as number) ?? 0,
     failed: (item.failed as number) ?? 0,
     status: (item.status as BulkMessage['status']) ?? 'draft',
+    scheduledFor: (item.scheduledFor as string) ?? undefined,
     sentAt: (item.sentAt as string) ?? undefined,
     isDeleted: (item.isDeleted as boolean) ?? false,
     createdAt: (item.createdAt as string) ?? '',
