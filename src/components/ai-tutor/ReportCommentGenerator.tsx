@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Sparkles, Loader2, Copy, Check } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -13,14 +12,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
-import type { ReportComment, ReportCommentPayload, SchoolClass, Subject, Student } from '@/types';
+import { ReportCommentCard } from './ReportCommentCard';
+import type { ReportCommentPayload, SchoolClass, Subject, Student } from '@/types';
 
 interface ReportCommentGeneratorProps {
   onGenerate: (payload: ReportCommentPayload) => void;
-  comments: ReportComment[];
+  onLoadComments: (filters: { classId?: string; subjectId?: string; term?: number }) => void;
+  onUpdateComment: (id: string, finalText: string) => Promise<unknown>;
+  onUpdateCommentLocal: (studentId: string, text: string) => void;
+  onRegenerate: (id: string, wasEdited: boolean) => void;
+  onDelete: (id: string) => void;
+  comments: import('@/types').ReportComment[];
   generating: boolean;
-  onUpdateComment: (studentId: string, comment: string) => void;
   classes: SchoolClass[];
   subjects: Subject[];
   students: Student[];
@@ -41,9 +44,13 @@ const TERMS = [
 
 export function ReportCommentGenerator({
   onGenerate,
+  onLoadComments,
+  onUpdateComment,
+  onUpdateCommentLocal,
+  onRegenerate,
+  onDelete,
   comments,
   generating,
-  onUpdateComment,
   classes,
   subjects,
   students,
@@ -52,12 +59,18 @@ export function ReportCommentGenerator({
   const [subjectId, setSubjectId] = useState('');
   const [term, setTerm] = useState('1');
   const [tone, setTone] = useState<'formal' | 'encouraging' | 'balanced'>('balanced');
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const classStudents = useMemo(
     () => students.filter((s) => s.classId === classId),
     [students, classId],
   );
+
+  // Hydrate saved comments whenever class/subject/term changes
+  useEffect(() => {
+    if (classId && subjectId) {
+      onLoadComments({ classId, subjectId, term: parseInt(term, 10) });
+    }
+  }, [classId, subjectId, term, onLoadComments]);
 
   const handleGenerate = () => {
     if (!classId || !subjectId) return;
@@ -68,13 +81,6 @@ export function ReportCommentGenerator({
       tone,
       studentIds: classStudents.map((s) => s.id),
     });
-  };
-
-  const handleCopy = async (studentId: string, comment: string) => {
-    await navigator.clipboard.writeText(comment);
-    setCopiedId(studentId);
-    toast.success('Copied to clipboard');
-    setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
@@ -133,7 +139,10 @@ export function ReportCommentGenerator({
             </div>
             <div className="space-y-1.5">
               <Label>Tone</Label>
-              <Select value={tone} onValueChange={(v: unknown) => setTone(v as 'formal' | 'encouraging' | 'balanced')}>
+              <Select
+                value={tone}
+                onValueChange={(v: unknown) => setTone(v as 'formal' | 'encouraging' | 'balanced')}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -161,32 +170,18 @@ export function ReportCommentGenerator({
 
       {comments.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold">Generated Comments ({comments.length})</h3>
+          <h3 className="text-lg font-semibold">
+            {comments.length === 1 ? '1 Comment' : `${comments.length} Comments`}
+          </h3>
           {comments.map((c) => (
-            <Card key={c.studentId}>
-              <CardContent className="space-y-2 pt-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">{c.studentName}</p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleCopy(c.studentId, c.comment)}
-                  >
-                    {copiedId === c.studentId ? (
-                      <Check className="mr-1 h-3 w-3" />
-                    ) : (
-                      <Copy className="mr-1 h-3 w-3" />
-                    )}
-                    Copy
-                  </Button>
-                </div>
-                <Textarea
-                  value={c.comment}
-                  onChange={(e) => onUpdateComment(c.studentId, e.target.value)}
-                  rows={3}
-                />
-              </CardContent>
-            </Card>
+            <ReportCommentCard
+              key={c.id || c.studentId}
+              comment={c}
+              onTextChange={onUpdateCommentLocal}
+              onSave={onUpdateComment}
+              onRegenerate={onRegenerate}
+              onDelete={onDelete}
+            />
           ))}
         </div>
       )}

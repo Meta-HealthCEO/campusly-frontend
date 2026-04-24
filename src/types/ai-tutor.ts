@@ -97,7 +97,17 @@ export interface ReportCommentPayload {
 }
 
 export interface ReportComment {
+  id: string;
   studentId: string;
   studentName: string;
-  comment: string;
+  subjectId: string;
+  classId?: string;
+  term: number;
+  academicYear: number;
+  tone: 'encouraging' | 'balanced' | 'formal';
+  aiGenerated: string;
+  finalText: string;
+  comment: string;   // back-compat alias for finalText
+  wasEdited: boolean;
+  lastEditedAt?: string;
 }
