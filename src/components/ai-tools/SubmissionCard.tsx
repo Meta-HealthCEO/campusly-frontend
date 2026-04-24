@@ -2,19 +2,22 @@
 
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { ChevronDown, ChevronUp, Check, Send, RotateCcw } from 'lucide-react';
 import { GradingJobStatusBadge } from './GradingJobStatusBadge';
 import { PublishToGradebookDialog } from './PublishToGradebookDialog';
+import { CriteriaEditor } from './CriteriaEditor';
+import type { CriteriaEdit } from './CriteriaEditor';
 import type { GradingJob } from './types';
+import type { ReviewGradePayload } from '@/hooks/useAITools';
 
 interface SubmissionCardProps {
   job: GradingJob;
-  onReview: (jobId: string, finalMark: number, notes: string) => void;
+  onReview: (jobId: string, payload: ReviewGradePayload) => void;
   onPublish: (jobId: string, assessmentId: string, comment?: string) => Promise<void>;
   onRetry: (jobId: string) => void;
 }
@@ -26,21 +29,45 @@ function getStudentName(job: GradingJob): string {
   return String(job.studentId);
 }
 
+function initCriteriaEdits(job: GradingJob): CriteriaEdit[] {
+  const overrideCriteria = job.teacherOverride?.criteriaScores;
+  const aiCriteria = job.aiResult?.criteriaScores;
+  const source = overrideCriteria ?? aiCriteria ?? [];
+  return source.map((c) => ({
+    criterion: c.criterion,
+    score: c.score,
+    maxScore: c.maxScore,
+    feedback: c.feedback,
+  }));
+}
+
 export function SubmissionCard({ job, onReview, onPublish, onRetry }: SubmissionCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const [finalMark, setFinalMark] = useState(
-    job.teacherOverride?.finalMark ?? job.aiResult?.totalMark ?? 0,
+  const [criteriaEdits, setCriteriaEdits] = useState<CriteriaEdit[]>(() => initCriteriaEdits(job));
+  const [teacherNotes, setTeacherNotes] = useState(job.teacherOverride?.teacherNotes ?? '');
+  const [useCriteriaMode, setUseCriteriaMode] = useState(
+    (job.aiResult?.criteriaScores?.length ?? 0) > 0,
   );
-  const [teacherNotes, setTeacherNotes] = useState(
-    job.teacherOverride?.teacherNotes ?? '',
+  const [overrideMark, setOverrideMark] = useState(
+    job.teacherOverride?.finalMark ?? job.aiResult?.totalMark ?? 0,
   );
   const [publishOpen, setPublishOpen] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
   const result = job.aiResult;
-  const percentage = result && result.maxMark > 0
-    ? Math.round((finalMark / result.maxMark) * 100)
-    : 0;
+  const editedTotal = criteriaEdits.reduce((s, c) => s + c.score, 0);
+  const maxTotal = criteriaEdits.reduce((s, c) => s + c.maxScore, 0);
+  const displayMark = useCriteriaMode ? editedTotal : overrideMark;
+  const displayMax = useCriteriaMode ? maxTotal : (result?.maxMark ?? 0);
+  const percentage = displayMax > 0 ? Math.round((displayMark / displayMax) * 100) : 0;
+
+  const handleApprove = () => {
+    if (useCriteriaMode && criteriaEdits.length > 0) {
+      onReview(job.id, { teacherNotes, criteriaScores: criteriaEdits });
+    } else {
+      onReview(job.id, { finalMark: overrideMark, teacherNotes });
+    }
+  };
 
   return (
     <Card>
@@ -57,7 +84,7 @@ export function SubmissionCard({ job, onReview, onPublish, onRetry }: Submission
           </div>
           {result && (
             <div className="text-right hidden sm:block">
-              <p className="font-bold">{finalMark}/{result.maxMark}</p>
+              <p className="font-bold">{displayMark}/{displayMax}</p>
               <p className={`text-xs font-medium ${
                 percentage >= 70 ? 'text-emerald-600' :
                 percentage >= 50 ? 'text-orange-500' : 'text-destructive'
@@ -86,24 +113,42 @@ export function SubmissionCard({ job, onReview, onPublish, onRetry }: Submission
           {result && (
             <>
               <div className="space-y-3">
-                <Label className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Marks per Criterion
-                </Label>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {result.criteriaScores.map((cs) => (
-                    <div key={cs.criterion} className="flex items-center gap-3 rounded-lg border p-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium">{cs.criterion}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Max: {cs.maxScore} | AI: {cs.score}
-                        </p>
-                        {cs.feedback && (
-                          <p className="mt-1 text-xs text-muted-foreground">{cs.feedback}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+                    Marks per Criterion
+                  </Label>
+                  {(job.status === 'completed' || job.status === 'reviewed') && criteriaEdits.length > 0 && (
+                    <button
+                      className="text-xs text-primary underline"
+                      onClick={() => setUseCriteriaMode((v) => !v)}
+                    >
+                      {useCriteriaMode ? 'Switch to total mark' : 'Override per criterion'}
+                    </button>
+                  )}
                 </div>
+                {(job.status === 'completed' || job.status === 'reviewed') && useCriteriaMode && criteriaEdits.length > 0 ? (
+                  <CriteriaEditor
+                    criteria={criteriaEdits}
+                    aiScores={result.criteriaScores}
+                    onChange={setCriteriaEdits}
+                  />
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {result.criteriaScores.map((cs) => (
+                      <div key={cs.criterion} className="flex items-center gap-3 rounded-lg border p-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium">{cs.criterion}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Max: {cs.maxScore} | AI: {cs.score}
+                          </p>
+                          {cs.feedback && (
+                            <p className="mt-1 text-xs text-muted-foreground">{cs.feedback}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -147,16 +192,26 @@ export function SubmissionCard({ job, onReview, onPublish, onRetry }: Submission
               {(job.status === 'completed' || job.status === 'reviewed') && (
                 <div className="space-y-3 border-t pt-4">
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs">Final Mark</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        max={result.maxMark}
-                        value={finalMark}
-                        onChange={(e) => setFinalMark(Number(e.target.value))}
-                      />
-                    </div>
+                    {!useCriteriaMode && (
+                      <div className="space-y-1">
+                        <Label className="text-xs">Final Mark</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={result.maxMark}
+                          value={overrideMark}
+                          onChange={(e) => setOverrideMark(Number(e.target.value))}
+                        />
+                      </div>
+                    )}
+                    {useCriteriaMode && criteriaEdits.length > 0 && (
+                      <div className="space-y-1">
+                        <Label className="text-xs">Calculated Total</Label>
+                        <p className="h-9 flex items-center text-sm font-semibold">
+                          {editedTotal} / {maxTotal}
+                        </p>
+                      </div>
+                    )}
                     <div className="space-y-1">
                       <Label className="text-xs">Teacher Notes</Label>
                       <Textarea
@@ -169,7 +224,7 @@ export function SubmissionCard({ job, onReview, onPublish, onRetry }: Submission
                   </div>
                   <div className="flex gap-2">
                     {job.status === 'completed' && (
-                      <Button size="sm" onClick={() => onReview(job.id, finalMark, teacherNotes)}>
+                      <Button size="sm" onClick={handleApprove}>
                         <Check className="mr-2 h-4 w-4" /> Approve
                       </Button>
                     )}

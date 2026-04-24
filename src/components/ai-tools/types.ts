@@ -60,9 +60,17 @@ export interface AIResult {
   improvements: string[];
 }
 
+export interface TeacherOverrideCriterionScore {
+  criterion: string;
+  score: number;
+  maxScore: number;
+  feedback?: string;
+}
+
 export interface TeacherOverride {
   finalMark: number;
   teacherNotes: string;
+  criteriaScores?: TeacherOverrideCriterionScore[];
 }
 
 export interface GradingJob {

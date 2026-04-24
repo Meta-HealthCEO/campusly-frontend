@@ -22,6 +22,7 @@ import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useAITools } from '@/hooks/useAITools';
+import type { ReviewGradePayload } from '@/hooks/useAITools';
 import { useTeacherGradingAssignments } from '@/hooks/useTeacherGrading';
 import { RubricBuilder } from '@/components/ai-tools/RubricBuilder';
 import { SubmissionCard } from '@/components/ai-tools/SubmissionCard';
@@ -135,8 +136,8 @@ export default function GradingPage() {
     });
   }, [user, selectedAssignment, gradingJobs, rubric, submitBulkGrade, pollGradingJob]);
 
-  const handleReview = useCallback(async (jobId: string, finalMark: number, notes: string) => {
-    await reviewGrade(jobId, finalMark, notes);
+  const handleReview = useCallback(async (jobId: string, payload: ReviewGradePayload) => {
+    await reviewGrade(jobId, payload);
   }, [reviewGrade]);
 
   const handlePublish = useCallback(async (jobId: string, assessmentId: string, comment?: string) => {
@@ -154,7 +155,7 @@ export default function GradingPage() {
     const completedJobs = gradingJobs.filter(j => j.status === 'completed');
     for (const job of completedJobs) {
       const mark = job.aiResult?.totalMark ?? 0;
-      await reviewGrade(job.id, mark);
+      await reviewGrade(job.id, { finalMark: mark });
     }
   }, [gradingJobs, reviewGrade]);
 

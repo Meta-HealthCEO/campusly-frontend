@@ -29,6 +29,11 @@ export type {
   MarkPaperPayload,
 } from './ai-tools-helpers';
 export type { RubricTemplate } from './useRubricTemplates';
+export interface ReviewGradePayload {
+  finalMark?: number;
+  teacherNotes?: string;
+  criteriaScores?: Array<{ criterion: string; score: number; maxScore: number; feedback?: string }>;
+}
 
 export function useAITools() {
   const [loading, setLoading] = useState(false);
@@ -218,11 +223,12 @@ export function useAITools() {
     pollingRefs.current.clear();
   }, []);
 
-  const reviewGrade = useCallback(async (jobId: string, finalMark: number, teacherNotes?: string) => {
+  const reviewGrade = useCallback(async (jobId: string, payload: ReviewGradePayload) => {
     try {
       const response = await apiClient.post(`/ai-tools/grade/${jobId}/review`, {
-        finalMark,
-        teacherNotes: teacherNotes ?? '',
+        finalMark: payload.finalMark,
+        teacherNotes: payload.teacherNotes ?? '',
+        criteriaScores: payload.criteriaScores,
       });
       const raw = unwrapResponse(response);
       const job = mapJob(raw as Record<string, unknown>);
