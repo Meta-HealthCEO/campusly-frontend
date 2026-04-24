@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { RotateCcw, Send, ListOrdered, Save } from 'lucide-react';
+import { RotateCcw, Send, ListOrdered, Save, AlertTriangle } from 'lucide-react';
 import type { PaperMarking, MarkingQuestion } from '@/hooks/useTeacherMarking';
 
 interface MarkingResultsProps {
@@ -61,9 +61,30 @@ export function MarkingResults({
 
   const pctVariant = adjustedPct >= 50 ? 'default' : 'destructive';
   const statusVariant = marking.status === 'published' ? 'default' : 'secondary';
+  const downrankAccept = marking.paperMismatch && marking.status === 'needs_review';
 
   return (
     <div className="space-y-4">
+      {/* Paper mismatch warning */}
+      {marking.paperMismatch && (
+        <div className="flex items-start gap-3 rounded-md border border-destructive/50 bg-destructive/5 p-4">
+          <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+          <div className="space-y-1 text-sm">
+            <p className="font-medium text-destructive">This doesn&apos;t look like the selected paper.</p>
+            <p className="text-muted-foreground">
+              The AI read the header as:{' '}
+              <span className="font-medium">&ldquo;{marking.extractedHeader ?? 'unknown'}&rdquo;</span>
+            </p>
+            {marking.mismatchReason && (
+              <p className="text-muted-foreground">{marking.mismatchReason}</p>
+            )}
+            <p className="text-muted-foreground mt-2">
+              Please review carefully before accepting these marks, or cancel and re-upload with the correct paper.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Summary card */}
       <Card>
         <CardHeader className="pb-3">
@@ -132,7 +153,7 @@ export function MarkingResults({
           </Button>
         )}
         <Button
-          variant={marking.status === 'published' ? 'outline' : 'default'}
+          variant={marking.status === 'published' || downrankAccept ? 'outline' : 'default'}
           onClick={onPublish}
           disabled={isLoading || marking.status === 'published'}
         >
