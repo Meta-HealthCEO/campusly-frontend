@@ -4,7 +4,7 @@ import apiClient from '@/lib/api-client';
 import { unwrapResponse, unwrapList } from '@/lib/api-helpers';
 
 interface MarkingQuestion {
-  questionNumber: number;
+  questionNumber: string;
   studentAnswer: string;
   correctAnswer: string;
   marksAwarded: number;
@@ -22,8 +22,11 @@ interface PaperMarking {
   maxMarks: number;
   percentage: number;
   questions: MarkingQuestion[];
-  status: 'processing' | 'completed' | 'failed' | 'published';
+  status: 'processing' | 'completed' | 'needs_review' | 'failed' | 'published';
   errorMessage?: string;
+  extractedHeader: string | null;
+  paperMismatch: boolean;
+  mismatchReason: string | null;
   createdAt: string;
 }
 
@@ -52,7 +55,7 @@ export function useTeacherMarking() {
   }): Promise<PaperMarking> => {
     setLoading(true);
     try {
-      const res = await apiClient.post('/ai-tools/mark-paper-multi', data);
+      const res = await apiClient.post('/ai-tools/mark-paper', data);
       const marking = unwrapResponse<PaperMarking>(res);
       setCurrentMarking(marking);
       return marking;
@@ -67,8 +70,9 @@ export function useTeacherMarking() {
 
   const getMarkings = useCallback(async (paperId: string): Promise<void> => {
     try {
-      const res = await apiClient.get(`/ai-tools/markings/paper/${paperId}`);
-      setMarkings(unwrapList<PaperMarking>(res));
+      const res = await apiClient.get('/ai-tools/markings', { params: { paperId } });
+      const raw = unwrapResponse<{ markings: PaperMarking[]; total: number }>(res);
+      setMarkings(raw.markings ?? []);
     } catch (err: unknown) {
       console.error('Failed to load markings', err);
       toast.error('Could not load marking history.');
@@ -97,19 +101,8 @@ export function useTeacherMarking() {
     }
   }, []);
 
-  const publishMarking = useCallback(async (id: string): Promise<void> => {
-    try {
-      const res = await apiClient.post(`/ai-tools/markings/${id}/publish`);
-      const updated = unwrapResponse<PaperMarking>(res);
-      setCurrentMarking(updated);
-      setMarkings((prev) =>
-        prev.map((m) => (m.id === id ? updated : m)),
-      );
-      toast.success('Marks published to gradebook');
-    } catch (err: unknown) {
-      console.error('Failed to publish marking', err);
-      toast.error('Failed to publish marks.');
-    }
+  const publishMarking = useCallback(async (_id: string): Promise<void> => {
+    toast.info('Publishing to gradebook is coming in a future release.');
   }, []);
 
   const fetchPapers = useCallback(async () => {
