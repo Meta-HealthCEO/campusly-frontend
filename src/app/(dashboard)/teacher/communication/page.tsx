@@ -13,25 +13,19 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
-} from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MessageSquare, Send, Mail, Clock, ArrowRight, CalendarClock } from 'lucide-react';
 import Link from 'next/link';
 import { formatDate } from '@/lib/utils';
 import { StatusBadge, ChannelBadge } from '@/components/communication/MessageBadges';
+import { DeliveryDashboard } from '@/components/communication/DeliveryDashboard';
 import { ParentRecipientPicker } from '@/components/communication/ParentRecipientPicker';
 import { TeacherMessageTemplatePicker } from '@/components/communication/TeacherMessageTemplatePicker';
 import { ScheduledMessagesList } from '@/components/communication/ScheduledMessagesList';
-import {
-  useBulkMessages, useParentsList, useTemplates, useScheduledMessages,
-} from '@/hooks/useCommunication';
-import type { ChannelType } from '@/components/communication/types';
-import type { BulkMessageSender } from '@/components/communication/types';
+import { useBulkMessages, useParentsList, useTemplates, useScheduledMessages } from '@/hooks/useCommunication';
+import type { ChannelType, BulkMessageSender } from '@/components/communication/types';
 
 const teacherComposeSchema = z.object({
   subject: z.string().min(3, 'Subject must be at least 3 characters'),
@@ -48,7 +42,10 @@ export default function TeacherCommunicationPage() {
   const [sendLater, setSendLater] = useState(false);
   const [scheduledFor, setScheduledFor] = useState('');
 
-  const { messages, loading, sendMessage, scheduleMessage } = useBulkMessages();
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsBulkId, setDetailsBulkId] = useState<string | null>(null);
+
+  const { messages, loading, sendMessage, scheduleMessage, getMessageLogs } = useBulkMessages();
   const { parents, loading: parentsLoading } = useParentsList();
   const { templates, createTemplate } = useTemplates();
   const { scheduled, loading: scheduledLoading, cancel: cancelScheduled } = useScheduledMessages();
@@ -65,15 +62,8 @@ export default function TeacherCommunicationPage() {
   const watchChannel = watch('channel') ?? 'all';
 
   // Minimum datetime-local value (current time + 2 minutes)
-  const minDatetime = (() => {
-    const d = new Date(Date.now() + 2 * 60 * 1000);
-    const y = d.getFullYear();
-    const mo = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const h = String(d.getHours()).padStart(2, '0');
-    const min = String(d.getMinutes()).padStart(2, '0');
-    return `${y}-${mo}-${day}T${h}:${min}`;
-  })();
+  const _d = new Date(Date.now() + 2 * 60 * 1000);
+  const minDatetime = `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, '0')}-${String(_d.getDate()).padStart(2, '0')}T${String(_d.getHours()).padStart(2, '0')}:${String(_d.getMinutes()).padStart(2, '0')}`;
 
   const onSubmit = async (data: TeacherComposeValues) => {
     if (selectedRecipients.length === 0) {
@@ -115,9 +105,7 @@ export default function TeacherCommunicationPage() {
   };
 
   const handleTemplateSelect = (tpl: { subject: string; body: string; channel: ChannelType }) => {
-    setValue('subject', tpl.subject);
-    setValue('body', tpl.body);
-    setValue('channel', tpl.channel);
+    setValue('subject', tpl.subject); setValue('body', tpl.body); setValue('channel', tpl.channel);
   };
 
   const handleSaveTemplate = async (data: {
@@ -177,9 +165,7 @@ export default function TeacherCommunicationPage() {
       ) : (
         <div className="space-y-3">
           {sentMessages.map((message) => {
-            const senderName = typeof message.sentBy === 'string'
-              ? message.sentBy
-              : `${(message.sentBy as BulkMessageSender).firstName} ${(message.sentBy as BulkMessageSender).lastName}`.trim();
+            const senderName = typeof message.sentBy === 'string' ? message.sentBy : `${(message.sentBy as BulkMessageSender).firstName} ${(message.sentBy as BulkMessageSender).lastName}`.trim();
 
             return (
               <Card key={message.id}>
@@ -212,6 +198,13 @@ export default function TeacherCommunicationPage() {
                             <span className="text-xs text-muted-foreground">By: {senderName}</span>
                           </>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => { setDetailsBulkId(message.id); setDetailsOpen(true); }}
+                          className="ml-auto text-xs text-primary hover:underline shrink-0"
+                        >
+                          View details
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -221,6 +214,14 @@ export default function TeacherCommunicationPage() {
           })}
         </div>
       )}
+
+      <DeliveryDashboard
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        bulkId={detailsBulkId}
+        messageSubject={messages.find((m) => m.id === detailsBulkId)?.subject}
+        loadLogs={getMessageLogs}
+      />
 
       <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setSendLater(false); setScheduledFor(''); } }}>
         <DialogContent className="flex flex-col max-h-[90vh] sm:max-w-lg">

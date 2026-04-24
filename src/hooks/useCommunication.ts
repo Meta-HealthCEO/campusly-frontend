@@ -134,7 +134,20 @@ export function useBulkMessages() {
     }
   }, []);
 
-  return { messages, total, page, totalPages, loading, fetchMessages, sendMessage, scheduleMessage, cancelScheduledMessage, setPage };
+  const getMessageLogs = useCallback(async (bulkId: string): Promise<MessageLogEntry[]> => {
+    try {
+      const res = await apiClient.get(`/communication/messages/${bulkId}/logs`, {
+        params: { limit: 200 },
+      });
+      const raw = unwrapResponse(res);
+      return extractArray(raw).map(mapMessageLog);
+    } catch {
+      toast.error('Failed to load delivery details');
+      return [];
+    }
+  }, []);
+
+  return { messages, total, page, totalPages, loading, fetchMessages, sendMessage, scheduleMessage, cancelScheduledMessage, setPage, getMessageLogs };
 }
 
 // ============== useScheduledMessages ==============

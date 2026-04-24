@@ -9,6 +9,7 @@ export { MessageDetailView } from './MessageDetailView';
 export { DeliveryStatsPanel } from './DeliveryStatsPanel';
 export { DeliveryLogsTable } from './DeliveryLogsTable';
 export { ParentRecipientPicker } from './ParentRecipientPicker';
+export { DeliveryDashboard } from './DeliveryDashboard';
 
 // Communication Admin (Scope 35)
 export { DeliveryStatusBadge } from './DeliveryStatusBadge';

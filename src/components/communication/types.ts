@@ -4,7 +4,7 @@ export type TemplateType = 'fee_reminder' | 'absence' | 'general' | 'event' | 'e
 export type ChannelType = 'email' | 'sms' | 'whatsapp' | 'all';
 export type RecipientScopeType = 'school' | 'grade' | 'class' | 'custom';
 export type MessageStatus = 'draft' | 'scheduled' | 'queued' | 'sending' | 'sent' | 'partial' | 'failed' | 'cancelled';
-export type LogStatus = 'queued' | 'sent' | 'delivered' | 'failed' | 'read';
+export type LogStatus = 'queued' | 'retrying' | 'sent' | 'delivered' | 'failed' | 'read';
 
 export interface MessageTemplate {
   id: string;
