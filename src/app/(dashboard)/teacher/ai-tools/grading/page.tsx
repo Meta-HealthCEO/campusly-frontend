@@ -26,12 +26,12 @@ import { useTeacherGradingAssignments } from '@/hooks/useTeacherGrading';
 import { RubricBuilder } from '@/components/ai-tools/RubricBuilder';
 import { SubmissionCard } from '@/components/ai-tools/SubmissionCard';
 import { GradingProgressBar } from '@/components/ai-tools/GradingProgressBar';
-import type { RubricCriterion, GradingJob } from '@/components/ai-tools/types';
+import type { RubricCriterion } from '@/components/ai-tools/types';
 
 export default function GradingPage() {
   const { user } = useAuthStore();
   const {
-    gradingJobs, setGradingJobs,
+    gradingJobs,
     submitGrade, submitBulkGrade,
     pollGradingJob, stopAllPolling,
     reviewGrade, publishGrade,
