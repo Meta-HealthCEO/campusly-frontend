@@ -178,20 +178,20 @@ export default function CreatePaperPage() {
 
       {step === 1 && (
         <StepBasicInfo
-          subject={subject} setSubject={setSubject}
-          grade={grade} setGrade={setGrade}
-          term={term} setTerm={setTerm}
-          topic={topic} setTopic={setTopic}
-          canProceed={!!canProceed()} onNext={() => setStep(2)}
+          subject={subject} setSubjectAction={setSubject}
+          grade={grade} setGradeAction={setGrade}
+          term={term} setTermAction={setTerm}
+          topic={topic} setTopicAction={setTopic}
+          canProceed={!!canProceed()} onNextAction={() => setStep(2)}
         />
       )}
 
       {step === 2 && (
         <StepConfig
-          duration={duration} setDuration={setDuration}
-          totalMarks={totalMarks} setTotalMarks={setTotalMarks}
-          difficulty={difficulty} setDifficulty={setDifficulty}
-          canProceed={!!canProceed()} onBack={() => setStep(1)} onNext={() => setStep(3)}
+          duration={duration} setDurationAction={setDuration}
+          totalMarks={totalMarks} setTotalMarksAction={setTotalMarks}
+          difficulty={difficulty} setDifficultyAction={setDifficulty}
+          canProceed={!!canProceed()} onBackAction={() => setStep(1)} onNextAction={() => setStep(3)}
         />
       )}
 
@@ -199,9 +199,9 @@ export default function CreatePaperPage() {
         <StepSections
           sections={sections} totalMarks={totalMarks}
           sectionMarksTotal={sectionMarksTotal}
-          addSection={addSection} removeSection={removeSection}
-          updateSection={updateSection}
-          onBack={() => setStep(2)} onGenerate={handleGenerate}
+          addSectionAction={addSection} removeSectionAction={removeSection}
+          updateSectionAction={updateSection}
+          onBackAction={() => setStep(2)} onGenerateAction={handleGenerate}
         />
       )}
 

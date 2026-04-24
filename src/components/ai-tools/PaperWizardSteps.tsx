@@ -42,12 +42,12 @@ export function StepIndicator({ step, generated }: { step: number; generated: bo
   );
 }
 
-export function StepBasicInfo({ subject, setSubject, grade, setGrade, term, setTerm, topic, setTopic, canProceed, onNext }: {
-  subject: string; setSubject: (v: string) => void;
-  grade: string; setGrade: (v: string) => void;
-  term: string; setTerm: (v: string) => void;
-  topic: string; setTopic: (v: string) => void;
-  canProceed: boolean; onNext: () => void;
+export function StepBasicInfo({ subject, setSubjectAction, grade, setGradeAction, term, setTermAction, topic, setTopicAction, canProceed, onNextAction }: {
+  subject: string; setSubjectAction: (v: string) => void;
+  grade: string; setGradeAction: (v: string) => void;
+  term: string; setTermAction: (v: string) => void;
+  topic: string; setTopicAction: (v: string) => void;
+  canProceed: boolean; onNextAction: () => void;
 }) {
   return (
     <Card>
@@ -56,7 +56,7 @@ export function StepBasicInfo({ subject, setSubject, grade, setGrade, term, setT
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="subject">Subject <span className="text-destructive">*</span></Label>
-            <Select value={subject} onValueChange={(v: unknown) => v && setSubject(v as string)}>
+            <Select value={subject} onValueChange={(v: unknown) => v && setSubjectAction(v as string)}>
               <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
               <SelectContent>
                 {subjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -65,7 +65,7 @@ export function StepBasicInfo({ subject, setSubject, grade, setGrade, term, setT
           </div>
           <div className="space-y-2">
             <Label htmlFor="grade">Grade <span className="text-destructive">*</span></Label>
-            <Select value={grade} onValueChange={(v: unknown) => v && setGrade(v as string)}>
+            <Select value={grade} onValueChange={(v: unknown) => v && setGradeAction(v as string)}>
               <SelectTrigger><SelectValue placeholder="Select grade" /></SelectTrigger>
               <SelectContent>
                 {Array.from({ length: 12 }, (_, i) => (
@@ -76,7 +76,7 @@ export function StepBasicInfo({ subject, setSubject, grade, setGrade, term, setT
           </div>
           <div className="space-y-2">
             <Label htmlFor="term">Term <span className="text-destructive">*</span></Label>
-            <Select value={term} onValueChange={(v: unknown) => v && setTerm(v as string)}>
+            <Select value={term} onValueChange={(v: unknown) => v && setTermAction(v as string)}>
               <SelectTrigger><SelectValue placeholder="Select term" /></SelectTrigger>
               <SelectContent>
                 {[1, 2, 3, 4].map(t => <SelectItem key={t} value={String(t)}>Term {t}</SelectItem>)}
@@ -85,11 +85,11 @@ export function StepBasicInfo({ subject, setSubject, grade, setGrade, term, setT
           </div>
           <div className="space-y-2">
             <Label htmlFor="topic">Topic <span className="text-destructive">*</span></Label>
-            <Input id="topic" placeholder="e.g. Chemical Reactions" value={topic} onChange={(e) => setTopic(e.target.value)} />
+            <Input id="topic" placeholder="e.g. Chemical Reactions" value={topic} onChange={(e) => setTopicAction(e.target.value)} />
           </div>
         </div>
         <div className="flex justify-end">
-          <Button onClick={onNext} disabled={!canProceed}>
+          <Button onClick={onNextAction} disabled={!canProceed}>
             Next <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
@@ -98,11 +98,11 @@ export function StepBasicInfo({ subject, setSubject, grade, setGrade, term, setT
   );
 }
 
-export function StepConfig({ duration, setDuration, totalMarks, setTotalMarks, difficulty, setDifficulty, canProceed, onBack, onNext }: {
-  duration: string; setDuration: (v: string) => void;
-  totalMarks: string; setTotalMarks: (v: string) => void;
-  difficulty: string; setDifficulty: (v: 'easy' | 'medium' | 'hard' | 'mixed') => void;
-  canProceed: boolean; onBack: () => void; onNext: () => void;
+export function StepConfig({ duration, setDurationAction, totalMarks, setTotalMarksAction, difficulty, setDifficultyAction, canProceed, onBackAction, onNextAction }: {
+  duration: string; setDurationAction: (v: string) => void;
+  totalMarks: string; setTotalMarksAction: (v: string) => void;
+  difficulty: string; setDifficultyAction: (v: 'easy' | 'medium' | 'hard' | 'mixed') => void;
+  canProceed: boolean; onBackAction: () => void; onNextAction: () => void;
 }) {
   return (
     <Card>
@@ -111,7 +111,7 @@ export function StepConfig({ duration, setDuration, totalMarks, setTotalMarks, d
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="duration">Duration (minutes) <span className="text-destructive">*</span></Label>
-            <Select value={duration} onValueChange={(v: unknown) => v && setDuration(v as string)}>
+            <Select value={duration} onValueChange={(v: unknown) => v && setDurationAction(v as string)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {durations.map(d => <SelectItem key={d} value={d}>{d} minutes</SelectItem>)}
@@ -120,31 +120,31 @@ export function StepConfig({ duration, setDuration, totalMarks, setTotalMarks, d
           </div>
           <div className="space-y-2">
             <Label htmlFor="totalMarks">Total Marks <span className="text-destructive">*</span></Label>
-            <Input id="totalMarks" type="number" value={totalMarks} onChange={(e) => setTotalMarks(e.target.value)} />
+            <Input id="totalMarks" type="number" value={totalMarks} onChange={(e) => setTotalMarksAction(e.target.value)} />
           </div>
         </div>
         <div className="space-y-2">
           <Label>Difficulty <span className="text-destructive">*</span></Label>
           <div className="flex gap-2">
             {(['easy', 'medium', 'hard', 'mixed'] as const).map(d => (
-              <Button key={d} type="button" variant={difficulty === d ? 'default' : 'outline'} size="sm" onClick={() => setDifficulty(d)} className="capitalize">{d}</Button>
+              <Button key={d} type="button" variant={difficulty === d ? 'default' : 'outline'} size="sm" onClick={() => setDifficultyAction(d)} className="capitalize">{d}</Button>
             ))}
           </div>
         </div>
         <div className="flex justify-between">
-          <Button variant="outline" onClick={onBack}><ArrowLeft className="mr-2 h-4 w-4" /> Back</Button>
-          <Button onClick={onNext} disabled={!canProceed}>Next <ArrowRight className="ml-2 h-4 w-4" /></Button>
+          <Button variant="outline" onClick={onBackAction}><ArrowLeft className="mr-2 h-4 w-4" /> Back</Button>
+          <Button onClick={onNextAction} disabled={!canProceed}>Next <ArrowRight className="ml-2 h-4 w-4" /></Button>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-export function StepSections({ sections, totalMarks, sectionMarksTotal, addSection, removeSection, updateSection, onBack, onGenerate }: {
+export function StepSections({ sections, totalMarks, sectionMarksTotal, addSectionAction, removeSectionAction, updateSectionAction, onBackAction, onGenerateAction }: {
   sections: SectionConfig[]; totalMarks: string; sectionMarksTotal: number;
-  addSection: () => void; removeSection: (id: string) => void;
-  updateSection: (id: string, field: keyof SectionConfig, value: string | number) => void;
-  onBack: () => void; onGenerate: () => void;
+  addSectionAction: () => void; removeSectionAction: (id: string) => void;
+  updateSectionAction: (id: string, field: keyof SectionConfig, value: string | number) => void;
+  onBackAction: () => void; onGenerateAction: () => void;
 }) {
   return (
     <Card>
@@ -165,7 +165,7 @@ export function StepSections({ sections, totalMarks, sectionMarksTotal, addSecti
             <div className="grid flex-1 gap-3 sm:grid-cols-3">
               <div className="space-y-1">
                 <Label className="text-xs">Type</Label>
-                <Select value={section.type} onValueChange={(v: unknown) => v && updateSection(section.id, 'type', v as string)}>
+                <Select value={section.type} onValueChange={(v: unknown) => v && updateSectionAction(section.id, 'type', v as string)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {sectionTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
@@ -174,22 +174,22 @@ export function StepSections({ sections, totalMarks, sectionMarksTotal, addSecti
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Marks</Label>
-                <Input type="number" value={section.marks} onChange={(e) => updateSection(section.id, 'marks', Number(e.target.value))} />
+                <Input type="number" value={section.marks} onChange={(e) => updateSectionAction(section.id, 'marks', Number(e.target.value))} />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Questions</Label>
-                <Input type="number" value={section.questionCount} onChange={(e) => updateSection(section.id, 'questionCount', Number(e.target.value))} />
+                <Input type="number" value={section.questionCount} onChange={(e) => updateSectionAction(section.id, 'questionCount', Number(e.target.value))} />
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => removeSection(section.id)} disabled={sections.length <= 1} className="shrink-0 text-destructive hover:text-destructive">
+            <Button variant="ghost" size="sm" onClick={() => removeSectionAction(section.id)} disabled={sections.length <= 1} className="shrink-0 text-destructive hover:text-destructive">
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         ))}
-        <Button variant="outline" onClick={addSection} className="w-full"><Plus className="mr-2 h-4 w-4" /> Add Section</Button>
+        <Button variant="outline" onClick={addSectionAction} className="w-full"><Plus className="mr-2 h-4 w-4" /> Add Section</Button>
         <div className="flex justify-between">
-          <Button variant="outline" onClick={onBack}><ArrowLeft className="mr-2 h-4 w-4" /> Back</Button>
-          <Button onClick={onGenerate} disabled={sections.length === 0}><Sparkles className="mr-2 h-4 w-4" /> Generate Paper</Button>
+          <Button variant="outline" onClick={onBackAction}><ArrowLeft className="mr-2 h-4 w-4" /> Back</Button>
+          <Button onClick={onGenerateAction} disabled={sections.length === 0}><Sparkles className="mr-2 h-4 w-4" /> Generate Paper</Button>
         </div>
       </CardContent>
     </Card>
