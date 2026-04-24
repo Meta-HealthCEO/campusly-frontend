@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import { toast } from 'sonner';
+import { useRubricTemplates } from './useRubricTemplates';
 import type {
   GeneratedPaper,
   GradingJob,
@@ -27,6 +28,7 @@ export type {
   MarkPaperResult,
   MarkPaperPayload,
 } from './ai-tools-helpers';
+export type { RubricTemplate } from './useRubricTemplates';
 
 export function useAITools() {
   const [loading, setLoading] = useState(false);
@@ -295,6 +297,8 @@ export function useAITools() {
     }
   }, []);
 
+  const rubricTemplateActions = useRubricTemplates();
+
   const loadUsageStats = useCallback(async (startDate?: string, endDate?: string) => {
     setLoading(true);
     try {
@@ -335,5 +339,6 @@ export function useAITools() {
     retryGrade,
     loadIncompleteGradingJobs,
     loadUsageStats,
+    ...rubricTemplateActions,
   };
 }

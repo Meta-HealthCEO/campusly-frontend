@@ -5,6 +5,15 @@
 
 import type { GeneratedPaper, GradingJob } from '@/components/ai-tools/types';
 
+export interface RubricTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  criteria: Array<{ criterion: string; maxScore: number; description: string }>;
+  isShared: boolean;
+  teacherId: string;
+}
+
 export interface MarkPaperQuestionResult {
   questionNumber: number;
   studentAnswer: string;

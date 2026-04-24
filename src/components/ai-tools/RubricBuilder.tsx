@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Trash2 } from 'lucide-react';
 import type { RubricCriterion } from './types';
+import { RubricTemplatePicker } from './RubricTemplatePicker';
 
 interface RubricBuilderProps {
   rubric: RubricCriterion[];
@@ -30,9 +31,12 @@ export function RubricBuilder({ rubric, onChange }: RubricBuilderProps) {
 
   return (
     <div className="space-y-3">
-      <Label className="text-xs uppercase tracking-wider text-muted-foreground">
-        Rubric Criteria
-      </Label>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+          Rubric Criteria
+        </Label>
+        <RubricTemplatePicker currentCriteria={rubric} onLoad={onChange} />
+      </div>
       {rubric.map((criterion, idx) => (
         <div key={idx} className="flex items-end gap-3 rounded-lg border p-3">
           <div className="grid flex-1 gap-2 sm:grid-cols-3">
