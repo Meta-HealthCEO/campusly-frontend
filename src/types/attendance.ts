@@ -4,6 +4,12 @@
 
 import type { Student, User } from './common';
 
+export interface AttendanceEditHistoryEntry {
+  at: string;
+  by: string;
+  prevStatus: string;
+}
+
 export interface Attendance {
   id: string;
   studentId: string;
@@ -14,6 +20,9 @@ export interface Attendance {
   note?: string;
   markedById: string;
   markedBy: User;
+  lastModifiedBy?: string;
+  lastModifiedAt?: string;
+  editHistory?: AttendanceEditHistoryEntry[];
 }
 
 export interface DisciplineRecord {

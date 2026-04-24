@@ -230,6 +230,7 @@ export default function TeacherAttendancePage() {
                 student={student}
                 status={entry?.status ?? 'present'}
                 note={entry?.note}
+                editHistory={entry?.editHistory}
                 onUpdate={updateStatus}
                 onNoteChange={updateNote}
               />

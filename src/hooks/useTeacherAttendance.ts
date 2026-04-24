@@ -5,12 +5,14 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { toast } from 'sonner';
 import { toISODate } from '@/lib/utils';
 import type { Student, SchoolClass } from '@/types';
+import type { AttendanceEditHistoryEntry } from '@/types/attendance';
 
 export type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused';
 
 export interface AttendanceEntry {
   status: AttendanceStatus;
   note?: string;
+  editHistory?: AttendanceEditHistoryEntry[];
 }
 
 interface AttendanceRecord {
@@ -24,6 +26,7 @@ interface RawAttendanceRecord {
   status: AttendanceStatus;
   notes?: string;
   period?: number;
+  editHistory?: AttendanceEditHistoryEntry[];
 }
 
 const today = toISODate(new Date());
@@ -60,7 +63,7 @@ export function useTeacherAttendance() {
           const map = new Map<string, AttendanceEntry>();
           filtered.forEach((r) => {
             const sid = resolveId(r.studentId);
-            if (sid) map.set(sid, { status: r.status, note: r.notes });
+            if (sid) map.set(sid, { status: r.status, note: r.notes, editHistory: r.editHistory });
           });
           setAttendance(map);
           setExistingLoaded(true);
