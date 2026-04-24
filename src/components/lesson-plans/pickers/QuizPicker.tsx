@@ -1,9 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { FileQuestion, ExternalLink } from 'lucide-react';
+import { buttonVariants } from '@/components/ui/button';
 import { useQuizLibrary } from '@/hooks/useQuizLibrary';
 import type { StagedQuizHomework } from '@/types';
 
@@ -52,10 +55,21 @@ export function QuizPicker({
 
   if (quizzes.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
-        No quizzes available for this class and subject yet. Create a quiz in
-        the Learning module first.
-      </p>
+      <div className="text-center py-6 space-y-3 border border-dashed rounded-md">
+        <FileQuestion className="h-8 w-8 text-muted-foreground mx-auto" />
+        <div className="space-y-1">
+          <p className="font-medium text-sm">No quizzes yet</p>
+          <p className="text-xs text-muted-foreground">
+            Create a quiz in the Learning module and it will appear here.
+          </p>
+        </div>
+        <Link
+          href="/teacher/learning"
+          className={buttonVariants({ variant: 'outline', size: 'sm' })}
+        >
+          Create a quiz <ExternalLink className="ml-1 h-3 w-3" />
+        </Link>
+      </div>
     );
   }
 

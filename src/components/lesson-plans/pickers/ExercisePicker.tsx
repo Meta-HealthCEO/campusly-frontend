@@ -1,10 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ListChecks, ExternalLink } from 'lucide-react';
+import { buttonVariants } from '@/components/ui/button';
 import { useQuestionBankLibrary } from '@/hooks/useQuestionBankLibrary';
 import type { StagedExerciseHomework } from '@/types';
 
@@ -75,10 +78,23 @@ export function ExercisePicker({
       )}
 
       {!loading && questions.length === 0 && (
-        <p className="text-sm text-muted-foreground">
-          No questions available for this subject yet. Add questions in the
-          Question Bank first.
-        </p>
+        <div className="text-center py-6 space-y-3 border border-dashed rounded-md">
+          <ListChecks className="h-8 w-8 text-muted-foreground mx-auto" />
+          <div className="space-y-1">
+            <p className="font-medium text-sm">No questions found</p>
+            <p className="text-xs text-muted-foreground">
+              {search.trim()
+                ? 'Try a different search term, or add questions to the Question Bank.'
+                : 'Add questions to the Question Bank to build exercise sets.'}
+            </p>
+          </div>
+          <Link
+            href="/teacher/curriculum/questions"
+            className={buttonVariants({ variant: 'outline', size: 'sm' })}
+          >
+            Add questions <ExternalLink className="ml-1 h-3 w-3" />
+          </Link>
+        </div>
       )}
 
       {questions.length > 0 && (

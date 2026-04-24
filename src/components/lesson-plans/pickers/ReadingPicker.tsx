@@ -1,9 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { BookOpen, ExternalLink } from 'lucide-react';
+import { buttonVariants } from '@/components/ui/button';
 import { useContentResourceLibrary } from '@/hooks/useContentResourceLibrary';
 import type { StagedReadingHomework } from '@/types';
 
@@ -69,10 +72,23 @@ export function ReadingPicker({
       )}
 
       {!loading && resources.length === 0 && (
-        <p className="text-sm text-muted-foreground">
-          No resources found. Try a different search, or create one in the
-          Content Library.
-        </p>
+        <div className="text-center py-6 space-y-3 border border-dashed rounded-md">
+          <BookOpen className="h-8 w-8 text-muted-foreground mx-auto" />
+          <div className="space-y-1">
+            <p className="font-medium text-sm">No resources found</p>
+            <p className="text-xs text-muted-foreground">
+              {search.trim()
+                ? 'Try a different search term, or add a resource to the Content Library.'
+                : 'Add study notes, worksheets, or lessons in the Content Library.'}
+            </p>
+          </div>
+          <Link
+            href="/teacher/curriculum/content"
+            className={buttonVariants({ variant: 'outline', size: 'sm' })}
+          >
+            Add a resource <ExternalLink className="ml-1 h-3 w-3" />
+          </Link>
+        </div>
       )}
 
       {resources.length > 0 && (
