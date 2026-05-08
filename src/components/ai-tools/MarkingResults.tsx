@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { RotateCcw, Send, ListOrdered, Save, AlertTriangle } from 'lucide-react';
 import type { PaperMarking, MarkingQuestion } from '@/hooks/useTeacherMarking';
+import { useTeacherPapers } from '@/hooks/useTeacherPapers';
 import { PublishToGradebookDialog } from './PublishToGradebookDialog';
 
 const IMAGE_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4500/api').replace(/\/api\/?$/, '') + '/uploads';
@@ -39,6 +40,25 @@ export function MarkingResults({
   const [publishOpen, setPublishOpen] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
+  const { getPaperById } = useTeacherPapers();
+  const [paperVersion, setPaperVersion] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (marking.paperType !== 'assessment') return;
+    let cancelled = false;
+    void getPaperById(marking.paperId).then((p) => {
+      if (cancelled) return;
+      setPaperVersion(p?.version ?? null);
+    });
+    return () => { cancelled = true; };
+  }, [marking.paperId, marking.paperType, getPaperById]);
+
+  const markingVersion = marking.paperVersion ?? null;
+  const isStale =
+    paperVersion !== null &&
+    markingVersion !== null &&
+    markingVersion < paperVersion;
+
   const adjustedTotal = useMemo(
     () => questions.reduce((sum, q) => sum + q.marksAwarded, 0),
     [questions],
@@ -70,6 +90,16 @@ export function MarkingResults({
 
   return (
     <div className="space-y-4">
+      {/* Stale-marking banner */}
+      {isStale && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3">
+          <p className="text-sm font-medium">Paper edited since this marking</p>
+          <p className="text-xs text-muted-foreground">
+            Re-mark recommended. Marking captured paper v{markingVersion}, current is v{paperVersion}.
+          </p>
+        </div>
+      )}
+
       {/* Paper mismatch warning */}
       {marking.paperMismatch && (
         <div className="flex items-start gap-3 rounded-md border border-destructive/50 bg-destructive/5 p-4">

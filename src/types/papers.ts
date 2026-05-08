@@ -117,6 +117,7 @@ export interface Paper {
   totalMarks: number;
   difficulty: PaperDifficulty;
   aiGenerated: boolean;
+  version: number;
   sections: PaperSection[];
   instructions?: string | null;
   status: PaperStatus;
