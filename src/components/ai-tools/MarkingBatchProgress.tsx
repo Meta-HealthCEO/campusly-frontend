@@ -17,26 +17,28 @@ export function MarkingBatchProgress({ batchId, onComplete }: Props) {
 
   useEffect(() => {
     let cancelled = false;
+    let timerId: ReturnType<typeof setTimeout> | null = null;
 
     const poll = async (): Promise<void> => {
       if (cancelled) return;
       const batch = await getBatch(batchId);
       if (cancelled) return;
       if (!batch) {
-        setTimeout(() => void poll(), POLL_INTERVAL_MS);
+        timerId = setTimeout(() => void poll(), POLL_INTERVAL_MS);
         return;
       }
       if (batch.status === 'complete' || batch.status === 'failed') {
         onComplete(batch);
         return;
       }
-      setTimeout(() => void poll(), POLL_INTERVAL_MS);
+      timerId = setTimeout(() => void poll(), POLL_INTERVAL_MS);
     };
 
     void poll();
 
     return () => {
       cancelled = true;
+      if (timerId) clearTimeout(timerId);
     };
   }, [batchId, getBatch, onComplete]);
 

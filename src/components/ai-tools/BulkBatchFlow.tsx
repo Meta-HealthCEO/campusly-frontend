@@ -22,6 +22,7 @@ export function BulkBatchFlow({ batchId, onDone }: Props) {
   // Poll while status is 'extracting'
   useEffect(() => {
     let cancelled = false;
+    let timerId: ReturnType<typeof setTimeout> | null = null;
 
     const poll = async (): Promise<void> => {
       if (cancelled) return;
@@ -29,7 +30,7 @@ export function BulkBatchFlow({ batchId, onDone }: Props) {
       if (cancelled) return;
       if (fetched) setBatch(fetched);
       if (!fetched || fetched.status === 'extracting') {
-        setTimeout(() => void poll(), EXTRACT_POLL_MS);
+        timerId = setTimeout(() => void poll(), EXTRACT_POLL_MS);
       }
     };
 
@@ -37,6 +38,7 @@ export function BulkBatchFlow({ batchId, onDone }: Props) {
 
     return () => {
       cancelled = true;
+      if (timerId) clearTimeout(timerId);
     };
   }, [batchId, getBatch]);
 
@@ -74,7 +76,7 @@ export function BulkBatchFlow({ batchId, onDone }: Props) {
       {batch.status === 'reviewing' && (
         <MarkingBatchReview
           batch={batch}
-          onConfirmed={() => setBatch({ ...batch, status: 'marking' })}
+          onConfirmed={() => setBatch((prev) => prev ? { ...prev, status: 'marking' } : prev)}
         />
       )}
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useTeacherMarkingBatch } from '@/hooks/useTeacherMarkingBatch';
 import { useTeacherStudents } from '@/hooks/useTeacherStudents';
 import { Badge } from '@/components/ui/badge';
@@ -29,8 +30,8 @@ function fullName(s: Student): string {
 }
 
 export function MarkingBatchReview({ batch, onConfirmed }: Props) {
-  const { confirmBatch, loading } = useTeacherMarkingBatch();
-  const { students: allStudents } = useTeacherStudents();
+  const { confirmBatch } = useTeacherMarkingBatch();
+  const { students: allStudents, loading: studentsLoading } = useTeacherStudents();
 
   const students = useMemo(
     () => allStudents.filter((s) => s.classId === batch.classId),
@@ -39,46 +40,58 @@ export function MarkingBatchReview({ batch, onConfirmed }: Props) {
 
   // ambiguous index -> selected studentId
   const [overrides, setOverrides] = useState<Record<number, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   const handleConfirm = async (): Promise<void> => {
-    const assignments: ConfirmBatchAssignment[] = [];
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const assignments: ConfirmBatchAssignment[] = [];
 
-    // Auto-matched groups: build map from matchedStudentId -> filenames[]
-    const autoMap: Record<string, string[]> = {};
-    for (const extract of batch.pageExtracts) {
-      if (extract.matchedStudentId) {
-        const existing = autoMap[extract.matchedStudentId] ?? [];
-        existing.push(extract.filename);
-        autoMap[extract.matchedStudentId] = existing;
+      // Auto-matched groups: build map from matchedStudentId -> filenames[]
+      const autoMap: Record<string, string[]> = {};
+      for (const extract of batch.pageExtracts) {
+        if (extract.matchedStudentId) {
+          const existing = autoMap[extract.matchedStudentId] ?? [];
+          existing.push(extract.filename);
+          autoMap[extract.matchedStudentId] = existing;
+        }
       }
-    }
 
-    for (const [studentId, filenames] of Object.entries(autoMap)) {
-      const student = students.find((s) => s.id === studentId);
-      assignments.push({
-        imageFilenames: filenames,
-        studentId,
-        studentName: student ? fullName(student) : studentId,
+      for (const [studentId, filenames] of Object.entries(autoMap)) {
+        const student = students.find((s) => s.id === studentId);
+        assignments.push({
+          imageFilenames: filenames,
+          studentId,
+          studentName: student ? fullName(student) : studentId,
+        });
+      }
+
+      // Ambiguous groups: only included if teacher selected an override
+      batch.ambiguousMatches.forEach((match, idx) => {
+        const selectedId = overrides[idx];
+        if (!selectedId) return;
+        const student = students.find((s) => s.id === selectedId);
+        assignments.push({
+          imageFilenames: match.imageFilenames,
+          studentId: selectedId,
+          studentName: student ? fullName(student) : selectedId,
+        });
       });
+
+      if (assignments.length === 0) return;
+      const result = await confirmBatch(batch._id, assignments);
+      if (result) onConfirmed();
+    } finally {
+      setSubmitting(false);
     }
-
-    // Ambiguous groups: only included if teacher selected an override
-    batch.ambiguousMatches.forEach((match, idx) => {
-      const selectedId = overrides[idx];
-      if (!selectedId) return;
-      const student = students.find((s) => s.id === selectedId);
-      assignments.push({
-        imageFilenames: match.imageFilenames,
-        studentId: selectedId,
-        studentName: student ? fullName(student) : selectedId,
-      });
-    });
-
-    const result = await confirmBatch(batch._id, assignments);
-    if (result) onConfirmed();
   };
 
   const confirmedCount = batch.matchedCount + Object.keys(overrides).length;
+
+  if (studentsLoading && batch.ambiguousMatches.length > 0) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="space-y-4">
@@ -106,10 +119,10 @@ export function MarkingBatchReview({ batch, onConfirmed }: Props) {
                 <Select
                   value={overrides[idx] ?? ''}
                   onValueChange={(v: unknown) => {
-                    const val = v as string;
+                    if (typeof v !== 'string') return;
                     setOverrides((prev) => ({
                       ...prev,
-                      [idx]: val === 'none' ? '' : val,
+                      [idx]: v === 'none' ? '' : v,
                     }));
                   }}
                 >
@@ -133,10 +146,10 @@ export function MarkingBatchReview({ batch, onConfirmed }: Props) {
 
       <Button
         onClick={() => void handleConfirm()}
-        disabled={loading}
+        disabled={submitting || confirmedCount === 0}
         className="w-full sm:w-auto"
       >
-        {loading ? 'Confirming...' : `Confirm & Mark ${confirmedCount} student${confirmedCount === 1 ? '' : 's'}`}
+        {submitting ? 'Confirming...' : `Confirm & Mark ${confirmedCount} student${confirmedCount === 1 ? '' : 's'}`}
       </Button>
     </div>
   );
