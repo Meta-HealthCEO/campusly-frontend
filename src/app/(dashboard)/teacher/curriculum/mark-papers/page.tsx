@@ -11,6 +11,7 @@ import { MarkingStudentSelect } from '@/components/ai-tools/MarkingStudentSelect
 import { MarkingUpload } from '@/components/ai-tools/MarkingUpload';
 import { MarkingResults } from '@/components/ai-tools/MarkingResults';
 import { MarkingHistoryTable } from '@/components/ai-tools/MarkingHistoryTable';
+import { MarkingBulkUpload } from '@/components/ai-tools/MarkingBulkUpload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
@@ -37,6 +38,7 @@ export default function MarkPapersPage() {
   const [step, setStep] = useState<Step>(1);
   const [selectedPaper, setSelectedPaper] = useState<MarkingPaperOption | null>(null);
   const [studentData, setStudentData] = useState<{ studentId?: string; studentName: string } | null>(null);
+  const [bulkBatchId, setBulkBatchId] = useState<string | null>(null);
 
   useEffect(() => { fetchPapers(); }, [fetchPapers]);
 
@@ -213,9 +215,10 @@ export default function MarkPapersPage() {
         </TabsContent>
 
         <TabsContent value="class">
-          <p className="text-sm text-muted-foreground py-8">
-            Bulk class upload — coming in Task 15.
-          </p>
+          {!bulkBatchId && <MarkingBulkUpload onCreated={setBulkBatchId} />}
+          {bulkBatchId && (
+            <BulkBatchFlow batchId={bulkBatchId} onDone={() => setBulkBatchId(null)} />
+          )}
         </TabsContent>
 
         <TabsContent value="history">
@@ -227,6 +230,20 @@ export default function MarkPapersPage() {
           />
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+// Placeholder — Task 16 replaces this with the real review flow.
+function BulkBatchFlow({ batchId, onDone }: { batchId: string; onDone: () => void }) {
+  return (
+    <div className="space-y-3 py-4">
+      <p className="text-sm text-muted-foreground">
+        Batch {batchId} processing... (review UI in Task 16)
+      </p>
+      <Button variant="outline" size="sm" onClick={onDone}>
+        Cancel
+      </Button>
     </div>
   );
 }
