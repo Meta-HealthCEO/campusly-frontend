@@ -67,3 +67,7 @@ export * from './assessment-structure';
 // (PaperType, PaperStatus, PaperMemo, MemoSection, MemoAnswer).
 // Import directly from '@/types/papers' instead of from '@/types'.
 // export * from './papers';
+// marking types (Module 3) have name conflicts with the legacy inline
+// PaperMarking in '@/hooks/useTeacherMarking' (different shape).
+// Import directly from '@/types/marking' instead of from '@/types'.
+// export * from './marking';
