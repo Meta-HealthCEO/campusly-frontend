@@ -8,7 +8,7 @@ import {
   Heart, Upload, Shirt, Trophy, Sparkles,
   Compass, Target, Clipboard, Newspaper,
   CalendarCheck, CalendarCog, Crown, DoorOpen, UserPlus,
-  AlertTriangle, Calculator, Library, PenTool, HelpCircle, Camera, Eye,
+  AlertTriangle, Calculator, Library, HelpCircle, Camera, Eye,
   CheckSquare, Video, PlayCircle,
   type LucideIcon
 } from 'lucide-react';
@@ -464,6 +464,7 @@ export const TEACHER_NAV: NavItem[] = [
   { label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
   { label: 'Attendance', href: ROUTES.TEACHER_ATTENDANCE, icon: ClipboardList },
   { label: 'Lesson Plans', href: ROUTES.TEACHER_LESSON_PLANS, icon: BookOpen },
+  { label: 'Papers', href: '/teacher/papers', icon: FileText },
   { label: 'Substitutes', href: ROUTES.TEACHER_SUBSTITUTES, icon: UserCheck },
   {
     label: 'Curriculum',
@@ -475,9 +476,7 @@ export const TEACHER_NAV: NavItem[] = [
       { label: 'Textbooks', href: '/teacher/curriculum/textbooks', icon: BookMarked },
       { label: 'Content Library', href: ROUTES.TEACHER_CURRICULUM_CONTENT, icon: BookOpen },
       { label: 'Question Bank', href: ROUTES.TEACHER_CURRICULUM_QUESTIONS, icon: HelpCircle },
-      { label: 'Assessments', href: ROUTES.TEACHER_CURRICULUM_ASSESSMENTS, icon: PenTool },
       { label: 'Assessment Structure', href: ROUTES.TEACHER_ASSESSMENT_STRUCTURES, icon: BarChart3 },
-      { label: 'Generated Papers', href: ROUTES.TEACHER_CURRICULUM_PAPERS, icon: FileText, badge: 'AI' },
       { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
       { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
       { label: 'Mark Papers', href: ROUTES.TEACHER_CURRICULUM_MARK_PAPERS, icon: Camera, badge: 'AI' },

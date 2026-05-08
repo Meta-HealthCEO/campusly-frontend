@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trash2, RefreshCw, Pencil } from 'lucide-react';
 import { QuestionEditDialog } from './QuestionEditDialog';
+import { QuestionBankPicker } from './QuestionBankPicker';
 import type { Paper, PaperQuestion } from '@/types/papers';
 
 interface Props {
@@ -50,6 +51,10 @@ export function PaperDetailPaperTab({ paper, onChanged }: Props) {
   };
 
   const isFinalised = paper.status === 'finalised';
+  const subjectIdStr =
+    typeof paper.subjectId === 'object' ? paper.subjectId._id : paper.subjectId;
+  const gradeIdStr =
+    typeof paper.gradeId === 'object' ? paper.gradeId._id : paper.gradeId;
 
   return (
     <div className="space-y-6">
@@ -142,6 +147,16 @@ export function PaperDetailPaperTab({ paper, onChanged }: Props) {
               </CardContent>
             </Card>
           ))}
+
+          {!isFinalised && (
+            <QuestionBankPicker
+              paperId={paper._id}
+              sectionIdx={sIdx}
+              subjectId={subjectIdStr}
+              gradeId={gradeIdStr}
+              onAdded={onChanged}
+            />
+          )}
         </div>
       ))}
 
