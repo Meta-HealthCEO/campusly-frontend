@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import apiClient from '@/lib/api-client';
 import {
   Dialog,
   DialogContent,
@@ -20,15 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
-import { unwrapList } from '@/lib/api-helpers';
-
-interface AssessmentOption {
-  id: string;
-  name: string;
-  totalMarks: number;
-  term: number;
-  subjectName?: string;
-}
+import { useTeacherAssessments } from '@/hooks/useTeacherAssessments';
 
 export interface PublishToGradebookDialogProps {
   open: boolean;
@@ -37,6 +28,8 @@ export interface PublishToGradebookDialogProps {
   description?: string;
   onConfirm: (assessmentId: string, comment?: string) => Promise<void>;
   submitting?: boolean;
+  classId?: string;
+  subjectId?: string;
 }
 
 export function PublishToGradebookDialog({
@@ -46,42 +39,22 @@ export function PublishToGradebookDialog({
   description,
   onConfirm,
   submitting = false,
+  classId,
+  subjectId,
 }: PublishToGradebookDialogProps) {
-  const [assessments, setAssessments] = useState<AssessmentOption[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { assessments, loading } = useTeacherAssessments({
+    classId,
+    subjectId,
+    enabled: open,
+  });
   const [assessmentId, setAssessmentId] = useState('');
   const [comment, setComment] = useState('');
 
   useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    setLoading(true);
-    setAssessmentId('');
-    setComment('');
-
-    apiClient
-      .get('/academic/assessments')
-      .then((res) => {
-        if (cancelled) return;
-        const rows = unwrapList<Record<string, unknown>>(res).map((r) => ({
-          id: ((r.id ?? r._id) as string) ?? '',
-          name: (r.name as string) ?? '',
-          totalMarks: (r.totalMarks as number) ?? 0,
-          term: (r.term as number) ?? 0,
-          subjectName: (r.subjectId as { name?: string } | undefined)?.name,
-        }));
-        setAssessments(rows);
-      })
-      .catch(() => {
-        if (!cancelled) setAssessments([]);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    if (open) {
+      setAssessmentId('');
+      setComment('');
+    }
   }, [open]);
 
   const handleSubmit = async () => {
