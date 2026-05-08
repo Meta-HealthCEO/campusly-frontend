@@ -1,7 +1,5 @@
 'use client';
 
-const IMAGE_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4500/api').replace(/\/api\/?$/, '') + '/uploads';
-
 import { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { RotateCcw, Send, ListOrdered, Save, AlertTriangle } from 'lucide-react';
 import type { PaperMarking, MarkingQuestion } from '@/hooks/useTeacherMarking';
 import { PublishToGradebookDialog } from './PublishToGradebookDialog';
+
+const IMAGE_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4500/api').replace(/\/api\/?$/, '') + '/uploads';
 
 interface MarkingResultsProps {
   marking: PaperMarking;
