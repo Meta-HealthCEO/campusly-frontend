@@ -12,6 +12,7 @@ import { MarkingUpload } from '@/components/ai-tools/MarkingUpload';
 import { MarkingResults } from '@/components/ai-tools/MarkingResults';
 import { MarkingHistoryTable } from '@/components/ai-tools/MarkingHistoryTable';
 import { MarkingBulkUpload } from '@/components/ai-tools/MarkingBulkUpload';
+import { BulkBatchFlow } from '@/components/ai-tools/BulkBatchFlow';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
@@ -234,16 +235,3 @@ export default function MarkPapersPage() {
   );
 }
 
-// Placeholder — Task 16 replaces this with the real review flow.
-function BulkBatchFlow({ batchId, onDone }: { batchId: string; onDone: () => void }) {
-  return (
-    <div className="space-y-3 py-4">
-      <p className="text-sm text-muted-foreground">
-        Batch {batchId} processing... (review UI in Task 16)
-      </p>
-      <Button variant="outline" size="sm" onClick={onDone}>
-        Cancel
-      </Button>
-    </div>
-  );
-}
