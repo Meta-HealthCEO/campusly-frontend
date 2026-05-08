@@ -63,3 +63,7 @@ export * from './textbook';
 export * from './diagram';
 export * from './courses';
 export * from './assessment-structure';
+// papers types (Module 2) have name conflicts with teacher-workbench and question-bank
+// (PaperType, PaperStatus, PaperMemo, MemoSection, MemoAnswer).
+// Import directly from '@/types/papers' instead of from '@/types'.
+// export * from './papers';
