@@ -11,6 +11,7 @@ import { MarkingStudentSelect } from '@/components/ai-tools/MarkingStudentSelect
 import { MarkingUpload } from '@/components/ai-tools/MarkingUpload';
 import { MarkingResults } from '@/components/ai-tools/MarkingResults';
 import { MarkingHistoryTable } from '@/components/ai-tools/MarkingHistoryTable';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { ROUTES } from '@/lib/constants';
@@ -20,7 +21,7 @@ import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import type { MarkingPaperOption, MarkingQuestion } from '@/hooks/useTeacherMarking';
 
 type Step = 1 | 2 | 3 | 4 | 5;
-type View = 'wizard' | 'history';
+type Tab = 'single' | 'class' | 'history';
 
 const STEP_LABELS = ['Select Paper', 'Select Student', 'Upload Pages', 'AI Marking', 'Save'] as const;
 
@@ -32,7 +33,7 @@ export default function MarkPapersPage() {
   } = useTeacherMarking();
   const { students, loading: classesLoading } = useTeacherClasses();
 
-  const [view, setView] = useState<View>('wizard');
+  const [tab, setTab] = useState<Tab>('single');
   const [step, setStep] = useState<Step>(1);
   const [selectedPaper, setSelectedPaper] = useState<MarkingPaperOption | null>(null);
   const [studentData, setStudentData] = useState<{ studentId?: string; studentName: string } | null>(null);
@@ -101,14 +102,14 @@ export default function MarkPapersPage() {
     if (selectedPaper) {
       await getMarkings(selectedPaper.id);
     }
-    setView('history');
+    setTab('history');
   }, [selectedPaper, getMarkings]);
 
   // View a specific marking from history
   const handleViewMarking = useCallback(async (id: string) => {
     await getMarking(id);
     setStep(4);
-    setView('wizard');
+    setTab('single');
   }, [getMarking]);
 
   // Publish from history table — called by MarkingHistoryTable dialog
@@ -124,9 +125,9 @@ export default function MarkPapersPage() {
     }
   }, [publishMarking, selectedPaper, getMarkings, markings]);
 
-  // Back from history to wizard
+  // Back from history to single-student wizard
   const handleBackFromHistory = useCallback(() => {
-    setView('wizard');
+    setTab('single');
   }, []);
 
   if (!user?.schoolId) {
@@ -155,8 +156,14 @@ export default function MarkPapersPage() {
         </Link>
       </PageHeader>
 
-      {view === 'wizard' && (
-        <>
+      <Tabs value={tab} onValueChange={(v: unknown) => setTab(v as Tab)}>
+        <TabsList>
+          <TabsTrigger value="single">Single Student</TabsTrigger>
+          <TabsTrigger value="class">Whole Class</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="single" className="space-y-6">
           {/* Step indicators */}
           <div className="flex gap-2 flex-wrap">
             {STEP_LABELS.map((label, idx) => (
@@ -203,17 +210,23 @@ export default function MarkPapersPage() {
               isLoading={loading}
             />
           )}
-        </>
-      )}
+        </TabsContent>
 
-      {view === 'history' && (
-        <MarkingHistoryTable
-          markings={markings}
-          onViewMarking={(id) => void handleViewMarking(id)}
-          onPublish={handlePublishFromHistory}
-          onBack={handleBackFromHistory}
-        />
-      )}
+        <TabsContent value="class">
+          <p className="text-sm text-muted-foreground py-8">
+            Bulk class upload — coming in Task 15.
+          </p>
+        </TabsContent>
+
+        <TabsContent value="history">
+          <MarkingHistoryTable
+            markings={markings}
+            onViewMarking={(id) => void handleViewMarking(id)}
+            onPublish={handlePublishFromHistory}
+            onBack={handleBackFromHistory}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
