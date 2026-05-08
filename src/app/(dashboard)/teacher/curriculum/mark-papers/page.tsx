@@ -52,17 +52,27 @@ export default function MarkPapersPage() {
   }, []);
 
   // Step 3 handler — submit images for marking
+  // TODO: Task 14 will replace this base64->File bridge with native File[] flow.
   const handleUploadSubmit = useCallback(async (images: { base64: string; type: string }[]) => {
     if (!selectedPaper || !studentData) return;
     try {
-      await markPaper({
-        paperId: selectedPaper.id,
-        studentName: studentData.studentName,
-        studentId: studentData.studentId,
-        images: images.map((i) => i.base64),
-        imageTypes: images.map((i) => i.type),
+      const files = images.map((img, idx) => {
+        // base64 may be a data URL (data:image/png;base64,XXX) or just the payload.
+        const payload = img.base64.includes(',') ? img.base64.split(',')[1] : img.base64;
+        const binary = atob(payload);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+        const ext = img.type.split('/')[1] ?? 'png';
+        return new File([bytes], `page-${idx + 1}.${ext}`, { type: img.type });
       });
-      setStep(4);
+      const result = await markPaper(
+        selectedPaper.id,
+        selectedPaper.type,
+        studentData.studentName,
+        files,
+        { studentId: studentData.studentId },
+      );
+      if (result) setStep(4);
     } catch (err: unknown) {
       console.error('Marking failed', err);
     }

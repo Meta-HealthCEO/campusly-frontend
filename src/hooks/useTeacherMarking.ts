@@ -46,23 +46,32 @@ export function useTeacherMarking() {
   const [papers, setPapers] = useState<MarkingPaperOption[]>([]);
   const [papersLoading, setPapersLoading] = useState(false);
 
-  const markPaper = useCallback(async (data: {
-    paperId: string;
-    studentName: string;
-    studentId?: string;
-    images: string[];
-    imageTypes: string[];
-  }): Promise<PaperMarking> => {
+  const markPaper = useCallback(async (
+    paperId: string,
+    paperType: 'generated' | 'assessment',
+    studentName: string,
+    files: File[],
+    options?: { studentId?: string; classId?: string },
+  ): Promise<PaperMarking | null> => {
     setLoading(true);
     try {
-      const res = await apiClient.post('/ai-tools/mark-paper', data);
+      const fd = new FormData();
+      fd.append('paperId', paperId);
+      fd.append('paperType', paperType);
+      fd.append('studentName', studentName);
+      if (options?.studentId) fd.append('studentId', options.studentId);
+      if (options?.classId) fd.append('classId', options.classId);
+      files.forEach((f) => fd.append('files', f));
+      const res = await apiClient.post('/ai-tools/mark-paper', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       const marking = unwrapResponse<PaperMarking>(res);
       setCurrentMarking(marking);
       return marking;
     } catch (err: unknown) {
       console.error('Failed to mark paper', err);
-      toast.error('Failed to mark paper. Please try again.');
-      throw err;
+      toast.error(err instanceof Error ? err.message : 'Failed to mark paper. Please try again.');
+      return null;
     } finally {
       setLoading(false);
     }
