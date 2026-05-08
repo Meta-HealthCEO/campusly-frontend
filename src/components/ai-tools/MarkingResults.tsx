@@ -1,5 +1,7 @@
 'use client';
 
+const IMAGE_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4500/api').replace(/\/api\/?$/, '') + '/uploads';
+
 import { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -88,6 +90,27 @@ export function MarkingResults({
         </div>
       )}
 
+      {/* Image strip */}
+      {marking.images && marking.images.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto py-2">
+          {marking.images.map((img) => {
+            const url = `${IMAGE_BASE}/markings/${marking.id}/${img.filename}`;
+            return (
+              <a
+                key={img.filename}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 border rounded overflow-hidden hover:border-primary"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt={`Page ${img.pageNumber}`} className="h-32 w-auto object-cover" />
+              </a>
+            );
+          })}
+        </div>
+      )}
+
       {/* Summary card */}
       <Card>
         <CardHeader className="pb-3">
@@ -128,6 +151,12 @@ export function MarkingResults({
                       <span className="text-muted-foreground line-clamp-2">{q.correctAnswer}</span>
                     </p>
                     <p className="text-muted-foreground text-xs">{q.feedback}</p>
+                    {q.rationale && (
+                      <details className="text-xs text-muted-foreground mt-1">
+                        <summary className="cursor-pointer hover:text-foreground">AI rationale</summary>
+                        <p className="whitespace-pre-wrap mt-1 pl-2 border-l-2 border-muted">{q.rationale}</p>
+                      </details>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-1 sm:flex-col sm:items-end shrink-0">

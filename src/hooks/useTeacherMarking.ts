@@ -10,6 +10,14 @@ interface MarkingQuestion {
   marksAwarded: number;
   maxMarks: number;
   feedback: string;
+  rationale?: string;
+}
+
+interface PaperMarkingImage {
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  pageNumber: number;
 }
 
 interface PaperMarking {
@@ -28,6 +36,11 @@ interface PaperMarking {
   paperMismatch: boolean;
   mismatchReason: string | null;
   createdAt: string;
+  paperVersion?: number;
+  classId?: string | null;
+  batchId?: string | null;
+  images?: PaperMarkingImage[];
+  imageCount?: number;
 }
 
 export interface MarkingPaperOption {
@@ -37,7 +50,7 @@ export interface MarkingPaperOption {
   maxMarks: number;
 }
 
-export type { PaperMarking, MarkingQuestion };
+export type { PaperMarking, MarkingQuestion, PaperMarkingImage };
 
 export function useTeacherMarking() {
   const [loading, setLoading] = useState(false);
