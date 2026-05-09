@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { ListSkeleton } from '@/components/shared/skeletons';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { useTeacherHomework } from '@/hooks/useTeacherHomework';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import {
@@ -17,12 +16,7 @@ import {
 import { HomeworkListRow } from '@/components/homework/HomeworkListRow';
 
 export default function TeacherHomeworkListPage() {
-  const {
-    teacherHomework,
-    deleting,
-    loading,
-    deleteHomework,
-  } = useTeacherHomework();
+  const { teacherHomework, loading } = useTeacherHomework();
 
   const { classes } = useTeacherClasses();
 
@@ -32,11 +26,6 @@ export default function TeacherHomeworkListPage() {
     classId: 'all',
     status: 'all',
   });
-
-  const [pendingDelete, setPendingDelete] = useState<{
-    id: string;
-    title: string;
-  } | null>(null);
 
   const filtered = useMemo(() => {
     return teacherHomework.filter((hw) => {
@@ -100,22 +89,6 @@ export default function TeacherHomeworkListPage() {
         </div>
       )}
 
-      <ConfirmDialog
-        open={pendingDelete !== null}
-        onOpenChange={(v) => {
-          if (!v) setPendingDelete(null);
-        }}
-        title="Delete homework"
-        description={
-          pendingDelete
-            ? `Are you sure you want to delete "${pendingDelete.title}"? All submissions and grades will also be removed. This cannot be undone.`
-            : ''
-        }
-        confirmLabel="Delete"
-        onConfirm={async () => {
-          if (pendingDelete) await deleteHomework(pendingDelete.id);
-        }}
-      />
     </div>
   );
 }
