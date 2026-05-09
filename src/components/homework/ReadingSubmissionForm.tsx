@@ -1,22 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useHomeworkSubmission } from '@/hooks/useHomeworkSubmission';
 import { useQuestionsByIds } from '@/hooks/useQuestionsByIds';
+import { useContentResource } from '@/hooks/useContentResource';
 import { ExerciseQuestionRenderer } from './ExerciseQuestionRenderer';
 import { ResourceHomeworkViewer } from './ResourceHomeworkViewer';
-import apiClient from '@/lib/api-client';
-import { unwrapResponse } from '@/lib/api-helpers';
 import type {
   ReadingHomework,
   ReadingSubmission,
   SubmitHomeworkPayload,
   StructuredHomeworkSubmission,
 } from '@/types/homework';
-import type { HomeworkResource } from '@/types/homework';
 
 // ─── Props ──────────────────────────────────────────────────────────────────
 
@@ -31,37 +29,11 @@ interface Props {
 export function ReadingSubmissionForm({ homework, submission, onSubmit }: Props) {
   const ids = homework.comprehensionQuestionIds ?? [];
   const { questions, loading: questionsLoading } = useQuestionsByIds(ids);
+  const { resource, loading: resourceLoading } = useContentResource(homework.contentResourceId);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submittedId, setSubmittedId] = useState<string | null>(submission?._id ?? null);
   const [submitting, setSubmitting] = useState(false);
-  const [resource, setResource] = useState<HomeworkResource | null>(null);
-  const [resourceLoading, setResourceLoading] = useState(true);
   const live = useHomeworkSubmission(submittedId);
-
-  useEffect(() => {
-    if (!homework.contentResourceId) {
-      setResourceLoading(false);
-      return;
-    }
-    let cancelled = false;
-    setResourceLoading(true);
-    apiClient
-      .get(`/content-library/student/resources/${homework.contentResourceId}`)
-      .then((res) => {
-        if (cancelled) return;
-        const data = unwrapResponse<HomeworkResource>(res);
-        setResource(data);
-      })
-      .catch((err: unknown) => {
-        console.error('Failed to load reading resource', err);
-      })
-      .finally(() => {
-        if (!cancelled) setResourceLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [homework.contentResourceId]);
 
   const handleSubmit = async (): Promise<void> => {
     if (submitting) return;

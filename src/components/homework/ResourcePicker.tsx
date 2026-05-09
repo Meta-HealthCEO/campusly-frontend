@@ -1,9 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
-import { unwrapResponse } from '@/lib/api-helpers';
 import { useTeacherResources } from '@/hooks/useTeacherResources';
+import { useComprehensionGenerator } from '@/hooks/useComprehensionGenerator';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -19,10 +18,6 @@ interface Props {
   onComprehensionReady: (questionIds: string[]) => void;
 }
 
-interface ComprehensionResult {
-  questionIds: string[];
-}
-
 export function ResourcePicker({
   subjectId,
   gradeId,
@@ -32,7 +27,7 @@ export function ResourcePicker({
   onComprehensionReady,
 }: Props) {
   const { resources, loading } = useTeacherResources({ subjectId, gradeId });
-  const [generating, setGenerating] = useState(false);
+  const { generate, generating } = useComprehensionGenerator();
   const [generatedCount, setGeneratedCount] = useState(0);
 
   const handleGenerate = async (resourceId: string): Promise<void> => {
@@ -40,21 +35,11 @@ export function ResourcePicker({
       toast.error('Pick a subject + class first');
       return;
     }
-    setGenerating(true);
-    try {
-      const res = await apiClient.post(
-        '/homework/comprehension-questions',
-        { contentResourceId: resourceId, count: 4 },
-        { params: { subjectId, gradeId, curriculumNodeId } },
-      );
-      const data = unwrapResponse<ComprehensionResult>(res);
-      onComprehensionReady(data.questionIds);
-      setGeneratedCount(data.questionIds.length);
-      toast.success(`Generated ${data.questionIds.length} comprehension questions`);
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Generation failed');
-    } finally {
-      setGenerating(false);
+    const questionIds = await generate(resourceId, subjectId, gradeId, curriculumNodeId, 4);
+    if (questionIds) {
+      onComprehensionReady(questionIds);
+      setGeneratedCount(questionIds.length);
+      toast.success(`Generated ${questionIds.length} comprehension questions`);
     }
   };
 

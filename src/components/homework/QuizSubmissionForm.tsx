@@ -1,36 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import apiClient from '@/lib/api-client';
-import { unwrapResponse } from '@/lib/api-helpers';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useHomeworkSubmission } from '@/hooks/useHomeworkSubmission';
+import { useQuiz } from '@/hooks/useQuiz';
 import type {
   QuizHomework,
   QuizSubmission,
   SubmitHomeworkPayload,
   StructuredHomeworkSubmission,
 } from '@/types/homework';
-
-interface QuizOption {
-  text: string;
-  isCorrect: boolean;
-}
-
-interface QuizQuestion {
-  questionText: string;
-  questionType: 'mcq' | 'true_false' | 'short_answer' | 'matching';
-  options: QuizOption[];
-  correctAnswer: string;
-  points: number;
-}
-
-interface QuizData {
-  questions: QuizQuestion[];
-}
 
 interface Props {
   homework: QuizHomework;
@@ -39,20 +21,11 @@ interface Props {
 }
 
 export function QuizSubmissionForm({ homework, submission, onSubmit }: Props) {
-  const [quiz, setQuiz] = useState<QuizData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { quiz, loading } = useQuiz(homework.quizId);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submittedId, setSubmittedId] = useState<string | null>(submission?._id ?? null);
   const [submitting, setSubmitting] = useState(false);
   const live = useHomeworkSubmission(submittedId);
-
-  useEffect(() => {
-    apiClient
-      .get(`/learning/quizzes/${homework.quizId}`)
-      .then((res) => setQuiz(unwrapResponse<QuizData>(res)))
-      .catch((err: unknown) => console.error('Failed to load quiz', err))
-      .finally(() => setLoading(false));
-  }, [homework.quizId]);
 
   const handleSubmit = async (): Promise<void> => {
     if (!quiz || submitting) return;
