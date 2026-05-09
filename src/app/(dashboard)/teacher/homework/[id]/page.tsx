@@ -48,13 +48,13 @@ export default function TeacherHomeworkDetailPage() {
   }
 
   // Build a minimal Homework union shape for HomeworkGradingPanel.
-  // The hook returns a HomeworkDetail (legacy shape) so we bridge the gap here.
+  // version and type come from the real API response via useTeacherHomeworkDetail.
   const homeworkForPanel = {
     _id: homework.id,
-    version: 1,
+    version: homework.version,
     title: homework.title,
     status: homework.status as 'assigned' | 'closed',
-    type: 'quiz',
+    type: homework.type,
   } as unknown as Homework;
 
   return (

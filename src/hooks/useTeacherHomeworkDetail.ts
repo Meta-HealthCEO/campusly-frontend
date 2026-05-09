@@ -17,6 +17,8 @@ interface HomeworkDetail {
   resourceId?: string;
   resourceType?: string;
   resourceTitle?: string;
+  version: number;
+  type: 'quiz' | 'reading' | 'exercise';
 }
 
 interface SubmissionItem {
@@ -82,6 +84,8 @@ export function useTeacherHomeworkDetail(homeworkId: string) {
               : (typeof raw.resourceId === 'string' ? raw.resourceId as string : undefined),
             resourceType: (resourceObj?.type as string) ?? undefined,
             resourceTitle: (resourceObj?.title as string) ?? undefined,
+            version: (raw.version as number) ?? 1,
+            type: (raw.type as 'quiz' | 'reading' | 'exercise') ?? 'quiz',
           });
         }
 
