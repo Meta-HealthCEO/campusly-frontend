@@ -79,7 +79,7 @@ maxFileSize
 allowedFileTypes
 ```
 
-Migration: existing records auto-default `latePolicy='block'`, `gradebookAutoPublish=true`, `version=1`. Removed fields silently dropped (Mongoose strict mode handles this when schema definitions are removed).
+Migration: existing records auto-default `latePolicy='block'`, `gradebookAutoPublish=true`, `version=1` (Mongoose populates defaults on read for fields absent in old docs). Removed fields persist as ghost fields on existing documents in MongoDB but are inaccessible from the TypeScript interface and not written by future updates. Optional follow-up cleanup migration can `$unset` them later — not required for Module 4.
 
 ### 4.2 `HomeworkSubmission` — discriminated union
 
@@ -99,6 +99,7 @@ maxMarks: number;                    // snapshot from homework
 feedback?: string;
 gradedAt?: Date;
 gradedBy?: ObjectId | null;          // teacher User._id when manually graded; null for auto-graded
+gradingGeneration: number;           // increments on each (re)submission; async grader checks this before writing
 errorMessage?: string;               // populated when gradingStatus='failed'
 lateMarkAdjustment?: {               // audit trail of late penalty calculation
   rawMark: number;
@@ -116,9 +117,9 @@ answers: Array<{
   questionSnapshot: string;          // snapshot of questionText at submit time
   studentAnswer: string;
   awarded?: number;
-  maxMarks: number;
+  maxMarks: number;                  // snapshot from quiz.questions[i].points (Quiz model uses 'points', map to 'maxMarks')
   rationale?: string;                // AI rationale for non-deterministic grades
-  gradedBy: 'deterministic' | 'ai' | 'teacher';
+  gradingMethod: 'deterministic' | 'ai' | 'teacher' | 'pending';
 }>;
 ```
 
@@ -131,7 +132,7 @@ answers: Array<{
   awarded?: number;
   maxMarks: number;
   rationale?: string;
-  gradedBy: 'deterministic' | 'ai' | 'teacher';
+  gradingMethod: 'deterministic' | 'ai' | 'teacher' | 'pending';
 }>;
 ```
 
@@ -145,7 +146,7 @@ comprehensionAnswers: Array<{
   awarded?: number;
   maxMarks: number;
   rationale?: string;
-  gradedBy: 'deterministic' | 'ai' | 'teacher';
+  gradingMethod: 'deterministic' | 'ai' | 'teacher' | 'pending';
 }>;
 ```
 
@@ -233,7 +234,12 @@ async function publishHomeworkGrade(
   homework: IHomework,
 ): Promise<void>;
   // 1. Resolve assessment via findOrCreateAssessmentForHomework
-  // 2. Upsert StudentGrade: { studentId, assessmentId, marks: submission.mark, percentage }
+  // 2. Upsert into the `Mark` collection (Academic/model.ts:389):
+  //    { assessmentId, studentId, schoolId,
+  //      mark: submission.mark, total: submission.maxMarks,
+  //      percentage: round(submission.mark / submission.maxMarks * 100),
+  //      isAbsent: false, isDeleted: false }
+  //    using the existing unique index on (assessmentId, studentId)
   // 3. Compensation: log error if upsert fails, do not block grading
 ```
 
@@ -249,16 +255,31 @@ async function publishHomeworkGrade(
 
 ## 6. Backend routes
 
-### 6.1 New routes
+### 6.1 Routes
+
+**Existing — extend or audit:**
 ```
-POST   /homework/:id/submit                  → student submits answers
-GET    /homework/submissions/:id              → student/parent/teacher polls grading status
+POST   /homework                              → create (extend payload: latePolicy, comprehensionQuestionIds, etc)
+GET    /homework                              → list (extend filters)
+PUT    /homework/:id                          → update (bump version)
+DELETE /homework/:id                          → delete (soft)
+POST   /homework/:id/submit                   → submit (rebuild handler for discriminated payload)
+GET    /homework/:id/submissions              → teacher list of submissions for a homework
+GET    /homework/parent/:studentId            → existing per-student parent view (keep)
+GET    /homework/student/:studentId/submissions → existing (keep)
+PATCH  /homework/submissions/:submissionId/grade → existing teacher-manual-override (keep, reuse for teacher overrides)
+```
+
+**New routes:**
+```
+GET    /homework/submissions/:id              → poll a single submission's grading status (for status polling)
 POST   /homework/comprehension-questions      → wizard step 2 reading flow (body: { contentResourceId, count })
-POST   /homework/:id/regrade                  → teacher manually re-runs grading on stale submissions
-GET    /homework/:id/submissions              → teacher list (already exists, audit + extend)
-GET    /homework/student/dashboard            → counts: due_this_week, overdue, awaiting_grading
-GET    /homework/parent/dashboard             → counts per child
+POST   /homework/:id/regrade                  → teacher manually re-runs gradeSubmissionAsync on stale submissions
+GET    /homework/student/dashboard            → counts for current student (due_this_week, overdue, awaiting_grading)
+GET    /homework/parent/dashboard             → aggregated counts across all linked children for current parent
 ```
+
+The new `/homework/parent/dashboard` is the parent-level aggregate (no studentId in path — JWT identifies the parent). It complements (does not replace) the existing `/homework/parent/:studentId` per-child route.
 
 ### 6.2 Auth + multi-tenancy
 
@@ -287,8 +308,9 @@ Pattern mirrors `/teacher/papers/new` from Module 2.
 - Exercise mode: reuse `QuestionBankPicker` from Module 2 — filter by subject/grade/topic, multi-select, total marks computed from selection
 
 **Step 3 — Review** (`HomeworkWizardStep3.tsx`):
-- Preview of what students will see (rendered with student-facing components)
-- "Edit step X" links
+- Metadata-only preview: title, due date, total marks, late policy, type, question list (text + marks per Q).
+- "Edit step X" links to jump back.
+- Note: this step does NOT render the student-facing submission components (those exist later in the build order). Rich preview deferred to a follow-up.
 
 **Step 4 — Assign** (`HomeworkWizardStep4.tsx`):
 - Confirm metadata
@@ -299,6 +321,8 @@ Wizard state: Zustand store `useHomeworkWizardStore` (similar to paper wizard). 
 ### 7.2 List page `/teacher/homework` (extend existing 208-line page)
 
 Add columns: `Submissions`, `Auto-graded` (count `gradingStatus='graded'`), `Pending grading`, `Late policy` badge. Filter: by type, by class, by status.
+
+To stay within the 350-line cap, extract the filter bar into `HomeworkListFilters.tsx` and the table rows into `HomeworkListRow.tsx` as part of this task. The parent `page.tsx` keeps only orchestration: hook calls + composing the filter + table.
 
 ### 7.3 Detail page `/teacher/homework/[id]` (extend existing 185-line page)
 
@@ -364,7 +388,7 @@ Extend existing `/student` page (already has `useStudentDashboard` hook): consum
 
 ### 9.1 Parent dashboard `/parent` (extend)
 
-New `useParentHomeworkSummary(parentId)` hook → GET `/homework/parent/dashboard`. Render per-child cards: child name, pending count, overdue count, awaiting-grading count, recent grade.
+New `useParentHomeworkSummary()` hook (no args — parent identity comes from JWT) → GET `/homework/parent/dashboard`. Render per-child cards: child name, pending count, overdue count, awaiting-grading count, recent grade.
 
 ### 9.2 Parent homework detail `/parent/homework/[id]` (NEW)
 
@@ -478,8 +502,8 @@ function applyLatePenalty(
 |---|---|
 | Comprehension Q generation partially fails | Wrap `Question.insertMany` + homework save in try/catch; on failure delete any inserted Qs |
 | Stale Quiz/Resource snapshot | Store `questionSnapshot` per answer at submit time (already in schema) |
-| AI grading rate limits | Per-school concurrent grading cap of 30 (semaphore in service); per-submission cap of 3 |
-| Concurrent re-submission before grading completes | Last-write-wins on `(homeworkId, studentId)` unique index; cancel in-flight `gradeSubmissionAsync` if found |
+| AI grading rate limits | Per-school concurrent grading cap of 30 via in-process semaphore (single-instance only — multi-instance horizontal scaling would need Redis-based locking, deferred). Per-submission concurrency cap of 3 simultaneous Claude calls |
+| Concurrent re-submission before grading completes | Submission has `gradingGeneration` counter; new submit increments it. Async grader captures generation at start, checks `submission.gradingGeneration === captured` before each write, aborts silently if the generation has advanced |
 | Late-policy=block edge: student submits at 23:59, server processes at 00:01 | Compare `submittedAt` (client-provided) against server time, but accept up to 60s clock skew |
 | Teacher edits homework after submissions exist | Bump `homework.version`; submissions show "stale" banner like Module 3 |
 | Gradebook publish fails (e.g., assessment cap reached) | Log error, do NOT mark gradingStatus='failed' — grading itself succeeded |
