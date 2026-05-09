@@ -34,7 +34,7 @@ export function useTeacherHomeworkSubmissions(homeworkId: string): {
   const regradeSubmission = useCallback(
     async (submissionId: string): Promise<StructuredHomeworkSubmission | null> => {
       try {
-        const res = await apiClient.post(`/homework/${homeworkId}/regrade`, {});
+        const res = await apiClient.post(`/homework/submissions/${submissionId}/regrade`, {});
         const fresh = unwrapResponse<StructuredHomeworkSubmission>(res);
         setSubmissions((prev) =>
           prev.map((s) => (s._id === submissionId ? fresh : s)),
@@ -46,7 +46,7 @@ export function useTeacherHomeworkSubmissions(homeworkId: string): {
         return null;
       }
     },
-    [homeworkId],
+    [],
   );
 
   return { submissions, loading, refetch, regradeSubmission };
