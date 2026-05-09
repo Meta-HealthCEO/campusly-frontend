@@ -12,6 +12,7 @@ import { BookOpen, Calendar, ArrowLeft } from 'lucide-react';
 import { useStudentHomeworkDetail } from '@/hooks/useStudentHomework';
 import { formatDate } from '@/lib/utils';
 import { QuizSubmissionForm } from '@/components/homework/QuizSubmissionForm';
+import { ExerciseSubmissionForm } from '@/components/homework/ExerciseSubmissionForm';
 
 export default function StudentHomeworkDetailPage() {
   const params = useParams();
@@ -73,7 +74,7 @@ export default function StudentHomeworkDetailPage() {
         <QuizSubmissionForm homework={homework} submission={submission} onSubmit={submitHomework} />
       )}
       {homework.type === 'exercise' && (
-        <p className="text-sm text-muted-foreground">Exercise form — Task 18</p>
+        <ExerciseSubmissionForm homework={homework} submission={submission} onSubmit={submitHomework} />
       )}
       {homework.type === 'reading' && (
         <p className="text-sm text-muted-foreground">Reading form — Task 19</p>
