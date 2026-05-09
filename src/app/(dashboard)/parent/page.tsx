@@ -14,6 +14,7 @@ import {
 import { formatCurrency, formatDate, formatRelativeDate } from '@/lib/utils';
 import { useCurrentParent } from '@/hooks/useCurrentParent';
 import { useParentDashboard } from '@/hooks/useParentDashboard';
+import { useParentHomeworkSummary } from '@/hooks/useParentHomeworkSummary';
 import { AnnouncementBanner } from '@/components/announcements/AnnouncementBanner';
 import { FeaturedBanner } from '@/components/school-news/FeaturedBanner';
 import Link from 'next/link';
@@ -22,6 +23,7 @@ import type { Notification } from '@/types';
 export default function ParentDashboard() {
   const { children } = useCurrentParent();
   const { childData, notifications, invoices, loading } = useParentDashboard();
+  const { children: hwChildren, loading: hwLoading } = useParentHomeworkSummary();
 
   const totalBalance = childData.reduce((sum, d) => sum + d.walletBalance, 0);
   const totalOutstanding = invoices
@@ -128,6 +130,30 @@ export default function ParentDashboard() {
       <AnnouncementBanner limit={3} />
 
       <FeaturedBanner limit={3} />
+
+      <section>
+        <h2 className="text-lg font-semibold mb-3">Children&apos;s Homework</h2>
+        {hwLoading && <LoadingSpinner />}
+        {!hwLoading && hwChildren.length === 0 && (
+          <p className="text-sm text-muted-foreground">No linked children.</p>
+        )}
+        {!hwLoading && hwChildren.length > 0 && (
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {hwChildren.map((c) => (
+              <Card key={c.studentId}>
+                <CardContent className="p-3 space-y-1">
+                  <p className="font-medium">{c.firstName} {c.lastName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Pending: <span className="font-medium">{c.pending}</span>
+                    {' · '}Overdue: <span className="font-medium text-destructive">{c.overdue}</span>
+                    {' · '}Grading: <span className="font-medium">{c.awaitingGrading}</span>
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

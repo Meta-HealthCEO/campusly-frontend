@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { BookOpen, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCard } from '@/components/shared/StatCard';
@@ -10,11 +11,19 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { ParentHomeworkList } from '@/components/homework/ParentHomeworkList';
 import { useCurrentParent } from '@/hooks/useCurrentParent';
 import { useParentHomework, getHomeworkDisplayStatus } from '@/hooks/useParentHomework';
+import type { ParentHomeworkItem } from '@/hooks/useParentHomework';
 
 export default function ParentHomeworkPage() {
+  const router = useRouter();
   const { children, loading: parentLoading } = useCurrentParent();
   const { homework, loading: hwLoading, loadHomework } = useParentHomework();
   const [selectedChildId, setSelectedChildId] = useState('');
+
+  const handleRowClick = useCallback((hw: ParentHomeworkItem) => {
+    const id = hw._id ?? hw.id;
+    if (!id || !selectedChildId) return;
+    router.push(`/parent/homework/${id}?studentId=${selectedChildId}`);
+  }, [router, selectedChildId]);
 
   // Auto-select first child
   useEffect(() => {
@@ -93,7 +102,7 @@ export default function ParentHomeworkPage() {
         <StatCard title="Total" value={homework.length.toString()} icon={BookOpen} description="All assignments" />
       </div>
 
-      {hwLoading ? <LoadingSpinner /> : <ParentHomeworkList homework={homework} />}
+      {hwLoading ? <LoadingSpinner /> : <ParentHomeworkList homework={homework} onRowClick={handleRowClick} />}
     </div>
   );
 }

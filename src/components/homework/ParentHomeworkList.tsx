@@ -25,9 +25,10 @@ const statusLabels: Record<HomeworkDisplayStatus, string> = {
 
 interface ParentHomeworkListProps {
   homework: ParentHomeworkItem[];
+  onRowClick?: (hw: ParentHomeworkItem) => void;
 }
 
-export function ParentHomeworkList({ homework }: ParentHomeworkListProps) {
+export function ParentHomeworkList({ homework, onRowClick }: ParentHomeworkListProps) {
   const sorted = useMemo(
     () => [...homework].sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()),
     [homework],
@@ -87,6 +88,7 @@ export function ParentHomeworkList({ homework }: ParentHomeworkListProps) {
       data={sorted}
       searchKey="title"
       searchPlaceholder="Search homework..."
+      onRowClick={onRowClick}
     />
   );
 }
