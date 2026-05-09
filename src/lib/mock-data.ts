@@ -176,9 +176,9 @@ export const mockStudentGrades: StudentGrade[] = mockStudents.slice(0, 5).flatMa
 
 // ============== Homework ==============
 export const mockHomework: Homework[] = [
-  { _id: 'hw1', type: 'exercise', exerciseQuestionIds: [], title: 'Quadratic Equations Worksheet', subjectId: 'sub1', classId: 'c1', schoolId: 'school1', teacherId: 't1', dueDate: '2025-03-25', totalMarks: 100, attachments: [], status: 'assigned', isDeleted: false, createdAt: '2025-03-18T08:00:00Z', updatedAt: '2025-03-18T08:00:00Z' },
-  { _id: 'hw2', type: 'exercise', exerciseQuestionIds: [], title: 'Creative Writing: Short Story', subjectId: 'sub2', classId: 'c1', schoolId: 'school1', teacherId: 't2', dueDate: '2025-03-28', totalMarks: 100, attachments: [], status: 'assigned', isDeleted: false, createdAt: '2025-03-20T10:00:00Z', updatedAt: '2025-03-20T10:00:00Z' },
-  { _id: 'hw3', type: 'exercise', exerciseQuestionIds: [], title: 'Newton Laws Summary', subjectId: 'sub3', classId: 'c1', schoolId: 'school1', teacherId: 't1', dueDate: '2025-04-01', totalMarks: 100, attachments: [], status: 'assigned', isDeleted: false, createdAt: '2025-03-22T09:00:00Z', updatedAt: '2025-03-22T09:00:00Z' },
+  { _id: 'hw1', type: 'exercise', exerciseQuestionIds: [], title: 'Quadratic Equations Worksheet', subjectId: 'sub1', classId: 'c1', schoolId: 'school1', teacherId: 't1', dueDate: '2025-03-25', totalMarks: 100, attachments: [], status: 'assigned', isDeleted: false, createdAt: '2025-03-18T08:00:00Z', updatedAt: '2025-03-18T08:00:00Z', latePolicy: 'block', gradebookAutoPublish: true, version: 1 },
+  { _id: 'hw2', type: 'exercise', exerciseQuestionIds: [], title: 'Creative Writing: Short Story', subjectId: 'sub2', classId: 'c1', schoolId: 'school1', teacherId: 't2', dueDate: '2025-03-28', totalMarks: 100, attachments: [], status: 'assigned', isDeleted: false, createdAt: '2025-03-20T10:00:00Z', updatedAt: '2025-03-20T10:00:00Z', latePolicy: 'block', gradebookAutoPublish: true, version: 1 },
+  { _id: 'hw3', type: 'exercise', exerciseQuestionIds: [], title: 'Newton Laws Summary', subjectId: 'sub3', classId: 'c1', schoolId: 'school1', teacherId: 't1', dueDate: '2025-04-01', totalMarks: 100, attachments: [], status: 'assigned', isDeleted: false, createdAt: '2025-03-22T09:00:00Z', updatedAt: '2025-03-22T09:00:00Z', latePolicy: 'block', gradebookAutoPublish: true, version: 1 },
 ];
 
 export const mockSubmissions: HomeworkSubmission[] = mockStudents.slice(0, 3).map((student, i) => ({

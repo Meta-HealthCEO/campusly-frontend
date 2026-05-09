@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapList, unwrapResponse, extractErrorMessage } from '@/lib/api-helpers';
 import { useCurrentStudent } from './useCurrentStudent';
 import { normalizeHomework, normalizeSubmission } from '@/lib/homework-helpers';
+import { toast } from 'sonner';
 import type { Homework, HomeworkSubmission } from '@/types';
+import type { StructuredHomeworkSubmission, SubmitHomeworkPayload } from '@/types/homework';
 
 type RawHomeworkInput = Parameters<typeof normalizeHomework>[0];
 
@@ -60,15 +62,15 @@ export function useStudentHomeworkList(): StudentHomeworkListResult {
 
 interface StudentHomeworkDetailResult {
   homework: Homework | null;
-  submission: HomeworkSubmission | null;
+  submission: StructuredHomeworkSubmission | null;
   loading: boolean;
-  submitHomework: (content: string) => Promise<void>;
+  submitHomework: (payload: SubmitHomeworkPayload) => Promise<StructuredHomeworkSubmission | null>;
 }
 
 export function useStudentHomeworkDetail(homeworkId: string): StudentHomeworkDetailResult {
   const { student, loading: studentLoading } = useCurrentStudent();
   const [homework, setHomework] = useState<Homework | null>(null);
-  const [submission, setSubmission] = useState<HomeworkSubmission | null>(null);
+  const [submission, setSubmission] = useState<StructuredHomeworkSubmission | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -83,7 +85,7 @@ export function useStudentHomeworkDetail(homeworkId: string): StudentHomeworkDet
         if (student) {
           const sid = student._id ?? student.id;
           const subRes = await apiClient.get(`/homework/student/${sid}/submissions`);
-          const subs = unwrapList<HomeworkSubmission>(subRes, 'submissions');
+          const subs = unwrapList<StructuredHomeworkSubmission>(subRes, 'submissions');
           const match = subs.find((s) => s.homeworkId === homeworkId);
           if (match) setSubmission(match);
         }
@@ -96,25 +98,17 @@ export function useStudentHomeworkDetail(homeworkId: string): StudentHomeworkDet
     fetchData();
   }, [homeworkId, student, studentLoading]);
 
-  const submitHomework = async (content: string) => {
-    if (!content.trim() || !student) return;
+  const submitHomework = useCallback(async (payload: SubmitHomeworkPayload): Promise<StructuredHomeworkSubmission | null> => {
     try {
-      await apiClient.post(`/homework/${homeworkId}/submit`, {
-        files: [content.trim()],
-      });
-      setSubmission({
-        id: 'new',
-        homeworkId,
-        studentId: student.id,
-        content,
-        submittedAt: new Date().toISOString(),
-        attachments: [],
-        status: 'submitted',
-      } as unknown as HomeworkSubmission);
+      const res = await apiClient.post(`/homework/${homeworkId}/submit`, payload);
+      const data = unwrapResponse<StructuredHomeworkSubmission>(res);
+      setSubmission(data);
+      return data;
     } catch (err: unknown) {
-      throw new Error(extractErrorMessage(err, 'Failed to submit homework'));
+      toast.error(err instanceof Error ? err.message : extractErrorMessage(err, 'Submit failed'));
+      return null;
     }
-  };
+  }, [homeworkId]);
 
   return { homework, submission, loading: studentLoading || loading, submitHomework };
 }

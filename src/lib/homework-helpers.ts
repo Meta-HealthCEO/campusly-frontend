@@ -68,6 +68,14 @@ export function normalizeHomework(raw: RawHomework): Homework {
     isDeleted: raw.isDeleted ?? false,
     createdAt: raw.createdAt ?? '',
     updatedAt: raw.updatedAt ?? '',
+    latePolicy: (raw.latePolicy as 'block' | 'penalty' | 'accept' | undefined) ?? 'block',
+    latePenaltyPercent: typeof raw.latePenaltyPercent === 'number' ? raw.latePenaltyPercent : undefined,
+    gradebookAutoPublish: typeof raw.gradebookAutoPublish === 'boolean' ? raw.gradebookAutoPublish : true,
+    assessmentId: typeof raw.assessmentId === 'string' ? raw.assessmentId : null,
+    version: typeof raw.version === 'number' ? raw.version : 1,
+    comprehensionQuestionIds: Array.isArray(raw.comprehensionQuestionIds)
+      ? (raw.comprehensionQuestionIds as string[])
+      : undefined,
   };
 
   const type: HomeworkType = raw.type ?? 'exercise';

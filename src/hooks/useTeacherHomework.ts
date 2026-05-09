@@ -149,3 +149,27 @@ export function useTeacherHomework() {
 }
 
 export type { SubmissionCounts };
+
+// ─── Module 4: Standalone mutations hook ───────────────────────────────────
+
+export function useTeacherHomeworkMutations(): {
+  createHomework: (payload: Record<string, unknown>) => Promise<Homework | null>;
+  loading: boolean;
+} {
+  const [mutLoading, setMutLoading] = useState(false);
+
+  const createHomework = useCallback(async (payload: Record<string, unknown>): Promise<Homework | null> => {
+    setMutLoading(true);
+    try {
+      const res = await apiClient.post('/homework', payload);
+      return unwrapResponse<Homework>(res);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to create homework');
+      return null;
+    } finally {
+      setMutLoading(false);
+    }
+  }, []);
+
+  return { createHomework, loading: mutLoading };
+}

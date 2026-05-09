@@ -34,6 +34,12 @@ interface HomeworkBase {
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
+  latePolicy: 'block' | 'penalty' | 'accept';
+  latePenaltyPercent?: number;
+  gradebookAutoPublish: boolean;
+  assessmentId?: string | null;
+  version: number;
+  comprehensionQuestionIds?: string[];
 }
 
 export interface QuizHomework extends HomeworkBase {
@@ -158,4 +164,102 @@ export interface HomeworkTemplate {
   attachments: TemplateAttachment[];
   createdAt: string;
 }
+
+// ─── Module 4: Submission discriminated union ──────────────────────────────
+
+export type GradingStatus = 'pending' | 'graded' | 'failed';
+export type GradingMethod = 'deterministic' | 'ai' | 'teacher' | 'pending';
+
+export interface GradedAnswerBase {
+  studentAnswer: string;
+  questionSnapshot: string;
+  awarded?: number;
+  maxMarks: number;
+  rationale?: string;
+  gradingMethod: GradingMethod;
+}
+
+export interface QuizAnswer extends GradedAnswerBase {
+  questionIndex: number;
+}
+
+export interface ExerciseAnswer extends GradedAnswerBase {
+  questionId: string;
+}
+
+export interface ReadingAnswer extends GradedAnswerBase {
+  questionId: string;
+}
+
+export interface LateMarkAdjustment {
+  rawMark: number;
+  penaltyPercent: number;
+  finalMark: number;
+}
+
+export interface HomeworkSubmissionBase {
+  _id: string;
+  homeworkId: string;
+  studentId: string;
+  schoolId: string;
+  homeworkVersion: number;
+  submittedAt: string;
+  isLate: boolean;
+  gradingStatus: GradingStatus;
+  gradingGeneration: number;
+  mark?: number;
+  maxMarks: number;
+  feedback?: string;
+  gradedAt?: string;
+  gradedBy?: string | null;
+  errorMessage?: string;
+  lateMarkAdjustment?: LateMarkAdjustment;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface QuizSubmission extends HomeworkSubmissionBase {
+  type: 'quiz';
+  answers: QuizAnswer[];
+}
+
+export interface ExerciseSubmission extends HomeworkSubmissionBase {
+  type: 'exercise';
+  answers: ExerciseAnswer[];
+}
+
+export interface ReadingSubmission extends HomeworkSubmissionBase {
+  type: 'reading';
+  markedReadAt: string;
+  comprehensionAnswers: ReadingAnswer[];
+}
+
+export type StructuredHomeworkSubmission =
+  | QuizSubmission
+  | ExerciseSubmission
+  | ReadingSubmission;
+
+// ─── Submit payloads (mirror backend Zod schemas) ──────────────────────────
+
+export type SubmitQuizPayload = {
+  type: 'quiz';
+  answers: Array<{ questionIndex: number; studentAnswer: string }>;
+};
+
+export type SubmitExercisePayload = {
+  type: 'exercise';
+  answers: Array<{ questionId: string; studentAnswer: string }>;
+};
+
+export type SubmitReadingPayload = {
+  type: 'reading';
+  markedReadAt: string;
+  comprehensionAnswers: Array<{ questionId: string; studentAnswer: string }>;
+};
+
+export type SubmitHomeworkPayload =
+  | SubmitQuizPayload
+  | SubmitExercisePayload
+  | SubmitReadingPayload;
 
