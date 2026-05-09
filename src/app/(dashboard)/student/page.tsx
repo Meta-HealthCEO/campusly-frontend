@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { BookOpen, Calendar, Wallet, Trophy, Clock } from 'lucide-react';
+import { BookOpen, Calendar, Wallet, Trophy, Clock, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCard } from '@/components/shared/StatCard';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -10,11 +10,13 @@ import { AnnouncementBanner } from '@/components/announcements/AnnouncementBanne
 import { FeaturedBanner } from '@/components/school-news/FeaturedBanner';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { useStudentDashboard } from '@/hooks/useStudentDashboard';
+import { useStudentHomeworkDashboard } from '@/hooks/useStudentHomeworkDashboard';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
 export default function StudentDashboard() {
   const { student } = useCurrentStudent();
   const { homework, submissions, wallet, timetable, loading } = useStudentDashboard();
+  const { counts: hwCounts } = useStudentHomeworkDashboard();
 
   if (loading) return <LoadingSpinner />;
 
@@ -33,8 +35,10 @@ export default function StudentDashboard() {
     <div className="space-y-6">
       <PageHeader title={`Welcome back, ${firstName}!`} description="Here is your overview for today" />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Homework Due" value={String(pendingHomework.length)} icon={BookOpen} description="Pending submissions" />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <StatCard title="Due This Week" value={String(hwCounts?.dueThisWeek ?? 0)} icon={BookOpen} description="Homework pending" />
+        <StatCard title="Overdue" value={String(hwCounts?.overdue ?? 0)} icon={AlertTriangle} description="Late, not submitted" />
+        <StatCard title="Awaiting Grading" value={String(hwCounts?.awaitingGrading ?? 0)} icon={Clock} description="AI grading in progress" />
         <StatCard title="Today's Classes" value={String(todayClasses.length)} icon={Calendar} description={`${today.charAt(0).toUpperCase() + today.slice(1)} schedule`} />
         <StatCard title="Wallet Balance" value={wallet ? formatCurrency(wallet.balance) : 'R0.00'} icon={Wallet} description="Tuck shop funds" />
         <StatCard title="House Points" value={student?.house ? String(student.house.points) : '0'} icon={Trophy} description={student?.house?.name || 'No house'} />
