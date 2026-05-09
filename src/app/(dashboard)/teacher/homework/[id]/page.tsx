@@ -11,21 +11,20 @@ import {
   BookOpen,
   ArrowLeft,
   Calendar,
-  Users,
-  CheckCircle,
   Paperclip,
   ExternalLink,
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
-import { GradingInterface } from '@/components/homework/GradingInterface';
+import { HomeworkGradingPanel } from '@/components/homework/HomeworkGradingPanel';
 import { useTeacherHomeworkDetail } from '@/hooks/useTeacherHomeworkDetail';
 import Link from 'next/link';
+import type { Homework } from '@/types/homework';
 
 export default function TeacherHomeworkDetailPage() {
   const params = useParams();
   const homeworkId = params.id as string;
 
-  const { homework, submissions, loading, changeStatus, gradeSubmission, handleGraded } =
+  const { homework, loading, changeStatus } =
     useTeacherHomeworkDetail(homeworkId);
 
   if (loading) return <LoadingSpinner />;
@@ -48,9 +47,15 @@ export default function TeacherHomeworkDetailPage() {
     );
   }
 
-  const gradedCount = submissions.filter(
-    (s) => s.mark !== null && s.mark !== undefined
-  ).length;
+  // Build a minimal Homework union shape for HomeworkGradingPanel.
+  // The hook returns a HomeworkDetail (legacy shape) so we bridge the gap here.
+  const homeworkForPanel = {
+    _id: homework.id,
+    version: 1,
+    title: homework.title,
+    status: homework.status as 'assigned' | 'closed',
+    type: 'quiz',
+  } as unknown as Homework;
 
   return (
     <div className="space-y-6">
@@ -62,22 +67,19 @@ export default function TeacherHomeworkDetailPage() {
         Back to Homework
       </Link>
 
-      <PageHeader
-        title={homework.title}
-        description={homework.subjectName}
-      />
+      <PageHeader title={homework.title} description={homework.subjectName} />
 
       <Card>
         <CardContent className="p-5">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-xl font-bold">{homework.title}</h2>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <h2 className="text-xl font-bold truncate">{homework.title}</h2>
               <p className="text-sm text-muted-foreground mt-1">
                 {homework.subjectName}
                 {homework.className ? ` - ${homework.className}` : ''}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0 flex-wrap">
               <Badge
                 variant={homework.status === 'assigned' ? 'default' : 'secondary'}
               >
@@ -87,7 +89,7 @@ export default function TeacherHomeworkDetailPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => changeStatus('closed')}
+                  onClick={() => void changeStatus('closed')}
                 >
                   Close
                 </Button>
@@ -95,29 +97,24 @@ export default function TeacherHomeworkDetailPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => changeStatus('assigned')}
+                  onClick={() => void changeStatus('assigned')}
                 >
                   Reopen
                 </Button>
               )}
             </div>
           </div>
+
           <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
               Due: {formatDate(homework.dueDate)}
             </span>
-            <span className="flex items-center gap-1">
-              <Users className="h-4 w-4" />
-              {submissions.length} submissions
-            </span>
-            <span className="flex items-center gap-1">
-              <CheckCircle className="h-4 w-4" />
-              {gradedCount} graded
-            </span>
             <span>Total marks: {homework.totalMarks}</span>
           </div>
+
           <p className="mt-3 text-sm">{homework.description}</p>
+
           {homework.resourceId && (
             <div className="mt-3">
               <Link
@@ -134,9 +131,12 @@ export default function TeacherHomeworkDetailPage() {
               </Link>
             </div>
           )}
+
           {homework.attachments.length > 0 && (
             <div className="mt-3 space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">Attachments</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Attachments
+              </p>
               {homework.attachments.map((att, i) => (
                 <a
                   key={i}
@@ -156,28 +156,10 @@ export default function TeacherHomeworkDetailPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">
-            Submissions ({submissions.length})
-          </CardTitle>
+          <CardTitle className="text-lg">Submissions</CardTitle>
         </CardHeader>
         <CardContent>
-          {submissions.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              No submissions yet.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {submissions.map((submission) => (
-                <GradingInterface
-                  key={submission.id}
-                  submission={submission}
-                  totalMarks={homework.totalMarks}
-                  onGraded={handleGraded}
-                  onGradeSubmission={gradeSubmission}
-                />
-              ))}
-            </div>
-          )}
+          <HomeworkGradingPanel homework={homeworkForPanel} />
         </CardContent>
       </Card>
     </div>
