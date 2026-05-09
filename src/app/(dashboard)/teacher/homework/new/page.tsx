@@ -8,6 +8,8 @@ import { ArrowLeft } from 'lucide-react';
 import { useTeacherHomeworkWizardStore } from '@/stores/useTeacherHomeworkWizardStore';
 import { HomeworkWizardStep1 } from '@/components/homework/HomeworkWizardStep1';
 import { HomeworkWizardStep2 } from '@/components/homework/HomeworkWizardStep2';
+import { HomeworkWizardStep3 } from '@/components/homework/HomeworkWizardStep3';
+import { HomeworkWizardStep4 } from '@/components/homework/HomeworkWizardStep4';
 
 export default function TeacherHomeworkNewPage() {
   const router = useRouter();
@@ -30,8 +32,8 @@ export default function TeacherHomeworkNewPage() {
         <CardContent className="p-4 sm:p-6">
           {step === 1 && <HomeworkWizardStep1 />}
           {step === 2 && <HomeworkWizardStep2 />}
-          {step === 3 && <p className="text-sm text-muted-foreground">Step 3 — Task 14</p>}
-          {step === 4 && <p className="text-sm text-muted-foreground">Step 4 — Task 14</p>}
+          {step === 3 && <HomeworkWizardStep3 />}
+          {step === 4 && <HomeworkWizardStep4 />}
         </CardContent>
       </Card>
     </div>
