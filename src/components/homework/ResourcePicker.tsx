@@ -31,7 +31,7 @@ export function ResourcePicker({
   const [generatedCount, setGeneratedCount] = useState(0);
 
   const handleGenerate = async (resourceId: string): Promise<void> => {
-    if (!subjectId || !gradeId || !curriculumNodeId) {
+    if (!subjectId || !gradeId) {
       toast.error('Pick a subject + class first');
       return;
     }
