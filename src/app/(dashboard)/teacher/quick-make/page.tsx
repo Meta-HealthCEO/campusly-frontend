@@ -293,16 +293,6 @@ function titleCaseCode(value: string): string {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function resolveMaybeId(value: unknown): string {
-  if (!value) return '';
-  if (typeof value === 'string') return value;
-  if (typeof value !== 'object') return '';
-  const obj = value as { id?: unknown; _id?: unknown };
-  if (typeof obj.id === 'string') return obj.id;
-  if (typeof obj._id === 'string') return obj._id;
-  return '';
-}
-
 function inferTerm(node: CurriculumNodeItem): number | null {
   const source = `${node.code} ${node.title}`;
   const match = source.match(/(?:^|[-\s])T(?:ERM)?\s*(\d)(?:$|[-\s])/i)
