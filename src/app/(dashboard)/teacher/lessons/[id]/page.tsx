@@ -136,6 +136,7 @@ export default function LessonWorkspacePage() {
         <MaterialDrawer
           lessonId={lessonId}
           materials={lesson.materials}
+          lessonHasAssignedClass={(lesson.assignedClasses?.length ?? 0) > 0}
           addMaterial={lessonHook.addMaterial}
           regenerateMaterial={lessonHook.regenerateMaterial}
         />

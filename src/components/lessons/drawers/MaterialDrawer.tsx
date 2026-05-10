@@ -17,6 +17,9 @@ import type { LessonMaterial } from '@/types/lesson';
 interface Props {
   lessonId: string;
   materials: LessonMaterial[];
+  /** Whether the lesson has at least one class assignment. Homework
+   *  drawers (AI / Create) need this to gate inline creation. */
+  lessonHasAssignedClass: boolean;
   addMaterial: (payload: Record<string, unknown>) => Promise<LessonMaterial>;
   regenerateMaterial: (mid: string, payload?: Record<string, unknown>) => Promise<LessonMaterial>;
 }
@@ -24,6 +27,7 @@ interface Props {
 export function MaterialDrawer({
   lessonId: _lessonId,
   materials,
+  lessonHasAssignedClass,
   addMaterial,
   regenerateMaterial,
 }: Props) {
@@ -98,6 +102,7 @@ export function MaterialDrawer({
         <HomeworkDrawer
           onSubmit={submit}
           existing={existing?.kind === 'homework' ? existing : undefined}
+          lessonHasAssignedClass={lessonHasAssignedClass}
         />
       )}
       {drawer.kind === 'paper' && (

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ClipboardList } from 'lucide-react';
+import { ClipboardList, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,26 +20,38 @@ import {
   useContentResourcesPicker,
 } from '@/hooks/useLessonResourcePickers';
 import { HomeworkCreateModePanel, type CreateType } from './HomeworkCreateModePanel';
+import { HomeworkAiModePanel } from './HomeworkAiModePanel';
 import type { HomeworkMaterial } from '@/types/lesson';
 
-type Mode = 'link' | 'create';
+type Mode = 'ai' | 'link' | 'create';
 
 interface Props {
   onSubmit: (payload: Record<string, unknown>) => Promise<void>;
   existing?: HomeworkMaterial;
+  /** Lesson must be assigned to at least one class for AI/Create modes
+   *  — Homework requires a classId per the schema. */
+  lessonHasAssignedClass: boolean;
 }
 
 const MONGO_ID_RE = /^[a-fA-F0-9]{24}$/;
 
-export function HomeworkDrawer({ onSubmit, existing }: Props) {
+const defaultDueDate = (): string => {
+  const d = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+export function HomeworkDrawer({ onSubmit, existing, lessonHasAssignedClass }: Props) {
   const closeDrawer = useLessonWorkspaceStore((s) => s.closeDrawer);
   const { items, loading: itemsLoading } = useHomeworkPicker();
   const { items: quizItems, loading: quizzesLoading } = useQuizzesPicker();
   const { items: contentItems, loading: contentLoading } = useContentResourcesPicker();
 
-  // When editing an existing homework material, default to "link" mode and
-  // pre-select the linked homework id.
-  const [mode, setMode] = useState<Mode>('link');
+  // Default to "ai" (path of least resistance) when adding new; default to
+  // "link" when editing an existing homework material so the linked id pre-fills.
+  const [mode, setMode] = useState<Mode>(existing ? 'link' : 'ai');
   const [title, setTitle] = useState(existing?.title ?? '');
   const [teacherNotes, setTeacherNotes] = useState(existing?.teacherNotes ?? '');
   const [submitting, setSubmitting] = useState(false);
@@ -52,6 +64,10 @@ export function HomeworkDrawer({ onSubmit, existing }: Props) {
   const [quizId, setQuizId] = useState('');
   const [contentResourceId, setContentResourceId] = useState('');
   const [exerciseQuestionIdsRaw, setExerciseQuestionIdsRaw] = useState('');
+
+  const [aiCount, setAiCount] = useState<number>(5);
+  const [aiDueDate, setAiDueDate] = useState<string>(defaultDueDate());
+  const [aiTotalMarks, setAiTotalMarks] = useState<number>(10);
 
   useEffect(() => {
     if (!existing) return;
@@ -106,9 +122,19 @@ export function HomeworkDrawer({ onSubmit, existing }: Props) {
   const createValid =
     !!title.trim() && !!dueDate &&
     Number.isFinite(totalMarks) && totalMarks >= 0 && totalMarks <= 1000 &&
-    typeSpecificValid;
+    typeSpecificValid && lessonHasAssignedClass;
 
-  const canSubmit = !submitting && (mode === 'link' ? linkValid : createValid);
+  const aiValid =
+    !!title.trim() && !!aiDueDate &&
+    Number.isFinite(aiCount) && aiCount >= 1 && aiCount <= 20 &&
+    Number.isFinite(aiTotalMarks) && aiTotalMarks >= 0 && aiTotalMarks <= 1000 &&
+    lessonHasAssignedClass;
+
+  const canSubmit = !submitting && (
+    mode === 'link' ? linkValid
+    : mode === 'create' ? createValid
+    : aiValid
+  );
 
   const buildCreatePayload = (dueIso: string): Record<string, unknown> => {
     const base = {
@@ -130,7 +156,7 @@ export function HomeworkDrawer({ onSubmit, existing }: Props) {
           teacherNotes: teacherNotes.trim() || undefined,
           existingHomeworkId,
         });
-      } else {
+      } else if (mode === 'create') {
         const due = new Date(dueDate);
         const dueIso = Number.isFinite(due.getTime()) ? due.toISOString() : new Date().toISOString();
         await onSubmit({
@@ -138,19 +164,60 @@ export function HomeworkDrawer({ onSubmit, existing }: Props) {
           teacherNotes: teacherNotes.trim() || undefined,
           createPayload: buildCreatePayload(dueIso),
         });
+      } else {
+        await onSubmit({
+          kind: 'homework', title: title.trim(),
+          teacherNotes: teacherNotes.trim() || undefined,
+          createPayload: {
+            aiGenerate: true,
+            aiCount,
+            dueDate: new Date(aiDueDate).toISOString(),
+            totalMarks: aiTotalMarks,
+            topicHint: teacherNotes.trim() || title.trim(),
+          },
+        });
       }
     } finally {
       setSubmitting(false);
     }
   };
 
+  const submitLabel = submitting
+    ? 'Saving\u2026'
+    : existing
+      ? mode === 'ai' ? 'Regenerate with AI' : 'Update homework'
+      : mode === 'link' ? 'Link homework'
+        : mode === 'create' ? 'Create homework'
+          : 'Generate with AI';
+
+  const needsClassEmptyState =
+    !lessonHasAssignedClass && (mode === 'ai' || mode === 'create');
+
   return (
     <div className="flex flex-col gap-4">
-      <Tabs value={mode} onValueChange={(v: unknown) => setMode((v as Mode) ?? 'link')}>
+      <Tabs value={mode} onValueChange={(v: unknown) => setMode((v as Mode) ?? 'ai')}>
         <TabsList className="w-full">
+          <TabsTrigger value="ai">AI Generate</TabsTrigger>
           <TabsTrigger value="link">Link existing</TabsTrigger>
           <TabsTrigger value="create">Create new</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="ai" className="pt-4">
+          {needsClassEmptyState ? (
+            <EmptyState
+              icon={Sparkles}
+              title="Assign this lesson to a class first"
+              description="Homework needs an audience to deliver to. Use the Assigned Classes section in the lesson outline to pick a class, then come back."
+              action={<Button onClick={closeDrawer}>Close</Button>}
+            />
+          ) : (
+            <HomeworkAiModePanel
+              aiCount={aiCount} setAiCount={setAiCount}
+              dueDate={aiDueDate} setDueDate={setAiDueDate}
+              totalMarks={aiTotalMarks} setTotalMarks={setAiTotalMarks}
+            />
+          )}
+        </TabsContent>
 
         <TabsContent value="link" className="pt-4 space-y-4">
           {itemsLoading ? <LoadingSpinner />
@@ -189,19 +256,28 @@ export function HomeworkDrawer({ onSubmit, existing }: Props) {
         </TabsContent>
 
         <TabsContent value="create" className="pt-4">
-          <HomeworkCreateModePanel
-            createType={createType} setCreateType={setCreateType}
-            quizId={quizId} onQuizChange={handleQuizChange}
-            quizItems={quizItems} quizzesLoading={quizzesLoading}
-            contentResourceId={contentResourceId} onContentChange={handleContentChange}
-            contentItems={contentItems} contentLoading={contentLoading}
-            exerciseQuestionIdsRaw={exerciseQuestionIdsRaw}
-            setExerciseQuestionIdsRaw={setExerciseQuestionIdsRaw}
-            exerciseIdsCount={exerciseQuestionIds.length}
-            exerciseIdsValid={exerciseIdsValid}
-            dueDate={dueDate} setDueDate={setDueDate}
-            totalMarks={totalMarks} setTotalMarks={setTotalMarks}
-          />
+          {needsClassEmptyState ? (
+            <EmptyState
+              icon={ClipboardList}
+              title="Assign this lesson to a class first"
+              description="Homework needs an audience to deliver to. Use the Assigned Classes section in the lesson outline to pick a class, then come back."
+              action={<Button onClick={closeDrawer}>Close</Button>}
+            />
+          ) : (
+            <HomeworkCreateModePanel
+              createType={createType} setCreateType={setCreateType}
+              quizId={quizId} onQuizChange={handleQuizChange}
+              quizItems={quizItems} quizzesLoading={quizzesLoading}
+              contentResourceId={contentResourceId} onContentChange={handleContentChange}
+              contentItems={contentItems} contentLoading={contentLoading}
+              exerciseQuestionIdsRaw={exerciseQuestionIdsRaw}
+              setExerciseQuestionIdsRaw={setExerciseQuestionIdsRaw}
+              exerciseIdsCount={exerciseQuestionIds.length}
+              exerciseIdsValid={exerciseIdsValid}
+              dueDate={dueDate} setDueDate={setDueDate}
+              totalMarks={totalMarks} setTotalMarks={setTotalMarks}
+            />
+          )}
         </TabsContent>
       </Tabs>
 
@@ -221,21 +297,17 @@ export function HomeworkDrawer({ onSubmit, existing }: Props) {
         <Textarea
           id="hw-notes" className="w-full min-h-20"
           value={teacherNotes} onChange={(e) => setTeacherNotes(e.target.value)}
-          placeholder="What should learners focus on?"
+          placeholder={
+            mode === 'ai'
+              ? 'Describe what learners should focus on — used as the AI prompt context'
+              : 'What should learners focus on?'
+          }
         />
       </div>
 
       <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2 border-t">
         <Button type="button" variant="outline" onClick={closeDrawer} disabled={submitting}>Cancel</Button>
-        <Button type="button" onClick={handleSubmit} disabled={!canSubmit}>
-          {submitting
-            ? 'Saving\u2026'
-            : existing
-              ? 'Update homework'
-              : mode === 'link'
-                ? 'Link homework'
-                : 'Create homework'}
-        </Button>
+        <Button type="button" onClick={handleSubmit} disabled={!canSubmit}>{submitLabel}</Button>
       </div>
     </div>
   );
