@@ -159,8 +159,9 @@ export interface Lesson {
   _id: string;
   schoolId: string;
   teacherId: string | { _id: string; firstName: string; lastName: string };
-  subjectId: string | { _id: string; name: string; code?: string };
-  gradeId: string | { _id: string; name: string; level?: number };
+  /** Optional — standalone teachers omit these; the topic carries them instead. */
+  subjectId?: string | { _id: string; name: string; code?: string } | null;
+  gradeId?: string | { _id: string; name: string; level?: number } | null;
   curriculumNodeId: string | { _id: string; title: string; code?: string };
   /** SA term derived from the topic on create. May be null. */
   termNumber?: number | null;
@@ -198,8 +199,13 @@ export interface AssignedClassPayload {
 }
 
 export interface CreateLessonPayload {
-  subjectId: string;
-  gradeId: string;
+  /**
+   * Optional — backend derives subject/grade from the picked topic's
+   * denormalized refs when omitted (used by the standalone teacher portal,
+   * which has no school Subject/Grade collections).
+   */
+  subjectId?: string;
+  gradeId?: string;
   curriculumNodeId: string;
   termNumber?: number;
   title: string;
@@ -222,8 +228,9 @@ export interface UpdateAssignmentPayload {
 
 export interface ScaffoldLessonPayload {
   curriculumNodeId: string;
-  subjectId: string;
-  gradeId: string;
+  /** Optional context — backend uses node title when omitted. */
+  subjectId?: string;
+  gradeId?: string;
   durationMinutes: number;
   hints?: string;
 }

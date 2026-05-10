@@ -8,10 +8,8 @@ import { NewLessonStep1 } from '@/components/lessons/NewLessonStep1';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useGrades } from '@/hooks/useAcademics';
 import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { useLessonScaffold } from '@/hooks/useLessonScaffold';
-import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import type { ScaffoldedOutline } from '@/types/lesson';
 import type { CurriculumNodeItem } from '@/types';
 
@@ -19,7 +17,9 @@ type Step = 1 | 2 | 3;
 
 interface FormState {
   curriculumNodeId: string;
+  /** CurriculumNode subject _id, derived from the picked topic. */
   subjectId: string;
+  /** CurriculumNode grade _id, derived from the picked topic. */
   gradeId: string;
   termNumber: number;
   durationMinutes: number;
@@ -38,8 +38,6 @@ function currentSATerm(): number {
 
 export default function NewLessonPage() {
   const router = useRouter();
-  const { grades } = useGrades();
-  const { entries } = useTeacherClasses();
   const { frameworks, selectedFramework } = useCurriculumStructure();
   const { scaffold, createLesson, scaffolding, creating } = useLessonScaffold();
 
@@ -67,36 +65,42 @@ export default function NewLessonPage() {
       ...f,
       curriculumNodeId: node.id,
       title: f.title || node.title,
-      // Topics carry their own term — adopt it so the AI scaffold and the
-      // saved lesson agree with the source-of-truth on the curriculum node.
+      // Adopt the topic's own subject/grade/term — single source of truth.
+      // These are CurriculumNode IDs (the backend now accepts them).
+      subjectId: node.subjectId ?? f.subjectId,
+      gradeId: node.gradeId ?? f.gradeId,
       termNumber: typeof node.termNumber === 'number' ? node.termNumber : f.termNumber,
     }));
   };
 
   const onScaffold = async () => {
     try {
-      // Scaffold is curriculum-driven; class context isn't needed because the
-      // pack itself is curriculum-scoped now.
-      const result = await scaffold({
-        curriculumNodeId: form.curriculumNodeId,
-        subjectId: form.subjectId,
-        gradeId: form.gradeId,
-        durationMinutes: form.durationMinutes,
-        hints: form.hints || undefined,
-      });
-      setOutline(result);
-      setStep(3);
+      // Scaffold is curriculum-driven; subject/grade are optional context.
+      await runScaffold();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to generate outline';
       toast.error(msg);
     }
   };
 
+  const runScaffold = async () => {
+    const result = await scaffold({
+      curriculumNodeId: form.curriculumNodeId,
+      subjectId: form.subjectId || undefined,
+      gradeId: form.gradeId || undefined,
+      durationMinutes: form.durationMinutes,
+      hints: form.hints || undefined,
+    });
+    setOutline(result);
+    setStep(3);
+  };
+
   const onCreate = async (finalOutline: ScaffoldedOutline | null) => {
     try {
       const lesson = await createLesson({
-        subjectId: form.subjectId,
-        gradeId: form.gradeId,
+        // Optional — backend derives them from the topic when omitted.
+        subjectId: form.subjectId || undefined,
+        gradeId: form.gradeId || undefined,
         curriculumNodeId: form.curriculumNodeId,
         termNumber: form.termNumber,
         title: form.title || 'Untitled lesson',
@@ -125,8 +129,6 @@ export default function NewLessonPage() {
         <NewLessonStep1
           form={form}
           update={update}
-          entries={entries}
-          grades={grades}
           frameworkId={defaultFrameworkId}
           onTopicSelect={onTopicSelect}
           onNext={() => setStep(2)}

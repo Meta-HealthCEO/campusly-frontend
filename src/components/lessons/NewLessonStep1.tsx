@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { TopicQuickPicker } from './TopicQuickPicker';
-import type { TeacherClassEntry } from '@/hooks/useTeacherClasses';
-import type { CurriculumNodeItem, Grade } from '@/types';
+import type { CurriculumNodeItem } from '@/types';
 
 export interface NewLessonStep1Form {
   curriculumNodeId: string;
+  /** CurriculumNode subject _id (NOT an academic Subject id). */
   subjectId: string;
+  /** CurriculumNode grade _id (NOT an academic Grade id). */
   gradeId: string;
   termNumber: number;
   durationMinutes: number;
@@ -19,8 +20,6 @@ export interface NewLessonStep1Form {
 interface Props {
   form: NewLessonStep1Form;
   update: (patch: Partial<NewLessonStep1Form>) => void;
-  entries: TeacherClassEntry[];
-  grades: Grade[];
   frameworkId: string;
   onTopicSelect: (node: CurriculumNodeItem) => void;
   onNext: () => void;
@@ -29,31 +28,29 @@ interface Props {
 export function NewLessonStep1({
   form,
   update,
-  entries,
-  grades,
   frameworkId,
   onTopicSelect,
   onNext,
 }: Props) {
-  // Class is no longer required at create time — it's assigned in the
-  // workspace afterwards. The pack just needs a topic + subject + grade.
-  const canProceed =
-    !!form.curriculumNodeId && !!form.subjectId && !!form.gradeId;
+  // The pack just needs a curriculum topic — subject/grade are derived from
+  // the topic's denormalized refs, so the only mandatory field is the topic.
+  // Class is no longer required at create time — assigned in the workspace.
+  const canProceed = !!form.curriculumNodeId;
 
   return (
     <div className="space-y-4">
       <TopicQuickPicker
-        entries={entries}
-        grades={grades}
         frameworkId={frameworkId}
         subjectId={form.subjectId}
         gradeId={form.gradeId}
         curriculumNodeId={form.curriculumNodeId}
         termNumber={form.termNumber}
         onSubjectChange={(subjectId) =>
-          update({ subjectId, gradeId: '', curriculumNodeId: '' })
+          update({ subjectId, curriculumNodeId: '' })
         }
-        onGradeChange={(gradeId) => update({ gradeId, curriculumNodeId: '' })}
+        onGradeChange={(gradeId) =>
+          update({ gradeId, subjectId: '', curriculumNodeId: '' })
+        }
         onTermChange={(termNumber) => update({ termNumber })}
         onTopicSelect={onTopicSelect}
       />

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,20 +14,17 @@ import {
 import { TopicListPanel } from './TopicListPanel';
 import { useRecentTopics, type RecentTopic } from '@/hooks/useRecentTopics';
 import { useTopicCatalog } from '@/hooks/useTopicCatalog';
-import type { TeacherClassEntry } from '@/hooks/useTeacherClasses';
-import type { CurriculumNodeItem, Grade } from '@/types';
+import { useCurriculumGrades } from '@/hooks/useCurriculumGrades';
+import { useCurriculumSubjects } from '@/hooks/useCurriculumSubjects';
+import type { CurriculumNodeItem } from '@/types';
 
 interface Props {
-  /** Teacher class+subject entries — used only to derive distinct grade+subject
-   *  combos the teacher actually teaches. The class itself is no longer part
-   *  of the new-lesson flow (assignment happens in the workspace later). */
-  entries: TeacherClassEntry[];
-  /** All grades — used to render a friendly grade name. */
-  grades: Grade[];
-  /** Curriculum framework (default) — drives the topic catalog query. */
+  /** Curriculum framework (default) — drives every dropdown below. */
   frameworkId: string;
 
+  /** Subject CurriculumNode `_id` (NOT an academic Subject id). */
   subjectId: string;
+  /** Grade CurriculumNode `_id` (NOT an academic Grade id). */
   gradeId: string;
   curriculumNodeId: string;
   termNumber: number;
@@ -40,17 +37,7 @@ interface Props {
 
 const TERM_NUMBERS: ReadonlyArray<1 | 2 | 3 | 4> = [1, 2, 3, 4];
 
-interface SubjectGradeCombo {
-  key: string;
-  subjectId: string;
-  subjectName: string;
-  gradeId: string;
-  gradeName: string;
-}
-
 export function TopicQuickPicker({
-  entries,
-  grades,
   frameworkId,
   subjectId,
   gradeId,
@@ -63,6 +50,14 @@ export function TopicQuickPicker({
 }: Props) {
   const [search, setSearch] = useState('');
 
+  // CAPS sources — every grade and every subject under that grade. No school
+  // collections involved (works for the standalone teacher portal).
+  const { grades, loading: gradesLoading } = useCurriculumGrades(frameworkId);
+  const { subjects, loading: subjectsLoading } = useCurriculumSubjects(
+    frameworkId,
+    gradeId,
+  );
+
   const { topics, subtopics, loading: topicsLoading } = useTopicCatalog({
     frameworkId,
     subjectId,
@@ -70,75 +65,6 @@ export function TopicQuickPicker({
     termNumber,
   });
   const { items: recent, loading: recentLoading } = useRecentTopics(6);
-
-  // Derive the unique (subject, grade) combos this teacher actually teaches.
-  // A teacher with Maths-11A and Maths-11B sees a single (Maths, Grade 11)
-  // combo; with Maths-10A AND Physics-11A they see two distinct combos.
-  const combos = useMemo<SubjectGradeCombo[]>(() => {
-    const seen = new Map<string, SubjectGradeCombo>();
-    for (const e of entries) {
-      if (!e.subject || !e.class?.gradeId) continue;
-      const subjectIdEntry = e.subject.id;
-      const gradeIdEntry = e.class.gradeId;
-      const key = `${subjectIdEntry}:${gradeIdEntry}`;
-      if (seen.has(key)) continue;
-      const grade = grades.find((g) => g.id === gradeIdEntry);
-      seen.set(key, {
-        key,
-        subjectId: subjectIdEntry,
-        subjectName: e.subject.name,
-        gradeId: gradeIdEntry,
-        gradeName: grade?.name ?? 'Grade',
-      });
-    }
-    return Array.from(seen.values());
-  }, [entries, grades]);
-
-  // Subject options are unique subjects across the teacher's combos.
-  const subjectOptions = useMemo(() => {
-    const map = new Map<string, { id: string; name: string }>();
-    for (const c of combos) {
-      if (!map.has(c.subjectId)) {
-        map.set(c.subjectId, { id: c.subjectId, name: c.subjectName });
-      }
-    }
-    return Array.from(map.values());
-  }, [combos]);
-
-  // Grade options narrow to grades available for the picked subject (so a
-  // teacher who teaches Maths to Grade 10 and Physics to Grade 11 doesn't see
-  // Grade 11 listed under Maths).
-  const gradeOptions = useMemo(() => {
-    const filtered = subjectId
-      ? combos.filter((c) => c.subjectId === subjectId)
-      : combos;
-    const map = new Map<string, { id: string; name: string }>();
-    for (const c of filtered) {
-      if (!map.has(c.gradeId)) {
-        map.set(c.gradeId, { id: c.gradeId, name: c.gradeName });
-      }
-    }
-    return Array.from(map.values());
-  }, [combos, subjectId]);
-
-  // Auto-select when the teacher has only one combo total. Doing this in a
-  // useEffect (rather than as a default initial value) means the parent stays
-  // the source of truth for the form state and we react to entries loading
-  // asynchronously.
-  useEffect(() => {
-    if (combos.length !== 1) return;
-    const only = combos[0];
-    if (!subjectId) onSubjectChange(only.subjectId);
-    if (!gradeId) onGradeChange(only.gradeId);
-  }, [combos, subjectId, gradeId, onSubjectChange, onGradeChange]);
-
-  // If the picked grade no longer fits the picked subject, drop it.
-  useEffect(() => {
-    if (!gradeId) return;
-    if (!gradeOptions.some((g) => g.id === gradeId)) {
-      onGradeChange('');
-    }
-  }, [gradeOptions, gradeId, onGradeChange]);
 
   const recentForContext = useMemo(() => {
     return recent.filter((r: RecentTopic) => {
@@ -148,59 +74,66 @@ export function TopicQuickPicker({
     });
   }, [recent, subjectId, gradeId]);
 
-  const subjectName = subjectOptions.find((s) => s.id === subjectId)?.name;
-  const gradeName = gradeOptions.find((g) => g.id === gradeId)?.name;
+  const subjectName = subjects.find((s) => s.id === subjectId)?.title;
+  const gradeName = grades.find((g) => g.id === gradeId)?.title;
   const contextReady = !!subjectId && !!gradeId;
-  const singleCombo = combos.length === 1;
 
   return (
     <div className="space-y-4">
-      {/* When the teacher has only one (subject, grade) combo, skip the selects
-          entirely — auto-selection above keeps parent state in sync, so we can
-          jump straight to the topic picker. */}
-      {!singleCombo && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <Label>Subject <span className="text-destructive">*</span></Label>
-            <Select
-              value={subjectId}
-              onValueChange={(v: unknown) => onSubjectChange(v as string)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Pick a subject" />
-              </SelectTrigger>
-              <SelectContent>
-                {subjectOptions.length === 0 && (
-                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                    No subjects in your teaching load.
-                  </div>
-                )}
-                {subjectOptions.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label>Grade <span className="text-destructive">*</span></Label>
-            <Select
-              value={gradeId}
-              onValueChange={(v: unknown) => onGradeChange(v as string)}
-              disabled={!subjectId}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={subjectId ? 'Pick a grade' : 'Pick a subject first'} />
-              </SelectTrigger>
-              <SelectContent>
-                {gradeOptions.map((g) => (
-                  <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <Label>Grade <span className="text-destructive">*</span></Label>
+          <Select
+            value={gradeId}
+            onValueChange={(v: unknown) => onGradeChange(v as string)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue
+                placeholder={gradesLoading ? 'Loading grades...' : 'Pick a grade'}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {!gradesLoading && grades.length === 0 && (
+                <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                  No grades found in the CAPS framework.
+                </div>
+              )}
+              {grades.map((g) => (
+                <SelectItem key={g.id} value={g.id}>{g.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      )}
+
+        <div>
+          <Label>Subject <span className="text-destructive">*</span></Label>
+          <Select
+            value={subjectId}
+            onValueChange={(v: unknown) => onSubjectChange(v as string)}
+            disabled={!gradeId}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue
+                placeholder={
+                  !gradeId
+                    ? 'Pick a grade first'
+                    : subjectsLoading ? 'Loading subjects...' : 'Pick a subject'
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {gradeId && !subjectsLoading && subjects.length === 0 && (
+                <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                  No subjects under this grade.
+                </div>
+              )}
+              {subjects.map((s) => (
+                <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       <div className="space-y-3">
         <div>
@@ -283,11 +216,6 @@ export function TopicQuickPicker({
   );
 }
 
-/**
- * A recent-topic chip click feeds the same handler the topic list uses, but
- * the recent endpoint only carries id/title/refs. Synthesize a minimal node
- * so the shared handler stays typed.
- */
 function recentToNode(r: RecentTopic, frameworkId: string): CurriculumNodeItem {
   return {
     id: r.id,
