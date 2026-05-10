@@ -1,10 +1,11 @@
-// STUB — replaced in Task 19
 'use client';
+
+import { ContentBackedDrawerBase } from './ContentBackedDrawerBase';
 
 interface Props {
   onSubmit: (payload: Record<string, unknown>) => Promise<void>;
 }
 
-export function ActivityDrawer({ onSubmit: _onSubmit }: Props) {
-  return <div className="text-sm text-muted-foreground">Activity drawer (Task 19)</div>;
+export function ActivityDrawer({ onSubmit }: Props) {
+  return <ContentBackedDrawerBase kind="activity" contentType="activity" onSubmit={onSubmit} />;
 }
