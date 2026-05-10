@@ -17,16 +17,21 @@ import type { LessonMaterial } from '@/types/lesson';
 interface Props {
   lessonId: string;
   addMaterial: (payload: Record<string, unknown>) => Promise<LessonMaterial>;
+  regenerateMaterial: (mid: string, payload?: Record<string, unknown>) => Promise<LessonMaterial>;
 }
 
-export function MaterialDrawer({ lessonId: _lessonId, addMaterial }: Props) {
+export function MaterialDrawer({ lessonId: _lessonId, addMaterial, regenerateMaterial }: Props) {
   const drawer = useLessonWorkspaceStore((s) => s.drawer);
   const setKind = useLessonWorkspaceStore((s) => s.setKind);
   const closeDrawer = useLessonWorkspaceStore((s) => s.closeDrawer);
 
   const submit = async (payload: Record<string, unknown>) => {
     if (!drawer.phase) return;
-    await addMaterial({ ...payload, phase: drawer.phase });
+    if (drawer.materialId) {
+      await regenerateMaterial(drawer.materialId, { ...payload, phase: drawer.phase });
+    } else {
+      await addMaterial({ ...payload, phase: drawer.phase });
+    }
     closeDrawer();
   };
 
