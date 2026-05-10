@@ -1,27 +1,19 @@
 'use client';
 
-import {
-  CurriculumTreeBrowser,
-  type CurriculumTreeBrowserSelectContext,
-} from '@/components/curriculum/CurriculumTreeBrowser';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { TopicQuickPicker } from './TopicQuickPicker';
+import type { TeacherClassEntry } from '@/hooks/useTeacherClasses';
 import type { AcademicLookupItem } from '@/hooks/useAcademicLookups';
-import type { CurriculumNodeItem, CurriculumFrameworkItem, Grade } from '@/types';
+import type { CurriculumNodeItem, Grade } from '@/types';
 
 export interface NewLessonStep1Form {
   curriculumNodeId: string;
   classId: string;
   subjectId: string;
   gradeId: string;
+  termNumber: number;
   date: string;
   durationMinutes: number;
   title: string;
@@ -30,129 +22,50 @@ export interface NewLessonStep1Form {
 interface Props {
   form: NewLessonStep1Form;
   update: (patch: Partial<NewLessonStep1Form>) => void;
-  classes: AcademicLookupItem[];
+  entries: TeacherClassEntry[];
   subjects: AcademicLookupItem[];
   grades: Grade[];
-  frameworks: CurriculumFrameworkItem[];
-  selectedFramework: string;
-  setSelectedFramework: (id: string) => void;
-  onTopicSelect: (
-    node: CurriculumNodeItem,
-    ctx?: CurriculumTreeBrowserSelectContext,
-  ) => void;
+  frameworkId: string;
+  onClassChange: (entry: TeacherClassEntry | null) => void;
+  onTopicSelect: (node: CurriculumNodeItem) => void;
   onNext: () => void;
 }
 
 export function NewLessonStep1({
   form,
   update,
-  classes,
+  entries,
   subjects,
   grades,
-  frameworks,
-  selectedFramework,
-  setSelectedFramework,
+  frameworkId,
+  onClassChange,
   onTopicSelect,
   onNext,
 }: Props) {
   const canProceed =
     !!form.curriculumNodeId && !!form.classId && !!form.subjectId && !!form.gradeId;
 
-  const subjectName = subjects.find((s) => s._id === form.subjectId)?.name;
-  const gradeName = grades.find((g) => g.id === form.gradeId)?.name;
-  const autoDerived = !!subjectName && !!gradeName;
-  const topicPicked = !!form.curriculumNodeId;
-  const needsManualGradeSubject = topicPicked && !autoDerived;
-
   return (
     <div className="space-y-4">
-      {frameworks.length > 1 && (
-        <div>
-          <Label>Curriculum framework</Label>
-          <Select
-            value={selectedFramework}
-            onValueChange={(v: unknown) => setSelectedFramework(v as string)}
-          >
-            <SelectTrigger className="w-full sm:w-72">
-              <SelectValue placeholder="Pick a framework" />
-            </SelectTrigger>
-            <SelectContent>
-              {frameworks.map((f) => (
-                <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+      <TopicQuickPicker
+        entries={entries}
+        allSubjects={subjects}
+        grades={grades}
+        frameworkId={frameworkId}
+        classId={form.classId}
+        subjectId={form.subjectId}
+        gradeId={form.gradeId}
+        curriculumNodeId={form.curriculumNodeId}
+        termNumber={form.termNumber}
+        onClassChange={onClassChange}
+        onSubjectChange={(subjectId) => update({ subjectId })}
+        onTermChange={(termNumber) => update({ termNumber })}
+        onTopicSelect={onTopicSelect}
+      />
 
-      <div>
-        <Label>Curriculum topic <span className="text-destructive">*</span></Label>
-        <div className="max-h-[50vh] overflow-y-auto rounded-md border p-1 mt-1">
-          {selectedFramework ? (
-            <CurriculumTreeBrowser
-              frameworkId={selectedFramework}
-              selectedNodeId={form.curriculumNodeId || null}
-              onSelect={onTopicSelect}
-            />
-          ) : (
-            <p className="p-4 text-sm text-muted-foreground">Loading frameworks...</p>
-          )}
-        </div>
-        {autoDerived && (
-          <p className="mt-2 text-xs text-muted-foreground">
-            Detected from topic: <span className="font-medium text-foreground">{gradeName}</span>
-            {' · '}
-            <span className="font-medium text-foreground">{subjectName}</span>
-          </p>
-        )}
-      </div>
-
-      {needsManualGradeSubject && (
-        <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
-          Could not auto-detect Subject or Grade from the chosen topic. Pick them manually below.
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <Label>Class <span className="text-destructive">*</span></Label>
-          <Select value={form.classId} onValueChange={(v: unknown) => update({ classId: v as string })}>
-            <SelectTrigger className="w-full"><SelectValue placeholder="Pick a class" /></SelectTrigger>
-            <SelectContent>
-              {classes.map((c) => (
-                <SelectItem key={c._id} value={c._id}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {needsManualGradeSubject && (
-          <>
-            <div>
-              <Label>Subject <span className="text-destructive">*</span></Label>
-              <Select value={form.subjectId} onValueChange={(v: unknown) => update({ subjectId: v as string })}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="Pick a subject" /></SelectTrigger>
-                <SelectContent>
-                  {subjects.map((s) => (
-                    <SelectItem key={s._id} value={s._id}>{s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Grade <span className="text-destructive">*</span></Label>
-              <Select value={form.gradeId} onValueChange={(v: unknown) => update({ gradeId: v as string })}>
-                <SelectTrigger className="w-full"><SelectValue placeholder="Pick a grade" /></SelectTrigger>
-                <SelectContent>
-                  {grades.map((g) => (
-                    <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </>
-        )}
-        <div>
-          <Label>Date</Label>
+          <Label>Date <span className="text-destructive">*</span></Label>
           <Input
             type="date"
             value={form.date}

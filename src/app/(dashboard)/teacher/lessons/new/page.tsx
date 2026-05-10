@@ -12,9 +12,9 @@ import { useAcademicLookups } from '@/hooks/useAcademicLookups';
 import { useGrades } from '@/hooks/useAcademics';
 import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { useLessonScaffold } from '@/hooks/useLessonScaffold';
+import { useTeacherClasses, type TeacherClassEntry } from '@/hooks/useTeacherClasses';
 import type { ScaffoldedOutline } from '@/types/lesson';
 import type { CurriculumNodeItem } from '@/types';
-import type { CurriculumTreeBrowserSelectContext } from '@/components/curriculum/CurriculumTreeBrowser';
 
 type Step = 1 | 2 | 3;
 
@@ -23,6 +23,7 @@ interface FormState {
   classId: string;
   subjectId: string;
   gradeId: string;
+  termNumber: number;
   date: string;
   durationMinutes: number;
   title: string;
@@ -37,12 +38,27 @@ function todayISODate(): string {
   return `${y}-${m}-${day}`;
 }
 
+/** South African school terms — Jan-Mar=1, Apr-Jun=2, Jul-Sep=3, Oct-Dec=4. */
+function currentSATerm(): number {
+  const month = new Date().getMonth(); // 0-11
+  if (month <= 2) return 1;
+  if (month <= 5) return 2;
+  if (month <= 8) return 3;
+  return 4;
+}
+
 export default function NewLessonPage() {
   const router = useRouter();
-  const { classes, subjects } = useAcademicLookups();
+  const { subjects } = useAcademicLookups();
   const { grades } = useGrades();
-  const { frameworks, selectedFramework, setSelectedFramework } = useCurriculumStructure();
+  const { entries } = useTeacherClasses();
+  const { frameworks, selectedFramework } = useCurriculumStructure();
   const { scaffold, createLesson, scaffolding, creating } = useLessonScaffold();
+
+  // Auto-pick the school's default framework — the new flow drops the
+  // framework Select in favour of "just use the right one".
+  const defaultFrameworkId =
+    frameworks.find((f) => f.isDefault)?.id ?? frameworks[0]?.id ?? selectedFramework ?? '';
 
   const [step, setStep] = useState<Step>(1);
   const [form, setForm] = useState<FormState>({
@@ -50,6 +66,7 @@ export default function NewLessonPage() {
     classId: '',
     subjectId: '',
     gradeId: '',
+    termNumber: currentSATerm(),
     date: todayISODate(),
     durationMinutes: 45,
     title: '',
@@ -59,56 +76,27 @@ export default function NewLessonPage() {
 
   const update = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }));
 
-  const onTopicSelect = (
-    node: CurriculumNodeItem,
-    ctx?: CurriculumTreeBrowserSelectContext,
-  ) => {
-    setForm((f) => {
-      const next: FormState = {
-        ...f,
-        curriculumNodeId: node.id,
-        title: f.title || node.title,
-      };
+  const onClassChange = (entry: TeacherClassEntry | null) => {
+    if (!entry) {
+      update({ classId: '', subjectId: '', gradeId: '', curriculumNodeId: '' });
+      return;
+    }
+    setForm((f) => ({
+      ...f,
+      classId: entry.class.id,
+      subjectId: entry.subject?.id ?? f.subjectId,
+      gradeId: entry.class.gradeId ?? f.gradeId,
+      // Wipe topic — old topic was for old subject/grade context.
+      curriculumNodeId: '',
+    }));
+  };
 
-      const norm = (s: string) => s.trim().toLowerCase();
-
-      // Prefer denormalized refs when present — O(1), no parentId walk needed.
-      // The self-ref convention means a subject node has subjectId === id, so
-      // these refs work even when the picked node IS a subject/grade.
-      let subjectTitle: string | null = null;
-      let gradeTitle: string | null = null;
-
-      if (node.subjectId && ctx?.getNodeById) {
-        const subjectNode = ctx.getNodeById(node.subjectId);
-        if (subjectNode) subjectTitle = subjectNode.title;
-      }
-      if (node.gradeId && ctx?.getNodeById) {
-        const gradeNode = ctx.getNodeById(node.gradeId);
-        if (gradeNode) gradeTitle = gradeNode.title;
-      }
-
-      // Defensive fallback to ancestor walk for older docs / cache misses.
-      if ((!subjectTitle || !gradeTitle) && ctx?.ancestors && ctx.ancestors.length > 0) {
-        if (!subjectTitle) {
-          const a = ctx.ancestors.find((x) => x.type === 'subject');
-          if (a) subjectTitle = a.title;
-        }
-        if (!gradeTitle) {
-          const a = ctx.ancestors.find((x) => x.type === 'grade');
-          if (a) gradeTitle = a.title;
-        }
-      }
-
-      if (subjectTitle) {
-        const match = subjects.find((s) => norm(s.name) === norm(subjectTitle as string));
-        if (match) next.subjectId = match._id;
-      }
-      if (gradeTitle) {
-        const match = grades.find((g) => norm(g.name) === norm(gradeTitle as string));
-        if (match) next.gradeId = match.id;
-      }
-      return next;
-    });
+  const onTopicSelect = (node: CurriculumNodeItem) => {
+    setForm((f) => ({
+      ...f,
+      curriculumNodeId: node.id,
+      title: f.title || node.title,
+    }));
   };
 
   const onScaffold = async () => {
@@ -160,12 +148,11 @@ export default function NewLessonPage() {
         <NewLessonStep1
           form={form}
           update={update}
-          classes={classes}
+          entries={entries}
           subjects={subjects}
           grades={grades}
-          frameworks={frameworks}
-          selectedFramework={selectedFramework}
-          setSelectedFramework={setSelectedFramework}
+          frameworkId={defaultFrameworkId}
+          onClassChange={onClassChange}
           onTopicSelect={onTopicSelect}
           onNext={() => setStep(2)}
         />
