@@ -44,6 +44,27 @@ const MANUAL_PLACEHOLDER_HINTS: Partial<Record<LessonMaterialKind, string>> = {
 };
 
 /**
+ * Backend `getById` populates the entity refs on each material (so reads can
+ * show titles inline). That means `material.contentResourceId` etc. arrive as
+ * either a string id, OR a populated object with `_id`/`id`. Normalize both.
+ */
+function refToId(ref: unknown): string | null {
+  if (!ref) return null;
+  if (typeof ref === 'string') return ref;
+  if (typeof ref === 'object') {
+    const obj = ref as { _id?: unknown; id?: unknown };
+    if (typeof obj._id === 'string') return obj._id;
+    if (typeof obj.id === 'string') return obj.id;
+  }
+  return null;
+}
+
+function refsToIds(refs: unknown): string[] {
+  if (!Array.isArray(refs)) return [];
+  return refs.map((r) => refToId(r)).filter((s): s is string => !!s);
+}
+
+/**
  * Resolve a "View" URL for a generated material so the teacher can actually
  * read what the AI produced. Each kind lives in its own module page.
  * Returns null when the material is a placeholder, or when the kind doesn't
@@ -55,20 +76,28 @@ function viewUrlFor(material: LessonMaterial): string | null {
     case 'worksheet':
     case 'activity':
     case 'notes':
-    case 'worked_example':
-      return material.contentResourceId
-        ? `/teacher/curriculum/preview/${material.contentResourceId}`
+    case 'worked_example': {
+      const id = refToId(material.contentResourceId);
+      return id ? `/teacher/curriculum/preview/${id}` : null;
+    }
+    case 'practice_questions': {
+      const ids = refsToIds(material.questionIds);
+      return ids.length > 0
+        ? `/teacher/curriculum/questions?ids=${ids.join(',')}`
         : null;
-    case 'practice_questions':
-      return material.questionIds && material.questionIds.length > 0
-        ? `/teacher/curriculum/questions?ids=${material.questionIds.join(',')}`
-        : null;
-    case 'homework':
-      return material.homeworkId ? `/teacher/homework/${material.homeworkId}` : null;
-    case 'paper':
-      return material.paperId ? `/teacher/papers/${material.paperId}` : null;
-    case 'quiz':
-      return material.quizId ? `/teacher/learning/quizzes/${material.quizId}` : null;
+    }
+    case 'homework': {
+      const id = refToId(material.homeworkId);
+      return id ? `/teacher/homework/${id}` : null;
+    }
+    case 'paper': {
+      const id = refToId(material.paperId);
+      return id ? `/teacher/papers/${id}` : null;
+    }
+    case 'quiz': {
+      const id = refToId(material.quizId);
+      return id ? `/teacher/learning/quizzes/${id}` : null;
+    }
     case 'reading':
       // No standalone reading viewer — the textbookRef + comprehension Q list
       // is best surfaced inline. Skip for v1; teacher still has Edit drawer.
