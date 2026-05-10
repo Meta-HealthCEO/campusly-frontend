@@ -67,29 +67,14 @@ export default function NewLessonPage() {
       };
       if (ancestors && ancestors.length > 0) {
         const norm = (s: string) => s.trim().toLowerCase();
-        // CAPS curriculum nodes are sometimes titled with the grade suffix
-        // (e.g. "Business Studies Grade 12"). Try exact match first, then
-        // fall back to substring containment, preferring the longest hit.
-        const fuzzyMatch = <T,>(items: T[], getName: (x: T) => string, target: string): T | undefined => {
-          const t = norm(target);
-          const exact = items.find((it) => norm(getName(it)) === t);
-          if (exact) return exact;
-          const contained = items
-            .filter((it) => {
-              const n = norm(getName(it));
-              return n.length > 0 && (t.includes(n) || n.includes(t));
-            })
-            .sort((a, b) => norm(getName(b)).length - norm(getName(a)).length);
-          return contained[0];
-        };
         const subjectNode = ancestors.find((a) => a.type === 'subject');
         const gradeNode = ancestors.find((a) => a.type === 'grade');
         if (subjectNode) {
-          const match = fuzzyMatch(subjects, (s) => s.name, subjectNode.title);
+          const match = subjects.find((s) => norm(s.name) === norm(subjectNode.title));
           if (match) next.subjectId = match._id;
         }
         if (gradeNode) {
-          const match = fuzzyMatch(grades, (g) => g.name, gradeNode.title);
+          const match = grades.find((g) => norm(g.name) === norm(gradeNode.title));
           if (match) next.gradeId = match.id;
         }
       }
