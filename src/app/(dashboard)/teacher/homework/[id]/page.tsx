@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { PageHeader } from '@/components/shared/PageHeader';
 import {
   BookOpen,
   ArrowLeft,
@@ -16,9 +15,20 @@ import {
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { HomeworkGradingPanel } from '@/components/homework/HomeworkGradingPanel';
+import { ExerciseQuestionsList } from '@/components/homework/ExerciseQuestionsList';
+import {
+  LinkedQuizSummary,
+  LinkedReadingSummary,
+} from '@/components/homework/LinkedResourceSummary';
 import { useTeacherHomeworkDetail } from '@/hooks/useTeacherHomeworkDetail';
 import Link from 'next/link';
 import type { Homework } from '@/types/homework';
+
+const TYPE_BADGE_LABEL: Record<'quiz' | 'reading' | 'exercise', string> = {
+  quiz: 'Quiz',
+  reading: 'Reading',
+  exercise: 'Exercise',
+};
 
 export default function TeacherHomeworkDetailPage() {
   const params = useParams();
@@ -67,7 +77,17 @@ export default function TeacherHomeworkDetailPage() {
         Back to Homework
       </Link>
 
-      <PageHeader title={homework.title} description={homework.subjectName} />
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-2xl font-bold tracking-tight">{homework.title}</h1>
+            <Badge variant="outline">{TYPE_BADGE_LABEL[homework.type]}</Badge>
+          </div>
+          {homework.subjectName && (
+            <p className="text-muted-foreground">{homework.subjectName}</p>
+          )}
+        </div>
+      </div>
 
       <Card>
         <CardContent className="p-5">
@@ -150,6 +170,21 @@ export default function TeacherHomeworkDetailPage() {
                 </a>
               ))}
             </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Content</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {homework.type === 'exercise' && (
+            <ExerciseQuestionsList questions={homework.exerciseQuestions} />
+          )}
+          {homework.type === 'quiz' && <LinkedQuizSummary quiz={homework.quiz} />}
+          {homework.type === 'reading' && (
+            <LinkedReadingSummary resource={homework.reading} />
           )}
         </CardContent>
       </Card>

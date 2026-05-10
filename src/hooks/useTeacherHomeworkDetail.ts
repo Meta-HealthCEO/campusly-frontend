@@ -2,6 +2,22 @@ import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse, unwrapList, extractErrorMessage } from '@/lib/api-helpers';
 import { toast } from 'sonner';
+import type { QuestionItem } from '@/types/question-bank';
+
+/** Quiz summary populated on Homework.quizId. */
+export interface PopulatedQuizSummary {
+  id: string;
+  title: string;
+  totalPoints: number;
+  questionCount: number;
+}
+
+/** Reading resource summary populated on Homework.contentResourceId. */
+export interface PopulatedReadingSummary {
+  id: string;
+  title: string;
+  type?: string;
+}
 
 interface HomeworkDetail {
   id: string;
@@ -19,6 +35,12 @@ interface HomeworkDetail {
   resourceTitle?: string;
   version: number;
   type: 'quiz' | 'reading' | 'exercise';
+  /** Populated from backend for type === 'exercise'. */
+  exerciseQuestions: QuestionItem[];
+  /** Populated from backend for type === 'quiz'. */
+  quiz: PopulatedQuizSummary | null;
+  /** Populated from backend for type === 'reading'. */
+  reading: PopulatedReadingSummary | null;
 }
 
 interface SubmissionItem {
@@ -68,6 +90,24 @@ export function useTeacherHomeworkDetail(homeworkId: string) {
               ? (raw.resourceId as Record<string, unknown>)
               : null;
 
+          // Populated arrays / refs from backend service.getById
+          const exerciseQs = Array.isArray(raw.exerciseQuestionIds)
+            ? (raw.exerciseQuestionIds as unknown[]).filter(
+                (q): q is Record<string, unknown> =>
+                  typeof q === 'object' && q !== null,
+              )
+            : [];
+
+          const quizObj =
+            typeof raw.quizId === 'object' && raw.quizId !== null
+              ? (raw.quizId as Record<string, unknown>)
+              : null;
+
+          const contentObj =
+            typeof raw.contentResourceId === 'object' && raw.contentResourceId !== null
+              ? (raw.contentResourceId as Record<string, unknown>)
+              : null;
+
           setHomework({
             id: (raw.id as string) ?? '',
             title: raw.title as string,
@@ -86,6 +126,27 @@ export function useTeacherHomeworkDetail(homeworkId: string) {
             resourceTitle: (resourceObj?.title as string) ?? undefined,
             version: (raw.version as number) ?? 1,
             type: (raw.type as 'quiz' | 'reading' | 'exercise') ?? 'quiz',
+            exerciseQuestions: exerciseQs.map((q) => ({
+              ...(q as unknown as QuestionItem),
+              id: (q.id as string) ?? (q._id as string) ?? '',
+            })),
+            quiz: quizObj
+              ? {
+                  id: (quizObj.id as string) ?? (quizObj._id as string) ?? '',
+                  title: (quizObj.title as string) ?? '',
+                  totalPoints: (quizObj.totalPoints as number) ?? 0,
+                  questionCount: Array.isArray(quizObj.questions)
+                    ? (quizObj.questions as unknown[]).length
+                    : 0,
+                }
+              : null,
+            reading: contentObj
+              ? {
+                  id: (contentObj.id as string) ?? (contentObj._id as string) ?? '',
+                  title: (contentObj.title as string) ?? '',
+                  type: (contentObj.type as string) ?? undefined,
+                }
+              : null,
           });
         }
 
