@@ -8,11 +8,10 @@ import { NewLessonStep1 } from '@/components/lessons/NewLessonStep1';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useAcademicLookups } from '@/hooks/useAcademicLookups';
 import { useGrades } from '@/hooks/useAcademics';
 import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { useLessonScaffold } from '@/hooks/useLessonScaffold';
-import { useTeacherClasses, type TeacherClassEntry } from '@/hooks/useTeacherClasses';
+import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import type { ScaffoldedOutline } from '@/types/lesson';
 import type { CurriculumNodeItem } from '@/types';
 
@@ -20,22 +19,12 @@ type Step = 1 | 2 | 3;
 
 interface FormState {
   curriculumNodeId: string;
-  classId: string;
   subjectId: string;
   gradeId: string;
   termNumber: number;
-  date: string;
   durationMinutes: number;
   title: string;
   hints: string;
-}
-
-function todayISODate(): string {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
 }
 
 /** South African school terms — Jan-Mar=1, Apr-Jun=2, Jul-Sep=3, Oct-Dec=4. */
@@ -49,7 +38,6 @@ function currentSATerm(): number {
 
 export default function NewLessonPage() {
   const router = useRouter();
-  const { subjects } = useAcademicLookups();
   const { grades } = useGrades();
   const { entries } = useTeacherClasses();
   const { frameworks, selectedFramework } = useCurriculumStructure();
@@ -63,11 +51,9 @@ export default function NewLessonPage() {
   const [step, setStep] = useState<Step>(1);
   const [form, setForm] = useState<FormState>({
     curriculumNodeId: '',
-    classId: '',
     subjectId: '',
     gradeId: '',
     termNumber: currentSATerm(),
-    date: todayISODate(),
     durationMinutes: 45,
     title: '',
     hints: '',
@@ -76,34 +62,23 @@ export default function NewLessonPage() {
 
   const update = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }));
 
-  const onClassChange = (entry: TeacherClassEntry | null) => {
-    if (!entry) {
-      update({ classId: '', subjectId: '', gradeId: '', curriculumNodeId: '' });
-      return;
-    }
-    setForm((f) => ({
-      ...f,
-      classId: entry.class.id,
-      subjectId: entry.subject?.id ?? f.subjectId,
-      gradeId: entry.class.gradeId ?? f.gradeId,
-      // Wipe topic — old topic was for old subject/grade context.
-      curriculumNodeId: '',
-    }));
-  };
-
   const onTopicSelect = (node: CurriculumNodeItem) => {
     setForm((f) => ({
       ...f,
       curriculumNodeId: node.id,
       title: f.title || node.title,
+      // Topics carry their own term — adopt it so the AI scaffold and the
+      // saved lesson agree with the source-of-truth on the curriculum node.
+      termNumber: typeof node.termNumber === 'number' ? node.termNumber : f.termNumber,
     }));
   };
 
   const onScaffold = async () => {
     try {
+      // Scaffold is curriculum-driven; class context isn't needed because the
+      // pack itself is curriculum-scoped now.
       const result = await scaffold({
         curriculumNodeId: form.curriculumNodeId,
-        classId: form.classId,
         subjectId: form.subjectId,
         gradeId: form.gradeId,
         durationMinutes: form.durationMinutes,
@@ -120,14 +95,16 @@ export default function NewLessonPage() {
   const onCreate = async (finalOutline: ScaffoldedOutline | null) => {
     try {
       const lesson = await createLesson({
-        classId: form.classId,
         subjectId: form.subjectId,
         gradeId: form.gradeId,
         curriculumNodeId: form.curriculumNodeId,
+        termNumber: form.termNumber,
         title: form.title || 'Untitled lesson',
-        date: new Date(form.date).toISOString(),
         durationMinutes: form.durationMinutes,
         scaffoldedOutline: finalOutline ?? undefined,
+        // Library lesson by default; teacher assigns to classes from the
+        // workspace afterwards.
+        assignedClasses: [],
       });
       toast.success('Lesson created');
       router.push(`/teacher/lessons/${lesson._id}`);
@@ -149,10 +126,8 @@ export default function NewLessonPage() {
           form={form}
           update={update}
           entries={entries}
-          subjects={subjects}
           grades={grades}
           frameworkId={defaultFrameworkId}
-          onClassChange={onClassChange}
           onTopicSelect={onTopicSelect}
           onNext={() => setStep(2)}
         />

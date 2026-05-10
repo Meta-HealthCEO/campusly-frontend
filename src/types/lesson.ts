@@ -139,21 +139,32 @@ export interface LessonPhaseEntry {
 
 // ─── Lesson document ────────────────────────────────────────────────────────
 //
-// The relationship fields (teacherId / classId / subjectId / gradeId /
-// curriculumNodeId) are `string | { populated subset }` because the
-// list endpoint populates a shallow shape and the detail endpoint
-// populates full objects. The union is intentional.
+// The relationship fields (teacherId / subjectId / gradeId / curriculumNodeId)
+// are `string | { populated subset }` because the list endpoint populates a
+// shallow shape and the detail endpoint populates full objects. The union is
+// intentional.
+
+export type LessonAssignmentStatus = 'planned' | 'taught';
+
+/** A single delivery of a lesson pack to one class on one date. */
+export interface LessonAssignment {
+  _id?: string;
+  classId: string | { _id: string; name: string };
+  scheduledDate: string;
+  status: LessonAssignmentStatus;
+  taughtAt?: string;
+}
 
 export interface Lesson {
   _id: string;
   schoolId: string;
   teacherId: string | { _id: string; firstName: string; lastName: string };
-  classId: string | { _id: string; name: string };
   subjectId: string | { _id: string; name: string; code?: string };
   gradeId: string | { _id: string; name: string; level?: number };
   curriculumNodeId: string | { _id: string; title: string; code?: string };
+  /** SA term derived from the topic on create. May be null. */
+  termNumber?: number | null;
   title: string;
-  date: string;
   durationMinutes: number;
   objectives: string[];
   phases: LessonPhaseEntry[];
@@ -162,6 +173,8 @@ export interface Lesson {
   reflectionNotes?: string;
   aiGenerated: boolean;
   isDeleted: boolean;
+  /** Empty array == library lesson (unscheduled). */
+  assignedClasses: LessonAssignment[];
   createdAt: string;
   updatedAt: string;
 }
@@ -178,21 +191,37 @@ export interface ScaffoldedOutline {
 
 // ─── API payloads ───────────────────────────────────────────────────────────
 
-export interface CreateLessonPayload {
+export interface AssignedClassPayload {
   classId: string;
+  scheduledDate: string;
+  status?: LessonAssignmentStatus;
+}
+
+export interface CreateLessonPayload {
   subjectId: string;
   gradeId: string;
   curriculumNodeId: string;
+  termNumber?: number;
   title: string;
-  date: string;
   durationMinutes: number;
   objectives?: string[];
   scaffoldedOutline?: ScaffoldedOutline;
+  /** Initial schedule. Empty == library lesson. */
+  assignedClasses?: AssignedClassPayload[];
+}
+
+export interface AssignClassPayload {
+  classId: string;
+  scheduledDate: string;
+}
+
+export interface UpdateAssignmentPayload {
+  scheduledDate?: string;
+  status?: LessonAssignmentStatus;
 }
 
 export interface ScaffoldLessonPayload {
   curriculumNodeId: string;
-  classId: string;
   subjectId: string;
   gradeId: string;
   durationMinutes: number;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,41 +19,46 @@ import type { CurriculumNodeItem, Grade } from '@/types';
 import type { AcademicLookupItem } from '@/hooks/useAcademicLookups';
 
 interface Props {
-  /** Pre-loaded teacher class+subject entries (one per subject taught). */
+  /** Teacher class+subject entries — used only to derive distinct grade+subject
+   *  combos the teacher actually teaches. The class itself is no longer part
+   *  of the new-lesson flow (assignment happens in the workspace later). */
   entries: TeacherClassEntry[];
-  /** All school subjects — used as fallback when class doesn't pin one. */
-  allSubjects: AcademicLookupItem[];
-  /** All grades — used to show a friendly grade name. */
+  /** All grades — used to render a friendly grade name. */
   grades: Grade[];
   /** Curriculum framework (default) — drives the topic catalog query. */
   frameworkId: string;
 
-  classId: string;
   subjectId: string;
   gradeId: string;
   curriculumNodeId: string;
   termNumber: number;
 
-  onClassChange: (entry: TeacherClassEntry | null) => void;
   onSubjectChange: (subjectId: string) => void;
+  onGradeChange: (gradeId: string) => void;
   onTermChange: (n: number) => void;
   onTopicSelect: (node: CurriculumNodeItem) => void;
 }
 
 const TERM_NUMBERS: ReadonlyArray<1 | 2 | 3 | 4> = [1, 2, 3, 4];
 
+interface SubjectGradeCombo {
+  key: string;
+  subjectId: string;
+  subjectName: string;
+  gradeId: string;
+  gradeName: string;
+}
+
 export function TopicQuickPicker({
   entries,
-  allSubjects,
   grades,
   frameworkId,
-  classId,
   subjectId,
   gradeId,
   curriculumNodeId,
   termNumber,
-  onClassChange,
   onSubjectChange,
+  onGradeChange,
   onTermChange,
   onTopicSelect,
 }: Props) {
@@ -67,31 +72,74 @@ export function TopicQuickPicker({
   });
   const { items: recent, loading: recentLoading } = useRecentTopics(6);
 
-  // Each entry is a (class, subject) tuple — render unique tuples so a teacher
-  // who teaches Maths AND Physical Sciences to the same class sees both.
-  const entryOptions = useMemo(() => {
-    return entries
-      .filter((e) => !!e.class?.id)
-      .map((e) => ({
-        key: `${e.class.id}:${e.subject?.id ?? 'homeroom'}`,
-        label: e.subject ? `${e.class.name} · ${e.subject.name}` : `${e.class.name} (Homeroom)`,
-        entry: e,
-      }));
-  }, [entries]);
+  // Derive the unique (subject, grade) combos this teacher actually teaches.
+  // A teacher with Maths-11A and Maths-11B sees a single (Maths, Grade 11)
+  // combo; with Maths-10A AND Physics-11A they see two distinct combos.
+  const combos = useMemo<SubjectGradeCombo[]>(() => {
+    const seen = new Map<string, SubjectGradeCombo>();
+    for (const e of entries) {
+      if (!e.subject || !e.class?.gradeId) continue;
+      const subjectIdEntry = e.subject.id;
+      const gradeIdEntry = e.class.gradeId;
+      const key = `${subjectIdEntry}:${gradeIdEntry}`;
+      if (seen.has(key)) continue;
+      const grade = grades.find((g) => g.id === gradeIdEntry);
+      seen.set(key, {
+        key,
+        subjectId: subjectIdEntry,
+        subjectName: e.subject.name,
+        gradeId: gradeIdEntry,
+        gradeName: grade?.name ?? 'Grade',
+      });
+    }
+    return Array.from(seen.values());
+  }, [entries, grades]);
 
-  const selectedEntryKey = useMemo(() => {
-    if (!classId) return '';
-    const found = entryOptions.find((o) => o.entry.class.id === classId
-      && (o.entry.subject?.id ?? 'homeroom') === (subjectId || 'homeroom'));
-    return found?.key ?? '';
-  }, [classId, subjectId, entryOptions]);
+  // Subject options are unique subjects across the teacher's combos.
+  const subjectOptions = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>();
+    for (const c of combos) {
+      if (!map.has(c.subjectId)) {
+        map.set(c.subjectId, { id: c.subjectId, name: c.subjectName });
+      }
+    }
+    return Array.from(map.values());
+  }, [combos]);
 
-  // If the picked class pinned a subject (single tuple in the teaching load
-  // for that class), hide the subject Select.
-  const classPinsSubject = useMemo(() => {
-    const matching = entries.filter((e) => e.class?.id === classId && e.subject);
-    return matching.length === 1 && !!matching[0].subject;
-  }, [entries, classId]);
+  // Grade options narrow to grades available for the picked subject (so a
+  // teacher who teaches Maths to Grade 10 and Physics to Grade 11 doesn't see
+  // Grade 11 listed under Maths).
+  const gradeOptions = useMemo(() => {
+    const filtered = subjectId
+      ? combos.filter((c) => c.subjectId === subjectId)
+      : combos;
+    const map = new Map<string, { id: string; name: string }>();
+    for (const c of filtered) {
+      if (!map.has(c.gradeId)) {
+        map.set(c.gradeId, { id: c.gradeId, name: c.gradeName });
+      }
+    }
+    return Array.from(map.values());
+  }, [combos, subjectId]);
+
+  // Auto-select when the teacher has only one combo total. Doing this in a
+  // useEffect (rather than as a default initial value) means the parent stays
+  // the source of truth for the form state and we react to entries loading
+  // asynchronously.
+  useEffect(() => {
+    if (combos.length !== 1) return;
+    const only = combos[0];
+    if (!subjectId) onSubjectChange(only.subjectId);
+    if (!gradeId) onGradeChange(only.gradeId);
+  }, [combos, subjectId, gradeId, onSubjectChange, onGradeChange]);
+
+  // If the picked grade no longer fits the picked subject, drop it.
+  useEffect(() => {
+    if (!gradeId) return;
+    if (!gradeOptions.some((g) => g.id === gradeId)) {
+      onGradeChange('');
+    }
+  }, [gradeOptions, gradeId, onGradeChange]);
 
   const recentForContext = useMemo(() => {
     return recent.filter((r: RecentTopic) => {
@@ -101,50 +149,57 @@ export function TopicQuickPicker({
     });
   }, [recent, subjectId, gradeId]);
 
-  const subjectName = allSubjects.find((s) => s.id === subjectId || s._id === subjectId)?.name;
-  const gradeName = grades.find((g) => g.id === gradeId)?.name;
+  const subjectName = subjectOptions.find((s) => s.id === subjectId)?.name;
+  const gradeName = gradeOptions.find((g) => g.id === gradeId)?.name;
   const contextReady = !!subjectId && !!gradeId;
+  const singleCombo = combos.length === 1;
 
   return (
     <div className="space-y-4">
-      <div>
-        <Label>Class <span className="text-destructive">*</span></Label>
-        <Select
-          value={selectedEntryKey}
-          onValueChange={(val: unknown) => {
-            const opt = entryOptions.find((o) => o.key === (val as string));
-            onClassChange(opt?.entry ?? null);
-          }}
-        >
-          <SelectTrigger className="w-full sm:w-80">
-            <SelectValue placeholder="Pick a class" />
-          </SelectTrigger>
-          <SelectContent>
-            {entryOptions.length === 0 && (
-              <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                No classes assigned yet.
-              </div>
-            )}
-            {entryOptions.map((o) => (
-              <SelectItem key={o.key} value={o.key}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* When the teacher has only one (subject, grade) combo, skip the selects
+          entirely — auto-selection above keeps parent state in sync, so we can
+          jump straight to the topic picker. */}
+      {!singleCombo && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <Label>Subject <span className="text-destructive">*</span></Label>
+            <Select
+              value={subjectId}
+              onValueChange={(v: unknown) => onSubjectChange(v as string)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Pick a subject" />
+              </SelectTrigger>
+              <SelectContent>
+                {subjectOptions.length === 0 && (
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                    No subjects in your teaching load.
+                  </div>
+                )}
+                {subjectOptions.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      {classId && !classPinsSubject && (
-        <div>
-          <Label>Subject <span className="text-destructive">*</span></Label>
-          <Select value={subjectId} onValueChange={(v: unknown) => onSubjectChange(v as string)}>
-            <SelectTrigger className="w-full sm:w-80">
-              <SelectValue placeholder="Pick a subject" />
-            </SelectTrigger>
-            <SelectContent>
-              {allSubjects.map((s) => (
-                <SelectItem key={s._id} value={s._id}>{s.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div>
+            <Label>Grade <span className="text-destructive">*</span></Label>
+            <Select
+              value={gradeId}
+              onValueChange={(v: unknown) => onGradeChange(v as string)}
+              disabled={!subjectId}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={subjectId ? 'Pick a grade' : 'Pick a subject first'} />
+              </SelectTrigger>
+              <SelectContent>
+                {gradeOptions.map((g) => (
+                  <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       )}
 
