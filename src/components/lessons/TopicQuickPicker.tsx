@@ -16,7 +16,6 @@ import { useRecentTopics, type RecentTopic } from '@/hooks/useRecentTopics';
 import { useTopicCatalog } from '@/hooks/useTopicCatalog';
 import type { TeacherClassEntry } from '@/hooks/useTeacherClasses';
 import type { CurriculumNodeItem, Grade } from '@/types';
-import type { AcademicLookupItem } from '@/hooks/useAcademicLookups';
 
 interface Props {
   /** Teacher class+subject entries — used only to derive distinct grade+subject
