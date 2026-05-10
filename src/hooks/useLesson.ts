@@ -1,7 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import type { Lesson, LessonMaterial, LessonPhase, LessonStatus } from '@/types/lesson';
+
+function toastError(err: unknown, fallback: string): void {
+  toast.error(err instanceof Error ? err.message : fallback);
+}
 
 export function useLesson(id: string) {
   const [lesson, setLesson] = useState<Lesson | null>(null);
@@ -24,45 +29,80 @@ export function useLesson(id: string) {
   useEffect(() => { fetchOne(); }, [fetchOne]);
 
   const updateLesson = useCallback(async (patch: Partial<Lesson>) => {
-    const res = await apiClient.put(`/lessons/${id}`, patch);
-    const updated = unwrapResponse<Lesson>(res);
-    setLesson(updated);
-    return updated;
+    try {
+      const res = await apiClient.put(`/lessons/${id}`, patch);
+      const updated = unwrapResponse<Lesson>(res);
+      setLesson(updated);
+      return updated;
+    } catch (err: unknown) {
+      toastError(err, 'Failed to update lesson');
+      throw err;
+    }
   }, [id]);
 
   const patchStatus = useCallback(async (status: LessonStatus) => {
-    const res = await apiClient.patch(`/lessons/${id}/status`, { status });
-    const updated = unwrapResponse<Lesson>(res);
-    setLesson(updated);
-    return updated;
+    try {
+      const res = await apiClient.patch(`/lessons/${id}/status`, { status });
+      const updated = unwrapResponse<Lesson>(res);
+      setLesson(updated);
+      return updated;
+    } catch (err: unknown) {
+      toastError(err, 'Failed to update lesson status');
+      throw err;
+    }
   }, [id]);
 
   const addMaterial = useCallback(async (payload: Record<string, unknown>) => {
-    const res = await apiClient.post(`/lessons/${id}/materials`, payload);
-    await fetchOne();
-    return unwrapResponse<LessonMaterial>(res);
+    try {
+      const res = await apiClient.post(`/lessons/${id}/materials`, payload);
+      await fetchOne();
+      return unwrapResponse<LessonMaterial>(res);
+    } catch (err: unknown) {
+      toastError(err, 'Failed to add material');
+      throw err;
+    }
   }, [id, fetchOne]);
 
   const updateMaterial = useCallback(async (mid: string, patch: { title?: string; teacherNotes?: string }) => {
-    const res = await apiClient.patch(`/lessons/${id}/materials/${mid}`, patch);
-    await fetchOne();
-    return unwrapResponse<LessonMaterial>(res);
+    try {
+      const res = await apiClient.patch(`/lessons/${id}/materials/${mid}`, patch);
+      await fetchOne();
+      return unwrapResponse<LessonMaterial>(res);
+    } catch (err: unknown) {
+      toastError(err, 'Failed to update material');
+      throw err;
+    }
   }, [id, fetchOne]);
 
   const moveMaterial = useCallback(async (mid: string, toPhase: LessonPhase, toIndex: number) => {
-    await apiClient.patch(`/lessons/${id}/materials/${mid}/move`, { toPhase, toIndex });
-    await fetchOne();
+    try {
+      await apiClient.patch(`/lessons/${id}/materials/${mid}/move`, { toPhase, toIndex });
+      await fetchOne();
+    } catch (err: unknown) {
+      toastError(err, 'Failed to move material');
+      throw err;
+    }
   }, [id, fetchOne]);
 
   const deleteMaterial = useCallback(async (mid: string) => {
-    await apiClient.delete(`/lessons/${id}/materials/${mid}`);
-    await fetchOne();
+    try {
+      await apiClient.delete(`/lessons/${id}/materials/${mid}`);
+      await fetchOne();
+    } catch (err: unknown) {
+      toastError(err, 'Failed to delete material');
+      throw err;
+    }
   }, [id, fetchOne]);
 
   const regenerateMaterial = useCallback(async (mid: string, payload?: Record<string, unknown>) => {
-    const res = await apiClient.post(`/lessons/${id}/materials/${mid}/regenerate`, payload ?? {});
-    await fetchOne();
-    return unwrapResponse<LessonMaterial>(res);
+    try {
+      const res = await apiClient.post(`/lessons/${id}/materials/${mid}/regenerate`, payload ?? {});
+      await fetchOne();
+      return unwrapResponse<LessonMaterial>(res);
+    } catch (err: unknown) {
+      toastError(err, 'Failed to regenerate material');
+      throw err;
+    }
   }, [id, fetchOne]);
 
   return { lesson, loading, error, refetch: fetchOne, updateLesson, patchStatus, addMaterial, updateMaterial, moveMaterial, deleteMaterial, regenerateMaterial };

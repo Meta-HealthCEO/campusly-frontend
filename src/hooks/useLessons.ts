@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import type { Lesson, LessonsListResult, LessonStatus } from '@/types/lesson';
@@ -40,8 +41,13 @@ export function useLessons(initial: LessonsFilters = {}) {
   useEffect(() => { fetchList(); }, [fetchList]);
 
   const deleteLesson = useCallback(async (id: string) => {
-    await apiClient.delete(`/lessons/${id}`);
-    await fetchList();
+    try {
+      await apiClient.delete(`/lessons/${id}`);
+      await fetchList();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete lesson');
+      throw err;
+    }
   }, [fetchList]);
 
   return { items, total, loading, error, filters, setFilters, refetch: fetchList, deleteLesson };
