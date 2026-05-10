@@ -14,7 +14,6 @@ import {
   FileText,
   Loader2,
   NotebookPen,
-  PlusCircle,
   Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -46,7 +45,6 @@ import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { useTeacherPapers } from '@/hooks/useTeacherPapers';
 import apiClient from '@/lib/api-client';
 import { extractErrorMessage, resolveId, unwrapResponse } from '@/lib/api-helpers';
-import { formatClassLabel, getClassGradeId, getClassId } from '@/lib/teacher-labels';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { AssignHomeworkFormValues } from '@/components/homework/AssignHomeworkDialog';
@@ -58,7 +56,6 @@ import type {
   GenerateContentPayload,
   Grade,
   ResourceType,
-  SchoolClass,
   Subject,
   UpdateResourcePayload,
 } from '@/types';
@@ -85,7 +82,6 @@ interface CurriculumGenerationContext {
 type StudioResult =
   | { kind: 'resource'; resource: ContentResourceItem }
   | { kind: 'paper'; id: string; title: string }
-  | { kind: 'lesson_plan'; id: string; title: string }
   | { kind: 'questions'; count: number };
 
 type AcademicGradeRecord = Grade & {
@@ -97,13 +93,6 @@ type AcademicSubjectRecord = Subject & {
   _id?: string;
   gradeIds?: Array<string | { id?: string; _id?: string }>;
 };
-
-interface GeneratedLessonDraft {
-  topic?: string;
-  objectives: string[];
-  activities: string[];
-  resources: string[];
-}
 
 const STEPS = [
   { number: 1, label: 'Create' },
@@ -501,7 +490,7 @@ export default function AiStudioPage() {
   const { generatePaperWithAI } = useTeacherPapers(false);
   const { subjects, loading: subjectsLoading, refetch: refetchSubjects } = useSubjects();
   const { grades, loading: gradesLoading, refetch: refetchGrades } = useGrades();
-  const { classes, classesLoading, refetchClasses, assignHomework } = useAssignHomework();
+  const { classes, assignHomework } = useAssignHomework();
 
   const [step, setStep] = useState(1);
   const [selectedOutput, setSelectedOutput] = useState<CreationKind | null>(null);
@@ -526,17 +515,12 @@ export default function AiStudioPage() {
   const [paperDifficulty, setPaperDifficulty] = useState<PaperDifficulty>('medium');
   const [paperYear, setPaperYear] = useState(new Date().getFullYear());
 
-  const [lessonClassId, setLessonClassId] = useState('');
-  const [lessonDate, setLessonDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [lessonDuration, setLessonDuration] = useState(45);
-
   const [questionType, setQuestionType] = useState<QuestionType>('mcq');
   const [questionCount, setQuestionCount] = useState(5);
   const [questionCapsLevel, setQuestionCapsLevel] = useState<CapsLevel>('knowledge');
   const [questionBloomsLevel, setQuestionBloomsLevel] = useState<BloomsLevel>('understand');
 
   const [generating, setGenerating] = useState(false);
-  const [creatingClass, setCreatingClass] = useState(false);
   const [result, setResult] = useState<StudioResult | null>(null);
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignResource, setAssignResource] = useState<ContentResourceItem | null>(null);
@@ -555,30 +539,6 @@ export default function AiStudioPage() {
     (framework: CurriculumFrameworkItem) => framework.id === selectedFramework,
   );
 
-  const matchingClasses = useMemo(() => {
-    if (!gradeId) return classes;
-    return classes.filter((schoolClass) => {
-      const classGradeId = getClassGradeId(schoolClass);
-      return !classGradeId || classGradeId === gradeId;
-    });
-  }, [classes, gradeId]);
-  const matchingClassOptions = useMemo(() => (
-    matchingClasses
-      .map((schoolClass) => ({
-        id: getClassId(schoolClass) || schoolClass.id,
-        label: formatClassLabel(schoolClass),
-      }))
-      .filter((option): option is { id: string; label: string } => Boolean(option.id))
-  ), [matchingClasses]);
-  const selectedLessonClassLabel = matchingClassOptions.find((option) => option.id === lessonClassId)?.label;
-  const defaultTeachingGroupName = useMemo(() => {
-    const pieces = [
-      curriculumContext?.gradeName ?? 'Class',
-      curriculumContext?.subjectName,
-    ].filter(Boolean);
-    return pieces.join(' ').slice(0, 50);
-  }, [curriculumContext?.gradeName, curriculumContext?.subjectName]);
-
   const computedPaperTitle = useMemo(() => {
     const explicit = paperTitle.trim();
     if (explicit) return explicit;
@@ -591,13 +551,7 @@ export default function AiStudioPage() {
     contextStatus === 'ready' &&
     Boolean(subjectId && gradeId && term);
 
-  const canGenerate =
-    canContinueFromCurriculum &&
-    !generating &&
-    (
-      selectedOutput !== 'lesson_plan' ||
-      Boolean(lessonClassId && lessonDate)
-    );
+  const canGenerate = canContinueFromCurriculum && !generating;
 
   const resetFlow = useCallback(() => {
     setStep(1);
@@ -620,9 +574,6 @@ export default function AiStudioPage() {
     setPaperDuration(60);
     setPaperDifficulty('medium');
     setPaperYear(new Date().getFullYear());
-    setLessonClassId('');
-    setLessonDate(new Date().toISOString().slice(0, 10));
-    setLessonDuration(45);
     setQuestionType('mcq');
     setQuestionCount(5);
     setQuestionCapsLevel('knowledge');
@@ -647,27 +598,10 @@ export default function AiStudioPage() {
   }, []);
 
   useEffect(() => {
-    if (selectedOutput !== 'lesson_plan') return;
-
-    const selectedClassStillAvailable = matchingClassOptions.some((option) => option.id === lessonClassId);
-    if (lessonClassId && selectedClassStillAvailable) return;
-
-    if (matchingClassOptions.length === 1) {
-      setLessonClassId(matchingClassOptions[0].id);
-      return;
-    }
-
-    if (lessonClassId && !selectedClassStillAvailable) {
-      setLessonClassId('');
-    }
-  }, [lessonClassId, matchingClassOptions, selectedOutput]);
-
-  useEffect(() => {
     if (initialToolHandledRef.current) return;
     const tool = searchParams.get('tool');
     const mapped: Partial<Record<string, CreationKind>> = {
       paper: 'paper',
-      lesson: 'lesson_plan',
       resource: 'resource',
       homework: 'homework',
       questions: 'questions',
@@ -869,41 +803,6 @@ export default function AiStudioPage() {
     [assignHomework, assignResource],
   );
 
-  const handleCreateTeachingGroup = useCallback(async () => {
-    if (!user?.id || !user.schoolId || !gradeId || !subjectId) return;
-
-    setCreatingClass(true);
-    try {
-      const response = await apiClient.post('/academic/classes', {
-        name: defaultTeachingGroupName || 'Teaching Group',
-        gradeId,
-        schoolId: user.schoolId,
-        teacherId: user.id,
-        subjectId,
-        capacity: 40,
-      });
-      const created = unwrapResponse<SchoolClass & { _id?: string }>(response);
-      const createdId = getClassId(created) || created.id || created._id || '';
-      await refetchClasses();
-      if (createdId) {
-        setLessonClassId(createdId);
-      }
-      toast.success('Teaching group created');
-    } catch (err: unknown) {
-      await refetchClasses();
-      toast.error(extractErrorMessage(err, 'Could not create teaching group'));
-    } finally {
-      setCreatingClass(false);
-    }
-  }, [
-    defaultTeachingGroupName,
-    gradeId,
-    refetchClasses,
-    subjectId,
-    user?.id,
-    user?.schoolId,
-  ]);
-
   const handleGenerate = useCallback(async () => {
     if (!selectedOutput || !selectedPrimaryNode || !canGenerate) return;
 
@@ -956,39 +855,6 @@ export default function AiStudioPage() {
         return;
       }
 
-      if (selectedOutput === 'lesson_plan') {
-        const dateIso = new Date(`${lessonDate}T08:00:00`).toISOString();
-        const draftResponse = await apiClient.post('/lesson-plans/ai-generate', {
-          curriculumTopicId: selectedPrimaryNode.id,
-          classId: lessonClassId,
-          subjectId,
-          date: dateIso,
-          durationMinutes: lessonDuration,
-        });
-        const draft = unwrapResponse<GeneratedLessonDraft>(draftResponse);
-        const saveResponse = await apiClient.post('/lesson-plans', {
-          classId: lessonClassId,
-          subjectId,
-          curriculumTopicId: selectedPrimaryNode.id,
-          date: dateIso,
-          topic: draft.topic || selectedPrimaryNode.title,
-          durationMinutes: lessonDuration,
-          objectives: draft.objectives ?? [],
-          activities: draft.activities ?? [],
-          resources: draft.resources ?? [],
-          aiGenerated: true,
-        });
-        const saved = unwrapResponse<{ _id?: string; id?: string; topic?: string }>(saveResponse);
-        setResult({
-          kind: 'lesson_plan',
-          id: saved._id ?? saved.id ?? '',
-          title: saved.topic ?? draft.topic ?? selectedPrimaryNode.title,
-        });
-        toast.success('Lesson plan generated and saved');
-        setStep(4);
-        return;
-      }
-
       if (selectedOutput === 'questions') {
         const cognitiveLevel: CognitiveLevelPair = {
           caps: questionCapsLevel,
@@ -1034,9 +900,6 @@ export default function AiStudioPage() {
     paperDifficulty,
     computedPaperTitle,
     generatePaperWithAI,
-    lessonDate,
-    lessonClassId,
-    lessonDuration,
     questionCapsLevel,
     questionBloomsLevel,
     questionType,
@@ -1352,88 +1215,6 @@ export default function AiStudioPage() {
               </div>
             )}
 
-            {selectedOutput === 'lesson_plan' && (
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="space-y-2">
-                  <Label>Teaching Group</Label>
-                  <Select
-                    value={lessonClassId || null}
-                    onValueChange={(value: string | null) => setLessonClassId(value ?? '')}
-                    disabled={classesLoading || matchingClassOptions.length === 0}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue
-                        placeholder={
-                          classesLoading
-                            ? 'Loading groups...'
-                            : matchingClassOptions.length
-                              ? 'Select teaching group'
-                              : 'Create a group first'
-                        }
-                      >
-                        {selectedLessonClassLabel}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {matchingClassOptions.map((option) => (
-                        <SelectItem key={option.id} value={option.id}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Who this lesson is for. Campusly uses this to save the plan against the right learner group.
-                  </p>
-                  {matchingClassOptions.length === 1 && selectedLessonClassLabel && (
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                      Auto-selected: {selectedLessonClassLabel}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label>Lesson Date</Label>
-                  <Input type="date" value={lessonDate} onChange={(event) => setLessonDate(event.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Duration (minutes)</Label>
-                  <Input
-                    type="number"
-                    min={5}
-                    max={240}
-                    value={lessonDuration}
-                    onChange={(event) => setLessonDuration(Number(event.target.value) || 45)}
-                  />
-                </div>
-                {!classesLoading && matchingClassOptions.length === 0 && (
-                  <div className="rounded-lg border bg-muted/30 p-4 sm:col-span-3">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="text-sm font-medium">No matching teaching group yet</p>
-                        <p className="text-xs text-muted-foreground">
-                          Create {defaultTeachingGroupName || 'a teaching group'} so this lesson has a learner group attached.
-                        </p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full sm:w-auto"
-                        onClick={() => void handleCreateTeachingGroup()}
-                        disabled={creatingClass || !gradeId || !subjectId}
-                      >
-                        {creatingClass ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <PlusCircle className="mr-2 h-4 w-4" />
-                        )}
-                        {creatingClass ? 'Creating...' : 'Create Teaching Group'}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
             {selectedOutput === 'questions' && (
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -1482,7 +1263,7 @@ export default function AiStudioPage() {
               </div>
             )}
 
-            {selectedOutput !== 'paper' && selectedOutput !== 'lesson_plan' && (
+            {selectedOutput !== 'paper' && (
               <div className="space-y-3">
                 <Label>Difficulty</Label>
                 <div className="grid gap-2 sm:grid-cols-3">
@@ -1503,17 +1284,15 @@ export default function AiStudioPage() {
               </div>
             )}
 
-            {selectedOutput !== 'lesson_plan' && (
-              <div className="space-y-2">
-                <Label>Special Instructions</Label>
-                <Textarea
-                  value={instructions}
-                  onChange={(event) => setInstructions(event.target.value)}
-                  placeholder="Add any teacher instruction, e.g. more exam-style questions, South African examples, simpler language."
-                  className="min-h-24"
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>Special Instructions</Label>
+              <Textarea
+                value={instructions}
+                onChange={(event) => setInstructions(event.target.value)}
+                placeholder="Add any teacher instruction, e.g. more exam-style questions, South African examples, simpler language."
+                className="min-h-24"
+              />
+            </div>
 
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setStep(2)}>
@@ -1627,13 +1406,11 @@ export default function AiStudioPage() {
             <CardContent className="space-y-5 p-6">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 {result.kind === 'paper' && <FileText className="h-6 w-6" />}
-                {result.kind === 'lesson_plan' && <NotebookPen className="h-6 w-6" />}
                 {result.kind === 'questions' && <FileQuestion className="h-6 w-6" />}
               </div>
               <div>
                 <Badge variant="outline">
                   {result.kind === 'paper' && 'Saved to Test Papers'}
-                  {result.kind === 'lesson_plan' && 'Saved to Lesson Plans'}
                   {result.kind === 'questions' && 'Saved to Practice Questions'}
                 </Badge>
                 <h2 className="mt-3 text-xl font-semibold">
@@ -1649,11 +1426,6 @@ export default function AiStudioPage() {
                 {result.kind === 'paper' && (
                   <Button onClick={() => router.push(`/teacher/papers/${result.id}`)}>
                     Open Paper and Memo
-                  </Button>
-                )}
-                {result.kind === 'lesson_plan' && (
-                  <Button onClick={() => router.push('/teacher/lessons')}>
-                    Open Lessons
                   </Button>
                 )}
                 {result.kind === 'questions' && (

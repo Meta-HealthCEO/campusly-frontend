@@ -202,7 +202,6 @@ export const ROUTES = {
   TEACHER_AI_CREATE_PAPER: '/teacher/ai-tools/create-paper',
   TEACHER_AI_GRADING: '/teacher/ai-tools/grading',
   TEACHER_AI_PAPERS: '/teacher/ai-tools/papers',
-  TEACHER_LESSON_PLANS: '/teacher/lesson-plans',
   TEACHER_LESSONS: '/teacher/lessons',
   TEACHER_LESSON_NEW: '/teacher/lessons/new',
   TEACHER_QUICK_MAKE: '/teacher/quick-make',

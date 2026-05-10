@@ -13,7 +13,6 @@ export * from './transport';
 export * from './library';
 export * from './attendance';
 export * from './homework';
-export * from './lesson-plans';
 export * from './lesson';
 export * from './consent';
 export * from './achiever';
