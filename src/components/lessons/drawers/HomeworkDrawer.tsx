@@ -14,7 +14,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { useLessonWorkspaceStore } from '@/stores/useLessonWorkspaceStore';
-import { useHomeworkPicker } from '@/hooks/useLessonResourcePickers';
+import {
+  useHomeworkPicker,
+  useQuizzesPicker,
+  useContentResourcesPicker,
+} from '@/hooks/useLessonResourcePickers';
 
 type Mode = 'link' | 'create';
 type CreateType = 'quiz' | 'reading' | 'exercise';
@@ -29,9 +33,14 @@ const CREATE_TYPE_OPTIONS: { value: CreateType; label: string }[] = [
   { value: 'exercise', label: 'Exercise' },
 ];
 
+const MONGO_ID_RE = /^[a-fA-F0-9]{24}$/;
+
 export function HomeworkDrawer({ onSubmit }: Props) {
   const closeDrawer = useLessonWorkspaceStore((s) => s.closeDrawer);
   const { items, loading: itemsLoading } = useHomeworkPicker();
+  const { items: quizItems, loading: quizzesLoading } = useQuizzesPicker();
+  const { items: contentItems, loading: contentLoading } =
+    useContentResourcesPicker();
 
   const [mode, setMode] = useState<Mode>('link');
   const [title, setTitle] = useState('');
@@ -41,14 +50,33 @@ export function HomeworkDrawer({ onSubmit }: Props) {
   // Link-mode state
   const [existingHomeworkId, setExistingHomeworkId] = useState('');
 
-  // Create-mode state — minimal; full wizard lives at /teacher/homework/new
+  // Create-mode state
   const [createType, setCreateType] = useState<CreateType>('quiz');
   const [dueDate, setDueDate] = useState('');
   const [totalMarks, setTotalMarks] = useState<number>(10);
+  const [quizId, setQuizId] = useState('');
+  const [contentResourceId, setContentResourceId] = useState('');
+  const [exerciseQuestionIdsRaw, setExerciseQuestionIdsRaw] = useState('');
 
   const linkSelected = useMemo(
     () => items.find((h) => h.id === existingHomeworkId) ?? null,
     [items, existingHomeworkId],
+  );
+
+  const exerciseQuestionIds = useMemo(
+    () =>
+      exerciseQuestionIdsRaw
+        .split(/[,\s]+/)
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0),
+    [exerciseQuestionIdsRaw],
+  );
+
+  const exerciseIdsValid = useMemo(
+    () =>
+      exerciseQuestionIds.length > 0 &&
+      exerciseQuestionIds.every((id) => MONGO_ID_RE.test(id)),
+    [exerciseQuestionIds],
   );
 
   const handleLinkChange = (val: string | null) => {
@@ -58,15 +86,53 @@ export function HomeworkDrawer({ onSubmit }: Props) {
     if (hw && !title.trim()) setTitle(hw.title);
   };
 
+  const handleQuizChange = (val: string | null) => {
+    const next = val ?? '';
+    setQuizId(next);
+    const q = quizItems.find((x) => x.id === next);
+    if (q && !title.trim()) setTitle(q.title);
+  };
+
+  const handleContentChange = (val: string | null) => {
+    const next = val ?? '';
+    setContentResourceId(next);
+    const c = contentItems.find((x) => x.id === next);
+    if (c && !title.trim()) setTitle(c.title);
+  };
+
   const linkValid = !!existingHomeworkId && !!title.trim();
+
+  const typeSpecificValid =
+    createType === 'quiz' ? !!quizId
+    : createType === 'reading' ? !!contentResourceId
+    : exerciseIdsValid;
+
   const createValid =
     !!title.trim() &&
     !!dueDate &&
     Number.isFinite(totalMarks) &&
     totalMarks >= 0 &&
-    totalMarks <= 1000;
+    totalMarks <= 1000 &&
+    typeSpecificValid;
 
   const canSubmit = !submitting && (mode === 'link' ? linkValid : createValid);
+
+  const buildCreatePayload = (dueIso: string): Record<string, unknown> => {
+    const base = {
+      title: title.trim(),
+      dueDate: dueIso,
+      totalMarks,
+      latePolicy: 'block' as const,
+      gradebookAutoPublish: true,
+    };
+    if (createType === 'quiz') {
+      return { ...base, type: 'quiz', quizId };
+    }
+    if (createType === 'reading') {
+      return { ...base, type: 'reading', contentResourceId };
+    }
+    return { ...base, type: 'exercise', exerciseQuestionIds };
+  };
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -80,11 +146,6 @@ export function HomeworkDrawer({ onSubmit }: Props) {
           existingHomeworkId,
         });
       } else {
-        // The backend's HomeworkService.create requires more than the bare
-        // essentials we collect here (e.g. quizId / contentResourceId for
-        // typed homework). The drawer collects what it can; the backend will
-        // reject incomplete payloads. The full homework wizard at
-        // /teacher/homework/new remains the recommended path.
         const due = new Date(dueDate);
         const dueIso = Number.isFinite(due.getTime())
           ? due.toISOString()
@@ -93,14 +154,7 @@ export function HomeworkDrawer({ onSubmit }: Props) {
           kind: 'homework',
           title: title.trim(),
           teacherNotes: teacherNotes.trim() || undefined,
-          createPayload: {
-            type: createType,
-            title: title.trim(),
-            dueDate: dueIso,
-            totalMarks,
-            latePolicy: 'block' as const,
-            gradebookAutoPublish: true,
-          },
+          createPayload: buildCreatePayload(dueIso),
         });
       }
     } finally {
@@ -166,9 +220,12 @@ export function HomeworkDrawer({ onSubmit }: Props) {
 
         <TabsContent value="create" className="pt-4 space-y-4">
           <div className="rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
-            Quick-create captures the essentials. For a full setup (questions,
-            attachments, late policy), use the{' '}
-            <Link href="/teacher/homework/new" className="underline">homework wizard</Link>.
+            Quick-create captures the essentials. For a full setup
+            (attachments, late policy, comprehension generation), use the{' '}
+            <Link href="/teacher/homework/new" className="underline">
+              homework wizard
+            </Link>
+            .
           </div>
           <div>
             <Label htmlFor="hw-type">
@@ -186,6 +243,103 @@ export function HomeworkDrawer({ onSubmit }: Props) {
               </SelectContent>
             </Select>
           </div>
+
+          {createType === 'quiz' && (
+            <div>
+              <Label htmlFor="hw-quiz">
+                Quiz <span className="text-destructive">*</span>
+              </Label>
+              {quizzesLoading ? (
+                <LoadingSpinner />
+              ) : quizItems.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  No quizzes available. Create one in the Learning module first.
+                </p>
+              ) : (
+                <Select value={quizId} onValueChange={handleQuizChange}>
+                  <SelectTrigger id="hw-quiz" className="w-full">
+                    <SelectValue placeholder="Select a quiz" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {quizItems.map((q) => (
+                      <SelectItem key={q.id} value={q.id}>
+                        <div className="flex flex-col">
+                          <span className="truncate">{q.title}</span>
+                          <span className="text-xs text-muted-foreground truncate">
+                            {q.subtitle}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          )}
+
+          {createType === 'reading' && (
+            <div>
+              <Label htmlFor="hw-content">
+                Content resource <span className="text-destructive">*</span>
+              </Label>
+              {contentLoading ? (
+                <LoadingSpinner />
+              ) : contentItems.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  No approved content resources available.
+                </p>
+              ) : (
+                <Select value={contentResourceId} onValueChange={handleContentChange}>
+                  <SelectTrigger id="hw-content" className="w-full">
+                    <SelectValue placeholder="Select a reading resource" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contentItems.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        <div className="flex flex-col">
+                          <span className="truncate">{c.title}</span>
+                          <span className="text-xs text-muted-foreground truncate">
+                            {c.subtitle}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          )}
+
+          {createType === 'exercise' && (
+            <div>
+              <Label htmlFor="hw-questions">
+                Question IDs <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="hw-questions"
+                className="w-full min-h-20 font-mono text-xs"
+                value={exerciseQuestionIdsRaw}
+                onChange={(e) => setExerciseQuestionIdsRaw(e.target.value)}
+                placeholder="Comma-separated MongoDB IDs (24 hex chars)"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Pick questions from{' '}
+                <Link href="/teacher/curriculum/questions" className="underline">
+                  Question Bank
+                </Link>{' '}
+                and paste their IDs here.{' '}
+                {exerciseQuestionIds.length > 0 && !exerciseIdsValid && (
+                  <span className="text-destructive">
+                    One or more IDs are not valid 24-character hex.
+                  </span>
+                )}
+                {exerciseIdsValid && (
+                  <span>{exerciseQuestionIds.length} question(s) ready.</span>
+                )}
+              </p>
+            </div>
+          )}
+
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             <div>
               <Label htmlFor="hw-due">

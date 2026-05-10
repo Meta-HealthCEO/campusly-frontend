@@ -30,6 +30,13 @@ export interface PaperPickerItem {
   status?: string;
 }
 
+export interface ContentResourcePickerItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  status?: string;
+}
+
 interface RawQuiz {
   id?: string;
   _id?: string;
@@ -55,6 +62,16 @@ interface RawPaper {
   status?: string;
   paperType?: string;
   totalMarks?: number;
+  subjectId?: { name?: string } | null;
+  gradeId?: { name?: string } | null;
+}
+
+interface RawContentResource {
+  _id?: string;
+  id?: string;
+  title?: string;
+  status?: string;
+  type?: string;
   subjectId?: { name?: string } | null;
   gradeId?: { name?: string } | null;
 }
@@ -197,6 +214,54 @@ export function usePapersPicker(): {
         if (!cancelled) {
           console.error('Failed to load papers', err);
           setError('Failed to load papers');
+          setItems([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return { items, loading, error };
+}
+
+// ── Content Resources (for reading homework) ──────────────────────────────
+export function useContentResourcesPicker(): {
+  items: ContentResourcePickerItem[];
+  loading: boolean;
+  error: string | null;
+} {
+  const [items, setItems] = useState<ContentResourcePickerItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await apiClient.get('/content-library/resources', {
+          params: { status: 'approved', limit: 100 },
+        });
+        const arr = unwrapList<RawContentResource>(res);
+        if (cancelled) return;
+        setItems(
+          arr.map((r) => ({
+            id: pickId(r),
+            title: r.title ?? 'Untitled resource',
+            subtitle:
+              joinMeta([r.subjectId?.name, r.gradeId?.name, r.type]) ||
+              'Content resource',
+            status: r.status,
+          })),
+        );
+      } catch (err: unknown) {
+        if (!cancelled) {
+          console.error('Failed to load content resources', err);
+          setError('Failed to load content resources');
           setItems([]);
         }
       } finally {
