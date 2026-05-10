@@ -8,9 +8,17 @@ import type { CurriculumNodeItem, CurriculumNodeType } from '@/types';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
+export interface CurriculumTreeBrowserSelectContext {
+  ancestors: CurriculumNodeItem[];
+  getNodeById: (id: string) => CurriculumNodeItem | undefined;
+}
+
 export interface CurriculumTreeBrowserProps {
   frameworkId: string;
-  onSelect: (node: CurriculumNodeItem, ancestors?: CurriculumNodeItem[]) => void;
+  onSelect: (
+    node: CurriculumNodeItem,
+    ctx?: CurriculumTreeBrowserSelectContext,
+  ) => void;
   selectedNodeId?: string | null;
   selectedNodeIds?: string[];
 }
@@ -198,17 +206,18 @@ export function CurriculumTreeBrowser({
   selectedNodeId,
   selectedNodeIds,
 }: CurriculumTreeBrowserProps) {
-  const { getChildren, fetchChildren, isLoading, resolveAncestors } = useCurriculumTree(frameworkId);
+  const { getChildren, fetchChildren, isLoading, resolveAncestors, getNodeById } =
+    useCurriculumTree(frameworkId);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const handleSelect = useCallback(
     async (node: CurriculumNodeItem) => {
       // Emit immediately for snappy UI; ancestors arrive asynchronously.
-      onSelect(node);
+      onSelect(node, { ancestors: [], getNodeById });
       const ancestors = await resolveAncestors(node);
-      if (ancestors.length > 0) onSelect(node, ancestors);
+      if (ancestors.length > 0) onSelect(node, { ancestors, getNodeById });
     },
-    [onSelect, resolveAncestors],
+    [onSelect, resolveAncestors, getNodeById],
   );
 
   // Load root nodes on mount / frameworkId change

@@ -14,6 +14,7 @@ import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { useLessonScaffold } from '@/hooks/useLessonScaffold';
 import type { ScaffoldedOutline } from '@/types/lesson';
 import type { CurriculumNodeItem } from '@/types';
+import type { CurriculumTreeBrowserSelectContext } from '@/components/curriculum/CurriculumTreeBrowser';
 
 type Step = 1 | 2 | 3;
 
@@ -58,25 +59,53 @@ export default function NewLessonPage() {
 
   const update = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }));
 
-  const onTopicSelect = (node: CurriculumNodeItem, ancestors?: CurriculumNodeItem[]) => {
+  const onTopicSelect = (
+    node: CurriculumNodeItem,
+    ctx?: CurriculumTreeBrowserSelectContext,
+  ) => {
     setForm((f) => {
       const next: FormState = {
         ...f,
         curriculumNodeId: node.id,
         title: f.title || node.title,
       };
-      if (ancestors && ancestors.length > 0) {
-        const norm = (s: string) => s.trim().toLowerCase();
-        const subjectNode = ancestors.find((a) => a.type === 'subject');
-        const gradeNode = ancestors.find((a) => a.type === 'grade');
-        if (subjectNode) {
-          const match = subjects.find((s) => norm(s.name) === norm(subjectNode.title));
-          if (match) next.subjectId = match._id;
+
+      const norm = (s: string) => s.trim().toLowerCase();
+
+      // Prefer denormalized refs when present — O(1), no parentId walk needed.
+      // The self-ref convention means a subject node has subjectId === id, so
+      // these refs work even when the picked node IS a subject/grade.
+      let subjectTitle: string | null = null;
+      let gradeTitle: string | null = null;
+
+      if (node.subjectId && ctx?.getNodeById) {
+        const subjectNode = ctx.getNodeById(node.subjectId);
+        if (subjectNode) subjectTitle = subjectNode.title;
+      }
+      if (node.gradeId && ctx?.getNodeById) {
+        const gradeNode = ctx.getNodeById(node.gradeId);
+        if (gradeNode) gradeTitle = gradeNode.title;
+      }
+
+      // Defensive fallback to ancestor walk for older docs / cache misses.
+      if ((!subjectTitle || !gradeTitle) && ctx?.ancestors && ctx.ancestors.length > 0) {
+        if (!subjectTitle) {
+          const a = ctx.ancestors.find((x) => x.type === 'subject');
+          if (a) subjectTitle = a.title;
         }
-        if (gradeNode) {
-          const match = grades.find((g) => norm(g.name) === norm(gradeNode.title));
-          if (match) next.gradeId = match.id;
+        if (!gradeTitle) {
+          const a = ctx.ancestors.find((x) => x.type === 'grade');
+          if (a) gradeTitle = a.title;
         }
+      }
+
+      if (subjectTitle) {
+        const match = subjects.find((s) => norm(s.name) === norm(subjectTitle as string));
+        if (match) next.subjectId = match._id;
+      }
+      if (gradeTitle) {
+        const match = grades.find((g) => norm(g.name) === norm(gradeTitle as string));
+        if (match) next.gradeId = match.id;
       }
       return next;
     });

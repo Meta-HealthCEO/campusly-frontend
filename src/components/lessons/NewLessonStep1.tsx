@@ -1,6 +1,9 @@
 'use client';
 
-import { CurriculumTreeBrowser } from '@/components/curriculum/CurriculumTreeBrowser';
+import {
+  CurriculumTreeBrowser,
+  type CurriculumTreeBrowserSelectContext,
+} from '@/components/curriculum/CurriculumTreeBrowser';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,7 +36,10 @@ interface Props {
   frameworks: CurriculumFrameworkItem[];
   selectedFramework: string;
   setSelectedFramework: (id: string) => void;
-  onTopicSelect: (node: CurriculumNodeItem) => void;
+  onTopicSelect: (
+    node: CurriculumNodeItem,
+    ctx?: CurriculumTreeBrowserSelectContext,
+  ) => void;
   onNext: () => void;
 }
 

@@ -51,6 +51,13 @@ export interface CurriculumNodeItem {
   metadata: CurriculumNodeMetadata;
   order: number;
   schoolId: string | null;
+  // Denormalized hierarchy refs — populated server-side. Self-ref convention
+  // mirrors backend: a subject node has subjectId === id, etc. Optional
+  // because older docs may predate the backfill migration.
+  phaseId?: string | null;
+  gradeId?: string | null;
+  subjectId?: string | null;
+  termNumber?: number | null;
   createdAt: string;
   updatedAt: string;
 }
