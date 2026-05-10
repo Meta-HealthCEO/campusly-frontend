@@ -8,8 +8,8 @@ import {
   Heart, Upload, Shirt, Trophy, Sparkles,
   Compass, Target, Clipboard, Newspaper,
   CalendarCheck, CalendarCog, Crown, DoorOpen, UserPlus,
-  AlertTriangle, Calculator, Library, HelpCircle, Camera, Eye,
-  CheckSquare, Video, PlayCircle,
+  AlertTriangle, Calculator, Library, Camera,
+  CheckSquare, Video, PlayCircle, FileQuestion,
   type LucideIcon
 } from 'lucide-react';
 import type { PermissionFlag } from '@/types';
@@ -197,11 +197,15 @@ export const ROUTES = {
   TEACHER_MESSAGES: '/teacher/messages',
   TEACHER_MEETINGS: '/teacher/meetings',
   TEACHER_REPORTS: '/teacher/reports',
+  TEACHER_AI_ASSISTANT: '/teacher/ai-assistant',
   TEACHER_AI_TOOLS: '/teacher/ai-tools',
   TEACHER_AI_CREATE_PAPER: '/teacher/ai-tools/create-paper',
   TEACHER_AI_GRADING: '/teacher/ai-tools/grading',
   TEACHER_AI_PAPERS: '/teacher/ai-tools/papers',
   TEACHER_LESSON_PLANS: '/teacher/lesson-plans',
+  TEACHER_LESSONS: '/teacher/lessons',
+  TEACHER_LESSON_NEW: '/teacher/lessons/new',
+  TEACHER_QUICK_MAKE: '/teacher/quick-make',
   TEACHER_SUBSTITUTES: '/teacher/substitutes',
 
   // Teacher — Virtual Classroom
@@ -452,6 +456,8 @@ export const COACH_NAV: NavItem[] = [
 
 export const TEACHER_NAV: NavItem[] = [
   { label: 'Dashboard', href: ROUTES.TEACHER_DASHBOARD, icon: Home },
+  { label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen },
+  { label: 'Quick Make', href: ROUTES.TEACHER_QUICK_MAKE, icon: Sparkles, badge: 'AI' },
   {
     label: 'Classes',
     href: ROUTES.TEACHER_CLASSES,
@@ -464,25 +470,12 @@ export const TEACHER_NAV: NavItem[] = [
   { label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
   { label: 'Attendance', href: ROUTES.TEACHER_ATTENDANCE, icon: ClipboardList },
   { label: 'Lesson Plans', href: ROUTES.TEACHER_LESSON_PLANS, icon: BookOpen },
-  { label: 'Papers', href: '/teacher/papers', icon: FileText },
-  { label: 'Substitutes', href: ROUTES.TEACHER_SUBSTITUTES, icon: UserCheck },
-  {
-    label: 'Curriculum',
-    href: ROUTES.TEACHER_CURRICULUM,
-    icon: Library,
-    children: [
-      { label: 'Home', href: ROUTES.TEACHER_CURRICULUM, icon: Library },
-      { label: 'AI Studio', href: ROUTES.TEACHER_CURRICULUM_AI_STUDIO, icon: Sparkles, badge: 'AI' },
-      { label: 'Textbooks', href: '/teacher/curriculum/textbooks', icon: BookMarked },
-      { label: 'Content Library', href: ROUTES.TEACHER_CURRICULUM_CONTENT, icon: BookOpen },
-      { label: 'Question Bank', href: ROUTES.TEACHER_CURRICULUM_QUESTIONS, icon: HelpCircle },
-      { label: 'Assessment Structure', href: ROUTES.TEACHER_ASSESSMENT_STRUCTURES, icon: BarChart3 },
-      { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
-      { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
-      { label: 'Mark Papers', href: ROUTES.TEACHER_CURRICULUM_MARK_PAPERS, icon: Camera, badge: 'AI' },
-      { label: 'Student Preview', href: ROUTES.TEACHER_CURRICULUM_PREVIEW, icon: Eye },
-    ],
-  },
+  { label: 'Test Papers', href: '/teacher/papers', icon: FileText },
+  { label: 'Mark Papers', href: ROUTES.TEACHER_CURRICULUM_MARK_PAPERS, icon: Camera, badge: 'AI' },
+  { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
+  { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
+  { label: 'Resources', href: ROUTES.TEACHER_CURRICULUM_CONTENT, icon: BookMarked },
+  { label: 'Curriculum', href: ROUTES.TEACHER_CURRICULUM, icon: Library },
   {
     label: 'Courses',
     href: ROUTES.TEACHER_COURSES,
@@ -534,6 +527,22 @@ export const TEACHER_NAV: NavItem[] = [
   // ─── Permission-gated (Special Roles) ──────────────────────────────
   { label: 'HOD Oversight', href: ROUTES.TEACHER_HOD, icon: Users, permission: 'isHOD' },
   { label: 'Course Review', href: ROUTES.ADMIN_COURSES_REVIEW, icon: CheckSquare, permission: 'isHOD', module: 'courses' },
+];
+
+export const STANDALONE_TEACHER_NAV: NavItem[] = [
+  { label: 'Home', href: ROUTES.TEACHER_DASHBOARD, icon: Home },
+  { label: 'Teaching Groups', href: ROUTES.TEACHER_CLASSES, icon: Users },
+  { label: 'AI Studio', href: ROUTES.TEACHER_CURRICULUM_AI_STUDIO, icon: Sparkles, badge: 'AI' },
+  { label: 'Lesson Plans', href: ROUTES.TEACHER_LESSON_PLANS, icon: BookOpen },
+  { label: 'Resources', href: ROUTES.TEACHER_CURRICULUM_CONTENT, icon: BookOpen },
+  { label: 'Textbooks', href: '/teacher/curriculum/textbooks', icon: BookMarked },
+  { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
+  { label: 'Test Papers', href: '/teacher/papers', icon: FileText },
+  { label: 'Practice Questions', href: ROUTES.TEACHER_CURRICULUM_QUESTIONS, icon: FileQuestion },
+  { label: 'Mark Papers', href: ROUTES.TEACHER_CURRICULUM_MARK_PAPERS, icon: Camera, badge: 'AI' },
+  { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
+  { label: 'CAPS Browser', href: ROUTES.TEACHER_CURRICULUM, icon: Library },
+  { label: 'Settings', href: '/teacher/settings', icon: Settings },
 ];
 
 export const MODULES = [
