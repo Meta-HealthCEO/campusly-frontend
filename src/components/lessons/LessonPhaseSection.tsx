@@ -1,11 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import {
-  DndContext,
-  closestCenter,
-  type DragEndEvent,
-} from '@dnd-kit/core';
+import { useDroppable } from '@dnd-kit/core';
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -23,6 +19,8 @@ const PHASE_LABELS: Record<LessonPhase, string> = {
   assessment: 'Assessment',
   homework: 'Homework',
 };
+
+export const PHASE_DROPPABLE_PREFIX = 'phase-drop-';
 
 interface Props {
   phase: LessonPhase;
@@ -42,7 +40,6 @@ interface Props {
 export function LessonPhaseSection({
   phase,
   lesson,
-  onMoveMaterial,
   onDeleteMaterial,
 }: Props) {
   const openDrawer = useLessonWorkspaceStore((s) => s.openDrawer);
@@ -56,12 +53,13 @@ export function LessonPhaseSection({
       .filter((m): m is LessonMaterial => !!m);
   }, [phaseEntry, lesson.materials]);
 
-  const handleDragEnd = async (e: DragEndEvent) => {
-    if (!e.over || e.over.id === e.active.id) return;
-    const newIdx = materials.findIndex((m) => m._id === e.over!.id);
-    if (newIdx < 0) return;
-    await onMoveMaterial(String(e.active.id), phase, newIdx);
-  };
+  // Make the phase container itself a droppable so cards can be dropped
+  // onto an empty phase. The id is namespaced so the orchestrator's
+  // handleDragEnd can distinguish phase drops from material drops.
+  const { setNodeRef, isOver } = useDroppable({
+    id: `${PHASE_DROPPABLE_PREFIX}${phase}`,
+    data: { phase },
+  });
 
   return (
     <section id={`phase-${phase}`} className="space-y-3">
@@ -71,28 +69,32 @@ export function LessonPhaseSection({
           {materials.length} item{materials.length !== 1 ? 's' : ''}
         </span>
       </header>
-      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext
-          items={materials.map((m) => m._id)}
-          strategy={verticalListSortingStrategy}
+      <SortableContext
+        items={materials.map((m) => m._id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div
+          ref={setNodeRef}
+          className={`space-y-2 rounded-md transition-colors ${
+            isOver ? 'bg-primary/5 ring-1 ring-primary/30' : ''
+          } ${materials.length === 0 ? 'min-h-16 border border-dashed p-3' : ''}`}
         >
-          <div className="space-y-2">
-            {materials.map((m) => (
-              <LessonMaterialCard
-                key={m._id}
-                material={m}
-                onDelete={onDeleteMaterial}
-                onOpenDrawer={(kind, mid) => openDrawer(phase, kind, mid)}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
-      {materials.length === 0 && (
-        <p className="text-xs text-muted-foreground italic">
-          No materials yet — add one to get started.
-        </p>
-      )}
+          {materials.map((m) => (
+            <LessonMaterialCard
+              key={m._id}
+              material={m}
+              phase={phase}
+              onDelete={onDeleteMaterial}
+              onOpenDrawer={(kind, mid) => openDrawer(phase, kind, mid)}
+            />
+          ))}
+          {materials.length === 0 && (
+            <p className="text-xs text-muted-foreground italic">
+              No materials yet — add one or drag here.
+            </p>
+          )}
+        </div>
+      </SortableContext>
       <Button variant="outline" size="sm" onClick={() => openDrawer(phase)}>
         <Plus className="h-4 w-4 mr-1" /> Add material
       </Button>

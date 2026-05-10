@@ -5,10 +5,11 @@ import { CSS } from '@dnd-kit/utilities';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { GripVertical } from 'lucide-react';
-import type { LessonMaterial, LessonMaterialKind } from '@/types/lesson';
+import type { LessonMaterial, LessonMaterialKind, LessonPhase } from '@/types/lesson';
 
 interface Props {
   material: LessonMaterial;
+  phase: LessonPhase;
   onDelete: (mid: string) => Promise<void>;
   onOpenDrawer: (kind: LessonMaterialKind, materialId: string) => void;
 }
@@ -25,8 +26,8 @@ const KIND_LABELS: Record<LessonMaterialKind, string> = {
   paper: 'Paper',
 };
 
-export function LessonMaterialCard({ material, onDelete, onOpenDrawer }: Props) {
-  const sortable = useSortable({ id: material._id });
+export function LessonMaterialCard({ material, phase, onDelete, onOpenDrawer }: Props) {
+  const sortable = useSortable({ id: material._id, data: { phase } });
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(sortable.transform),
     transition: sortable.transition,
