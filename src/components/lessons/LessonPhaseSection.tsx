@@ -40,6 +40,7 @@ interface Props {
 export function LessonPhaseSection({
   phase,
   lesson,
+  onUpdateMaterial,
   onDeleteMaterial,
 }: Props) {
   const openDrawer = useLessonWorkspaceStore((s) => s.openDrawer);
@@ -85,6 +86,7 @@ export function LessonPhaseSection({
               material={m}
               phase={phase}
               onDelete={onDeleteMaterial}
+              onUpdate={onUpdateMaterial}
               onOpenDrawer={(kind, mid) => openDrawer(phase, kind, mid)}
             />
           ))}

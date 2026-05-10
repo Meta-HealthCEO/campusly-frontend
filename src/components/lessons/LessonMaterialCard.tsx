@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { GripVertical } from 'lucide-react';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import type { LessonMaterial, LessonMaterialKind, LessonPhase } from '@/types/lesson';
@@ -13,6 +14,10 @@ interface Props {
   material: LessonMaterial;
   phase: LessonPhase;
   onDelete: (mid: string) => Promise<void>;
+  onUpdate: (
+    mid: string,
+    patch: { title?: string; teacherNotes?: string },
+  ) => Promise<unknown>;
   onOpenDrawer: (kind: LessonMaterialKind, materialId: string) => void;
 }
 
@@ -28,14 +33,62 @@ const KIND_LABELS: Record<LessonMaterialKind, string> = {
   paper: 'Paper',
 };
 
-export function LessonMaterialCard({ material, phase, onDelete, onOpenDrawer }: Props) {
+export function LessonMaterialCard({
+  material,
+  phase,
+  onDelete,
+  onUpdate,
+  onOpenDrawer,
+}: Props) {
   const sortable = useSortable({ id: material._id, data: { phase } });
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draftTitle, setDraftTitle] = useState(material.title);
+  const inputRef = useRef<HTMLInputElement>(null);
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(sortable.transform),
     transition: sortable.transition,
   };
   const isPlaceholder = !material.generatedAt;
+
+  // Re-sync the draft when the material's title changes from outside
+  // (e.g. another user edited it, or the lesson refetched after a save).
+  useEffect(() => {
+    if (!editing) setDraftTitle(material.title);
+  }, [material.title, editing]);
+
+  // Focus the input when entering edit mode.
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editing]);
+
+  const startEdit = () => {
+    setDraftTitle(material.title);
+    setEditing(true);
+  };
+
+  const commitEdit = async () => {
+    const next = draftTitle.trim();
+    setEditing(false);
+    if (!next || next === material.title) {
+      setDraftTitle(material.title);
+      return;
+    }
+    try {
+      await onUpdate(material._id, { title: next });
+    } catch {
+      // hook surfaces a toast; revert local draft so UI matches truth
+      setDraftTitle(material.title);
+    }
+  };
+
+  const cancelEdit = () => {
+    setDraftTitle(material.title);
+    setEditing(false);
+  };
 
   return (
     <Card
@@ -54,7 +107,34 @@ export function LessonMaterialCard({ material, phase, onDelete, onOpenDrawer }: 
       </button>
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-medium truncate">{material.title}</span>
+          {editing ? (
+            <Input
+              ref={inputRef}
+              value={draftTitle}
+              onChange={(e) => setDraftTitle(e.target.value)}
+              onBlur={() => void commitEdit()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  void commitEdit();
+                } else if (e.key === 'Escape') {
+                  e.preventDefault();
+                  cancelEdit();
+                }
+              }}
+              className="h-7 text-sm font-medium w-full sm:w-64"
+              aria-label="Material title"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={startEdit}
+              className="font-medium truncate text-left hover:underline focus:outline-none focus:underline"
+              title="Click to rename"
+            >
+              {material.title}
+            </button>
+          )}
           <Badge variant="outline" className="text-xs">
             {KIND_LABELS[material.kind]}
           </Badge>
