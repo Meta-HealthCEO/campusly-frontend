@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { GripVertical } from 'lucide-react';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import type { LessonMaterial, LessonMaterialKind, LessonPhase } from '@/types/lesson';
 
 interface Props {
@@ -28,6 +30,7 @@ const KIND_LABELS: Record<LessonMaterialKind, string> = {
 
 export function LessonMaterialCard({ material, phase, onDelete, onOpenDrawer }: Props) {
   const sortable = useSortable({ id: material._id, data: { phase } });
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(sortable.transform),
     transition: sortable.transition,
@@ -78,12 +81,21 @@ export function LessonMaterialCard({ material, phase, onDelete, onOpenDrawer }: 
         </button>
         <button
           type="button"
-          onClick={() => void onDelete(material._id)}
+          onClick={() => setConfirmOpen(true)}
           className="text-destructive hover:underline"
         >
           Delete
         </button>
       </div>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Delete this material?"
+        description="Underlying content (questions, homework, etc.) will be soft-deleted and removed from this lesson."
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={() => onDelete(material._id)}
+      />
     </Card>
   );
 }
