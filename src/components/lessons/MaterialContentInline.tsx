@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ExerciseQuestionsList } from '@/components/homework/ExerciseQuestionsList';
+import { BlockRenderer } from '@/components/content/renderers/BlockRenderer';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import type { LessonMaterial } from '@/types/lesson';
 import type { QuestionItem } from '@/types/question-bank';
+import type { ContentBlockItem, AttemptResult, BlockInteractionState } from '@/types';
 
 interface Props {
   material: LessonMaterial;
@@ -144,21 +145,53 @@ export function MaterialContentInline({ material, enabled }: Props) {
   );
 }
 
+// Read-only preview: BlockRenderer expects an `onAttempt` for interactive
+// blocks (quiz/fill_blank/match/ordering). For teacher preview we never
+// submit attempts — return a stable no-op so the renderer is happy.
+const NOOP_ATTEMPT_RESULT: AttemptResult = {
+  id: 'preview',
+  correct: false,
+  score: 0,
+  maxScore: 0,
+  attemptNumber: 0,
+};
+
+function defaultInteraction(blockId: string): BlockInteractionState {
+  return {
+    blockId,
+    answered: false,
+    correct: null,
+    score: 0,
+    maxScore: 0,
+    showExplanation: false,
+    hintsRevealed: 0,
+    attemptResult: null,
+  };
+}
+
+async function noopAttempt(): Promise<AttemptResult> {
+  return NOOP_ATTEMPT_RESULT;
+}
+
 function ContentBlocksList({ blocks }: { blocks: unknown[] }) {
   if (blocks.length === 0) {
     return <p className="text-xs text-muted-foreground">No content blocks.</p>;
   }
   return (
-    <div className="space-y-2">
-      {blocks.map((block, i) => {
-        const b = block as { type?: string; content?: unknown };
+    <div className="space-y-3">
+      {blocks.map((raw, i) => {
+        const block = raw as ContentBlockItem;
+        const blockId =
+          (typeof block.blockId === 'string' && block.blockId) || `preview-${i}`;
+        // BlockRenderer reads block.blockId; ensure it's set even if seed data lacks it
+        const safeBlock: ContentBlockItem = { ...block, blockId };
         return (
-          <div key={i} className="rounded border bg-muted/30 p-3 space-y-1">
-            <Badge variant="outline" className="text-xs">{b.type ?? 'block'}</Badge>
-            <pre className="text-xs whitespace-pre-wrap break-words font-sans">
-              {typeof b.content === 'string' ? b.content : JSON.stringify(b.content, null, 2)}
-            </pre>
-          </div>
+          <BlockRenderer
+            key={blockId}
+            block={safeBlock}
+            onAttempt={noopAttempt}
+            interaction={defaultInteraction(blockId)}
+          />
         );
       })}
     </div>
