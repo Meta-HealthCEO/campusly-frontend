@@ -1652,8 +1652,8 @@ export default function AiStudioPage() {
                   </Button>
                 )}
                 {result.kind === 'lesson_plan' && (
-                  <Button onClick={() => router.push('/teacher/lesson-plans')}>
-                    Open Lesson Plans
+                  <Button onClick={() => router.push('/teacher/lessons')}>
+                    Open Lessons
                   </Button>
                 )}
                 {result.kind === 'questions' && (

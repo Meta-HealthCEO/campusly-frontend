@@ -469,7 +469,6 @@ export const TEACHER_NAV: NavItem[] = [
   },
   { label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
   { label: 'Attendance', href: ROUTES.TEACHER_ATTENDANCE, icon: ClipboardList },
-  { label: 'Lesson Plans', href: ROUTES.TEACHER_LESSON_PLANS, icon: BookOpen },
   { label: 'Test Papers', href: '/teacher/papers', icon: FileText },
   { label: 'Mark Papers', href: ROUTES.TEACHER_CURRICULUM_MARK_PAPERS, icon: Camera, badge: 'AI' },
   { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
@@ -532,8 +531,8 @@ export const TEACHER_NAV: NavItem[] = [
 export const STANDALONE_TEACHER_NAV: NavItem[] = [
   { label: 'Home', href: ROUTES.TEACHER_DASHBOARD, icon: Home },
   { label: 'Teaching Groups', href: ROUTES.TEACHER_CLASSES, icon: Users },
-  { label: 'AI Studio', href: ROUTES.TEACHER_CURRICULUM_AI_STUDIO, icon: Sparkles, badge: 'AI' },
-  { label: 'Lesson Plans', href: ROUTES.TEACHER_LESSON_PLANS, icon: BookOpen },
+  { label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen },
+  { label: 'Quick Make', href: ROUTES.TEACHER_QUICK_MAKE, icon: Sparkles, badge: 'AI' },
   { label: 'Resources', href: ROUTES.TEACHER_CURRICULUM_CONTENT, icon: BookOpen },
   { label: 'Textbooks', href: '/teacher/curriculum/textbooks', icon: BookMarked },
   { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },

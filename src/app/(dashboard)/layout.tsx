@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSchoolStore } from '@/stores/useSchoolStore';
 import { useSchoolData } from '@/hooks/useSchoolData';
@@ -12,6 +13,7 @@ import {
   PARENT_NAV,
   STUDENT_NAV,
   TEACHER_NAV,
+  STANDALONE_TEACHER_NAV,
   SUPERADMIN_NAV,
   COACH_NAV,
   type NavItem,
@@ -51,6 +53,32 @@ function filterByPermission(
   });
 }
 
+function isStandaloneTeacherPathAllowed(pathname: string): boolean {
+  if (pathname === '/teacher' || pathname === '/teacher/curriculum') return true;
+
+  const allowedPrefixes = [
+    '/teacher/onboarding',
+    '/teacher/ai-assistant',
+    '/teacher/classes',
+    '/teacher/students',
+    '/teacher/curriculum/ai-studio',
+    '/teacher/curriculum/textbooks',
+    '/teacher/curriculum/content',
+    '/teacher/curriculum/questions',
+    '/teacher/curriculum/preview',
+    '/teacher/curriculum/mark-papers',
+    '/teacher/lesson-plans',
+    '/teacher/lessons',
+    '/teacher/quick-make',
+    '/teacher/papers',
+    '/teacher/grades',
+    '/teacher/homework',
+    '/teacher/settings',
+  ];
+
+  return allowedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -60,6 +88,8 @@ export default function DashboardLayout({
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const school = useSchoolStore((s) => s.school);
   const { fetchSchool } = useSchoolData();
+  const pathname = usePathname();
+  const router = useRouter();
 
   // Poll for unread notification count
   useNotificationPoller();
@@ -71,13 +101,24 @@ export default function DashboardLayout({
     }
   }, [user?.schoolId, school, fetchSchool]);
 
+  useEffect(() => {
+    if (!user?.isStandaloneTeacher) return;
+    if (isStandaloneTeacherPathAllowed(pathname)) return;
+    router.replace('/teacher');
+  }, [pathname, router, user?.isStandaloneTeacher]);
+
   const navItems = useMemo(() => {
     if (!user) return ADMIN_NAV;
+    if (user.isStandaloneTeacher) return STANDALONE_TEACHER_NAV;
     const roleBaseline = NAV_BY_ROLE[user.role] ?? ADMIN_NAV;
     const composed = composeNav(user, roleBaseline);
     const moduleFiltered = school ? filterByModule(composed, school.modulesEnabled) : composed;
     return filterByPermission(moduleFiltered, hasPermission);
   }, [user, school, hasPermission]);
+
+  if (user?.isStandaloneTeacher && !isStandaloneTeacherPathAllowed(pathname)) {
+    return null;
+  }
 
   return (
     <AuthGuard>
