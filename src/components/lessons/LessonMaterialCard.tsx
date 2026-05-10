@@ -6,9 +6,9 @@ import { CSS } from '@dnd-kit/utilities';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { GripVertical } from 'lucide-react';
+import { ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
-import { MaterialPreviewDialog } from './MaterialPreviewDialog';
+import { MaterialContentInline } from './MaterialContentInline';
 import type { LessonMaterial, LessonMaterialKind, LessonPhase } from '@/types/lesson';
 
 interface Props {
@@ -54,7 +54,7 @@ export function LessonMaterialCard({
 }: Props) {
   const sortable = useSortable({ id: material._id, data: { phase } });
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(material.title);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -107,8 +107,9 @@ export function LessonMaterialCard({
     <Card
       ref={sortable.setNodeRef}
       style={style}
-      className="p-3 flex gap-2 items-start"
+      className="p-3"
     >
+      <div className="flex gap-2 items-start">
       <button
         type="button"
         {...sortable.attributes}
@@ -169,14 +170,16 @@ export function LessonMaterialCard({
           </p>
         )}
       </div>
-      <div className="flex gap-2 text-xs shrink-0">
+      <div className="flex gap-2 text-xs shrink-0 items-center">
         {!isPlaceholder && (
           <button
             type="button"
-            onClick={() => setPreviewOpen(true)}
-            className="text-primary hover:underline font-medium"
+            onClick={() => setExpanded((v) => !v)}
+            className="text-primary hover:underline font-medium flex items-center gap-1"
+            aria-expanded={expanded}
           >
-            View
+            {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+            {expanded ? 'Hide' : 'View'}
           </button>
         )}
         <button
@@ -194,6 +197,10 @@ export function LessonMaterialCard({
           Delete
         </button>
       </div>
+      </div>
+      {!isPlaceholder && (
+        <MaterialContentInline material={material} enabled={expanded} />
+      )}
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
@@ -202,11 +209,6 @@ export function LessonMaterialCard({
         confirmLabel="Delete"
         variant="destructive"
         onConfirm={() => onDelete(material._id)}
-      />
-      <MaterialPreviewDialog
-        open={previewOpen}
-        onClose={() => setPreviewOpen(false)}
-        material={material}
       />
     </Card>
   );
