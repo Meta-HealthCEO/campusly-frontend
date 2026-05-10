@@ -236,8 +236,6 @@ export function LessonMaterialCard({
           return href ? (
             <a
               href={href}
-              target="_blank"
-              rel="noopener noreferrer"
               className="text-primary hover:underline font-medium"
             >
               View
