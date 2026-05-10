@@ -33,6 +33,16 @@ const KIND_LABELS: Record<LessonMaterialKind, string> = {
   paper: 'Paper',
 };
 
+// Hints surfaced under placeholders that the bulk "Generate all" flow
+// cannot safely auto-process — these need teacher-supplied references
+// (textbook / existing quiz / assigned class). Generated manually.
+const MANUAL_PLACEHOLDER_HINTS: Partial<Record<LessonMaterialKind, string>> = {
+  reading: 'Requires a textbook — generate manually.',
+  quiz: 'Requires an existing quiz — generate manually.',
+  homework: 'Requires an assigned class — generate manually.',
+  paper: 'Requires sections and totals — generate manually.',
+};
+
 export function LessonMaterialCard({
   material,
   phase,
@@ -148,6 +158,11 @@ export function LessonMaterialCard({
         {material.teacherNotes && (
           <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
             {material.teacherNotes}
+          </p>
+        )}
+        {isPlaceholder && MANUAL_PLACEHOLDER_HINTS[material.kind] && (
+          <p className="text-xs text-muted-foreground mt-1 italic">
+            {MANUAL_PLACEHOLDER_HINTS[material.kind]}
           </p>
         )}
       </div>

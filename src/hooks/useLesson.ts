@@ -111,6 +111,24 @@ export function useLesson(id: string) {
     }
   }, [id, fetchOne]);
 
+  const generateAllPlaceholders = useCallback(async () => {
+    try {
+      const res = await apiClient.post(
+        `/lessons/${id}/materials/generate-all`,
+      );
+      await fetchOne();
+      return unwrapResponse<{
+        total: number;
+        succeeded: number;
+        failed: Array<{ materialId: string; title: string; error: string }>;
+      }>(res);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to generate materials';
+      toast.error(msg);
+      throw err;
+    }
+  }, [id, fetchOne]);
+
   // ── Assignment mutations ─────────────────────────────────────────────────
   // The pack itself is curriculum-scoped; classes are attached as a separate
   // schedule. Each mutation refetches so the workspace UI stays in sync with
@@ -170,6 +188,7 @@ export function useLesson(id: string) {
     moveMaterial,
     deleteMaterial,
     regenerateMaterial,
+    generateAllPlaceholders,
     assignClass,
     unassignClass,
     updateAssignment,

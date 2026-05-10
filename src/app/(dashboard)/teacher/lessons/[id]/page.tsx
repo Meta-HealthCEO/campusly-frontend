@@ -9,6 +9,7 @@ import {
 import { useLesson } from '@/hooks/useLesson';
 import { useLessonExport } from '@/hooks/useLessonExport';
 import { LessonOutline } from '@/components/lessons/LessonOutline';
+import { LessonGenerateAllBanner } from '@/components/lessons/LessonGenerateAllBanner';
 import {
   LessonPhaseSection,
   PHASE_DROPPABLE_PREFIX,
@@ -116,6 +117,10 @@ export default function LessonWorkspacePage() {
         </aside>
 
         <main className="space-y-6">
+          <LessonGenerateAllBanner
+            materials={lesson.materials}
+            generateAllPlaceholders={lessonHook.generateAllPlaceholders}
+          />
           {LESSON_PHASES.map((phase) => (
             <LessonPhaseSection
               key={phase}
