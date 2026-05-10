@@ -43,6 +43,41 @@ const MANUAL_PLACEHOLDER_HINTS: Partial<Record<LessonMaterialKind, string>> = {
   paper: 'Requires sections and totals — generate manually.',
 };
 
+/**
+ * Resolve a "View" URL for a generated material so the teacher can actually
+ * read what the AI produced. Each kind lives in its own module page.
+ * Returns null when the material is a placeholder, or when the kind doesn't
+ * have a viewable surface yet.
+ */
+function viewUrlFor(material: LessonMaterial): string | null {
+  if (!material.generatedAt) return null;
+  switch (material.kind) {
+    case 'worksheet':
+    case 'activity':
+    case 'notes':
+    case 'worked_example':
+      return material.contentResourceId
+        ? `/teacher/curriculum/preview/${material.contentResourceId}`
+        : null;
+    case 'practice_questions':
+      return material.questionIds && material.questionIds.length > 0
+        ? `/teacher/curriculum/questions?ids=${material.questionIds.join(',')}`
+        : null;
+    case 'homework':
+      return material.homeworkId ? `/teacher/homework/${material.homeworkId}` : null;
+    case 'paper':
+      return material.paperId ? `/teacher/papers/${material.paperId}` : null;
+    case 'quiz':
+      return material.quizId ? `/teacher/learning/quizzes/${material.quizId}` : null;
+    case 'reading':
+      // No standalone reading viewer — the textbookRef + comprehension Q list
+      // is best surfaced inline. Skip for v1; teacher still has Edit drawer.
+      return null;
+    default:
+      return null;
+  }
+}
+
 export function LessonMaterialCard({
   material,
   phase,
@@ -167,6 +202,19 @@ export function LessonMaterialCard({
         )}
       </div>
       <div className="flex gap-2 text-xs shrink-0">
+        {(() => {
+          const href = viewUrlFor(material);
+          return href ? (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline font-medium"
+            >
+              View
+            </a>
+          ) : null;
+        })()}
         <button
           type="button"
           onClick={() => onOpenDrawer(material.kind, material._id)}
