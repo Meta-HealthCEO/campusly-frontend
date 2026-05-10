@@ -10,8 +10,9 @@ import type { CurriculumNodeItem, CurriculumNodeType } from '@/types';
 
 export interface CurriculumTreeBrowserProps {
   frameworkId: string;
-  onSelect: (node: CurriculumNodeItem) => void;
+  onSelect: (node: CurriculumNodeItem, ancestors?: CurriculumNodeItem[]) => void;
   selectedNodeId?: string | null;
+  selectedNodeIds?: string[];
 }
 
 interface TreeNodeRowProps {
@@ -21,6 +22,7 @@ interface TreeNodeRowProps {
   onToggle: (nodeId: string) => Promise<void>;
   onSelect: (node: CurriculumNodeItem) => void;
   selectedNodeId?: string | null;
+  selectedNodeIds?: string[];
   getChildren: (parentId: string | null) => CurriculumNodeItem[] | undefined;
   isLoading: (parentId: string | null) => boolean;
 }
@@ -48,14 +50,16 @@ function TreeNodeRow({
   onToggle,
   onSelect,
   selectedNodeId,
+  selectedNodeIds,
   getChildren,
   isLoading,
 }: TreeNodeRowProps) {
   const isExpanded = expanded.has(node.id);
-  const isSelected = selectedNodeId === node.id;
-  const leaf = LEAF_TYPES.includes(node.type);
+  const isSelected = selectedNodeId === node.id || Boolean(selectedNodeIds?.includes(node.id));
   const children = getChildren(node.id);
   const childrenLoading = isLoading(node.id);
+  const isKnownEmptyTopic = node.type === 'topic' && children && children.length === 0;
+  const leaf = LEAF_TYPES.includes(node.type) || isKnownEmptyTopic;
 
   const handleRowClick = () => {
     if (leaf) {
@@ -74,7 +78,7 @@ function TreeNodeRow({
           'flex items-center gap-2 rounded-md py-2 pr-3 cursor-pointer transition-colors group',
           'hover:bg-muted',
           isSelected
-            ? 'bg-primary/10 border-l-2 border-primary'
+            ? 'bg-primary/10 border-l-2 border-primary ring-1 ring-primary/20'
             : 'border-l-2 border-transparent',
         ].join(' ')}
         style={{ paddingLeft: `${depth * 20 + 12}px` }}
@@ -111,7 +115,9 @@ function TreeNodeRow({
         </span>
 
         {/* Title */}
-        <span className="flex-1 truncate text-sm">{node.title}</span>
+        <span className={['flex-1 truncate text-sm', isSelected ? 'font-semibold' : ''].join(' ')}>
+          {node.title}
+        </span>
 
         {/* Code */}
         {node.code && (
@@ -120,19 +126,24 @@ function TreeNodeRow({
           </span>
         )}
 
-        {/* Select button (non-leaf, shown on hover) */}
-        {!leaf && (
+        {/* Select button for nodes that can be used directly for generation. */}
+        {(node.type === 'topic' || !leaf) && (
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 shrink-0 px-2 py-0 text-[10px] opacity-0 group-hover:opacity-100 focus:opacity-100"
+            className={[
+              'h-6 shrink-0 px-2 py-0 text-[10px]',
+              node.type === 'topic'
+                ? 'opacity-100'
+                : 'opacity-0 group-hover:opacity-100 focus:opacity-100',
+            ].join(' ')}
             tabIndex={-1}
             onClick={(e) => {
               e.stopPropagation();
               onSelect(node);
             }}
           >
-            Select
+            {isSelected ? 'Selected' : 'Select'}
           </Button>
         )}
       </div>
@@ -149,6 +160,7 @@ function TreeNodeRow({
               onToggle={onToggle}
               onSelect={onSelect}
               selectedNodeId={selectedNodeId}
+              selectedNodeIds={selectedNodeIds}
               getChildren={getChildren}
               isLoading={isLoading}
             />
@@ -157,7 +169,16 @@ function TreeNodeRow({
       )}
 
       {/* Empty state for expanded node */}
-      {isExpanded && children && children.length === 0 && !childrenLoading && (
+      {isExpanded && isKnownEmptyTopic && !childrenLoading && (
+        <div
+          className="py-1 text-[11px] text-muted-foreground"
+          style={{ paddingLeft: `${(depth + 1) * 20 + 12}px` }}
+        >
+          No smaller CAPS subtopics. Select this topic to generate from its description.
+        </div>
+      )}
+
+      {isExpanded && children && children.length === 0 && !childrenLoading && !isKnownEmptyTopic && (
         <p
           className="py-1 text-[11px] text-muted-foreground"
           style={{ paddingLeft: `${(depth + 1) * 20 + 12}px` }}
@@ -175,9 +196,20 @@ export function CurriculumTreeBrowser({
   frameworkId,
   onSelect,
   selectedNodeId,
+  selectedNodeIds,
 }: CurriculumTreeBrowserProps) {
-  const { getChildren, fetchChildren, isLoading } = useCurriculumTree(frameworkId);
+  const { getChildren, fetchChildren, isLoading, resolveAncestors } = useCurriculumTree(frameworkId);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const handleSelect = useCallback(
+    async (node: CurriculumNodeItem) => {
+      // Emit immediately for snappy UI; ancestors arrive asynchronously.
+      onSelect(node);
+      const ancestors = await resolveAncestors(node);
+      if (ancestors.length > 0) onSelect(node, ancestors);
+    },
+    [onSelect, resolveAncestors],
+  );
 
   // Load root nodes on mount / frameworkId change
   useEffect(() => {
@@ -238,8 +270,9 @@ export function CurriculumTreeBrowser({
             depth={0}
             expanded={expanded}
             onToggle={handleToggle}
-            onSelect={onSelect}
+            onSelect={handleSelect}
             selectedNodeId={selectedNodeId}
+            selectedNodeIds={selectedNodeIds}
             getChildren={getChildren}
             isLoading={isLoading}
           />

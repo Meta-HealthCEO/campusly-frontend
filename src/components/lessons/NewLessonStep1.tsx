@@ -52,6 +52,12 @@ export function NewLessonStep1({
   const canProceed =
     !!form.curriculumNodeId && !!form.classId && !!form.subjectId && !!form.gradeId;
 
+  const subjectName = subjects.find((s) => s._id === form.subjectId)?.name;
+  const gradeName = grades.find((g) => g.id === form.gradeId)?.name;
+  const autoDerived = !!subjectName && !!gradeName;
+  const topicPicked = !!form.curriculumNodeId;
+  const needsManualGradeSubject = topicPicked && !autoDerived;
+
   return (
     <div className="space-y-4">
       {frameworks.length > 1 && (
@@ -86,7 +92,20 @@ export function NewLessonStep1({
             <p className="p-4 text-sm text-muted-foreground">Loading frameworks...</p>
           )}
         </div>
+        {autoDerived && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Detected from topic: <span className="font-medium text-foreground">{gradeName}</span>
+            {' · '}
+            <span className="font-medium text-foreground">{subjectName}</span>
+          </p>
+        )}
       </div>
+
+      {needsManualGradeSubject && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
+          Could not auto-detect Subject or Grade from the chosen topic. Pick them manually below.
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
@@ -100,28 +119,32 @@ export function NewLessonStep1({
             </SelectContent>
           </Select>
         </div>
-        <div>
-          <Label>Subject <span className="text-destructive">*</span></Label>
-          <Select value={form.subjectId} onValueChange={(v: unknown) => update({ subjectId: v as string })}>
-            <SelectTrigger className="w-full"><SelectValue placeholder="Pick a subject" /></SelectTrigger>
-            <SelectContent>
-              {subjects.map((s) => (
-                <SelectItem key={s._id} value={s._id}>{s.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>Grade <span className="text-destructive">*</span></Label>
-          <Select value={form.gradeId} onValueChange={(v: unknown) => update({ gradeId: v as string })}>
-            <SelectTrigger className="w-full"><SelectValue placeholder="Pick a grade" /></SelectTrigger>
-            <SelectContent>
-              {grades.map((g) => (
-                <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {needsManualGradeSubject && (
+          <>
+            <div>
+              <Label>Subject <span className="text-destructive">*</span></Label>
+              <Select value={form.subjectId} onValueChange={(v: unknown) => update({ subjectId: v as string })}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Pick a subject" /></SelectTrigger>
+                <SelectContent>
+                  {subjects.map((s) => (
+                    <SelectItem key={s._id} value={s._id}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Grade <span className="text-destructive">*</span></Label>
+              <Select value={form.gradeId} onValueChange={(v: unknown) => update({ gradeId: v as string })}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Pick a grade" /></SelectTrigger>
+                <SelectContent>
+                  {grades.map((g) => (
+                    <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        )}
         <div>
           <Label>Date</Label>
           <Input

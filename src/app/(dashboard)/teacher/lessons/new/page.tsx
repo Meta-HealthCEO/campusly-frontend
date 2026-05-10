@@ -58,12 +58,28 @@ export default function NewLessonPage() {
 
   const update = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }));
 
-  const onTopicSelect = (node: CurriculumNodeItem) => {
-    setForm((f) => ({
-      ...f,
-      curriculumNodeId: node.id,
-      title: f.title || node.title,
-    }));
+  const onTopicSelect = (node: CurriculumNodeItem, ancestors?: CurriculumNodeItem[]) => {
+    setForm((f) => {
+      const next: FormState = {
+        ...f,
+        curriculumNodeId: node.id,
+        title: f.title || node.title,
+      };
+      if (ancestors && ancestors.length > 0) {
+        const norm = (s: string) => s.trim().toLowerCase();
+        const subjectNode = ancestors.find((a) => a.type === 'subject');
+        const gradeNode = ancestors.find((a) => a.type === 'grade');
+        if (subjectNode) {
+          const match = subjects.find((s) => norm(s.name) === norm(subjectNode.title));
+          if (match) next.subjectId = match._id;
+        }
+        if (gradeNode) {
+          const match = grades.find((g) => norm(g.name) === norm(gradeNode.title));
+          if (match) next.gradeId = match.id;
+        }
+      }
+      return next;
+    });
   };
 
   const onScaffold = async () => {
