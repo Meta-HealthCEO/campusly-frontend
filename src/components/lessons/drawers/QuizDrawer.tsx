@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,19 +18,29 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { useLessonWorkspaceStore } from '@/stores/useLessonWorkspaceStore';
 import { useQuizzesPicker } from '@/hooks/useLessonResourcePickers';
+import type { QuizMaterial } from '@/types/lesson';
 
 interface Props {
   onSubmit: (payload: Record<string, unknown>) => Promise<void>;
+  existing?: QuizMaterial;
 }
 
-export function QuizDrawer({ onSubmit }: Props) {
+export function QuizDrawer({ onSubmit, existing }: Props) {
   const closeDrawer = useLessonWorkspaceStore((s) => s.closeDrawer);
   const { items, loading } = useQuizzesPicker();
 
-  const [quizId, setQuizId] = useState<string>('');
-  const [title, setTitle] = useState<string>('');
-  const [teacherNotes, setTeacherNotes] = useState<string>('');
+  const [quizId, setQuizId] = useState<string>(existing?.quizId ?? '');
+  const [title, setTitle] = useState<string>(existing?.title ?? '');
+  const [teacherNotes, setTeacherNotes] = useState<string>(existing?.teacherNotes ?? '');
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!existing) return;
+    setQuizId(existing.quizId);
+    setTitle(existing.title);
+    setTeacherNotes(existing.teacherNotes ?? '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existing?._id]);
 
   const selected = useMemo(
     () => items.find((q) => q.id === quizId) ?? null,
@@ -77,6 +87,8 @@ export function QuizDrawer({ onSubmit }: Props) {
       />
     );
   }
+
+  const actionLabel = existing ? 'Update quiz' : 'Add quiz';
 
   return (
     <div className="flex flex-col gap-4">
@@ -137,7 +149,7 @@ export function QuizDrawer({ onSubmit }: Props) {
           Cancel
         </Button>
         <Button type="button" onClick={handleSubmit} disabled={!canSubmit}>
-          {submitting ? 'Saving\u2026' : 'Add quiz'}
+          {submitting ? 'Saving\u2026' : actionLabel}
         </Button>
       </div>
     </div>

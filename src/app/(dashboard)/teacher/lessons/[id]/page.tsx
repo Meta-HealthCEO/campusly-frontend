@@ -130,6 +130,7 @@ export default function LessonWorkspacePage() {
 
         <MaterialDrawer
           lessonId={lessonId}
+          materials={lesson.materials}
           addMaterial={lessonHook.addMaterial}
           regenerateMaterial={lessonHook.regenerateMaterial}
         />

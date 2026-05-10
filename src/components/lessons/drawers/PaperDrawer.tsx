@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,12 +20,14 @@ import {
   type SectionInput,
   type SectionQuestionType,
 } from './PaperSectionsEditor';
+import type { PaperMaterial } from '@/types/lesson';
 
 type Mode = 'link' | 'create';
 type PaperType = 'test' | 'exam' | 'assessment';
 
 interface Props {
   onSubmit: (payload: Record<string, unknown>) => Promise<void>;
+  existing?: PaperMaterial;
 }
 
 const PAPER_TYPE_OPTIONS: { value: PaperType; label: string }[] = [
@@ -39,17 +41,19 @@ const DEFAULT_SECTIONS: SectionInput[] = [
   { title: 'Section B', questionCount: 3, questionType: 'short_answer' },
 ];
 
-export function PaperDrawer({ onSubmit }: Props) {
+export function PaperDrawer({ onSubmit, existing }: Props) {
   const closeDrawer = useLessonWorkspaceStore((s) => s.closeDrawer);
   const { items, loading: itemsLoading } = usePapersPicker();
 
+  // When editing an existing paper material, default to "link" mode and
+  // pre-select the linked paper id.
   const [mode, setMode] = useState<Mode>('link');
-  const [title, setTitle] = useState('');
-  const [teacherNotes, setTeacherNotes] = useState('');
+  const [title, setTitle] = useState(existing?.title ?? '');
+  const [teacherNotes, setTeacherNotes] = useState(existing?.teacherNotes ?? '');
   const [submitting, setSubmitting] = useState(false);
 
   // Link-mode
-  const [existingPaperId, setExistingPaperId] = useState('');
+  const [existingPaperId, setExistingPaperId] = useState(existing?.paperId ?? '');
 
   // Create-mode
   const [paperType, setPaperType] = useState<PaperType>('test');
@@ -57,6 +61,15 @@ export function PaperDrawer({ onSubmit }: Props) {
   const [durationMinutes, setDurationMinutes] = useState<number>(60);
   const [topicHint, setTopicHint] = useState('');
   const [sections, setSections] = useState<SectionInput[]>(DEFAULT_SECTIONS);
+
+  useEffect(() => {
+    if (!existing) return;
+    setMode('link');
+    setTitle(existing.title);
+    setTeacherNotes(existing.teacherNotes ?? '');
+    setExistingPaperId(existing.paperId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existing?._id]);
 
   const linkSelected = useMemo(
     () => items.find((p) => p.id === existingPaperId) ?? null,
@@ -151,7 +164,7 @@ export function PaperDrawer({ onSubmit }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <Tabs
-        defaultValue="link"
+        value={mode}
         onValueChange={(v: unknown) => setMode((v as Mode) ?? 'link')}
       >
         <TabsList className="w-full">
@@ -306,7 +319,13 @@ export function PaperDrawer({ onSubmit }: Props) {
           Cancel
         </Button>
         <Button type="button" onClick={handleSubmit} disabled={!canSubmit}>
-          {submitting ? 'Saving\u2026' : mode === 'link' ? 'Link paper' : 'Create paper'}
+          {submitting
+            ? 'Saving\u2026'
+            : existing
+              ? 'Update paper'
+              : mode === 'link'
+                ? 'Link paper'
+                : 'Create paper'}
         </Button>
       </div>
     </div>

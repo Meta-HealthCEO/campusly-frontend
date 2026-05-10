@@ -1,15 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import type { LessonMaterialKind } from '@/types/lesson';
+import type {
+  ActivityMaterial,
+  LessonMaterialKind,
+  NotesMaterial,
+  WorkedExampleMaterial,
+  WorksheetMaterial,
+} from '@/types/lesson';
 
 type ContentResourceType = 'worksheet' | 'activity' | 'study_notes' | 'worked_example';
 type Difficulty = 'easy' | 'medium' | 'hard';
 type Term = 1 | 2 | 3 | 4;
+
+export type ContentBackedExisting =
+  | WorksheetMaterial
+  | ActivityMaterial
+  | NotesMaterial
+  | WorkedExampleMaterial;
 
 // Backend GenerateContentInput requires `difficulty` as a Number 1-5.
 const DIFFICULTY_NUMERIC: Record<Difficulty, number> = {
@@ -27,15 +39,27 @@ interface Props {
   kind: LessonMaterialKind;
   contentType: ContentResourceType;
   onSubmit: (payload: Record<string, unknown>) => Promise<void>;
+  existing?: ContentBackedExisting;
 }
 
-export function ContentBackedDrawerBase({ kind, contentType, onSubmit }: Props) {
-  const [title, setTitle] = useState('');
-  const [teacherNotes, setNotes] = useState('');
-  const [prompt, setPrompt] = useState('');
+export function ContentBackedDrawerBase({ kind, contentType, onSubmit, existing }: Props) {
+  const [title, setTitle] = useState(existing?.title ?? '');
+  const [teacherNotes, setNotes] = useState(existing?.teacherNotes ?? '');
+  const [prompt, setPrompt] = useState(existing?.teacherNotes ?? '');
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [term, setTerm] = useState<Term>(1);
   const [busy, setBusy] = useState(false);
+
+  // Re-seed when the drawer reopens with a different material.
+  useEffect(() => {
+    if (!existing) return;
+    setTitle(existing.title);
+    setNotes(existing.teacherNotes ?? '');
+    setPrompt(existing.teacherNotes ?? '');
+    // Intentionally only depends on existing._id — reseeding mid-edit on
+    // every keystroke would clobber the teacher's in-progress changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existing?._id]);
 
   const submit = async () => {
     setBusy(true);
@@ -59,6 +83,9 @@ export function ContentBackedDrawerBase({ kind, contentType, onSubmit }: Props) 
       setBusy(false);
     }
   };
+
+  const actionLabel = existing ? 'Regenerate' : 'Generate';
+  const busyLabel = existing ? 'Regenerating...' : 'Generating...';
 
   return (
     <div className="space-y-3">
@@ -122,7 +149,7 @@ export function ContentBackedDrawerBase({ kind, contentType, onSubmit }: Props) 
       </div>
       <div className="flex justify-end pt-2">
         <Button disabled={busy || !prompt.trim()} onClick={submit}>
-          {busy ? 'Generating...' : 'Generate'}
+          {busy ? busyLabel : actionLabel}
         </Button>
       </div>
     </div>

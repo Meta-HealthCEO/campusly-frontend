@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,27 +20,31 @@ import {
   useContentResourcesPicker,
 } from '@/hooks/useLessonResourcePickers';
 import { HomeworkCreateModePanel, type CreateType } from './HomeworkCreateModePanel';
+import type { HomeworkMaterial } from '@/types/lesson';
 
 type Mode = 'link' | 'create';
 
 interface Props {
   onSubmit: (payload: Record<string, unknown>) => Promise<void>;
+  existing?: HomeworkMaterial;
 }
 
 const MONGO_ID_RE = /^[a-fA-F0-9]{24}$/;
 
-export function HomeworkDrawer({ onSubmit }: Props) {
+export function HomeworkDrawer({ onSubmit, existing }: Props) {
   const closeDrawer = useLessonWorkspaceStore((s) => s.closeDrawer);
   const { items, loading: itemsLoading } = useHomeworkPicker();
   const { items: quizItems, loading: quizzesLoading } = useQuizzesPicker();
   const { items: contentItems, loading: contentLoading } = useContentResourcesPicker();
 
+  // When editing an existing homework material, default to "link" mode and
+  // pre-select the linked homework id.
   const [mode, setMode] = useState<Mode>('link');
-  const [title, setTitle] = useState('');
-  const [teacherNotes, setTeacherNotes] = useState('');
+  const [title, setTitle] = useState(existing?.title ?? '');
+  const [teacherNotes, setTeacherNotes] = useState(existing?.teacherNotes ?? '');
   const [submitting, setSubmitting] = useState(false);
 
-  const [existingHomeworkId, setExistingHomeworkId] = useState('');
+  const [existingHomeworkId, setExistingHomeworkId] = useState(existing?.homeworkId ?? '');
 
   const [createType, setCreateType] = useState<CreateType>('quiz');
   const [dueDate, setDueDate] = useState('');
@@ -48,6 +52,15 @@ export function HomeworkDrawer({ onSubmit }: Props) {
   const [quizId, setQuizId] = useState('');
   const [contentResourceId, setContentResourceId] = useState('');
   const [exerciseQuestionIdsRaw, setExerciseQuestionIdsRaw] = useState('');
+
+  useEffect(() => {
+    if (!existing) return;
+    setMode('link');
+    setTitle(existing.title);
+    setTeacherNotes(existing.teacherNotes ?? '');
+    setExistingHomeworkId(existing.homeworkId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existing?._id]);
 
   const linkSelected = useMemo(
     () => items.find((h) => h.id === existingHomeworkId) ?? null,
@@ -133,7 +146,7 @@ export function HomeworkDrawer({ onSubmit }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <Tabs defaultValue="link" onValueChange={(v: unknown) => setMode((v as Mode) ?? 'link')}>
+      <Tabs value={mode} onValueChange={(v: unknown) => setMode((v as Mode) ?? 'link')}>
         <TabsList className="w-full">
           <TabsTrigger value="link">Link existing</TabsTrigger>
           <TabsTrigger value="create">Create new</TabsTrigger>
@@ -215,7 +228,13 @@ export function HomeworkDrawer({ onSubmit }: Props) {
       <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2 border-t">
         <Button type="button" variant="outline" onClick={closeDrawer} disabled={submitting}>Cancel</Button>
         <Button type="button" onClick={handleSubmit} disabled={!canSubmit}>
-          {submitting ? 'Saving\u2026' : mode === 'link' ? 'Link homework' : 'Create homework'}
+          {submitting
+            ? 'Saving\u2026'
+            : existing
+              ? 'Update homework'
+              : mode === 'link'
+                ? 'Link homework'
+                : 'Create homework'}
         </Button>
       </div>
     </div>

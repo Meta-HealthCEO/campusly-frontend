@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,21 +9,40 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { TextbookSourcePicker } from '../TextbookSourcePicker';
 import { useLessonWorkspaceStore } from '@/stores/useLessonWorkspaceStore';
-import type { TextbookRef } from '@/types/lesson';
+import type { ReadingMaterial, TextbookRef } from '@/types/lesson';
 
 interface Props {
   onSubmit: (payload: Record<string, unknown>) => Promise<void>;
+  existing?: ReadingMaterial;
 }
 
-export function ReadingDrawer({ onSubmit }: Props) {
+export function ReadingDrawer({ onSubmit, existing }: Props) {
   const closeDrawer = useLessonWorkspaceStore((s) => s.closeDrawer);
 
-  const [title, setTitle] = useState('Reading');
-  const [teacherNotes, setTeacherNotes] = useState('');
-  const [textbookRef, setTextbookRef] = useState<TextbookRef | null>(null);
-  const [generateComprehension, setGenerateComprehension] = useState(false);
-  const [comprehensionCount, setComprehensionCount] = useState(4);
+  const initialCompCount = existing?.comprehensionQuestionIds?.length ?? 0;
+  const initialGenerateComp = initialCompCount > 0;
+
+  const [title, setTitle] = useState(existing?.title ?? 'Reading');
+  const [teacherNotes, setTeacherNotes] = useState(existing?.teacherNotes ?? '');
+  const [textbookRef, setTextbookRef] = useState<TextbookRef | null>(
+    existing?.textbookRef ?? null,
+  );
+  const [generateComprehension, setGenerateComprehension] = useState(initialGenerateComp);
+  const [comprehensionCount, setComprehensionCount] = useState(
+    initialCompCount > 0 ? initialCompCount : 4,
+  );
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!existing) return;
+    const compCount = existing.comprehensionQuestionIds?.length ?? 0;
+    setTitle(existing.title);
+    setTeacherNotes(existing.teacherNotes ?? '');
+    setTextbookRef(existing.textbookRef);
+    setGenerateComprehension(compCount > 0);
+    setComprehensionCount(compCount > 0 ? compCount : 4);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existing?._id]);
 
   const isExternalNoExcerpt =
     textbookRef?.source === 'external' && !textbookRef.excerpt?.trim();
@@ -53,6 +72,8 @@ export function ReadingDrawer({ onSubmit }: Props) {
       setSubmitting(false);
     }
   };
+
+  const actionLabel = existing ? 'Regenerate' : 'Generate';
 
   return (
     <div className="flex flex-col gap-4">
@@ -132,7 +153,7 @@ export function ReadingDrawer({ onSubmit }: Props) {
           Cancel
         </Button>
         <Button type="button" onClick={handleSubmit} disabled={!canSubmit}>
-          {submitting ? 'Saving…' : 'Generate'}
+          {submitting ? 'Saving\u2026' : actionLabel}
         </Button>
       </div>
     </div>
