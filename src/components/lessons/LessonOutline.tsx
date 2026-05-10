@@ -9,8 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { LessonStatusMenu } from '@/components/lessons/outline/LessonStatusMenu';
 import { LessonObjectivesEditor } from '@/components/lessons/outline/LessonObjectivesEditor';
 import { LessonPhaseNav } from '@/components/lessons/outline/LessonPhaseNav';
-import { formatDate } from '@/lib/utils';
-import type { Lesson, LessonPhase, LessonStatus } from '@/types/lesson';
+import { LessonAssignedClasses } from '@/components/lessons/LessonAssignedClasses';
+import type { Lesson, LessonPhase, LessonStatus, UpdateAssignmentPayload } from '@/types/lesson';
 
 interface Props {
   lesson: Lesson;
@@ -18,6 +18,9 @@ interface Props {
   patchStatus: (status: LessonStatus) => Promise<Lesson>;
   onExport: (mode: 'teacher' | 'student') => Promise<void> | void;
   exporting: 'teacher' | 'student' | null;
+  assignClass: (classId: string, scheduledDate: string) => Promise<Lesson>;
+  unassignClass: (classId: string) => Promise<Lesson>;
+  updateAssignment: (classId: string, patch: UpdateAssignmentPayload) => Promise<Lesson>;
 }
 
 function readRel<T extends { name?: string; title?: string }>(
@@ -35,6 +38,9 @@ export function LessonOutline({
   patchStatus,
   onExport,
   exporting,
+  assignClass,
+  unassignClass,
+  updateAssignment,
 }: Props) {
   const [titleDraft, setTitleDraft] = useState(lesson.title);
   const [editingTitle, setEditingTitle] = useState(false);
@@ -42,7 +48,6 @@ export function LessonOutline({
     lesson.reflectionNotes ?? '',
   );
 
-  const className = readRel(lesson.classId, 'Class');
   const subjectName = readRel(lesson.subjectId, 'Subject');
   const topicTitle = readRel(lesson.curriculumNodeId, 'Topic');
 
@@ -125,10 +130,6 @@ export function LessonOutline({
       {/* Metadata */}
       <dl className="space-y-1 text-sm">
         <div className="flex justify-between gap-2">
-          <dt className="text-muted-foreground">Class</dt>
-          <dd className="truncate font-medium">{className}</dd>
-        </div>
-        <div className="flex justify-between gap-2">
           <dt className="text-muted-foreground">Subject</dt>
           <dd className="truncate font-medium">{subjectName}</dd>
         </div>
@@ -136,15 +137,25 @@ export function LessonOutline({
           <dt className="text-muted-foreground">Topic</dt>
           <dd className="truncate font-medium">{topicTitle}</dd>
         </div>
-        <div className="flex justify-between gap-2">
-          <dt className="text-muted-foreground">Date</dt>
-          <dd className="truncate font-medium">{formatDate(lesson.date)}</dd>
-        </div>
+        {typeof lesson.termNumber === 'number' && (
+          <div className="flex justify-between gap-2">
+            <dt className="text-muted-foreground">Term</dt>
+            <dd className="truncate font-medium">{lesson.termNumber}</dd>
+          </div>
+        )}
         <div className="flex justify-between gap-2">
           <dt className="text-muted-foreground">Duration</dt>
           <dd className="truncate font-medium">{lesson.durationMinutes} min</dd>
         </div>
       </dl>
+
+      {/* Assigned classes — sits between metadata and phase nav, per spec. */}
+      <LessonAssignedClasses
+        assignedClasses={lesson.assignedClasses}
+        onAssign={assignClass}
+        onUnassign={unassignClass}
+        onUpdate={updateAssignment}
+      />
 
       {/* Objectives */}
       <LessonObjectivesEditor

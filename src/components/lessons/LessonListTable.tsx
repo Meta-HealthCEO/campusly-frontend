@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { LessonStatusPill } from './LessonStatusPill';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
-import type { Lesson } from '@/types/lesson';
+import type { Lesson, LessonAssignment } from '@/types/lesson';
 import { MoreHorizontal, ExternalLink, Trash2 } from 'lucide-react';
 
 interface Props {
@@ -20,10 +20,14 @@ interface Props {
   onDelete: (id: string) => Promise<void>;
 }
 
-function populatedName(field: Lesson['classId'] | Lesson['subjectId']): string {
+function populatedName(field: Lesson['subjectId']): string {
   if (!field) return '—';
   if (typeof field === 'string') return field;
   return field.name ?? '—';
+}
+
+function readClassName(rel: LessonAssignment['classId']): string {
+  return typeof rel === 'string' ? rel : (rel.name ?? '—');
 }
 
 function formatDate(value: string): string {
@@ -35,6 +39,25 @@ function formatDate(value: string): string {
     month: 'short',
     day: 'numeric',
   });
+}
+
+/** Comma-joined first 2 class names with "+N more" overflow. "—" if empty. */
+function formatClasses(assignments: LessonAssignment[]): string {
+  if (assignments.length === 0) return '—';
+  const names = assignments.map((a) => readClassName(a.classId));
+  if (names.length <= 2) return names.join(', ');
+  return `${names.slice(0, 2).join(', ')} +${names.length - 2}`;
+}
+
+/** Earliest scheduledDate among 'planned' assignments. "—" if none. */
+function nextScheduled(assignments: LessonAssignment[]): string {
+  const planned = assignments
+    .filter((a) => a.status === 'planned')
+    .map((a) => new Date(a.scheduledDate).getTime())
+    .filter((t) => !Number.isNaN(t))
+    .sort((a, b) => a - b);
+  if (planned.length === 0) return '—';
+  return formatDate(new Date(planned[0]).toISOString());
 }
 
 export function LessonListTable({ items, onDelete }: Props) {
@@ -60,11 +83,11 @@ export function LessonListTable({ items, onDelete }: Props) {
       ),
     },
     {
-      id: 'class',
-      header: 'Class',
+      id: 'classes',
+      header: 'Classes',
       cell: ({ row }) => (
-        <span className="truncate block max-w-40">
-          {populatedName(row.original.classId)}
+        <span className="truncate block max-w-48">
+          {formatClasses(row.original.assignedClasses)}
         </span>
       ),
     },
@@ -78,10 +101,12 @@ export function LessonListTable({ items, onDelete }: Props) {
       ),
     },
     {
-      accessorKey: 'date',
-      header: 'Date',
+      id: 'nextScheduled',
+      header: 'Next scheduled',
       cell: ({ row }) => (
-        <span className="whitespace-nowrap">{formatDate(row.original.date)}</span>
+        <span className="whitespace-nowrap">
+          {nextScheduled(row.original.assignedClasses)}
+        </span>
       ),
     },
     {

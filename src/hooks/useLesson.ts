@@ -2,7 +2,13 @@ import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
-import type { Lesson, LessonMaterial, LessonPhase, LessonStatus } from '@/types/lesson';
+import type {
+  Lesson,
+  LessonMaterial,
+  LessonPhase,
+  LessonStatus,
+  UpdateAssignmentPayload,
+} from '@/types/lesson';
 
 function toastError(err: unknown, fallback: string): void {
   toast.error(err instanceof Error ? err.message : fallback);
@@ -105,5 +111,67 @@ export function useLesson(id: string) {
     }
   }, [id, fetchOne]);
 
-  return { lesson, loading, error, refetch: fetchOne, updateLesson, patchStatus, addMaterial, updateMaterial, moveMaterial, deleteMaterial, regenerateMaterial };
+  // ── Assignment mutations ─────────────────────────────────────────────────
+  // The pack itself is curriculum-scoped; classes are attached as a separate
+  // schedule. Each mutation refetches so the workspace UI stays in sync with
+  // the server's authoritative populated shape.
+
+  const assignClass = useCallback(async (classId: string, scheduledDate: string) => {
+    try {
+      const res = await apiClient.post(`/lessons/${id}/assignments`, {
+        classId,
+        scheduledDate,
+      });
+      const updated = unwrapResponse<Lesson>(res);
+      setLesson(updated);
+      return updated;
+    } catch (err: unknown) {
+      toastError(err, 'Failed to assign class');
+      throw err;
+    }
+  }, [id]);
+
+  const unassignClass = useCallback(async (classId: string) => {
+    try {
+      const res = await apiClient.delete(`/lessons/${id}/assignments/${classId}`);
+      const updated = unwrapResponse<Lesson>(res);
+      setLesson(updated);
+      return updated;
+    } catch (err: unknown) {
+      toastError(err, 'Failed to remove class');
+      throw err;
+    }
+  }, [id]);
+
+  const updateAssignment = useCallback(async (
+    classId: string,
+    patch: UpdateAssignmentPayload,
+  ) => {
+    try {
+      const res = await apiClient.patch(`/lessons/${id}/assignments/${classId}`, patch);
+      const updated = unwrapResponse<Lesson>(res);
+      setLesson(updated);
+      return updated;
+    } catch (err: unknown) {
+      toastError(err, 'Failed to update assignment');
+      throw err;
+    }
+  }, [id]);
+
+  return {
+    lesson,
+    loading,
+    error,
+    refetch: fetchOne,
+    updateLesson,
+    patchStatus,
+    addMaterial,
+    updateMaterial,
+    moveMaterial,
+    deleteMaterial,
+    regenerateMaterial,
+    assignClass,
+    unassignClass,
+    updateAssignment,
+  };
 }

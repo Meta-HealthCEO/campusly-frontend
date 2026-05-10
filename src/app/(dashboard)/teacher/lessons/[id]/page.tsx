@@ -109,6 +109,9 @@ export default function LessonWorkspacePage() {
               )
             }
             exporting={exportHook.downloading}
+            assignClass={lessonHook.assignClass}
+            unassignClass={lessonHook.unassignClass}
+            updateAssignment={lessonHook.updateAssignment}
           />
         </aside>
 

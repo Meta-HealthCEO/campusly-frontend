@@ -2,22 +2,36 @@
 
 import Link from 'next/link';
 import { useMemo } from 'react';
-import type { Lesson, LessonStatus } from '@/types/lesson';
+import type { Lesson, LessonAssignment, LessonAssignmentStatus } from '@/types/lesson';
 
 interface Props {
   items: Lesson[];
+}
+
+/**
+ * One calendar entry == one (lesson, assignment) pair. A lesson assigned to
+ * 11A on Mon and 11B on Tue produces two entries; a library lesson (no
+ * assignments) produces zero. The chip shows the class name first because
+ * that's what disambiguates two cells of the same lesson on the calendar.
+ */
+interface CalendarEntry {
+  key: string;
+  lessonId: string;
+  lessonTitle: string;
+  className: string;
+  status: LessonAssignmentStatus;
+  isoKey: string;
 }
 
 interface DayCell {
   date: Date;
   inMonth: boolean;
   isoKey: string;
-  lessons: Lesson[];
+  entries: CalendarEntry[];
 }
 
-const STATUS_CHIP: Record<LessonStatus, string> = {
-  draft: 'bg-amber-500/15 text-amber-700 border-amber-500/30',
-  ready: 'bg-blue-500/15 text-blue-700 border-blue-500/30',
+const STATUS_CHIP: Record<LessonAssignmentStatus, string> = {
+  planned: 'bg-blue-500/15 text-blue-700 border-blue-500/30',
   taught: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30',
 };
 
@@ -49,17 +63,37 @@ function buildMonthGrid(reference: Date): DayCell[] {
       date: d,
       inMonth: d.getMonth() === month,
       isoKey: toLocalIsoDate(d),
-      lessons: [],
+      entries: [],
     });
   }
   return cells;
 }
 
-function lessonIsoDate(lesson: Lesson): string {
-  if (!lesson.date) return '';
-  const d = new Date(lesson.date);
-  if (Number.isNaN(d.getTime())) return '';
-  return toLocalIsoDate(d);
+function readClassName(rel: LessonAssignment['classId']): string {
+  return typeof rel === 'string' ? rel : (rel.name ?? '—');
+}
+
+function readClassId(rel: LessonAssignment['classId']): string {
+  return typeof rel === 'string' ? rel : rel._id;
+}
+
+function expandLessonAssignments(items: Lesson[]): CalendarEntry[] {
+  const out: CalendarEntry[] = [];
+  for (const lesson of items) {
+    for (const a of lesson.assignedClasses ?? []) {
+      const d = new Date(a.scheduledDate);
+      if (Number.isNaN(d.getTime())) continue;
+      out.push({
+        key: `${lesson._id}:${readClassId(a.classId)}`,
+        lessonId: lesson._id,
+        lessonTitle: lesson.title,
+        className: readClassName(a.classId),
+        status: a.status,
+        isoKey: toLocalIsoDate(d),
+      });
+    }
+  }
+  return out;
 }
 
 export function LessonCalendar({ items }: Props) {
@@ -72,17 +106,15 @@ export function LessonCalendar({ items }: Props) {
 
   const cells = useMemo(() => {
     const grid = buildMonthGrid(today);
-    const byDate = new Map<string, Lesson[]>();
-    for (const lesson of items) {
-      const key = lessonIsoDate(lesson);
-      if (!key) continue;
-      const list = byDate.get(key) ?? [];
-      list.push(lesson);
-      byDate.set(key, list);
+    const byDate = new Map<string, CalendarEntry[]>();
+    for (const entry of expandLessonAssignments(items)) {
+      const list = byDate.get(entry.isoKey) ?? [];
+      list.push(entry);
+      byDate.set(entry.isoKey, list);
     }
     return grid.map((cell) => ({
       ...cell,
-      lessons: byDate.get(cell.isoKey) ?? [],
+      entries: byDate.get(cell.isoKey) ?? [],
     }));
   }, [items, today]);
 
@@ -103,8 +135,8 @@ export function LessonCalendar({ items }: Props) {
 
       <div className="grid grid-cols-7">
         {cells.map((cell) => {
-          const visible = cell.lessons.slice(0, 3);
-          const overflow = cell.lessons.length - visible.length;
+          const visible = cell.entries.slice(0, 3);
+          const overflow = cell.entries.length - visible.length;
           const isToday = cell.isoKey === todayIso;
           return (
             <div
@@ -121,16 +153,18 @@ export function LessonCalendar({ items }: Props) {
                 {cell.date.getDate()}
               </div>
               <div className="space-y-0.5">
-                {visible.map((lesson) => (
+                {visible.map((entry) => (
                   <Link
-                    key={lesson._id}
-                    href={`/teacher/lessons/${lesson._id}`}
+                    key={entry.key}
+                    href={`/teacher/lessons/${entry.lessonId}`}
                     className={`block truncate rounded border px-1.5 py-0.5 text-[10px] leading-tight hover:opacity-80 ${
-                      STATUS_CHIP[lesson.status]
+                      STATUS_CHIP[entry.status]
                     }`}
-                    title={lesson.title}
+                    title={`${entry.className} — ${entry.lessonTitle}`}
                   >
-                    {lesson.title}
+                    <span className="font-medium">{entry.className}</span>
+                    {' · '}
+                    {entry.lessonTitle}
                   </Link>
                 ))}
                 {overflow > 0 && (
