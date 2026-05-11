@@ -6,7 +6,20 @@ import { CSS } from '@dnd-kit/utilities';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
+import {
+  Activity,
+  BookOpen,
+  ChevronDown,
+  ChevronRight,
+  ClipboardList,
+  FileText,
+  GripVertical,
+  ListChecks,
+  NotebookPen,
+  PenSquare,
+  Sparkles,
+  type LucideIcon,
+} from 'lucide-react';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { MaterialContentInline } from './MaterialContentInline';
 import type { LessonMaterial, LessonMaterialKind, LessonPhase } from '@/types/lesson';
@@ -32,6 +45,21 @@ const KIND_LABELS: Record<LessonMaterialKind, string> = {
   practice_questions: 'Practice Questions',
   homework: 'Homework',
   paper: 'Paper',
+};
+
+// Icon per material kind — mirrors the type tile picker so cards in the
+// workspace look consistent with the picker the teacher used to create
+// them. Imported as named lucide icons (no font-awesome / inline svg).
+const KIND_ICONS: Record<LessonMaterialKind, LucideIcon> = {
+  reading: BookOpen,
+  worksheet: ClipboardList,
+  activity: Activity,
+  notes: NotebookPen,
+  worked_example: Sparkles,
+  quiz: ListChecks,
+  practice_questions: PenSquare,
+  homework: FileText,
+  paper: FileText,
 };
 
 // Hints surfaced under placeholders that the bulk "Generate all" flow
@@ -103,11 +131,13 @@ export function LessonMaterialCard({
     setEditing(false);
   };
 
+  const KindIcon = KIND_ICONS[material.kind];
+
   return (
     <Card
       ref={sortable.setNodeRef}
       style={style}
-      className="p-3"
+      className="p-4 hover:border-primary/30 transition-colors"
     >
       <div className="flex gap-2 items-start">
       <button
@@ -149,7 +179,8 @@ export function LessonMaterialCard({
               {material.title}
             </button>
           )}
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="outline" className="text-xs gap-1">
+            <KindIcon className="h-3 w-3" />
             {KIND_LABELS[material.kind]}
           </Badge>
           <Badge

@@ -20,6 +20,17 @@ const PHASE_LABELS: Record<LessonPhase, string> = {
   homework: 'Homework',
 };
 
+// Subtle per-phase accent applied to the left stripe. All tints derived
+// from existing design tokens (primary + a few intentionally muted hues
+// already present elsewhere) — no new colors introduced.
+const PHASE_ACCENTS: Record<LessonPhase, string> = {
+  introduction: 'bg-primary/70',
+  direct_instruction: 'bg-primary',
+  practice: 'bg-primary/60',
+  assessment: 'bg-primary/80',
+  homework: 'bg-primary/50',
+};
+
 export const PHASE_DROPPABLE_PREFIX = 'phase-drop-';
 
 interface Props {
@@ -64,11 +75,19 @@ export function LessonPhaseSection({
 
   return (
     <section id={`phase-${phase}`} className="space-y-3">
-      <header className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">{PHASE_LABELS[phase]}</h2>
-        <span className="text-xs text-muted-foreground">
-          {materials.length} item{materials.length !== 1 ? 's' : ''}
-        </span>
+      <header className="flex items-stretch gap-3">
+        <div
+          className={`w-1 rounded-full ${PHASE_ACCENTS[phase]}`}
+          aria-hidden="true"
+        />
+        <div className="flex flex-1 items-center justify-between min-w-0">
+          <h2 className="text-xl font-semibold tracking-tight truncate">
+            {PHASE_LABELS[phase]}
+          </h2>
+          <span className="text-xs text-muted-foreground shrink-0 ml-3">
+            {materials.length} item{materials.length !== 1 ? 's' : ''}
+          </span>
+        </div>
       </header>
       <SortableContext
         items={materials.map((m) => m._id)}
@@ -76,7 +95,7 @@ export function LessonPhaseSection({
       >
         <div
           ref={setNodeRef}
-          className={`space-y-2 rounded-md transition-colors ${
+          className={`space-y-2.5 rounded-md transition-colors ${
             isOver ? 'bg-primary/5 ring-1 ring-primary/30' : ''
           } ${materials.length === 0 ? 'min-h-16 border border-dashed p-3' : ''}`}
         >

@@ -87,15 +87,17 @@ export function LessonGenerateAllBanner({
   const noun = placeholderCount === 1 ? 'placeholder material' : 'placeholder materials';
 
   return (
-    <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-3">
-          <Sparkles className="h-5 w-5 shrink-0 text-primary" />
+    <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 shadow-sm">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-4">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <Sparkles className="h-5 w-5" />
+          </span>
           <div className="min-w-0">
-            <p className="text-sm font-medium">
+            <p className="text-base font-semibold tracking-tight">
               {placeholderCount} {noun} waiting
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground mt-0.5">
               Generate them all at once. Reading, quiz, homework and paper
               placeholders need manual setup and will be skipped.
             </p>

@@ -126,7 +126,7 @@ export function LessonHeader({
   };
 
   return (
-    <header className="rounded-lg border bg-card p-4 space-y-4">
+    <header className="rounded-xl border bg-card p-6 space-y-5 shadow-sm">
       {/* Row 0 — Back link to lesson list */}
       <Link
         href="/teacher/lessons"
@@ -152,13 +152,13 @@ export function LessonHeader({
                   setEditingTitle(false);
                 }
               }}
-              className="text-xl font-semibold h-9"
+              className="text-2xl font-semibold h-11"
             />
           ) : (
             <button
               type="button"
               onClick={() => setEditingTitle(true)}
-              className="text-xl font-semibold truncate hover:bg-muted/50 rounded px-1 py-0.5 text-left min-w-0"
+              className="text-2xl font-semibold tracking-tight truncate hover:bg-muted/50 rounded-md px-1.5 py-0.5 text-left min-w-0"
               title="Click to rename"
             >
               {lesson.title}
@@ -194,8 +194,8 @@ export function LessonHeader({
         </div>
       </div>
 
-      {/* Row 2 — Grade · Subject · Term · Duration */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+      {/* Row 2 — Grade · Subject · Term · Duration as data badges */}
+      <div className="flex flex-wrap gap-2">
         <MetaChip label="Grade" value={gradeName} />
         <MetaChip label="Subject" value={subjectName} />
         {typeof lesson.termNumber === 'number' && (
@@ -204,12 +204,12 @@ export function LessonHeader({
         <MetaChip label="Duration" value={`${lesson.durationMinutes} min`} />
       </div>
 
-      {/* Row 3 — Topic on its own line */}
-      <div className="text-sm">
+      {/* Row 3 — Topic on its own line (full-width chip) */}
+      <div className="flex flex-wrap gap-2">
         <MetaChip label="Topic" value={topicTitle} />
       </div>
 
-      {/* Row 3 — Assigned classes (chips + add) */}
+      {/* Row 3b — Assigned classes (chips + add) */}
       <LessonAssignedClasses
         assignedClasses={lesson.assignedClasses}
         onAssign={assignClass}
@@ -243,9 +243,11 @@ export function LessonHeader({
 
 function MetaChip({ label, value }: { label: string; value: string }) {
   return (
-    <span className="inline-flex items-baseline gap-1 truncate">
-      <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
-      <span className="font-medium truncate">{value}</span>
+    <span className="inline-flex items-baseline gap-1.5 truncate bg-muted/40 px-2.5 py-1 rounded-md">
+      <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
+        {label}
+      </span>
+      <span className="text-sm font-medium truncate">{value}</span>
     </span>
   );
 }

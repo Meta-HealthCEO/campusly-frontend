@@ -96,7 +96,7 @@ export default function LessonWorkspacePage() {
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <div className="space-y-6 p-4 max-w-5xl mx-auto">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         <LessonHeader
           lesson={lesson}
           updateLesson={lessonHook.updateLesson}
@@ -119,7 +119,7 @@ export default function LessonWorkspacePage() {
           generateAllPlaceholders={lessonHook.generateAllPlaceholders}
         />
 
-        <main className="space-y-6">
+        <main className="space-y-8">
           {LESSON_PHASES.map((phase) => (
             <LessonPhaseSection
               key={phase}
