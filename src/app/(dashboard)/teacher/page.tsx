@@ -9,12 +9,13 @@ import { DashboardSkeleton } from '@/components/shared/skeletons';
 import {
   ClipboardList, AlertTriangle, Users, Calendar,
   CheckSquare, PenLine, BarChart3, School, RefreshCw,
-  Sparkles, FileText, BookOpen,
+  Sparkles, FileText, BookOpen, Settings,
 } from 'lucide-react';
 import { AnnouncementBanner } from '@/components/announcements/AnnouncementBanner';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useTeacherDashboard } from '@/hooks/useTeacherDashboard';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
+import { useTeachingScope } from '@/hooks/useTeachingScope';
 import Link from 'next/link';
 
 export default function TeacherDashboard() {
@@ -24,6 +25,7 @@ export default function TeacherDashboard() {
     classCount, ungradedCount, loading, refreshing, refresh,
   } = useTeacherDashboard();
   const { status: onboardingStatus, loading: onboardingLoading } = useOnboardingStatus();
+  const { isEmpty: scopeEmpty, loading: scopeLoading } = useTeachingScope();
 
   if (loading) return <DashboardSkeleton />;
 
@@ -33,6 +35,7 @@ export default function TeacherDashboard() {
   const isStandaloneTeacher = user?.isStandaloneTeacher === true;
   const isIndependent = isStandaloneTeacher || (permissions.isSchoolPrincipal && user?.role === 'teacher');
   const isSetupIncomplete = isStandaloneTeacher && !onboardingLoading && !onboardingStatus.hasClass;
+  const showScopeBanner = isStandaloneTeacher && !scopeLoading && scopeEmpty;
 
   return (
     <div className="space-y-6">
@@ -61,6 +64,25 @@ export default function TeacherDashboard() {
           <Link href="/teacher/settings/join-school">
             <Button size="sm" variant="outline" className="w-full sm:w-auto shrink-0">
               Join Your School
+            </Button>
+          </Link>
+        </div>
+      )}
+
+      {showScopeBanner && (
+        <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <Settings className="h-5 w-5 shrink-0 text-primary" />
+            <div>
+              <p className="text-sm font-medium">Set up your teaching scope</p>
+              <p className="text-xs text-muted-foreground">
+                Pick the grades and subjects you teach so the rest of Campusly is tailored to you.
+              </p>
+            </div>
+          </div>
+          <Link href="/teacher/settings">
+            <Button size="sm" variant="outline" className="w-full sm:w-auto shrink-0">
+              Open settings
             </Button>
           </Link>
         </div>
