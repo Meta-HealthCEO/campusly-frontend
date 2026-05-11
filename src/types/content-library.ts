@@ -7,7 +7,8 @@ export type ResourceType =
   | 'study_notes'
   | 'worksheet'
   | 'worked_example'
-  | 'activity';
+  | 'activity'
+  | 'reading';
 
 export type ResourceFormat = 'static' | 'interactive';
 

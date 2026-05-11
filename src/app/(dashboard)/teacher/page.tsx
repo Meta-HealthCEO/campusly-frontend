@@ -9,10 +9,12 @@ import { DashboardSkeleton } from '@/components/shared/skeletons';
 import {
   ClipboardList, AlertTriangle, Users, Calendar,
   CheckSquare, PenLine, BarChart3, School, RefreshCw,
+  Sparkles, FileText, BookOpen,
 } from 'lucide-react';
 import { AnnouncementBanner } from '@/components/announcements/AnnouncementBanner';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useTeacherDashboard } from '@/hooks/useTeacherDashboard';
+import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 import Link from 'next/link';
 
 export default function TeacherDashboard() {
@@ -21,13 +23,16 @@ export default function TeacherDashboard() {
     timetable, pendingHomework, absentToday,
     classCount, ungradedCount, loading, refreshing, refresh,
   } = useTeacherDashboard();
+  const { status: onboardingStatus, loading: onboardingLoading } = useOnboardingStatus();
 
   if (loading) return <DashboardSkeleton />;
 
   const firstName = user?.firstName ?? 'Teacher';
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
-  const isIndependent = permissions.isSchoolPrincipal && user?.role === 'teacher';
+  const isStandaloneTeacher = user?.isStandaloneTeacher === true;
+  const isIndependent = isStandaloneTeacher || (permissions.isSchoolPrincipal && user?.role === 'teacher');
+  const isSetupIncomplete = isStandaloneTeacher && !onboardingLoading && !onboardingStatus.hasClass;
 
   return (
     <div className="space-y-6">
@@ -61,30 +66,61 @@ export default function TeacherDashboard() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Today's Classes" value={String(timetable.length)} icon={Calendar} description={`${today} schedule`} />
+      {isSetupIncomplete && (
+        <div className="flex flex-col gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium">Complete your teacher setup</p>
+            <p className="text-xs text-muted-foreground">
+              Add your grades, subjects, and first teaching group so the AI tools can organise your work.
+            </p>
+          </div>
+          <Link href="/teacher/onboarding">
+            <Button size="sm" className="w-full sm:w-auto">
+              Complete Setup
+            </Button>
+          </Link>
+        </div>
+      )}
+
+      <div className={`grid gap-4 sm:grid-cols-2 ${isStandaloneTeacher ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
+        <StatCard title={isStandaloneTeacher ? "Today's Groups" : "Today's Classes"} value={String(timetable.length)} icon={Calendar} description={`${today} schedule`} />
         <StatCard title="To Grade" value={String(ungradedCount)} icon={ClipboardList} description="Pending submissions" />
-        <StatCard title="Absent Today" value={String(absentToday.length)} icon={AlertTriangle} description="Students absent" />
-        <StatCard title="My Classes" value={String(classCount)} icon={Users} description="Assigned classes" />
+        {!isStandaloneTeacher && (
+          <StatCard title="Absent Today" value={String(absentToday.length)} icon={AlertTriangle} description="Students absent" />
+        )}
+        <StatCard title={isStandaloneTeacher ? 'Teaching Groups' : 'My Classes'} value={String(classCount)} icon={Users} description={isStandaloneTeacher ? 'Organising folders' : 'Assigned classes'} />
       </div>
 
       <Card>
         <CardHeader><CardTitle className="text-lg">Quick Actions</CardTitle></CardHeader>
         <CardContent>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Link href="/teacher/attendance"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><CheckSquare className="h-6 w-6 text-primary" /><span>Take Attendance</span></Button></Link>
-            <Link href="/teacher/homework"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><PenLine className="h-6 w-6 text-primary" /><span>Create Homework</span></Button></Link>
-            <Link href="/teacher/grades"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><BarChart3 className="h-6 w-6 text-primary" /><span>View Gradebook</span></Button></Link>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {isStandaloneTeacher ? (
+              <>
+                <Link href="/teacher/curriculum/ai-studio?tool=lesson"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><BookOpen className="h-6 w-6 text-primary" /><span>Plan Lesson</span></Button></Link>
+                <Link href="/teacher/curriculum/ai-studio?tool=resource"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><Sparkles className="h-6 w-6 text-primary" /><span>Make Material</span></Button></Link>
+                <Link href="/teacher/curriculum/ai-studio?tool=homework"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><ClipboardList className="h-6 w-6 text-primary" /><span>Set Homework</span></Button></Link>
+                <Link href="/teacher/curriculum/ai-studio?tool=paper"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><FileText className="h-6 w-6 text-primary" /><span>Generate Paper</span></Button></Link>
+              </>
+            ) : (
+              <>
+                <Link href="/teacher/attendance"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><CheckSquare className="h-6 w-6 text-primary" /><span>Take Attendance</span></Button></Link>
+                <Link href="/teacher/homework"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><PenLine className="h-6 w-6 text-primary" /><span>Create Homework</span></Button></Link>
+                <Link href="/teacher/grades"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><BarChart3 className="h-6 w-6 text-primary" /><span>View Gradebook</span></Button></Link>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle className="text-lg">Today&apos;s Classes</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-lg">{isStandaloneTeacher ? 'Teaching Groups' : 'Today&apos;s Classes'}</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {timetable.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No classes scheduled for today.</p>
+              <p className="text-sm text-muted-foreground">
+                {isStandaloneTeacher ? 'No timetable needed for teacher-only mode.' : 'No classes scheduled for today.'}
+              </p>
             ) : (
               timetable.map((slot) => (
                 <div key={slot.id} className="flex items-center justify-between rounded-lg border p-3">
@@ -127,7 +163,7 @@ export default function TeacherDashboard() {
 
       <AnnouncementBanner limit={3} />
 
-      {absentToday.length > 0 && (
+      {!isStandaloneTeacher && absentToday.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">

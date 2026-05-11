@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
 export default function DeprecatedRedirect() {
-  redirect('/teacher/papers');
+  redirect('/teacher/curriculum/ai-studio?tool=paper');
 }

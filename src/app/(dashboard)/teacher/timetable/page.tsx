@@ -11,6 +11,7 @@ import { useTeacherTimetableManager } from '@/hooks/useTeacherTimetableManager';
 import { useTeacherSubjects } from '@/hooks/useTeacherSubjects';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import { useCan } from '@/hooks/useCan';
+import { useIsStandalone } from '@/hooks/useIsStandalone';
 import { TimetableGrid } from '@/components/timetable/TimetableGrid';
 import { TimetableMobileView } from '@/components/timetable/TimetableMobileView';
 import { resolveId } from '@/components/timetable/timetable-helpers';
@@ -36,7 +37,9 @@ export default function TeacherTimetablePage() {
   const { subjects, loading: subjectsLoading } = useTeacherSubjects();
   const { classes, loading: classesLoading } = useTeacherClasses();
 
-  const canConfigure = useCan('manage_school_config');
+  const canConfigurePeriods = useCan('manage_school_config');
+  const canManageTimetable = useCan('manage_academic_setup');
+  const isStandalone = useIsStandalone();
 
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [slotDialog, setSlotDialog] = useState<SlotDialogState>({
@@ -58,9 +61,10 @@ export default function TeacherTimetablePage() {
 
   const handleSlotClick = useCallback(
     (day: DayOfWeek, period: number, slot: TimetableSlot | null) => {
+      if (!canManageTimetable) return;
       setSlotDialog({ open: true, day, period, slot });
     },
-    [],
+    [canManageTimetable],
   );
 
   const handleSlotSave = useCallback(
@@ -131,12 +135,14 @@ export default function TeacherTimetablePage() {
           icon={Calendar}
           title="No period configuration"
           description={
-            canConfigure
-              ? "Set up your school's period times before building your timetable."
-              : 'Your school admin has not configured periods yet. Please check back later.'
+            canConfigurePeriods
+              ? isStandalone
+                ? 'Set up your teaching period times before building your timetable.'
+                : "Set up your school's period times before building your timetable."
+              : 'Your timetable periods have not been configured yet. Please check back later.'
           }
           action={
-            canConfigure ? (
+            canConfigurePeriods ? (
               <Button onClick={() => setConfigDialogOpen(true)}>
                 <Settings className="mr-2 h-4 w-4" />
                 Configure Periods
@@ -144,7 +150,7 @@ export default function TeacherTimetablePage() {
             ) : undefined
           }
         />
-        {canConfigure && (
+        {canConfigurePeriods && (
           <PeriodConfigDialog
             open={configDialogOpen}
             onOpenChange={setConfigDialogOpen}
@@ -166,7 +172,7 @@ export default function TeacherTimetablePage() {
               <Printer className="mr-2 h-4 w-4" />
               Print
             </Button>
-            {canConfigure && (
+            {canConfigurePeriods && (
               <Button variant="outline" onClick={() => setConfigDialogOpen(true)}>
                 <Settings className="mr-2 h-4 w-4" />
                 Period Settings
@@ -181,6 +187,7 @@ export default function TeacherTimetablePage() {
             config={config!}
             timetable={timetable}
             onSlotClick={handleSlotClick}
+            editable={canManageTimetable}
           />
         </div>
 
@@ -190,36 +197,39 @@ export default function TeacherTimetablePage() {
             config={config!}
             timetable={timetable}
             onSlotClick={handleSlotClick}
+            editable={canManageTimetable}
           />
         </div>
 
         {/* Dialogs */}
         <div className="print:hidden">
-        {canConfigure && (
-          <PeriodConfigDialog
-            open={configDialogOpen}
-            onOpenChange={setConfigDialogOpen}
-            config={config}
-            onSave={saveConfig}
-            maxExistingPeriod={maxExistingPeriod}
-          />
-        )}
+          {canConfigurePeriods && (
+            <PeriodConfigDialog
+              open={configDialogOpen}
+              onOpenChange={setConfigDialogOpen}
+              config={config}
+              onSave={saveConfig}
+              maxExistingPeriod={maxExistingPeriod}
+            />
+          )}
 
-        <TimetableSlotDialog
-          open={slotDialog.open}
-          onOpenChange={(open: boolean) => setSlotDialog((prev) => ({ ...prev, open }))}
-          day={slotDialog.day}
-          period={slotDialog.period}
-          periodTime={periodTime}
-          subjects={subjects}
-          classes={classes}
-          subjectsLoading={subjectsLoading}
-          classesLoading={classesLoading}
-          existingSlot={slotDialog.slot}
-          onSave={handleSlotSave}
-          onUpdate={handleSlotUpdate}
-          onDelete={handleSlotDelete}
-        />
+          {canManageTimetable && (
+            <TimetableSlotDialog
+              open={slotDialog.open}
+              onOpenChange={(open: boolean) => setSlotDialog((prev) => ({ ...prev, open }))}
+              day={slotDialog.day}
+              period={slotDialog.period}
+              periodTime={periodTime}
+              subjects={subjects}
+              classes={classes}
+              subjectsLoading={subjectsLoading}
+              classesLoading={classesLoading}
+              existingSlot={slotDialog.slot}
+              onSave={handleSlotSave}
+              onUpdate={handleSlotUpdate}
+              onDelete={handleSlotDelete}
+            />
+          )}
         </div>
       </div>
     </ErrorBoundary>

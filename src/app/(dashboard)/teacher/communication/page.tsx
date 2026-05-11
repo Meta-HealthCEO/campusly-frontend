@@ -30,7 +30,7 @@ import type { ChannelType, BulkMessageSender } from '@/components/communication/
 const teacherComposeSchema = z.object({
   subject: z.string().min(3, 'Subject must be at least 3 characters'),
   body: z.string().min(10, 'Message must be at least 10 characters'),
-  channel: z.enum(['email', 'sms', 'whatsapp', 'all']).optional(),
+  channel: z.enum(['email', 'sms']).optional(),
 });
 
 type TeacherComposeValues = z.infer<typeof teacherComposeSchema>;
@@ -54,12 +54,12 @@ export default function TeacherCommunicationPage() {
     register, handleSubmit, setValue, watch, reset, formState: { errors },
   } = useForm<TeacherComposeValues>({
     resolver: zodResolver(teacherComposeSchema),
-    defaultValues: { channel: 'all' },
+    defaultValues: { channel: 'email' },
   });
 
   const watchSubject = watch('subject') ?? '';
   const watchBody = watch('body') ?? '';
-  const watchChannel = watch('channel') ?? 'all';
+  const watchChannel = watch('channel') ?? 'email';
 
   // Minimum datetime-local value (current time + 2 minutes)
   const _d = new Date(Date.now() + 2 * 60 * 1000);
@@ -105,7 +105,8 @@ export default function TeacherCommunicationPage() {
   };
 
   const handleTemplateSelect = (tpl: { subject: string; body: string; channel: ChannelType }) => {
-    setValue('subject', tpl.subject); setValue('body', tpl.body); setValue('channel', tpl.channel);
+    const channel = tpl.channel === 'sms' ? 'sms' : 'email';
+    setValue('subject', tpl.subject); setValue('body', tpl.body); setValue('channel', channel);
   };
 
   const handleSaveTemplate = async (data: {
@@ -260,17 +261,15 @@ export default function TeacherCommunicationPage() {
               <div className="space-y-2">
                 <Label>Channel</Label>
                 <Select
-                  defaultValue="all"
-                  onValueChange={(val: unknown) => setValue('channel', val as ChannelType)}
+                  defaultValue="email"
+                  onValueChange={(val: unknown) => setValue('channel', val as TeacherComposeValues['channel'])}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Channel" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Channels</SelectItem>
                     <SelectItem value="email">Email</SelectItem>
                     <SelectItem value="sms">SMS</SelectItem>
-                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

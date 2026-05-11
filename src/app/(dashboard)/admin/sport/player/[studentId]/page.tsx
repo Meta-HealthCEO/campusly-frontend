@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { RefreshCw, Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,7 +19,7 @@ import { useCan } from '@/hooks/useCan';
 import type { RecordPersonalBestPayload } from '@/types/sport';
 import type { AIPerformanceReport } from '@/types/ai-sports';
 
-export default function PlayerDetailPage() {
+function PlayerDetailContent() {
   const canManage = useCan('manage_sport_config');
   const params = useParams();
   const searchParams = useSearchParams();
@@ -184,5 +184,13 @@ export default function PlayerDetailPage() {
         onSubmit={handleRecordPB}
       />
     </div>
+  );
+}
+
+export default function PlayerDetailPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <PlayerDetailContent />
+    </Suspense>
   );
 }

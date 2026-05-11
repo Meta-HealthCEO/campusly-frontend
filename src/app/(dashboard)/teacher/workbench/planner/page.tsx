@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { CalendarDays, Save } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -28,12 +29,17 @@ export default function TermPlannerPage() {
     clashes,
     weightings,
     classes,
+    subjects,
+    topics,
     loading,
+    loadingTopics,
     saving,
     selectedClass,
+    selectedSubject,
     selectedTerm,
     selectedYear,
     setSelectedClass,
+    setSelectedSubject,
     setSelectedTerm,
     setSelectedYear,
     savePlan,
@@ -43,80 +49,160 @@ export default function TermPlannerPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editAssessment, setEditAssessment] = useState<PlannedAssessment | undefined>();
-  const [pendingAssessments, setPendingAssessments] = useState<PlannedAssessment[]>([]);
+  const [clickedDate, setClickedDate] = useState('');
+  const [pendingState, setPendingState] = useState<{ key: string; assessments: PlannedAssessment[] }>({
+    key: '',
+    assessments: [],
+  });
 
-  const assessments =
-    pendingAssessments.length > 0
-      ? pendingAssessments
-      : plan?.plannedAssessments ?? [];
+  const selectionKey = `${selectedClass}:${selectedSubject}:${selectedTerm}:${selectedYear}`;
+  const pendingAssessments = pendingState.key === selectionKey ? pendingState.assessments : [];
+  const assessments = pendingAssessments.length > 0 ? pendingAssessments : plan?.plannedAssessments ?? [];
+  const hasPendingChanges = pendingAssessments.length > 0;
+  const hasSelections = Boolean(selectedClass && selectedSubject && selectedTerm && selectedYear);
+
+  function resetPending() {
+    setPendingState({ key: '', assessments: [] });
+    setEditAssessment(undefined);
+  }
 
   function handleDateClick(date: string) {
     checkClashes(date);
+    setClickedDate(date);
     setEditAssessment(undefined);
     setDialogOpen(true);
   }
 
   function handleAssessmentClick(assessment: PlannedAssessment) {
+    setClickedDate(assessment.plannedDate.slice(0, 10));
     setEditAssessment(assessment);
     setDialogOpen(true);
   }
 
   function handleFormSubmit(data: PlannedAssessment) {
-    if (editAssessment) {
-      setPendingAssessments(
-        assessments.map((a) =>
-          a.title === editAssessment.title && a.plannedDate === editAssessment.plannedDate
-            ? data
-            : a,
-        ),
-      );
-    } else {
-      setPendingAssessments([...assessments, data]);
+    const nextAssessments = editAssessment
+      ? assessments.map((assessment) => (assessment === editAssessment ? data : assessment))
+      : [...assessments, data];
+
+    setPendingState({
+      key: selectionKey,
+      assessments: nextAssessments.sort((a, b) => a.plannedDate.localeCompare(b.plannedDate)),
+    });
+  }
+
+  async function handleSave() {
+    const saved = await savePlan({ plannedAssessments: assessments });
+    if (saved) {
+      resetPending();
     }
   }
 
-  function handleSave() {
-    savePlan({ plannedAssessments: assessments });
+  function handleDialogOpenChange(open: boolean) {
+    setDialogOpen(open);
+    if (!open) {
+      setEditAssessment(undefined);
+      setClickedDate('');
+    }
   }
 
-  const hasSelections = selectedClass && selectedTerm && selectedYear;
+  function renderSelectionHint() {
+    if (classes.length === 0) {
+      return (
+        <EmptyState
+          icon={CalendarDays}
+          title="No classes linked"
+          description="Your teacher profile needs at least one linked class before you can plan the term."
+        />
+      );
+    }
+
+    if (selectedClass && subjects.length === 0) {
+      return (
+        <EmptyState
+          icon={CalendarDays}
+          title="No subjects linked"
+          description="This class has no subject teaching load yet, so there is nothing to plan."
+        />
+      );
+    }
+
+    return (
+      <EmptyState
+        icon={CalendarDays}
+        title="Select class, subject, and term"
+        description="Choose a class, subject, term, and year above to load or create an assessment plan."
+      />
+    );
+  }
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
       <PageHeader
         title="Term Assessment Planner"
-        description="Plan and manage assessments for the term"
-      />
+        description="Plan assessment dates, weightings, and curriculum coverage for the term."
+      >
+        {hasPendingChanges && (
+          <Badge variant="outline" className="border-amber-500 text-amber-700">
+            Unsaved changes
+          </Badge>
+        )}
+      </PageHeader>
 
-      {/* Filter bar */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_.7fr_.7fr_auto]">
         <Select
-          value={selectedClass}
-          onValueChange={(val: unknown) => setSelectedClass(val as string)}
+          value={selectedClass || undefined}
+          disabled={loading || classes.length === 0}
+          onValueChange={(val: unknown) => {
+            setSelectedClass(val as string);
+            resetPending();
+          }}
         >
-          <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Select Class" />
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={loading ? 'Loading classes...' : 'Select class'} />
           </SelectTrigger>
           <SelectContent>
-            {classes.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.name}
+            {classes.map((classInfo) => (
+              <SelectItem key={classInfo.id} value={classInfo.id}>
+                {classInfo.name}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
         <Select
-          value={selectedTerm}
-          onValueChange={(val: unknown) => setSelectedTerm(val as string)}
+          value={selectedSubject || undefined}
+          disabled={!selectedClass || subjects.length === 0}
+          onValueChange={(val: unknown) => {
+            setSelectedSubject(val as string);
+            resetPending();
+          }}
         >
-          <SelectTrigger className="w-full sm:w-36">
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select subject" />
+          </SelectTrigger>
+          <SelectContent>
+            {subjects.map((subject) => (
+              <SelectItem key={subject.id} value={subject.id}>
+                {subject.name}{subject.code ? ` (${subject.code})` : ''}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={selectedTerm || undefined}
+          onValueChange={(val: unknown) => {
+            setSelectedTerm(val as string);
+            resetPending();
+          }}
+        >
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Term" />
           </SelectTrigger>
           <SelectContent>
-            {[1, 2, 3, 4].map((t) => (
-              <SelectItem key={t} value={String(t)}>
-                Term {t}
+            {[1, 2, 3, 4].map((term) => (
+              <SelectItem key={term} value={String(term)}>
+                Term {term}
               </SelectItem>
             ))}
           </SelectContent>
@@ -124,15 +210,18 @@ export default function TermPlannerPage() {
 
         <Select
           value={selectedYear}
-          onValueChange={(val: unknown) => setSelectedYear(val as string)}
+          onValueChange={(val: unknown) => {
+            setSelectedYear(val as string);
+            resetPending();
+          }}
         >
-          <SelectTrigger className="w-full sm:w-32">
+          <SelectTrigger className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {YEAR_OPTIONS.map((y) => (
-              <SelectItem key={y} value={String(y)}>
-                {y}
+            {YEAR_OPTIONS.map((year) => (
+              <SelectItem key={year} value={String(year)}>
+                {year}
               </SelectItem>
             ))}
           </SelectContent>
@@ -141,11 +230,11 @@ export default function TermPlannerPage() {
         {hasSelections && (
           <Button
             onClick={handleSave}
-            disabled={saving}
-            className="w-full sm:w-auto"
+            disabled={saving || !hasPendingChanges}
+            className="w-full xl:w-auto"
           >
             <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Saving…' : 'Save Plan'}
+            {saving ? 'Saving...' : 'Save Plan'}
           </Button>
         )}
       </div>
@@ -153,14 +242,9 @@ export default function TermPlannerPage() {
       {loading ? (
         <LoadingSpinner />
       ) : !hasSelections ? (
-        <EmptyState
-          icon={CalendarDays}
-          title="Select class and term"
-          description="Choose a class, term, and year above to load or create an assessment plan."
-        />
+        renderSelectionHint()
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Calendar — spans 3 cols on lg */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
           <div className="lg:col-span-3">
             <PlannerCalendar
               assessments={assessments}
@@ -172,7 +256,6 @@ export default function TermPlannerPage() {
             />
           </div>
 
-          {/* Sidebar */}
           <div className="lg:col-span-1">
             <WeightingSidebar weightings={weightings} />
           </div>
@@ -181,10 +264,12 @@ export default function TermPlannerPage() {
 
       <AssessmentFormDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={handleDialogOpenChange}
         onSubmit={handleFormSubmit}
         initialData={editAssessment}
-        topics={[]}
+        defaultDate={clickedDate}
+        topics={topics}
+        loadingTopics={loadingTopics}
       />
     </div>
   );

@@ -164,7 +164,7 @@ export default function RegisterStudentPage() {
           <Button
             type="submit"
             disabled={isLoading}
-            className="h-10 w-full bg-[#2563EB] hover:bg-[#1d4ed8]"
+            className="h-10 w-full bg-[#2563EB] text-white hover:bg-[#1d4ed8] hover:text-white disabled:text-white/70"
             size="lg"
           >
             {isLoading ? (

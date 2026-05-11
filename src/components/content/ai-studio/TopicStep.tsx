@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, ChevronRight } from 'lucide-react';
+import { BookOpen, CheckCircle2, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,31 @@ export function TopicStep({
             Curriculum Node <span className="text-destructive">*</span>
           </label>
 
+          {selectedNode && (
+            <div className="rounded-lg border border-primary/25 bg-primary/5 p-3">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-medium text-primary">Selected topic</span>
+                    <Badge variant="secondary">{selectedNode.type}</Badge>
+                    {selectedNode.code && (
+                      <Badge variant="outline" className="font-mono text-xs">
+                        {selectedNode.code}
+                      </Badge>
+                    )}
+                  </div>
+                  <h3 className="text-sm font-semibold">{selectedNode.title}</h3>
+                  {selectedNode.description && (
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {selectedNode.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           <Tabs defaultValue="browse">
             <TabsList className="w-full sm:w-auto">
               <TabsTrigger value="browse" className="flex-1 sm:flex-none">
@@ -86,30 +111,6 @@ export function TopicStep({
               />
             </TabsContent>
           </Tabs>
-
-          {selectedNode && (
-            <div className="rounded-lg border bg-muted/30 p-4 space-y-2 transition-all duration-300">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge>{selectedNode.type}</Badge>
-                {selectedNode.code && (
-                  <Badge variant="outline" className="font-mono text-xs">
-                    {selectedNode.code}
-                  </Badge>
-                )}
-              </div>
-              <h3 className="font-semibold">{selectedNode.title}</h3>
-              {selectedNode.description && (
-                <p className="text-sm text-muted-foreground line-clamp-3">
-                  {selectedNode.description}
-                </p>
-              )}
-              {selectedNode.metadata?.capsReference && (
-                <p className="text-xs text-muted-foreground">
-                  CAPS Ref: {selectedNode.metadata.capsReference}
-                </p>
-              )}
-            </div>
-          )}
         </CardContent>
       </Card>
 

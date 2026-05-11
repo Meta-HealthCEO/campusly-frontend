@@ -15,6 +15,7 @@ const TYPE_ICONS: Record<ResourceType, React.ElementType> = {
   worksheet: PenTool,
   worked_example: Lightbulb,
   activity: Zap,
+  reading: BookOpen,
 };
 
 function resolveNodeTitle(node: ContentResourceItem['curriculumNodeId']): string {

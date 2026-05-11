@@ -9,7 +9,6 @@ import { useTeacherHomeworkWizardStore } from '@/stores/useTeacherHomeworkWizard
 import { HomeworkWizardStep1 } from '@/components/homework/HomeworkWizardStep1';
 import { HomeworkWizardStep2 } from '@/components/homework/HomeworkWizardStep2';
 import { HomeworkWizardStep3 } from '@/components/homework/HomeworkWizardStep3';
-import { HomeworkWizardStep4 } from '@/components/homework/HomeworkWizardStep4';
 
 export default function TeacherHomeworkNewPage() {
   const router = useRouter();
@@ -22,7 +21,7 @@ export default function TeacherHomeworkNewPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="New Homework" description={`Step ${step} of 4`}>
+      <PageHeader title="New Homework" description={`Step ${step} of 3`}>
         <Button variant="outline" size="sm" onClick={handleCancel}>
           <ArrowLeft className="mr-2 h-4 w-4" />Cancel
         </Button>
@@ -33,7 +32,6 @@ export default function TeacherHomeworkNewPage() {
           {step === 1 && <HomeworkWizardStep1 />}
           {step === 2 && <HomeworkWizardStep2 />}
           {step === 3 && <HomeworkWizardStep3 />}
-          {step === 4 && <HomeworkWizardStep4 />}
         </CardContent>
       </Card>
     </div>

@@ -23,14 +23,13 @@ import { useContentLibrary } from '@/hooks/useContentLibrary';
 import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { useSubjects, useGrades } from '@/hooks/useAcademics';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { toast } from 'sonner';
 import type { ContentResourceItem, ResourceFilters } from '@/types';
 import type { CurriculumNodeItem } from '@/types/curriculum-structure';
 
 export default function TeacherStudentPreviewPage() {
   const { user } = useAuthStore();
   const router = useRouter();
-  const { resources, loading, fetchResources } = useContentLibrary();
+  const { resources, loading, error, fetchResources } = useContentLibrary();
   const { frameworks, selectedFramework, searchNodes, loadNode } = useCurriculumStructure();
   const { subjects } = useSubjects();
   const { grades } = useGrades();
@@ -46,7 +45,7 @@ export default function TeacherStudentPreviewPage() {
     if (subjectFilter !== 'all') filters.subjectId = subjectFilter;
     if (gradeFilter !== 'all') filters.gradeId = gradeFilter;
     if (selectedNodeId) filters.curriculumNodeId = selectedNodeId;
-    fetchResources(filters);
+    void fetchResources(filters);
   }, [fetchResources, search, subjectFilter, gradeFilter, selectedNodeId]);
 
   useEffect(() => {
@@ -164,11 +163,17 @@ export default function TeacherStudentPreviewPage() {
       {/* Resource Grid */}
       {loading ? (
         <LoadingSpinner />
+      ) : error ? (
+        <EmptyState
+          icon={AlertTriangle}
+          title="Failed to load preview content"
+          description={error}
+        />
       ) : resources.length === 0 ? (
         <EmptyState
           icon={BookOpen}
           title="No approved resources"
-          description="No approved content available yet. Create resources in the Content Library and submit them for review."
+          description="No approved content available yet. Create resources in Resources and submit them for review."
         />
       ) : (
         <>

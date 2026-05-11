@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +14,7 @@ import {
 import { Save, BookOpen, Download, FileText, AlertCircle } from 'lucide-react';
 import { useTeacherGrades } from '@/hooks/useTeacherGrades';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
-// Assessment creation now goes through Curriculum → Assessments → Paper Builder
+// Assessment creation now goes through the Papers builder.
 import { EditAssessmentDialog } from '@/components/grades/EditAssessmentDialog';
 import { StudentHistoryDialog } from '@/components/grades/StudentHistoryDialog';
 import { ClassStatsBar } from '@/components/grades/ClassStatsBar';
@@ -188,10 +189,12 @@ export default function TeacherGradesPage() {
             </div>
 
             <div className="sm:ml-auto">
-              <Button variant="outline" onClick={() => window.location.href = '/teacher/curriculum/assessments'}>
-                <FileText className="mr-2 h-4 w-4" />
-                Create Assessment
-              </Button>
+              <Link href="/teacher/papers">
+                <Button variant="outline">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Create Paper
+                </Button>
+              </Link>
             </div>
           </div>
         </CardContent>
@@ -202,11 +205,11 @@ export default function TeacherGradesPage() {
         <EmptyState
           icon={BookOpen}
           title="No assessments yet"
-          description="Create an assessment paper in Curriculum → Assessments, then finalise it to capture marks here."
+          description="Create and finalise a paper, then capture its marks here."
           action={
-            <Button onClick={() => window.location.href = '/teacher/curriculum/assessments'}>
-              Go to Assessments
-            </Button>
+            <Link href="/teacher/papers">
+              <Button>Go to Papers</Button>
+            </Link>
           }
         />
       )}

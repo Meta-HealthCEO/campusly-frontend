@@ -101,7 +101,7 @@ export default function TeacherTextbookReaderPage() {
     }
   }, [currentChapter, loadChapterResources]);
 
-  // Local grading — checks answer against block data without a backend call
+  // Local grading checks answer data without a backend call.
   const handleAttempt = useCallback(
     async (blockId: string, response: string): Promise<AttemptResult> => {
       // Find the block
@@ -256,13 +256,13 @@ export default function TeacherTextbookReaderPage() {
           {/* Navigation */}
           <div className="flex items-center justify-between pt-4">
             <Button variant="outline" disabled={chapterIdx === 0} onClick={() => goToChapter(chapterIdx - 1)}>
-              ← Previous Chapter
+              Previous Chapter
             </Button>
             <span className="text-sm text-muted-foreground">
               {chapterIdx + 1} / {sortedChapters.length}
             </span>
             <Button variant="outline" disabled={chapterIdx >= sortedChapters.length - 1} onClick={() => goToChapter(chapterIdx + 1)}>
-              Next Chapter →
+              Next Chapter
             </Button>
           </div>
         </div>

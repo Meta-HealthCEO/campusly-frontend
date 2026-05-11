@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { AlertTriangle, Plus, Search } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -32,7 +33,7 @@ import type {
 } from '@/types';
 
 export default function TeacherTextbooksPage() {
-  const { textbooks, loading, fetchTextbooks, getTextbook, createTextbook, updateTextbook } = useTextbooks();
+  const { textbooks, loading, error, fetchTextbooks, getTextbook, createTextbook, updateTextbook } = useTextbooks();
   const { frameworks } = useCurriculumStructure();
   const { grades } = useGrades();
   const { subjects } = useSubjects();
@@ -52,17 +53,17 @@ export default function TeacherTextbooksPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTextbook, setEditingTextbook] = useState<TextbookItem | null>(null);
 
-  const applyFilters = useCallback(() => {
+  const applyFilters = useCallback(async () => {
     const filters: TextbookFilters = {};
     if (filterFramework && filterFramework !== 'all') filters.frameworkId = filterFramework;
     if (filterSubject && filterSubject !== 'all') filters.subjectId = filterSubject;
     if (filterGrade && filterGrade !== 'all') filters.gradeId = filterGrade;
     if (filterStatus && filterStatus !== 'all') filters.status = filterStatus as TextbookFilters['status'];
     if (search) filters.search = search;
-    fetchTextbooks(filters);
+    await fetchTextbooks(filters);
   }, [fetchTextbooks, filterFramework, filterSubject, filterGrade, filterStatus, search]);
 
-  useEffect(() => { applyFilters(); }, [applyFilters]);
+  useEffect(() => { void applyFilters(); }, [applyFilters]);
 
   const handleViewChange = useCallback((mode: ViewMode) => {
     setViewMode(mode);
@@ -90,7 +91,7 @@ export default function TeacherTextbooksPage() {
       <TextbookDetailPanel
         textbook={selected}
         onBack={() => setSelected(null)}
-        onRefresh={applyFilters}
+        onRefresh={() => { void applyFilters(); }}
         frameworks={frameworkOptions}
         subjects={subjectOptions}
         grades={gradeOptions}
@@ -169,7 +170,13 @@ export default function TeacherTextbooksPage() {
         </div>
       </div>
 
-      {viewMode === 'shelf' ? (
+      {error ? (
+        <EmptyState
+          icon={AlertTriangle}
+          title="Failed to load textbooks"
+          description={error}
+        />
+      ) : viewMode === 'shelf' ? (
         <TextbookShelfView textbooks={textbooks} />
       ) : (
         <TextbookListView textbooks={textbooks} />
@@ -178,8 +185,8 @@ export default function TeacherTextbooksPage() {
       <TextbookFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
-        onSubmitCreate={async (data: CreateTextbookPayload) => { await createTextbook(data); applyFilters(); }}
-        onSubmitUpdate={async (id: string, data: UpdateTextbookPayload) => { await updateTextbook(id, data); applyFilters(); }}
+        onSubmitCreate={async (data: CreateTextbookPayload) => { await createTextbook(data); await applyFilters(); }}
+        onSubmitUpdate={async (id: string, data: UpdateTextbookPayload) => { await updateTextbook(id, data); await applyFilters(); }}
         editingTextbook={editingTextbook}
         frameworks={frameworkOptions}
         subjects={subjectOptions}

@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +14,7 @@ import { useParentHomeworkChild } from '@/hooks/useParentHomeworkChild';
 import { ReadOnlySubmissionView } from '@/components/homework/ReadOnlySubmissionView';
 import { formatDate } from '@/lib/utils';
 
-export default function ParentHomeworkDetailPage() {
+function ParentHomeworkDetailContent() {
   const params = useParams();
   const search = useSearchParams();
   const homeworkId = params.id as string;
@@ -72,5 +73,13 @@ export default function ParentHomeworkDetailPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function ParentHomeworkDetailPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <ParentHomeworkDetailContent />
+    </Suspense>
   );
 }

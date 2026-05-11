@@ -1,12 +1,14 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { PaymentReturnPage } from '@/components/payment/PaymentReturnPage';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { CreditCard } from 'lucide-react';
 
-export default function PaymentReturnPageRoute() {
+function PaymentReturnContent() {
   const searchParams = useSearchParams();
   const paymentId = searchParams.get('paymentId');
 
@@ -26,5 +28,13 @@ export default function PaymentReturnPageRoute() {
         />
       )}
     </div>
+  );
+}
+
+export default function PaymentReturnPageRoute() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <PaymentReturnContent />
+    </Suspense>
   );
 }

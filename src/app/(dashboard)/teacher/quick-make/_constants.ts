@@ -74,6 +74,7 @@ export const RESOURCE_TYPES: Array<{ value: ResourceType; label: string; descrip
   { value: 'activity', label: 'Activity', description: 'Classroom task, group work, or interactive activity.' },
   { value: 'study_notes', label: 'Study Notes', description: 'Structured revision notes for learners.' },
   { value: 'worked_example', label: 'Worked Example', description: 'Step-by-step model solution.' },
+  { value: 'reading', label: 'Reading', description: 'Reading passage with optional comprehension content.' },
 ];
 
 export const BLOCK_TYPES_BY_RESOURCE: Record<ResourceType, ContentBlockType[]> = {
@@ -82,6 +83,7 @@ export const BLOCK_TYPES_BY_RESOURCE: Record<ResourceType, ContentBlockType[]> =
   activity: ['text', 'quiz', 'fill_blank', 'match_columns', 'image'],
   study_notes: ['text', 'image', 'quiz', 'step_reveal'],
   worked_example: ['text', 'step_reveal', 'quiz', 'image'],
+  reading: ['text', 'image', 'quiz'],
 };
 
 export const DIFFICULTIES = [

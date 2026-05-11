@@ -1,28 +1,32 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useTeacherOnboarding } from '@/hooks/useTeacherOnboarding';
-import { useGrades } from '@/hooks/useAcademics';
+import { useClasses, useGrades } from '@/hooks/useAcademics';
 import { SchoolSetupStep } from '@/components/onboarding/SchoolSetupStep';
 import type { SchoolSetupData } from '@/components/onboarding/SchoolSetupStep';
 import { GradesSubjectsStep } from '@/components/onboarding/GradesSubjectsStep';
 import { AddStudentsStep } from '@/components/onboarding/AddStudentsStep';
 import { GRADE_LEVELS } from '@/lib/constants';
+import { resolveId } from '@/lib/api-helpers';
 import type { Grade } from '@/types';
 
 export default function TeacherOnboardingPage() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { updateSchool, createGrade, createSubject, createStudent, bulkCreateStudents } =
+  const { updateSchool, createGrade, createSubject, createClass, bulkCreateStudents } =
     useTeacherOnboarding();
-  const { grades, refetch: refetchGrades } = useGrades();
+  const { grades, loading: gradesLoading, refetch: refetchGrades } = useGrades();
+  const { classes, loading: classesLoading, refetch: refetchClasses } = useClasses();
 
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [createdGrades, setCreatedGrades] = useState<Grade[]>([]);
+  const [classByGradeId, setClassByGradeId] = useState<Record<string, string>>({});
+  const [resumeChecked, setResumeChecked] = useState(false);
 
   const schoolName = useMemo(() => {
     if (!user) return '';
@@ -60,21 +64,60 @@ export default function TeacherOnboardingPage() {
         await createSubject(name, code, gradeIds);
       }
 
+      const nextClassByGradeId: Record<string, string> = {};
+      for (const grade of newGrades) {
+        const cls = await createClass(`${grade.name} Class`, grade.id);
+        nextClassByGradeId[grade.id] = cls.id;
+      }
+
       setCreatedGrades(newGrades);
+      setClassByGradeId(nextClassByGradeId);
       await refetchGrades();
-      toast.success(`Created ${newGrades.length} grades and ${subjectNames.length} subjects`);
+      await refetchClasses();
+      toast.success(`Created ${newGrades.length} grades, ${subjectNames.length} subjects, and ${newGrades.length} classes`);
       setStep(3);
     } catch {
       toast.error('Failed to create grades/subjects');
     } finally {
       setIsLoading(false);
     }
-  }, [createGrade, createSubject, refetchGrades]);
+  }, [createClass, createGrade, createSubject, refetchClasses, refetchGrades]);
+
+  const bulkCreateStudentsForSelectedGrades = useCallback(
+    async (students: { firstName: string; lastName: string; gradeId: string }[]) => {
+      const withClasses = students.map((student) => {
+        const classId = classByGradeId[student.gradeId];
+        if (!classId) {
+          throw new Error(`No class found for grade ${student.gradeId}`);
+        }
+        return { ...student, classId };
+      });
+      return bulkCreateStudents(withClasses);
+    },
+    [bulkCreateStudents, classByGradeId],
+  );
 
   const handleFinish = useCallback(() => {
     toast.success('Onboarding complete! Welcome to Campusly.');
     router.push('/teacher');
   }, [router]);
+
+  useEffect(() => {
+    if (resumeChecked || gradesLoading || classesLoading) return;
+
+    const nextClassByGradeId = classes.reduce<Record<string, string>>((acc, cls) => {
+      const gradeId = resolveId(cls.gradeId) || resolveId(cls.grade);
+      const classId = resolveId(cls);
+      if (gradeId && classId) acc[gradeId] = classId;
+      return acc;
+    }, {});
+
+    setClassByGradeId(nextClassByGradeId);
+    if (Object.keys(nextClassByGradeId).length > 0) {
+      setStep(3);
+    }
+    setResumeChecked(true);
+  }, [classes, classesLoading, gradesLoading, resumeChecked]);
 
   const allGrades = createdGrades.length > 0 ? createdGrades : grades;
 
@@ -127,8 +170,7 @@ export default function TeacherOnboardingPage() {
         {step === 3 && (
           <AddStudentsStep
             grades={allGrades}
-            onCreateStudent={createStudent}
-            onBulkCreate={bulkCreateStudents}
+            onBulkCreate={bulkCreateStudentsForSelectedGrades}
             onBack={() => setStep(2)}
             onFinish={handleFinish}
             isLoading={isLoading}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
@@ -68,10 +68,20 @@ function normaliseQuiz(raw: Record<string, unknown>): NormalisedQuiz {
 
 /* ── Inline markdown renderer (for question & option text) ── */
 
+const inlineMarkdownComponents: Components = {
+  p: ({ children }) => <span className="inline">{children}</span>,
+};
+
 function MathText({ children }: { children: string }) {
   return (
     <span className="inline [&_p]:inline [&_p]:m-0">
-      <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+      <ReactMarkdown
+        remarkPlugins={[remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+        components={inlineMarkdownComponents}
+        disallowedElements={['p']}
+        unwrapDisallowed
+      >
         {children}
       </ReactMarkdown>
     </span>
@@ -190,9 +200,9 @@ export function QuizBlock({ block, onSubmit, interaction }: QuizBlockProps) {
       {hintsShown > 0 && (
         <div className="space-y-1">
           {block.hints.slice(0, hintsShown).map((hint, i) => (
-            <p key={i} className="text-xs text-muted-foreground bg-muted/50 rounded px-3 py-2">
+            <div key={i} className="text-xs text-muted-foreground bg-muted/50 rounded px-3 py-2">
               Hint {i + 1}: <MathText>{hint}</MathText>
-            </p>
+            </div>
           ))}
         </div>
       )}

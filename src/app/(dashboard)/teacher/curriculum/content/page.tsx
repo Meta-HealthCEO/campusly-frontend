@@ -2,16 +2,17 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { BookOpen, Search, Plus, AlertTriangle } from 'lucide-react';
+import { BookOpen, Search, Plus, AlertTriangle, Sparkles, FileText, ClipboardList, NotebookPen } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { ResourceCard } from '@/components/content/ResourceCard';
+import { ResourceListTable } from '@/components/content/ResourceListTable';
 import { ResourceFormDialog } from '@/components/content/ResourceFormDialog';
 import { AssignHomeworkDialog } from '@/components/homework/AssignHomeworkDialog';
 import { NodePicker } from '@/components/curriculum';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
@@ -39,10 +40,11 @@ import type { CurriculumNodeItem } from '@/types/curriculum-structure';
 
 const TYPE_OPTIONS: { value: ResourceType; label: string }[] = [
   { value: 'lesson', label: 'Lesson' },
-  { value: 'study_notes', label: 'Study Notes' },
   { value: 'worksheet', label: 'Worksheet' },
-  { value: 'worked_example', label: 'Worked Example' },
   { value: 'activity', label: 'Activity' },
+  { value: 'study_notes', label: 'Study Notes' },
+  { value: 'worked_example', label: 'Worked Example' },
+  { value: 'reading', label: 'Reading' },
 ];
 
 const STATUS_OPTIONS: { value: ResourceStatus; label: string }[] = [
@@ -57,7 +59,7 @@ const STATUS_OPTIONS: { value: ResourceStatus; label: string }[] = [
 export default function TeacherContentBrowserPage() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { resources, total, loading, fetchResources, createResource } =
+  const { resources, total, loading, error, fetchResources, createResource } =
     useContentLibrary();
   const { subjects } = useSubjects();
   const { grades } = useGrades();
@@ -87,8 +89,9 @@ export default function TeacherContentBrowserPage() {
   }, [search, typeFilter, statusFilter, mineOnly, selectedNodeId]);
 
   useEffect(() => {
-    setFetchError(false);
-    fetchResources(buildFilters()).catch(() => setFetchError(true));
+    void fetchResources(buildFilters()).then((ok) => {
+      setFetchError(!ok);
+    });
   }, [fetchResources, buildFilters]);
 
   const subjectOptions = useMemo(
@@ -108,17 +111,14 @@ export default function TeacherContentBrowserPage() {
     const result = await createResource(data);
     if (result) {
       setFormOpen(false);
-      fetchResources(buildFilters());
+      const ok = await fetchResources(buildFilters());
+      setFetchError(!ok);
     }
   };
 
   const handleNodeChange = (nodeId: string | null, node: CurriculumNodeItem | null) => {
     setSelectedNodeId(nodeId);
     setSelectedNodeTitle(node?.title ?? null);
-  };
-
-  const handleCardClick = (resource: ContentResourceItem) => {
-    router.push(`/teacher/curriculum/preview/${resource.id}`);
   };
 
   const handleAssignClick = (resource: ContentResourceItem) => {
@@ -158,14 +158,68 @@ export default function TeacherContentBrowserPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Content Library"
-        description="Browse, create, and manage teaching resources"
+        title="Resources"
+        description="Printable and assignable lesson materials. Lesson plans, homework, test papers, and question bank items live in their own sections."
       >
-        <Button onClick={() => setFormOpen(true)} className="gap-2">
+        <Button
+          onClick={() => router.push('/teacher/curriculum/ai-studio?tool=resource')}
+          className="gap-2"
+        >
+          <Sparkles className="size-4" />
+          Generate Resource
+        </Button>
+        <Button onClick={() => setFormOpen(true)} variant="outline" className="gap-2">
           <Plus className="size-4" />
-          Create Resource
+          Create Manually
         </Button>
       </PageHeader>
+
+      <Card>
+        <CardContent className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="flex gap-3">
+            <BookOpen className="mt-0.5 size-5 text-primary" />
+            <div>
+              <p className="font-medium">Saved here</p>
+              <p className="text-sm text-muted-foreground">
+                Lessons, worksheets, activities, study notes, and worked examples.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push('/teacher/lesson-plans')}
+            className="flex gap-3 rounded-md border p-3 text-left transition-colors hover:bg-muted/50"
+          >
+            <NotebookPen className="mt-0.5 size-5 text-muted-foreground" />
+            <div>
+              <p className="font-medium">Lesson plans</p>
+              <p className="text-sm text-muted-foreground">Planning documents have their own workspace.</p>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push('/teacher/homework')}
+            className="flex gap-3 rounded-md border p-3 text-left transition-colors hover:bg-muted/50"
+          >
+            <ClipboardList className="mt-0.5 size-5 text-muted-foreground" />
+            <div>
+              <p className="font-medium">Homework</p>
+              <p className="text-sm text-muted-foreground">Assigned work is managed separately from source resources.</p>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push('/teacher/papers')}
+            className="flex gap-3 rounded-md border p-3 text-left transition-colors hover:bg-muted/50"
+          >
+            <FileText className="mt-0.5 size-5 text-muted-foreground" />
+            <div>
+              <p className="font-medium">Papers and questions</p>
+              <p className="text-sm text-muted-foreground">Tests, exams, memos, and reusable questions are separate.</p>
+            </div>
+          </button>
+        </CardContent>
+      </Card>
 
       {/* ── Filters ──────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -186,7 +240,7 @@ export default function TeacherContentBrowserPage() {
             <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="all">All Material Types</SelectItem>
             {TYPE_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
                 {opt.label}
@@ -242,27 +296,17 @@ export default function TeacherContentBrowserPage() {
         <EmptyState
           icon={AlertTriangle}
           title="Failed to load resources"
-          description="Something went wrong. Please try refreshing the page."
+          description={error ?? 'Something went wrong. Please try refreshing the page.'}
         />
       ) : resources.length === 0 ? (
         <EmptyState
           icon={BookOpen}
           title="No resources found"
-          description="Try adjusting your filters or create a new resource."
+          description="Try adjusting your filters, generate a resource in AI Studio, or create a resource manually."
         />
       ) : (
         <>
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {resources.map((resource) => (
-              <ResourceCard
-                key={resource.id}
-                resource={resource}
-                onClick={handleCardClick}
-                onAssign={handleAssignClick}
-              />
-            ))}
-          </div>
-
+          <ResourceListTable resources={resources} onAssign={handleAssignClick} />
           <p className="text-sm text-muted-foreground text-center">
             Showing {resources.length} of {total} resource{total !== 1 ? 's' : ''}
           </p>

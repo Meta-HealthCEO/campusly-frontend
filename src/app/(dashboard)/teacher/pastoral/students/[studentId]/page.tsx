@@ -27,7 +27,7 @@ export default function StudentWellbeingProfilePage() {
     if (studentId) {
       void fetchWellbeing(studentId);
     }
-  }, [studentId]);
+  }, [fetchWellbeing, studentId]);
 
   const handleCreateSession = async (data: CreateSessionPayload) => {
     await createSession(data);
@@ -57,11 +57,13 @@ export default function StudentWellbeingProfilePage() {
     );
   }
 
+  const studentLabel = `${wellbeingProfile.student.firstName} ${wellbeingProfile.student.lastName}`.trim();
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`${wellbeingProfile.student.firstName} ${wellbeingProfile.student.lastName}`}
-        description="Counselor view — referral history, sessions, and risk flags"
+        title={studentLabel}
+        description="Counselor view - referral history, sessions, and risk flags"
       >
         <Button onClick={() => setSessionCreateOpen(true)}>
           <Plus className="h-4 w-4 mr-2" /> New Session
@@ -74,6 +76,19 @@ export default function StudentWellbeingProfilePage() {
         open={sessionCreateOpen}
         onOpenChange={setSessionCreateOpen}
         onSubmit={handleCreateSession}
+        defaultStudentId={studentId}
+        studentOptions={[{
+          id: studentId,
+          label: studentLabel,
+          detail: wellbeingProfile.student.grade ? `Grade ${wellbeingProfile.student.grade}` : undefined,
+        }]}
+        referralOptions={wellbeingProfile.referrals.recent
+          .filter((referral) => !['resolved', 'closed'].includes(referral.status))
+          .map((referral) => ({
+            id: referral.id,
+            studentId,
+            label: `${referral.reason.replace(/_/g, ' ')} - ${referral.status.replace(/_/g, ' ')}`,
+          }))}
       />
     </div>
   );

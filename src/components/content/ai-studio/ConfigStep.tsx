@@ -1,31 +1,40 @@
 'use client';
 
-import { BookOpen, FileText, Gamepad2, ChevronRight, ChevronLeft } from 'lucide-react';
+import {
+  AlertTriangle,
+  BookOpen,
+  CheckCircle2,
+  FileText,
+  Gamepad2,
+  ChevronRight,
+  ChevronLeft,
+  Loader2,
+} from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { DIFFICULTY_LEVELS_SIMPLE } from '@/lib/design-system';
 import type { ResourceType } from '@/types';
-import type { Grade, Subject } from '@/types';
+
+type ContextStatus = 'idle' | 'preparing' | 'ready' | 'error';
 
 interface ConfigStepProps {
   resourceType: ResourceType;
   onResourceTypeChange: (t: ResourceType) => void;
   subjectId: string;
-  onSubjectChange: (v: string) => void;
   gradeId: string;
-  onGradeChange: (v: string) => void;
   term: number;
-  onTermChange: (v: number) => void;
+  contextSubjectName: string;
+  contextGradeName: string;
+  contextTerm: number;
+  contextStatus: ContextStatus;
+  contextError: string | null;
   difficulty: number;
   onDifficultyChange: (v: number) => void;
   instructions: string;
   onInstructionsChange: (v: string) => void;
-  subjects: Subject[];
-  grades: Grade[];
   onNext: () => void;
   onBack: () => void;
 }
@@ -40,27 +49,24 @@ export function ConfigStep({
   resourceType,
   onResourceTypeChange,
   subjectId,
-  onSubjectChange,
   gradeId,
-  onGradeChange,
   term,
-  onTermChange,
+  contextSubjectName,
+  contextGradeName,
+  contextTerm,
+  contextStatus,
+  contextError,
   difficulty,
   onDifficultyChange,
   instructions,
   onInstructionsChange,
-  subjects,
-  grades,
   onNext,
   onBack,
 }: ConfigStepProps) {
-  // Resource type is always selected (default: lesson). Subject/grade/term
-  // are auto-detected from the curriculum tree — don't block if missing.
-  const canContinue = true;
+  const canContinue = contextStatus === 'ready' && Boolean(subjectId && gradeId && term >= 1 && term <= 4);
 
   return (
     <div className="space-y-6">
-      {/* Resource Type Selector */}
       <div className="space-y-3">
         <Label className="text-base font-semibold">What would you like to create?</Label>
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
@@ -95,28 +101,66 @@ export function ConfigStep({
         </div>
       </div>
 
-      {/* Auto-detected from curriculum tree — show as read-only info */}
       <Card>
-        <CardContent className="flex flex-wrap items-center gap-3 text-sm">
-          <span className="text-muted-foreground">Detected from topic:</span>
-          {subjectId && (
-            <Badge variant="outline">{subjects.find((s: Subject) => s.id === subjectId)?.name ?? 'Subject'}</Badge>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium">Generation context</p>
+              <p className="text-xs text-muted-foreground">CAPS-aligned selection</p>
+            </div>
+            {contextStatus === 'preparing' && (
+              <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Preparing
+              </span>
+            )}
+            {contextStatus === 'ready' && (
+              <span className="inline-flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="h-4 w-4" />
+                Ready
+              </span>
+            )}
+            {contextStatus === 'error' && (
+              <span className="inline-flex items-center gap-1.5 text-sm text-destructive">
+                <AlertTriangle className="h-4 w-4" />
+                Needs attention
+              </span>
+            )}
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border bg-muted/30 px-3 py-2">
+              <p className="text-xs text-muted-foreground">Subject</p>
+              <p className="mt-1 text-sm font-medium">{contextSubjectName || 'Not detected'}</p>
+            </div>
+            <div className="rounded-lg border bg-muted/30 px-3 py-2">
+              <p className="text-xs text-muted-foreground">Grade</p>
+              <p className="mt-1 text-sm font-medium">{contextGradeName || 'Not detected'}</p>
+            </div>
+            <div className="rounded-lg border bg-muted/30 px-3 py-2">
+              <p className="text-xs text-muted-foreground">Term</p>
+              <p className="mt-1 text-sm font-medium">
+                {contextTerm > 0 ? `Term ${contextTerm}` : 'Not detected'}
+              </p>
+            </div>
+          </div>
+
+          {contextStatus === 'preparing' && (
+            <p className="text-sm text-muted-foreground">
+              Creating any missing teacher workspace records needed for this CAPS selection.
+            </p>
           )}
-          {gradeId && (
-            <Badge variant="outline">{grades.find((g: Grade) => g.id === gradeId)?.name ?? 'Grade'}</Badge>
-          )}
-          {term > 0 && (
-            <Badge variant="outline">Term {term}</Badge>
-          )}
-          {!subjectId && !gradeId && !term && (
-            <span className="text-muted-foreground italic">Could not detect — will use general settings</span>
+
+          {contextStatus === 'error' && (
+            <p className="text-sm text-destructive">
+              {contextError ?? 'Could not prepare this topic for generation.'}
+            </p>
           )}
         </CardContent>
       </Card>
 
-      {/* Difficulty */}
       <div className="space-y-3">
-        <Label className="text-base font-semibold">Difficulty Level</Label>
+        <Label className="text-base font-semibold">Resource difficulty</Label>
         <div className="flex gap-3">
           {DIFFICULTY_LEVELS_SIMPLE.map((d) => (
             <button
@@ -139,7 +183,6 @@ export function ConfigStep({
         </div>
       </div>
 
-      {/* Instructions */}
       <div className="space-y-2">
         <Label>Special Instructions (optional)</Label>
         <Textarea
@@ -150,7 +193,6 @@ export function ConfigStep({
         />
       </div>
 
-      {/* Actions */}
       <div className="flex justify-between">
         <Button variant="outline" onClick={onBack}>
           <ChevronLeft className="mr-1 h-4 w-4" />

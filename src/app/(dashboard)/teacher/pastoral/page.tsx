@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -41,7 +41,7 @@ export default function CounselorDashboardPage() {
   const { referrals, referralsLoading, fetchReferrals, updateReferral, resolveReferral } =
     usePastoralReferrals();
   const { sessions, sessionsLoading, fetchSessions, createSession } = usePastoralSessions();
-  const { caseload, caseloadLoading, fetchCaseload, report, reportLoading, fetchReport } =
+  const { caseload, caseloadLoading, fetchCaseload, reports, reportLoading, fetchReport } =
     usePastoralCare();
 
   const [selectedReferral, setSelectedReferral] = useState<PastoralReferral | null>(null);
@@ -57,6 +57,33 @@ export default function CounselorDashboardPage() {
   }, [fetchCaseload, fetchReferrals, fetchSessions]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
+
+  const studentOptions = useMemo(() => {
+    const map = new Map<string, { id: string; label: string; detail?: string }>();
+    const addStudent = (student: PastoralReferral['studentId'], detail?: string) => {
+      if (!student?.id) return;
+      map.set(student.id, {
+        id: student.id,
+        label: `${student.firstName} ${student.lastName}`.trim() || 'Unnamed student',
+        detail: detail ?? (student.grade ? `Grade ${student.grade}` : undefined),
+      });
+    };
+
+    caseload?.cases.forEach((item) => addStudent(
+      item.studentId,
+      item.studentId.grade ? `Grade ${item.studentId.grade}` : undefined,
+    ));
+    referrals.forEach((referral) => addStudent(referral.studentId, referral.status.replace(/_/g, ' ')));
+    return Array.from(map.values());
+  }, [caseload?.cases, referrals]);
+
+  const referralOptions = useMemo(() => referrals
+    .filter((referral) => !['resolved', 'closed'].includes(referral.status))
+    .map((referral) => ({
+      id: referral.id,
+      studentId: referral.studentId.id,
+      label: `${referral.studentId.firstName} ${referral.studentId.lastName} - ${referral.reason.replace(/_/g, ' ')}`,
+    })), [referrals]);
 
   const handleResolve = async (id: string, data: ResolveReferralPayload) => {
     await resolveReferral(id, data);
@@ -103,7 +130,7 @@ export default function CounselorDashboardPage() {
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
 
-        {/* ── Dashboard ─────────────────────────────────── */}
+        {/* Dashboard */}
         <TabsContent value="dashboard" className="space-y-4 mt-4">
           {caseloadLoading ? (
             <LoadingSpinner />
@@ -130,7 +157,7 @@ export default function CounselorDashboardPage() {
           )}
         </TabsContent>
 
-        {/* ── Referrals ─────────────────────────────────── */}
+        {/* Referrals */}
         <TabsContent value="referrals" className="space-y-4 mt-4">
           {referralsLoading ? (
             <LoadingSpinner />
@@ -156,7 +183,7 @@ export default function CounselorDashboardPage() {
           />
         </TabsContent>
 
-        {/* ── Sessions ──────────────────────────────────── */}
+        {/* Sessions */}
         <TabsContent value="sessions" className="space-y-4 mt-4">
           <div className="flex justify-end">
             <Button onClick={() => setSessionCreateOpen(true)}>
@@ -177,15 +204,17 @@ export default function CounselorDashboardPage() {
             open={sessionCreateOpen}
             onOpenChange={setSessionCreateOpen}
             onSubmit={handleCreateSession}
+            studentOptions={studentOptions}
+            referralOptions={referralOptions}
           />
         </TabsContent>
 
-        {/* ── Students ──────────────────────────────────── */}
+        {/* Students */}
         <TabsContent value="students" className="space-y-4 mt-4">
           <SearchInput
             value={studentSearch}
             onChange={setStudentSearch}
-            placeholder="Search students by name or grade…"
+            placeholder="Search students by name or grade..."
           />
           {(caseload?.cases ?? [])
             .filter((c) =>
@@ -211,7 +240,7 @@ export default function CounselorDashboardPage() {
           )}
         </TabsContent>
 
-        {/* ── Reports ───────────────────────────────────── */}
+        {/* Reports */}
         <TabsContent value="reports" className="space-y-4 mt-4">
           <Card>
             <CardContent className="pt-4">
@@ -235,16 +264,16 @@ export default function CounselorDashboardPage() {
                   />
                 </div>
                 <Button onClick={handleFetchReport} disabled={reportLoading}>
-                  {reportLoading ? 'Loading…' : 'Generate Report'}
+                  {reportLoading ? 'Loading...' : 'Generate Report'}
                 </Button>
               </div>
             </CardContent>
           </Card>
-          {report ? (
+          {reports.reasons || reports.sessions || reports.outcomes ? (
             <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
-              <ReferralReasonChart report={report} />
-              <SessionsPerMonthChart report={report} />
-              <OutcomeChart report={report} />
+              <ReferralReasonChart report={reports.reasons} />
+              <SessionsPerMonthChart report={reports.sessions} />
+              <OutcomeChart report={reports.outcomes} />
             </div>
           ) : (
             <EmptyState

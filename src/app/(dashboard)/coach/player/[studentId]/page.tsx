@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { Suspense, useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import {
   RefreshCw, Plus, Activity, HeartPulse, Trophy, Sparkles,
@@ -53,7 +53,7 @@ function studentDisplayName(s: { admissionNumber?: string; userId?: unknown } | 
   return 'Player';
 }
 
-export default function CoachPlayerDetailPage() {
+function CoachPlayerDetailContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -441,5 +441,13 @@ export default function CoachPlayerDetailPage() {
         onSubmit={handleRecordPB}
       />
     </div>
+  );
+}
+
+export default function CoachPlayerDetailPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <CoachPlayerDetailContent />
+    </Suspense>
   );
 }

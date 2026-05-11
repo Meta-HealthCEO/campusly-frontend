@@ -27,6 +27,10 @@ import {
 } from 'lucide-react';
 import { PatternCard } from '@/components/attendance/PatternCard';
 import { useTeacherAttendanceReport } from '@/hooks/useTeacherAttendanceReport';
+import { toISODate } from '@/lib/utils';
+import { toast } from 'sonner';
+
+const todayISO = toISODate(new Date());
 
 export default function TeacherAttendanceReportPage() {
   const {
@@ -51,6 +55,18 @@ export default function TeacherAttendanceReportPage() {
   const [selectedStudentId, setSelectedStudentId] = useState('');
 
   const handleApplyDates = () => {
+    if (!localStart || !localEnd) {
+      toast.error('Select both a start and end date.');
+      return;
+    }
+    if (localStart > localEnd) {
+      toast.error('Start date must be before end date.');
+      return;
+    }
+    if (localEnd > todayISO) {
+      toast.error('Attendance reports cannot include future dates.');
+      return;
+    }
     setDateRange(localStart, localEnd);
   };
 
@@ -110,6 +126,7 @@ export default function TeacherAttendanceReportPage() {
                 type="date"
                 className="w-full sm:w-44"
                 value={localStart}
+                max={localEnd || todayISO}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setLocalStart(e.target.value)
                 }
@@ -122,6 +139,8 @@ export default function TeacherAttendanceReportPage() {
                 type="date"
                 className="w-full sm:w-44"
                 value={localEnd}
+                min={localStart}
+                max={todayISO}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setLocalEnd(e.target.value)
                 }

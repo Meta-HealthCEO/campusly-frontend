@@ -30,7 +30,7 @@ const STEP_LABELS = ['Select Paper', 'Select Student', 'Upload Pages', 'AI Marki
 export default function MarkPapersPage() {
   const { user } = useAuthStore();
   const {
-    loading, papers, papersLoading, currentMarking, markings,
+    loading, papers, papersLoading, papersError, currentMarking, markings,
     fetchPapers, markPaper, getMarkings, getMarking, updateMarking, publishMarking,
   } = useTeacherMarking();
   const { students, loading: classesLoading } = useTeacherClasses();
@@ -183,6 +183,8 @@ export default function MarkPapersPage() {
             <MarkingPaperSelect
               papers={papers}
               loading={papersLoading}
+              error={papersError}
+              onRetry={() => { void fetchPapers(); }}
               onSelect={handlePaperSelect}
             />
           )}
@@ -234,4 +236,3 @@ export default function MarkPapersPage() {
     </div>
   );
 }
-

@@ -132,7 +132,7 @@ export default function HomePage() {
               </Button>
             </Link>
             <Link href="/register">
-              <Button size="lg" className="bg-[#2563EB] hover:bg-[#1d4ed8]">
+              <Button size="lg" className="bg-[#2563EB] text-white hover:bg-[#1d4ed8] hover:text-white">
                 Get Started
               </Button>
             </Link>
@@ -255,7 +255,7 @@ export default function HomePage() {
                     <Button
                       className={`w-full ${
                         tier.highlighted
-                          ? 'bg-[#2563EB] hover:bg-[#1d4ed8]'
+                          ? 'bg-[#2563EB] text-white hover:bg-[#1d4ed8] hover:text-white'
                           : ''
                       }`}
                       variant={tier.highlighted ? 'default' : 'outline'}

@@ -8,14 +8,11 @@ import { NoticeBoardFeed } from '@/components/notice-board/NoticeBoardFeed';
 import { CreatePostDialog } from '@/components/notice-board/CreatePostDialog';
 import { useNoticeBoardFeed, useNoticeBoardMutations } from '@/hooks/useNoticeBoard';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
-import { useAuthStore } from '@/stores/useAuthStore';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import type { NoticeBoardPost, CreateNoticeBoardPostInput, PostScope } from '@/types';
 
 export default function TeacherNoticeBoardPage() {
-  const user = useAuthStore((s) => s.user);
-  const schoolId = user?.schoolId ?? '';
   const { posts, loading, fetchFeed } = useNoticeBoardFeed();
   const { createPost, updatePost, deletePost, togglePin } = useNoticeBoardMutations();
   const { classes } = useTeacherClasses();
@@ -26,13 +23,12 @@ export default function TeacherNoticeBoardPage() {
 
   const scopeOptions = useMemo(() => {
     const options: Array<{ id: string; name: string; scope: PostScope }> = [];
-    if (schoolId) options.push({ id: schoolId, name: 'School-wide', scope: 'school' });
     classes.forEach((c) => {
       const classId = c.id ?? '';
       options.push({ id: classId, name: `Class: ${c.name}`, scope: 'class' });
     });
     return options;
-  }, [schoolId, classes]);
+  }, [classes]);
 
   const handleCreate = useCallback(async (data: CreateNoticeBoardPostInput) => {
     try {
@@ -87,8 +83,11 @@ export default function TeacherNoticeBoardPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Notice Board" description="Post notices to your classes or school-wide.">
-        <Button onClick={() => { setEditPost(null); setDialogOpen(true); }}>
+      <PageHeader title="Notice Board" description="Post notices to the classes you teach.">
+        <Button
+          disabled={scopeOptions.length === 0}
+          onClick={() => { setEditPost(null); setDialogOpen(true); }}
+        >
           <Plus className="h-4 w-4 mr-2" />
           New Notice
         </Button>

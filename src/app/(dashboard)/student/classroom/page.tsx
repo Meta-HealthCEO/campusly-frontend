@@ -78,7 +78,7 @@ export default function StudentClassroomPage() {
                   <SessionStatusBadge status={session.status} />
                 </div>
                 <p className="text-sm text-muted-foreground truncate">
-                  {session.subjectId.name} · {session.classId.name}
+                  {session.subjectId.name} - {session.classId.name}
                 </p>
                 {session.recordingUrl && (
                   <Button

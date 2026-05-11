@@ -2,8 +2,10 @@
 
 import { use, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Download, FileText, ChevronLeft, CheckCircle } from 'lucide-react';
+import { Download, FileText, ChevronLeft, CheckCircle, ShieldCheck } from 'lucide-react';
 import { useTeacherPapers } from '@/hooks/useTeacherPapers';
+import { usePaperModeration } from '@/hooks/usePaperModeration';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { Button } from '@/components/ui/button';
 import {
   Tabs,
@@ -39,7 +41,10 @@ export default function PaperDetailPage({
     finalisePaper,
     downloadPaperPdf,
     downloadMemoPdf,
-  } = useTeacherPapers();
+  } = useTeacherPapers(false);
+  const { submitForModeration, submitting } = usePaperModeration();
+  const user = useAuthStore((s) => s.user);
+  const permissions = useAuthStore((s) => s.permissions);
   const [paper, setPaper] = useState<Paper | null>(null);
   const [memo, setMemo] = useState<PaperMemo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,7 +60,6 @@ export default function PaperDetailPage({
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     Promise.all([getPaperById(id), getMemoByPaperId(id)])
       .then(([p, m]) => {
         if (!cancelled) {
@@ -109,6 +113,11 @@ export default function PaperDetailPage({
     const result = await finalisePaper(paper._id);
     if (result) setPaper(result);
   };
+  const canFinaliseDirectly = !!(
+    user?.role === 'school_admin' ||
+    user?.role === 'super_admin' ||
+    permissions.isSchoolPrincipal
+  );
 
   return (
     <div className="space-y-6">
@@ -123,9 +132,19 @@ export default function PaperDetailPage({
       <PageHeader title={paper.title} description={description}>
         <div className="flex gap-2 flex-wrap items-center">
           <Badge variant={statusVariant(paper.status)}>{paper.status}</Badge>
-          {paper.status === 'draft' && (
+          {paper.status === 'draft' && canFinaliseDirectly && (
             <Button size="sm" onClick={handleFinalise}>
               <CheckCircle className="h-4 w-4 mr-1" /> Finalise
+            </Button>
+          )}
+          {paper.status === 'draft' && !canFinaliseDirectly && (
+            <Button
+              size="sm"
+              onClick={() => void submitForModeration(paper._id)}
+              disabled={submitting}
+            >
+              <ShieldCheck className="h-4 w-4 mr-1" />
+              {submitting ? 'Submitting...' : 'Submit for Moderation'}
             </Button>
           )}
           <Button
@@ -156,6 +175,7 @@ export default function PaperDetailPage({
         <TabsContent value="memo">
           {memo ? (
             <PaperDetailMemoTab
+              key={memo.updatedAt}
               paper={paper}
               memo={memo}
               onChanged={reload}

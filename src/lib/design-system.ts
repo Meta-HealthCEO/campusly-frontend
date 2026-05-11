@@ -60,6 +60,7 @@ export const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
   worksheet: 'Worksheet',
   worked_example: 'Worked Example',
   activity: 'Activity',
+  reading: 'Reading',
 };
 
 // ─── CAPS Cognitive Levels ─────────────────────────────────────────────────

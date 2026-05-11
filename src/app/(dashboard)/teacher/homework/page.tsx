@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Plus, BookOpen } from 'lucide-react';
+import { AlertTriangle, Plus, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { ListSkeleton } from '@/components/shared/skeletons';
@@ -16,7 +16,7 @@ import {
 import { HomeworkListRow } from '@/components/homework/HomeworkListRow';
 
 export default function TeacherHomeworkListPage() {
-  const { teacherHomework, loading } = useTeacherHomework();
+  const { teacherHomework, loading, error } = useTeacherHomework();
 
   const { classes } = useTeacherClasses();
 
@@ -73,7 +73,15 @@ export default function TeacherHomeworkListPage() {
 
       {loading && <ListSkeleton rows={5} />}
 
-      {!loading && filtered.length === 0 && (
+      {!loading && error && (
+        <EmptyState
+          icon={AlertTriangle}
+          title="Failed to load homework"
+          description={error}
+        />
+      )}
+
+      {!loading && !error && filtered.length === 0 && (
         <EmptyState
           icon={BookOpen}
           title="No homework yet"
@@ -81,7 +89,7 @@ export default function TeacherHomeworkListPage() {
         />
       )}
 
-      {!loading && filtered.length > 0 && (
+      {!loading && !error && filtered.length > 0 && (
         <div className="space-y-2">
           {filtered.map((hw) => (
             <HomeworkListRow key={hw._id} homework={hw} />

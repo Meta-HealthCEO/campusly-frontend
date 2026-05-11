@@ -45,7 +45,7 @@ export default function MarkingHubPage() {
     } else if (item.type === 'assessment') {
       router.push('/teacher/grades');
     } else {
-      router.push('/teacher/ai-tools/grading');
+      router.push('/teacher/curriculum/mark-papers');
     }
   }
 

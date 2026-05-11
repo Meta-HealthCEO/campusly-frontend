@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import Link from 'next/link';
 import { FileQuestion, Sparkles, Upload, Search, AlertTriangle } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -54,6 +55,7 @@ export default function TeacherQuestionsPage() {
   const { user } = useAuthStore();
   const {
     questions, questionsTotal, questionsLoading,
+    questionsError,
     fetchQuestions, getQuestion, createQuestion, updateQuestion,
     generateQuestions, extractFromPaper,
   } = useQuestionBank();
@@ -93,8 +95,7 @@ export default function TeacherQuestionsPage() {
   }, [search, typeFilter, capsFilter, diffFilter, statusFilter, mineOnly, selectedNodeId]);
 
   useEffect(() => {
-    setFetchError(false);
-    fetchQuestions(filters).catch(() => setFetchError(true));
+    void fetchQuestions(filters).then((ok) => setFetchError(!ok));
   }, [filters, fetchQuestions]);
 
   // ─── Handlers ──────────────────────────────────────────────────────────
@@ -125,7 +126,7 @@ export default function TeacherQuestionsPage() {
   );
 
   const handleRefresh = useCallback(() => {
-    fetchQuestions(filters).catch(() => setFetchError(true));
+    void fetchQuestions(filters).then((ok) => setFetchError(!ok));
   }, [fetchQuestions, filters]);
 
   /** Batch-save extracted questions from paper upload */
@@ -158,14 +159,16 @@ export default function TeacherQuestionsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Question Bank"
-        description="AI-generated and uploaded questions for building assessment papers"
+        title={user?.isStandaloneTeacher ? 'Practice Questions' : 'Question Bank'}
+        description="Reusable questions for revision, homework, and assessment papers."
       >
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button onClick={() => setGenerateOpen(true)}>
-            <Sparkles className="mr-2 size-4" />
-            Generate with AI
-          </Button>
+          <Link href="/teacher/curriculum/ai-studio?tool=questions">
+            <Button className="w-full sm:w-auto">
+              <Sparkles className="mr-2 size-4" />
+              Generate in AI Studio
+            </Button>
+          </Link>
           <Button variant="outline" onClick={() => setUploadOpen(true)}>
             <Upload className="mr-2 size-4" />
             Upload Paper
@@ -269,7 +272,7 @@ export default function TeacherQuestionsPage() {
         <EmptyState
           icon={AlertTriangle}
           title="Failed to load questions"
-          description="Something went wrong. Please try refreshing the page."
+          description={questionsError ?? 'Something went wrong. Please try refreshing the page.'}
         />
       ) : questions.length === 0 ? (
         <EmptyState
@@ -278,10 +281,12 @@ export default function TeacherQuestionsPage() {
           description="Generate questions with AI or upload a paper to get started."
           action={
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Button onClick={() => setGenerateOpen(true)}>
-                <Sparkles className="mr-2 size-4" />
-                Generate with AI
-              </Button>
+              <Link href="/teacher/curriculum/ai-studio?tool=questions">
+                <Button className="w-full sm:w-auto">
+                  <Sparkles className="mr-2 size-4" />
+                  Generate in AI Studio
+                </Button>
+              </Link>
               <Button variant="outline" onClick={() => setUploadOpen(true)}>
                 <Upload className="mr-2 size-4" />
                 Upload Paper

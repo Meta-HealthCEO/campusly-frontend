@@ -12,6 +12,7 @@ import {
   BarChart3,
   Layers,
   Pencil,
+  Printer,
   X,
   ClipboardList,
 } from 'lucide-react';
@@ -39,6 +40,9 @@ interface PreviewStepProps {
   subjects: Subject[];
   onPublish: (id: string) => Promise<boolean>;
   onReview: (id: string, data: { action: 'approve'; notes?: string }) => Promise<boolean>;
+  canApprove?: boolean;
+  showPublishActions?: boolean;
+  assignLabel?: string;
   onRefine: (id: string, instruction: string) => Promise<ContentResourceItem | null>;
   onRegenerate: () => void;
   onReset: () => void;
@@ -53,6 +57,9 @@ export function PreviewStep({
   subjects,
   onPublish,
   onReview,
+  canApprove = false,
+  showPublishActions = true,
+  assignLabel = 'Assign as Homework',
   onRefine,
   onRegenerate,
   onReset,
@@ -118,6 +125,11 @@ export function PreviewStep({
     try {
       const submitted = await onPublish(resource.id);
       if (submitted) {
+        if (!canApprove) {
+          toast.success('Submitted for review. An HOD or admin can approve it for students.');
+          return;
+        }
+
         const approved = await onReview(resource.id, { action: 'approve' });
         if (approved) {
           toast.success('Published! Students can now access this resource.', {
@@ -133,12 +145,12 @@ export function PreviewStep({
       if (msg.includes('permission') || msg.includes('403')) {
         toast.error('Submitted for review. An HOD or admin needs to approve it.');
       } else {
-        toast.error(msg);
+      toast.error(msg);
       }
     } finally {
       setPublishing(false);
     }
-  }, [resource.id, onPublish, onReview, onResourceUpdated]);
+  }, [resource.id, onPublish, onReview, canApprove]);
 
   const handleEnterEdit = useCallback(() => {
     setEditedBlocks([...resource.blocks]);
@@ -289,18 +301,24 @@ export function PreviewStep({
             onClick={() => window.open('/teacher/curriculum/content', '_blank')}
           >
             <ExternalLink className="mr-1 h-4 w-4" />
-            Content Library
+            Open Resources
+          </Button>
+          <Button variant="outline" onClick={() => window.print()}>
+            <Printer className="mr-1 h-4 w-4" />
+            Print / Save PDF
           </Button>
           {onAssign && (
             <Button variant="outline" onClick={() => onAssign(resource)}>
               <ClipboardList className="mr-1 h-4 w-4" />
-              Assign to Class
+              {assignLabel}
             </Button>
           )}
-          <Button onClick={handlePublish} disabled={publishing}>
-            <CheckCircle className="mr-1 h-4 w-4" />
-            {publishing ? 'Publishing...' : 'Approve & Publish'}
-          </Button>
+          {showPublishActions && (
+            <Button onClick={handlePublish} disabled={publishing}>
+              <CheckCircle className="mr-1 h-4 w-4" />
+              {publishing ? 'Submitting...' : canApprove ? 'Approve & Publish' : 'Submit for Review'}
+            </Button>
+          )}
         </div>
       </div>
     </div>

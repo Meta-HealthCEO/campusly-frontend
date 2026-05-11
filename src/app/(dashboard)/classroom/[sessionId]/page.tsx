@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { BookOpen } from 'lucide-react';
+import { BarChart2Icon, BookOpen, PhoneOffIcon } from 'lucide-react';
 import { VideoRoom } from '@/components/classroom/VideoRoom';
 import { SessionChat } from '@/components/classroom/SessionChat';
 import { TeacherControls } from '@/components/classroom/TeacherControls';
@@ -14,6 +14,7 @@ import { SharedWhiteboard } from '@/components/classroom/SharedWhiteboard';
 import { ParticipantGrid } from '@/components/classroom/ParticipantGrid';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useClassroomSessions } from '@/hooks/useClassroomSessions';
 import type { JoinData } from '@/hooks/useClassroomSessions';
@@ -28,7 +29,15 @@ export default function LiveClassroomPage() {
 
   const { user } = useAuthStore();
   const { endSession, getJoinToken } = useClassroomSessions();
-  const isTeacher = user?.role === 'teacher' || user?.role === 'admin';
+  const isHostRole = ['teacher', 'school_admin', 'super_admin', 'principal'].includes(user?.role ?? '');
+  const returnPath =
+    user?.role === 'student'
+      ? '/student/classroom'
+      : user?.role === 'parent'
+        ? '/parent/classroom'
+        : ['school_admin', 'super_admin', 'principal'].includes(user?.role ?? '')
+          ? '/admin/classroom'
+          : '/teacher/classroom';
 
   const [joinData, setJoinData] = useState<JoinData | null>(null);
   const [sidebarTab, setSidebarTab] = useState('chat');
@@ -46,7 +55,7 @@ export default function LiveClassroomPage() {
     formattedDuration,
     startRecording,
     stopRecording,
-  } = useClassroomRecording(joinData && isTeacher ? sessionId : null);
+  } = useClassroomRecording(joinData && isHostRole ? sessionId : null);
 
   /* Fetch join data on mount */
   useEffect(() => {
@@ -80,11 +89,11 @@ export default function LiveClassroomPage() {
   const handleEnd = useCallback(async () => {
     try {
       await endSession(sessionId);
-      router.push('/teacher/classroom');
+      router.push(returnPath);
     } catch (err: unknown) {
       console.error('Failed to end session', err);
     }
-  }, [sessionId, endSession, router]);
+  }, [sessionId, endSession, router, returnPath]);
 
   const handleCreatePoll = useCallback(
     (question: string, options: string[]) => {
@@ -106,35 +115,59 @@ export default function LiveClassroomPage() {
     );
   }
 
+  const isTeacher = joinData.isTeacher || isHostRole;
+  const liveVideoReady = joinData.livekitConfigured && joinData.token && joinData.livekitUrl;
+
   return (
     <div className="flex flex-col gap-4 h-full">
       {/* Main content — two columns on desktop, stacked on mobile */}
       <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
-        {/* Left — video + controls */}
+        {/* Left - video + controls */}
         <div className="flex flex-col gap-4 flex-1 min-w-0">
-          <VideoRoom
-            token={joinData.token}
-            serverUrl={joinData.livekitUrl}
-            isTeacher={isTeacher}
-            onDisconnected={() => router.push('/teacher/classroom')}
-          />
-
-          {/* Controls bar */}
-          {isTeacher ? (
-            <TeacherControls
-              onEnd={handleEnd}
-              onCreatePoll={() => setPollCreatorOpen(true)}
-              isRecording={isRecording}
-              recordingDuration={formattedDuration}
-              onStartRecording={startRecording}
-              onStopRecording={stopRecording}
-            />
+          {isTeacher && liveVideoReady ? (
+            <VideoRoom
+              token={joinData.token}
+              serverUrl={joinData.livekitUrl}
+              isTeacher={isTeacher}
+              onDisconnected={() => router.push(returnPath)}
+            >
+              <TeacherControls
+                onEnd={handleEnd}
+                onCreatePoll={() => setPollCreatorOpen(true)}
+                isRecording={isRecording}
+                recordingDuration={formattedDuration}
+                onStartRecording={startRecording}
+                onStopRecording={stopRecording}
+              />
+            </VideoRoom>
           ) : (
-            <StudentControls
-              handRaised={handRaised}
-              onRaiseHand={socket.raiseHand}
-              onLowerHand={socket.lowerHand}
-            />
+            <>
+              <VideoRoom
+                token={joinData.token}
+                serverUrl={joinData.livekitUrl}
+                isTeacher={isTeacher}
+                onDisconnected={() => router.push(returnPath)}
+              />
+
+              {isTeacher ? (
+                <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-3">
+                  <Button variant="outline" size="default" onClick={() => setPollCreatorOpen(true)}>
+                    <BarChart2Icon className="size-4 mr-1.5" />
+                    Poll
+                  </Button>
+                  <Button variant="destructive" size="default" onClick={handleEnd}>
+                    <PhoneOffIcon className="size-4 mr-1.5" />
+                    End Session
+                  </Button>
+                </div>
+              ) : (
+                <StudentControls
+                  handRaised={handRaised}
+                  onRaiseHand={socket.raiseHand}
+                  onLowerHand={socket.lowerHand}
+                />
+              )}
+            </>
           )}
         </div>
 

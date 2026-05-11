@@ -23,6 +23,7 @@ const TYPE_ICONS: Record<ResourceType, React.ElementType> = {
   worksheet: PenTool,
   worked_example: Lightbulb,
   activity: Zap,
+  reading: BookOpen,
 };
 
 const TYPE_LABELS: Record<ResourceType, string> = {
@@ -31,6 +32,7 @@ const TYPE_LABELS: Record<ResourceType, string> = {
   worksheet: 'Worksheet',
   worked_example: 'Worked Example',
   activity: 'Activity',
+  reading: 'Reading',
 };
 
 function resolveCreatorName(creator: ContentResourceItem['createdBy']): string {

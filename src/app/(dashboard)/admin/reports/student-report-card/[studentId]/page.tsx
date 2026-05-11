@@ -91,6 +91,9 @@ export default function StudentReportCardPage() {
             marks={reportCard.marks}
             term={reportCard.term}
             academicYear={reportCard.academicYear}
+            student={reportCard.student}
+            subjectSummaries={reportCard.summary?.subjectSummaries}
+            overallAverage={reportCard.summary?.overallAverage}
           />
         </div>
       )}

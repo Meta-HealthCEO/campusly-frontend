@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { redirect } from 'next/navigation';
 import { toast } from 'sonner';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthCard } from '@/components/auth/AuthCard';
@@ -19,8 +18,12 @@ function ResetPasswordContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!token) router.replace('/forgot-password');
+  }, [router, token]);
+
   if (!token) {
-    redirect('/forgot-password');
+    return <ResetPasswordFallback />;
   }
 
   const onSubmit = async (data: ResetPasswordFormData) => {
@@ -68,6 +71,23 @@ function ResetPasswordContent() {
   );
 }
 
+function ResetPasswordFallback() {
+  return (
+    <AuthLayout>
+      <AuthCard
+        title="Set new password"
+        description="Checking your reset link..."
+      >
+        <p className="text-sm text-muted-foreground">Please wait.</p>
+      </AuthCard>
+    </AuthLayout>
+  );
+}
+
 export default function ResetPasswordPage() {
-  return <ResetPasswordContent />;
+  return (
+    <Suspense fallback={<ResetPasswordFallback />}>
+      <ResetPasswordContent />
+    </Suspense>
+  );
 }

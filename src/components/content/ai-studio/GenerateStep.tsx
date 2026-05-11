@@ -33,6 +33,7 @@ const BLOCK_TYPES_BY_RESOURCE: Record<ResourceType, ContentBlockType[]> = {
   activity: ['text', 'quiz', 'fill_blank', 'match_columns', 'image'],
   study_notes: ['text', 'quiz', 'fill_blank', 'image', 'step_reveal'],
   worked_example: ['text', 'quiz', 'fill_blank', 'step_reveal', 'image'],
+  reading: ['text', 'image', 'quiz'],
 };
 
 export function GenerateStep({
@@ -87,7 +88,7 @@ export function GenerateStep({
       }
     } catch (err: unknown) {
       console.error('Generate failed:', err);
-      setError('Something went wrong. Please try again.');
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
       setGenerating(false);
       setActiveProgressStep(-1);
     }

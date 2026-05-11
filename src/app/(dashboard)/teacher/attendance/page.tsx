@@ -18,7 +18,7 @@ import { StudentRow } from '@/components/attendance/StudentRow';
 import { useTeacherAttendance } from '@/hooks/useTeacherAttendance';
 import { getStudentDisplayName } from '@/lib/student-helpers';
 import { toISODate } from '@/lib/utils';
-import { CheckCircle2, UserX, Save, Users, Info, Search } from 'lucide-react';
+import { CheckCircle2, UserX, Save, Users, Info, Search, AlertTriangle } from 'lucide-react';
 
 const todayISO = toISODate(new Date());
 
@@ -30,6 +30,7 @@ export default function TeacherAttendancePage() {
     period,
     attendance,
     existingLoaded,
+    loadError,
     saved,
     saving,
     loading,
@@ -160,6 +161,15 @@ export default function TeacherAttendancePage() {
       </div>
 
       {/* Editing banner for existing records */}
+      {loadError && (
+        <Alert className="border-destructive/40 bg-destructive/10">
+          <AlertTriangle className="h-4 w-4 text-destructive" />
+          <AlertDescription className="text-destructive">
+            Attendance could not be loaded for this date and period. Refresh before saving to avoid overwriting existing records.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {existingLoaded && (
         <Alert className="border-sky-300 bg-sky-50 dark:border-sky-700 dark:bg-sky-950/30">
           <Info className="h-4 w-4 text-sky-600 dark:text-sky-400" />
@@ -185,7 +195,7 @@ export default function TeacherAttendancePage() {
           <Button
             size="default"
             onClick={() => { void saveAttendance(); }}
-            disabled={saving || saved}
+            disabled={saving || saved || loadError}
             className="flex-1 sm:flex-none"
           >
             <Save className="mr-2 h-4 w-4" />
@@ -245,7 +255,7 @@ export default function TeacherAttendancePage() {
           <Button
             size="default"
             onClick={() => { void saveAttendance(); }}
-            disabled={saving || saved}
+            disabled={saving || saved || loadError}
             className="w-full sm:w-auto"
           >
             <Save className="mr-2 h-4 w-4" />

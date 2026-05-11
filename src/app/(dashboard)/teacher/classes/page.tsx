@@ -18,9 +18,15 @@ import { ClassCard } from '@/components/classes/ClassCard';
 import { BookOpen, Plus, Search } from 'lucide-react';
 import { resolveId } from '@/lib/api-helpers';
 import { useClassesPageState, entryKey } from '@/hooks/useClassesPageState';
+import { useAuthStore } from '@/stores/useAuthStore';
 import type { Student } from '@/types';
 
 export default function TeacherClassesPage() {
+  const user = useAuthStore((state) => state.user);
+  const isStandaloneTeacher = user?.isStandaloneTeacher === true;
+  const entityLabel = isStandaloneTeacher ? 'Teaching Group' : 'Class';
+  const entityLabelPlural = isStandaloneTeacher ? 'Teaching Groups' : 'Classes';
+  const learnerLabel = isStandaloneTeacher ? 'learners' : 'students';
   const {
     entries, allStudents, loading, grades, description,
     selectedEntry, distinctSubjects, filteredEntries,
@@ -47,7 +53,14 @@ export default function TeacherClassesPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeader title="My Classes" description="Manage your classes and student rosters" />
+        <PageHeader
+          title={isStandaloneTeacher ? 'Teaching Groups' : 'My Classes'}
+          description={
+            isStandaloneTeacher
+              ? 'Organise work by grade and subject. Add learners later when you are ready for digital assignments.'
+              : 'Manage your classes and student rosters'
+          }
+        />
         <CardGridSkeleton count={6} />
       </div>
     );
@@ -55,9 +68,16 @@ export default function TeacherClassesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="My Classes" description={description}>
+      <PageHeader
+        title={isStandaloneTeacher ? 'Teaching Groups' : 'My Classes'}
+        description={
+          isStandaloneTeacher
+            ? 'Use groups as folders for lesson plans, resources, homework, and papers. Students are optional until you choose to invite them.'
+            : description
+        }
+      >
         <Button onClick={() => setShowCreateDialog(true)} className="gap-1">
-          <Plus className="h-4 w-4" /> Create Class
+          <Plus className="h-4 w-4" /> Create {entityLabel}
         </Button>
       </PageHeader>
 
@@ -65,7 +85,7 @@ export default function TeacherClassesPage() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search classes..." className="pl-9" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`Search ${entityLabelPlural.toLowerCase()}...`} className="pl-9" />
           </div>
           <Select onValueChange={(val: unknown) => setSort(val as string)} defaultValue="name-asc">
             <SelectTrigger className="w-full sm:w-40">
@@ -74,8 +94,8 @@ export default function TeacherClassesPage() {
             <SelectContent>
               <SelectItem value="name-asc">Name A-Z</SelectItem>
               <SelectItem value="name-desc">Name Z-A</SelectItem>
-              <SelectItem value="students-desc">Most students</SelectItem>
-              <SelectItem value="students-asc">Least students</SelectItem>
+              <SelectItem value="students-desc">Most {learnerLabel}</SelectItem>
+              <SelectItem value="students-asc">Least {learnerLabel}</SelectItem>
             </SelectContent>
           </Select>
           <Select onValueChange={(val: unknown) => setFilterGrade(val as string)} defaultValue="all">
@@ -105,8 +125,16 @@ export default function TeacherClassesPage() {
       )}
 
       {filteredEntries.length === 0 && entries.length === 0 ? (
-        <EmptyState icon={BookOpen} title="No classes yet" description="Create your first class to get started."
-          action={<Button onClick={() => setShowCreateDialog(true)}><Plus className="mr-1 h-4 w-4" /> Create Class</Button>} />
+        <EmptyState
+          icon={BookOpen}
+          title={`No ${entityLabelPlural.toLowerCase()} yet`}
+          description={
+            isStandaloneTeacher
+              ? 'Create a teaching group like Grade 12 Accounting. You can print/PDF work now and add learners later.'
+              : 'Create your first class to get started.'
+          }
+          action={<Button onClick={() => setShowCreateDialog(true)}><Plus className="mr-1 h-4 w-4" /> Create {entityLabel}</Button>}
+        />
       ) : filteredEntries.length === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">No classes match &quot;{search}&quot;</p>
       ) : (
@@ -116,6 +144,7 @@ export default function TeacherClassesPage() {
               key={entryKey(entry)}
               entry={entry}
               entryKey={entryKey(entry)}
+              copyMode={isStandaloneTeacher ? 'teachingGroup' : 'class'}
               onClick={() => setSelectedKey(entryKey(entry))}
               onEdit={() => setEditEntry(entry)}
               onDelete={() => setDeleteTarget(resolveId(entry.class))}
@@ -125,6 +154,7 @@ export default function TeacherClassesPage() {
       )}
 
       <ClassRosterDialog entry={selectedEntry} onClose={() => setSelectedKey(null)}
+        copyMode={isStandaloneTeacher ? 'teachingGroup' : 'class'}
         onInvite={(student: Student) => setInviteTarget(student)} invitingId={invitingId}
         onAddStudents={() => setShowAddStudent(true)} onAssignExisting={() => setShowAssignStudent(true)}
         onRemoveStudent={handleRemoveStudent}
@@ -134,11 +164,13 @@ export default function TeacherClassesPage() {
         onInvite={handleInviteSubmit} isLoading={invitingId === inviteTarget?.id} />
 
       <ClassFormDialog open={showCreateDialog} onOpenChange={setShowCreateDialog}
+        copyMode={isStandaloneTeacher ? 'teachingGroup' : 'class'}
         onSubmit={handleCreateClass} grades={grades} isLoading={createLoading} />
 
       {editEntry && (
         <ClassFormDialog open={!!editEntry} onOpenChange={(o) => { if (!o) setEditEntry(null); }}
           onSubmit={handleEditClass}
+          copyMode={isStandaloneTeacher ? 'teachingGroup' : 'class'}
           grades={grades}
           initialData={{ name: editEntry.class.name, gradeId: editEntry.class.gradeId ?? resolveId(editEntry.class.grade), capacity: editEntry.class.capacity ?? 35, subjectId: editEntry.subject?.id }}
           isLoading={editLoading} />
@@ -152,7 +184,7 @@ export default function TeacherClassesPage() {
         onAssign={handleAssignStudent} />
 
       <ConfirmDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-        title="Delete Class" description="Are you sure you want to delete this class? This action cannot be undone."
+        title={`Delete ${entityLabel}`} description={`Are you sure you want to delete this ${entityLabel.toLowerCase()}? This action cannot be undone.`}
         confirmLabel="Delete" onConfirm={handleDelete} />
     </div>
   );

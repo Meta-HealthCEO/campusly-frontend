@@ -1,95 +1,63 @@
 'use client';
 
-import Link from 'next/link';
-import {
-  BookOpen, BookMarked, HelpCircle, PenTool, BarChart3, ClipboardList,
-  Eye, Sparkles, Camera, AlertTriangle, FileText,
-} from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { AlertTriangle, BookOpen, Library, Sparkles } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { UsageBanner } from '@/components/shared/UsageBanner';
-import { useUsage } from '@/hooks/useUsage';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { CurriculumTreeBrowser } from '@/components/curriculum/CurriculumTreeBrowser';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { useAuthStore } from '@/stores/useAuthStore';
-
-interface HubCard {
-  title: string;
-  description: string;
-  href: string;
-  icon: React.ElementType;
-  badge?: string;
-}
-
-const CURRICULUM_CARDS: HubCard[] = [
-  {
-    title: 'AI Studio',
-    description: 'Generate complete lessons, worksheets, and activities with one click using AI.',
-    href: '/teacher/curriculum/ai-studio',
-    icon: Sparkles,
-    badge: 'AI',
-  },
-  {
-    title: 'Textbooks',
-    description: 'Create and manage digital textbooks with chapters and lessons for each subject.',
-    href: '/teacher/curriculum/textbooks',
-    icon: BookMarked,
-  },
-  {
-    title: 'Content Library',
-    description: 'Browse, create, and manage lessons, worksheets, and study materials.',
-    href: '/teacher/curriculum/content',
-    icon: BookOpen,
-  },
-  {
-    title: 'Question Bank',
-    description: 'Create and manage questions with CAPS cognitive level tagging.',
-    href: '/teacher/curriculum/questions',
-    icon: HelpCircle,
-  },
-  {
-    title: 'Assessments',
-    description: 'Build assessment papers with sections and questions. Export to PDF with memos.',
-    href: '/teacher/curriculum/assessments',
-    icon: PenTool,
-  },
-  {
-    title: 'Homework',
-    description: 'Assign content to students, track submissions, and grade work.',
-    href: '/teacher/homework',
-    icon: ClipboardList,
-  },
-  {
-    title: 'Gradebook',
-    description: 'Enter and manage student marks for finalised assessments.',
-    href: '/teacher/grades',
-    icon: BarChart3,
-  },
-  {
-    title: 'Mark Papers',
-    description: 'Upload photos of handwritten answers and let AI grade them.',
-    href: '/teacher/curriculum/mark-papers',
-    icon: Camera,
-    badge: 'AI',
-  },
-  {
-    title: 'Student Preview',
-    description: 'Preview approved content exactly as students will see it.',
-    href: '/teacher/curriculum/preview',
-    icon: Eye,
-  },
-];
+import { ROUTES } from '@/lib/constants';
+import type { CurriculumNodeItem } from '@/types/curriculum-structure';
 
 export default function TeacherCurriculumPage() {
-  const { user } = useAuthStore();
-  const { data: usageData } = useUsage();
+  const router = useRouter();
+  const user = useAuthStore((state) => state.user);
+  const {
+    frameworks,
+    loading,
+    selectedFramework,
+    setSelectedFramework,
+  } = useCurriculumStructure();
+  const [selectedNode, setSelectedNode] = useState<CurriculumNodeItem | null>(null);
+
+  const selectedFrameworkName = useMemo(
+    () => frameworks.find((framework) => framework.id === selectedFramework)?.name ?? 'CAPS',
+    [frameworks, selectedFramework],
+  );
 
   if (!user?.schoolId) {
     return (
       <EmptyState
         icon={AlertTriangle}
         title="School not configured"
-        description="You need to be part of a school to use this feature. Contact your administrator or complete onboarding."
+        description="Complete onboarding before browsing the curriculum."
+      />
+    );
+  }
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (frameworks.length === 0 || !selectedFramework) {
+    return (
+      <EmptyState
+        icon={Library}
+        title="No curriculum framework found"
+        description="The global CAPS curriculum needs to be loaded before this page can be used."
       />
     );
   }
@@ -97,38 +65,108 @@ export default function TeacherCurriculumPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Curriculum"
-        description="Create and manage teaching content aligned to the CAPS curriculum"
-      />
+        title="CAPS Browser"
+        description="Browse the curriculum map by phase, grade, subject, term, topic, and subtopic. Creation happens in AI Studio."
+      >
+        <Button
+          onClick={() => router.push(ROUTES.TEACHER_CURRICULUM_AI_STUDIO)}
+          className="gap-2"
+        >
+          <Sparkles className="size-4" />
+          Open AI Studio
+        </Button>
+      </PageHeader>
 
-      {usageData && <UsageBanner data={usageData} />}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <Card>
+          <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle className="text-lg">Curriculum Map</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Expand the tree to inspect CAPS coverage before generating work.
+              </p>
+            </div>
+            <Select
+              value={selectedFramework}
+              onValueChange={(value) => {
+                if (value) setSelectedFramework(value);
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-56">
+                <SelectValue placeholder="Framework" />
+              </SelectTrigger>
+              <SelectContent>
+                {frameworks.map((framework) => (
+                  <SelectItem key={framework.id} value={framework.id}>
+                    {framework.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-lg border p-2">
+              <CurriculumTreeBrowser
+                frameworkId={selectedFramework}
+                selectedNodeId={selectedNode?.id ?? null}
+                onSelect={setSelectedNode}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {CURRICULUM_CARDS.map((card) => {
-          const Icon = card.icon;
-          return (
-            <Link key={card.href} href={card.href}>
-              <Card className="h-full transition-colors hover:border-primary/50 hover:bg-muted/50 cursor-pointer">
-                <CardContent className="p-5 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                      <Icon className="size-4 text-primary" />
-                    </div>
-                    <h3 className="font-semibold text-sm">{card.title}</h3>
-                    {card.badge && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                        {card.badge}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Selected Item</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Use this as reference, then generate lessons, resources, homework, or papers in AI Studio.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {selectedNode ? (
+              <>
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary">{selectedNode.type}</Badge>
+                    {selectedNode.code && (
+                      <Badge variant="outline" className="font-mono">
+                        {selectedNode.code}
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    {card.description}
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          );
-        })}
+                  <div>
+                    <h2 className="font-semibold">{selectedNode.title}</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedNode.description || 'No description has been added for this item yet.'}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  className="w-full gap-2"
+                  onClick={() => router.push(ROUTES.TEACHER_CURRICULUM_AI_STUDIO)}
+                >
+                  <Sparkles className="size-4" />
+                  Create From Curriculum
+                </Button>
+              </>
+            ) : (
+              <div className="rounded-lg border border-dashed p-5 text-sm text-muted-foreground">
+                Select a topic or subtopic in the {selectedFrameworkName} tree to inspect its description.
+              </div>
+            )}
+
+            <div className="rounded-lg bg-muted/50 p-4">
+              <div className="mb-2 flex items-center gap-2">
+                <BookOpen className="size-4 text-muted-foreground" />
+                <p className="font-medium">What belongs here?</p>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                This page is only for browsing CAPS. Resources, textbooks, lesson plans,
+                homework, papers, and questions each have their own left-menu item.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
