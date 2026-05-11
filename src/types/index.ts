@@ -50,6 +50,7 @@ export * from './payroll';
 export * from './sgb';
 export * from './assets';
 export * from './governance';
+export * from './paper-import';
 export * from './curriculum';
 export * from './pastoral';
 export * from './classroom';
