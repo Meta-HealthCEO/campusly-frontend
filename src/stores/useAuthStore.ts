@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { scheduleTokenRefresh, cancelTokenRefresh } from '@/lib/token-refresh';
 import type { User, UserRole, AuthTokens, UserPermissions, PermissionFlag } from '@/types';
 
 const DEFAULT_PERMISSIONS: UserPermissions = {
@@ -8,6 +9,8 @@ const DEFAULT_PERMISSIONS: UserPermissions = {
   isBursar: false,
   isReceptionist: false,
   isCounselor: false,
+  isStandaloneTeacher: false,
+  isStandaloneCoach: false,
 };
 
 interface AuthState {
@@ -34,6 +37,8 @@ function parsePermissions(raw: Record<string, unknown>): UserPermissions {
     isBursar: raw.isBursar === true,
     isReceptionist: raw.isReceptionist === true,
     isCounselor: raw.isCounselor === true,
+    isStandaloneTeacher: raw.isStandaloneTeacher === true,
+    isStandaloneCoach: raw.isStandaloneCoach === true,
   };
 }
 
@@ -55,8 +60,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     const perms = parsePermissions(user as unknown as Record<string, unknown>);
     set({ user, tokens, permissions: perms, isAuthenticated: true, isLoading: false });
+    scheduleTokenRefresh();
   },
   logout: () => {
+    cancelTokenRefresh();
     if (typeof window !== 'undefined') {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');

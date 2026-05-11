@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { getStoredTokens, clearStoredTokens } from '@/lib/auth';
+import { scheduleTokenRefresh } from '@/lib/token-refresh';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import type { User } from '@/types';
@@ -36,6 +37,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
           phone: userData.phone ?? '',
           schoolId: userData.schoolId ?? '',
           isActive: userData.isActive ?? true,
+          isSchoolPrincipal: userData.isSchoolPrincipal === true,
+          isHOD: userData.isHOD === true,
+          isBursar: userData.isBursar === true,
+          isCounselor: userData.isCounselor === true,
+          isReceptionist: userData.isReceptionist === true,
+          isStandaloneTeacher: userData.isStandaloneTeacher === true,
+          isStandaloneCoach: userData.isStandaloneCoach === true,
           avatar: userData.profileImage ?? userData.avatar ?? undefined,
           createdAt: userData.createdAt ?? '',
           updatedAt: userData.updatedAt ?? '',
@@ -43,6 +51,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(user);
         setTokens(tokens);
         setLoading(false);
+        scheduleTokenRefresh();
       })
       .catch(() => {
         clearStoredTokens();
