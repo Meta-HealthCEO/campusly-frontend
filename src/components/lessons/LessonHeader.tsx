@@ -36,6 +36,41 @@ function readRel<T extends { name?: string; title?: string }>(
   return rel.name ?? rel.title ?? fallback;
 }
 
+/**
+ * Resolve the lesson's subject/grade NAME, falling back through:
+ *   1. populated academic Subject/Grade record (school-tenant flow)
+ *   2. populated CurriculumNode subject/grade ancestor on the topic node
+ *      (standalone teacher portal — no academic collections to populate)
+ *   3. literal fallback
+ */
+function resolveSubjectName(lesson: Lesson): string {
+  const direct = readRel(lesson.subjectId, '');
+  if (direct) return direct;
+  const node = lesson.curriculumNodeId;
+  if (node && typeof node === 'object') {
+    const inner = (node as { subjectId?: unknown }).subjectId;
+    if (inner && typeof inner === 'object') {
+      const o = inner as { title?: string; name?: string };
+      return o.title ?? o.name ?? 'Subject';
+    }
+  }
+  return 'Subject';
+}
+
+function resolveGradeName(lesson: Lesson): string {
+  const direct = readRel(lesson.gradeId, '');
+  if (direct) return direct;
+  const node = lesson.curriculumNodeId;
+  if (node && typeof node === 'object') {
+    const inner = (node as { gradeId?: unknown }).gradeId;
+    if (inner && typeof inner === 'object') {
+      const o = inner as { title?: string; name?: string };
+      return o.title ?? o.name ?? 'Grade';
+    }
+  }
+  return 'Grade';
+}
+
 export function LessonHeader({
   lesson,
   updateLesson,
@@ -52,7 +87,8 @@ export function LessonHeader({
     lesson.reflectionNotes ?? '',
   );
 
-  const subjectName = readRel(lesson.subjectId, 'Subject');
+  const subjectName = resolveSubjectName(lesson);
+  const gradeName = resolveGradeName(lesson);
   const topicTitle = readRel(lesson.curriculumNodeId, 'Topic');
 
   const phaseCounts = useMemo<Record<LessonPhase, number>>(() => {
@@ -148,14 +184,19 @@ export function LessonHeader({
         </div>
       </div>
 
-      {/* Row 2 — Meta chips */}
+      {/* Row 2 — Grade · Subject · Term · Duration */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+        <MetaChip label="Grade" value={gradeName} />
         <MetaChip label="Subject" value={subjectName} />
-        <MetaChip label="Topic" value={topicTitle} />
         {typeof lesson.termNumber === 'number' && (
           <MetaChip label="Term" value={String(lesson.termNumber)} />
         )}
         <MetaChip label="Duration" value={`${lesson.durationMinutes} min`} />
+      </div>
+
+      {/* Row 3 — Topic on its own line */}
+      <div className="text-sm">
+        <MetaChip label="Topic" value={topicTitle} />
       </div>
 
       {/* Row 3 — Assigned classes (chips + add) */}
