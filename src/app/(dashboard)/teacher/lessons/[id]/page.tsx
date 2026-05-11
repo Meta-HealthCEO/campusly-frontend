@@ -17,8 +17,12 @@ import {
 } from '@/components/lessons/LessonPhaseSection';
 import { MaterialDrawer } from '@/components/lessons/drawers/MaterialDrawer';
 import { LessonActionsDrawer } from '@/components/lessons/LessonActionsDrawer';
+import { LessonChatPanel } from '@/components/lessons/LessonChatPanel';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { LESSON_PHASES, type LessonPhase } from '@/types/lesson';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { MessageSquare } from 'lucide-react';
 
 const isLessonPhase = (val: unknown): val is LessonPhase =>
   typeof val === 'string' &&
@@ -31,6 +35,7 @@ export default function LessonWorkspacePage() {
   const lessonHook = useLesson(lessonId);
   const exportHook = useLessonExport();
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   if (lessonHook.loading) return <LoadingSpinner />;
   if (!lessonHook.lesson) {
@@ -99,42 +104,77 @@ export default function LessonWorkspacePage() {
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <div className="px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        <LessonHeader
-          lesson={lesson}
-          updateLesson={lessonHook.updateLesson}
-          patchStatus={lessonHook.patchStatus}
-          assignClass={lessonHook.assignClass}
-          unassignClass={lessonHook.unassignClass}
-          updateAssignment={lessonHook.updateAssignment}
-          onOpenActions={() => setActionsOpen(true)}
-        />
-
-        <LessonGenerateAllBanner
-          materials={lesson.materials}
-          generateAllPlaceholders={lessonHook.generateAllPlaceholders}
-        />
-
-        <main className="space-y-8">
-          {LESSON_PHASES.map((phase) => (
-            <LessonPhaseSection
-              key={phase}
-              phase={phase}
+      <div className="px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+          {/* Main workspace column */}
+          <div className="space-y-6 min-w-0">
+            <LessonHeader
               lesson={lesson}
-              onUpdateMaterial={lessonHook.updateMaterial}
-              onMoveMaterial={lessonHook.moveMaterial}
-              onDeleteMaterial={lessonHook.deleteMaterial}
+              updateLesson={lessonHook.updateLesson}
+              patchStatus={lessonHook.patchStatus}
+              assignClass={lessonHook.assignClass}
+              unassignClass={lessonHook.unassignClass}
+              updateAssignment={lessonHook.updateAssignment}
+              onOpenActions={() => setActionsOpen(true)}
             />
-          ))}
-        </main>
 
-        <MaterialDrawer
-          lessonId={lessonId}
-          materials={lesson.materials}
-          lessonHasAssignedClass={(lesson.assignedClasses?.length ?? 0) > 0}
-          addMaterial={lessonHook.addMaterial}
-          regenerateMaterial={lessonHook.regenerateMaterial}
-        />
+            <LessonGenerateAllBanner
+              materials={lesson.materials}
+              generateAllPlaceholders={lessonHook.generateAllPlaceholders}
+            />
+
+            <main className="space-y-8">
+              {LESSON_PHASES.map((phase) => (
+                <LessonPhaseSection
+                  key={phase}
+                  phase={phase}
+                  lesson={lesson}
+                  onUpdateMaterial={lessonHook.updateMaterial}
+                  onMoveMaterial={lessonHook.moveMaterial}
+                  onDeleteMaterial={lessonHook.deleteMaterial}
+                />
+              ))}
+            </main>
+
+            <MaterialDrawer
+              lessonId={lessonId}
+              materials={lesson.materials}
+              lessonHasAssignedClass={(lesson.assignedClasses?.length ?? 0) > 0}
+              addMaterial={lessonHook.addMaterial}
+              regenerateMaterial={lessonHook.regenerateMaterial}
+            />
+          </div>
+
+          {/* Chat side-rail (xl+). Sticky to viewport so it travels with
+              scroll; capped at viewport height so its own scroller engages. */}
+          <aside className="hidden xl:block">
+            <div className="sticky top-4 h-[calc(100vh-2rem)]">
+              <LessonChatPanel lessonId={lessonId} className="h-full" />
+            </div>
+          </aside>
+        </div>
+
+        {/* Mobile / tablet: floating chat trigger + slide-out sheet */}
+        <Button
+          type="button"
+          size="icon"
+          onClick={() => setChatOpen(true)}
+          className="xl:hidden fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-40"
+          aria-label="Open lesson assistant"
+        >
+          <MessageSquare className="h-6 w-6" />
+        </Button>
+        <Sheet open={chatOpen} onOpenChange={setChatOpen}>
+          <SheetContent
+            side="right"
+            className="xl:hidden w-full sm:max-w-md p-0 flex flex-col"
+          >
+            <LessonChatPanel
+              lessonId={lessonId}
+              className="h-full border-0 rounded-none shadow-none"
+            />
+          </SheetContent>
+        </Sheet>
 
         <LessonActionsDrawer
           lessonId={lesson._id}
