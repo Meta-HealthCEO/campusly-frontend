@@ -57,7 +57,6 @@ export interface ContentBlockItem {
 export interface ContentResourceItem {
   id: string;
   curriculumNodeId: string | { id: string; title: string; code: string; type: string };
-  lessonPlanId?: string | { id: string; topic: string; date?: string; durationMinutes?: number } | null;
   schoolId: string;
   type: ResourceType;
   format: ResourceFormat;
@@ -89,7 +88,6 @@ export interface ContentResourceItem {
 
 export interface CreateResourcePayload {
   curriculumNodeId: string;
-  lessonPlanId?: string | null;
   type: ResourceType;
   format: ResourceFormat;
   title: string;
@@ -103,6 +101,8 @@ export interface CreateResourcePayload {
   difficulty?: number;
   estimatedMinutes?: number;
   prerequisites?: string[];
+  sourceImport?: SourceImportRef;
+  needsReview?: boolean;
 }
 
 export interface UpdateResourcePayload {
@@ -122,7 +122,6 @@ export interface ReviewPayload {
 
 export interface GenerateContentPayload {
   curriculumNodeId: string;
-  lessonPlanId?: string;
   type: ResourceType;
   gradeId: string;
   subjectId: string;
@@ -134,7 +133,6 @@ export interface GenerateContentPayload {
 
 export interface ResourceFilters {
   curriculumNodeId?: string;
-  lessonPlanId?: string;
   type?: ResourceType;
   format?: ResourceFormat;
   status?: ResourceStatus;
