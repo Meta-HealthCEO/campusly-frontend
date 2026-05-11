@@ -8,7 +8,7 @@ import {
 } from '@dnd-kit/core';
 import { useLesson } from '@/hooks/useLesson';
 import { useLessonExport } from '@/hooks/useLessonExport';
-import { LessonOutline } from '@/components/lessons/LessonOutline';
+import { LessonHeader } from '@/components/lessons/LessonHeader';
 import { LessonGenerateAllBanner } from '@/components/lessons/LessonGenerateAllBanner';
 import {
   LessonPhaseSection,
@@ -96,31 +96,30 @@ export default function LessonWorkspacePage() {
 
   return (
     <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <div className="grid grid-cols-1 gap-6 p-4 lg:grid-cols-[320px_1fr]">
-        <aside className="self-start lg:sticky lg:top-4">
-          <LessonOutline
-            lesson={lesson}
-            updateLesson={lessonHook.updateLesson}
-            patchStatus={lessonHook.patchStatus}
-            onExport={(mode) =>
-              exportHook.download(
-                lesson._id,
-                mode,
-                `${lesson.title}-${mode}.pdf`,
-              )
-            }
-            exporting={exportHook.downloading}
-            assignClass={lessonHook.assignClass}
-            unassignClass={lessonHook.unassignClass}
-            updateAssignment={lessonHook.updateAssignment}
-          />
-        </aside>
+      <div className="space-y-6 p-4 max-w-5xl mx-auto">
+        <LessonHeader
+          lesson={lesson}
+          updateLesson={lessonHook.updateLesson}
+          patchStatus={lessonHook.patchStatus}
+          onExport={(mode) =>
+            exportHook.download(
+              lesson._id,
+              mode,
+              `${lesson.title}-${mode}.pdf`,
+            )
+          }
+          exporting={exportHook.downloading}
+          assignClass={lessonHook.assignClass}
+          unassignClass={lessonHook.unassignClass}
+          updateAssignment={lessonHook.updateAssignment}
+        />
+
+        <LessonGenerateAllBanner
+          materials={lesson.materials}
+          generateAllPlaceholders={lessonHook.generateAllPlaceholders}
+        />
 
         <main className="space-y-6">
-          <LessonGenerateAllBanner
-            materials={lesson.materials}
-            generateAllPlaceholders={lessonHook.generateAllPlaceholders}
-          />
           {LESSON_PHASES.map((phase) => (
             <LessonPhaseSection
               key={phase}
