@@ -240,7 +240,7 @@ export default function TeacherContentBrowserPage() {
             <SelectValue placeholder="Type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Material Types</SelectItem>
+            <SelectItem value="all">All Types</SelectItem>
             {TYPE_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
                 {opt.label}
