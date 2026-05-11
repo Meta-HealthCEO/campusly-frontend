@@ -85,40 +85,43 @@ export function useClassesPageState() {
     });
   }, [entries, search, sort, filterGrade, filterSubject]);
 
-  const description = `${entries.length} ${entries.length === 1 ? 'class' : 'classes'} \u00B7 ${allStudents.length} ${allStudents.length === 1 ? 'student' : 'students'}`;
+  const isStandaloneTeacher = user?.isStandaloneTeacher === true;
+  const description = isStandaloneTeacher
+    ? `${entries.length} ${entries.length === 1 ? 'teaching group' : 'teaching groups'} - ${allStudents.length} ${allStudents.length === 1 ? 'learner' : 'learners'} added`
+    : `${entries.length} ${entries.length === 1 ? 'class' : 'classes'} - ${allStudents.length} ${allStudents.length === 1 ? 'student' : 'students'}`;
 
-  const handleCreateClass = useCallback(async (data: { name: string; gradeId: string; capacity: number; subjectId?: string }) => {
+  const handleCreateClass = useCallback(async (data: { name: string; gradeId: string; capacity: number; subjectId?: string; isHomeroom?: boolean }) => {
     setCreateLoading(true);
     try {
       await createClass({ ...data, schoolId: user!.schoolId, teacherId: user!.id });
-      toast.success('Class created');
+      toast.success(isStandaloneTeacher ? 'Teaching group created' : 'Class created');
       setShowCreateDialog(false);
     } catch (err: unknown) {
       console.error('Failed to create class', err);
-      toast.error(extractErrorMessage(err, 'Failed to create class'));
+      toast.error(extractErrorMessage(err, isStandaloneTeacher ? 'Failed to create teaching group' : 'Failed to create class'));
     } finally { setCreateLoading(false); }
-  }, [createClass, user]);
+  }, [createClass, isStandaloneTeacher, user]);
 
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;
     try {
       await deleteClass(deleteTarget);
-      toast.success('Class deleted');
+      toast.success(isStandaloneTeacher ? 'Teaching group deleted' : 'Class deleted');
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       if (status === 409) {
-        toast.error(extractErrorMessage(err, 'Cannot delete class with students'));
+        toast.error(extractErrorMessage(err, isStandaloneTeacher ? 'Cannot delete teaching group with learners' : 'Cannot delete class with students'));
       } else {
-        toast.error(extractErrorMessage(err, 'Failed to delete class'));
+        toast.error(extractErrorMessage(err, isStandaloneTeacher ? 'Failed to delete teaching group' : 'Failed to delete class'));
       }
     }
-  }, [deleteTarget, deleteClass]);
+  }, [deleteTarget, deleteClass, isStandaloneTeacher]);
 
   const handleAddStudent = useCallback(async (data: { firstName: string; lastName: string; admissionNumber: string }) => {
     if (!selectedEntry) return;
     const classId = resolveId(selectedEntry.class);
     const gradeId = selectedEntry.class.gradeId ?? resolveId(selectedEntry.class.grade);
-    if (!classId || !gradeId) throw new Error('No class selected');
+      if (!classId || !gradeId) throw new Error(isStandaloneTeacher ? 'No teaching group selected' : 'No class selected');
     setAddStudentLoading(true);
     try {
       await addStudent({ ...data, classId, gradeId, schoolId: user!.schoolId });
@@ -127,21 +130,21 @@ export function useClassesPageState() {
       console.error('Failed to add student', err);
       toast.error(extractErrorMessage(err, 'Failed to add student'));
     } finally { setAddStudentLoading(false); }
-  }, [selectedEntry, addStudent, user]);
+  }, [selectedEntry, addStudent, isStandaloneTeacher, user]);
 
-  const handleEditClass = useCallback(async (data: { name: string; gradeId: string; capacity: number; subjectId?: string }) => {
+  const handleEditClass = useCallback(async (data: { name: string; gradeId: string; capacity: number; subjectId?: string; isHomeroom?: boolean }) => {
     if (!editEntry) return;
     setEditLoading(true);
     try {
       const clsId = resolveId(editEntry.class);
       await updateClass(clsId, { ...data, schoolId: user!.schoolId, teacherId: user!.id });
-      toast.success('Class updated');
+      toast.success(isStandaloneTeacher ? 'Teaching group updated' : 'Class updated');
       setEditEntry(null);
     } catch (err: unknown) {
       console.error('Failed to update class', err);
-      toast.error(extractErrorMessage(err, 'Failed to update class'));
+      toast.error(extractErrorMessage(err, isStandaloneTeacher ? 'Failed to update teaching group' : 'Failed to update class'));
     } finally { setEditLoading(false); }
-  }, [editEntry, updateClass, user]);
+  }, [editEntry, updateClass, isStandaloneTeacher, user]);
 
   const handleRemoveStudent = useCallback(async (studentId: string) => {
     try {
@@ -168,12 +171,12 @@ export function useClassesPageState() {
   const handleAssignStudent = useCallback(async (studentId: string, classId: string) => {
     try {
       await reassignStudent(studentId, classId);
-      toast.success('Student assigned');
+      toast.success(isStandaloneTeacher ? 'Learner assigned' : 'Student assigned');
       setShowAssignStudent(false);
     } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to assign student'));
+      toast.error(extractErrorMessage(err, isStandaloneTeacher ? 'Failed to assign learner' : 'Failed to assign student'));
     }
-  }, [reassignStudent]);
+  }, [isStandaloneTeacher, reassignStudent]);
 
   return {
     // Data

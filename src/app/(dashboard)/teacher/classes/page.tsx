@@ -174,7 +174,13 @@ export default function TeacherClassesPage() {
           onSubmit={handleEditClass}
           copyMode={isStandaloneTeacher ? 'teachingGroup' : 'class'}
           grades={grades}
-          initialData={{ name: editEntry.class.name, gradeId: resolveId(editEntry.class.gradeId) || resolveId(editEntry.class.grade), capacity: editEntry.class.capacity ?? 35, subjectId: editEntry.subject?.id }}
+          initialData={{
+            name: editEntry.class.name,
+            gradeId: resolveId(editEntry.class.gradeId) || resolveId(editEntry.class.grade),
+            capacity: editEntry.class.capacity ?? 35,
+            subjectId: editEntry.subject?.id,
+            isHomeroom: editEntry.isHomeroom === true,
+          }}
           isLoading={editLoading} />
       )}
 

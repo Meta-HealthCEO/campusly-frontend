@@ -36,6 +36,8 @@ interface CreateClassPayload {
   capacity: number;
   schoolId: string;
   teacherId: string;
+  subjectId?: string;
+  isHomeroom?: boolean;
 }
 
 interface AddStudentPayload {

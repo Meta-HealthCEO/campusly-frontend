@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useTeacherSubjects } from '@/hooks/useTeacherSubjects';
 import type { Grade } from '@/types';
 
@@ -27,15 +28,17 @@ interface ClassFormData {
   gradeId: string;
   capacity: number;
   subjectId?: string;
+  isHomeroom: boolean;
 }
 
 interface ClassFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: { name: string; gradeId: string; capacity: number; subjectId?: string }) => Promise<void>;
+  onSubmit: (data: { name: string; gradeId: string; capacity: number; subjectId?: string; isHomeroom: boolean }) => Promise<void>;
   grades: Grade[];
-  initialData?: { name: string; gradeId: string; capacity: number; subjectId?: string };
+  initialData?: { name: string; gradeId: string; capacity: number; subjectId?: string; isHomeroom?: boolean };
   isLoading: boolean;
+  copyMode?: 'class' | 'teachingGroup';
 }
 
 export function ClassFormDialog({
@@ -45,7 +48,9 @@ export function ClassFormDialog({
   grades,
   initialData,
   isLoading,
+  copyMode = 'class',
 }: ClassFormDialogProps) {
+  const isTeachingGroup = copyMode === 'teachingGroup';
   const {
     register,
     handleSubmit,
@@ -54,16 +59,28 @@ export function ClassFormDialog({
     watch,
     formState: { errors },
   } = useForm<ClassFormData>({
-    defaultValues: initialData ?? { name: '', gradeId: '', capacity: 35 },
+    defaultValues: {
+      name: initialData?.name ?? '',
+      gradeId: initialData?.gradeId ?? '',
+      capacity: initialData?.capacity ?? 35,
+      subjectId: initialData?.subjectId,
+      isHomeroom: initialData?.isHomeroom ?? false,
+    },
   });
 
   const selectedGradeId = watch('gradeId');
-  // Fetch subjects filtered by the selected grade — only when the dialog is open
+  const isHomeroom = watch('isHomeroom');
   const { subjects } = useTeacherSubjects(open && selectedGradeId ? selectedGradeId : undefined);
 
   useEffect(() => {
     if (open) {
-      reset(initialData ?? { name: '', gradeId: '', capacity: 35 });
+      reset({
+        name: initialData?.name ?? '',
+        gradeId: initialData?.gradeId ?? '',
+        capacity: initialData?.capacity ?? 35,
+        subjectId: initialData?.subjectId,
+        isHomeroom: initialData?.isHomeroom ?? false,
+      });
     }
   }, [open, initialData, reset]);
 
@@ -73,10 +90,11 @@ export function ClassFormDialog({
     if (submitting) return;
     setSubmitting(true);
     try {
-      const payload: { name: string; gradeId: string; capacity: number; subjectId?: string } = {
+      const payload: { name: string; gradeId: string; capacity: number; subjectId?: string; isHomeroom: boolean } = {
         name: data.name,
         gradeId: data.gradeId,
         capacity: data.capacity,
+        isHomeroom: Boolean(data.isHomeroom),
       };
       if (data.subjectId && data.subjectId !== 'none') {
         payload.subjectId = data.subjectId;
@@ -92,7 +110,9 @@ export function ClassFormDialog({
       <DialogContent className="flex flex-col max-h-[85vh]">
         <DialogHeader>
           <DialogTitle>
-            {initialData ? 'Edit Class' : 'Create Class'}
+            {initialData
+              ? isTeachingGroup ? 'Edit Teaching Group' : 'Edit Class'
+              : isTeachingGroup ? 'Create Teaching Group' : 'Create Class'}
           </DialogTitle>
         </DialogHeader>
         <form
@@ -130,7 +150,7 @@ export function ClassFormDialog({
               <Label>
                 Subject{' '}
                 <span className="text-muted-foreground text-xs">
-                  (optional — leave blank for homeroom)
+                  {isTeachingGroup ? '(optional - use this to organise by subject)' : '(optional - leave blank for homeroom)'}
                 </span>
               </Label>
               <Select
@@ -140,10 +160,10 @@ export function ClassFormDialog({
                 defaultValue={initialData?.subjectId ?? 'none'}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Homeroom (no subject)" />
+                  <SelectValue placeholder={isTeachingGroup ? 'No subject' : 'Homeroom (no subject)'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Homeroom (no subject)</SelectItem>
+                  <SelectItem value="none">{isTeachingGroup ? 'No subject' : 'Homeroom (no subject)'}</SelectItem>
                   {(subjects ?? []).map((s: { id: string; name: string }) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name}
@@ -160,12 +180,12 @@ export function ClassFormDialog({
 
             <div className="space-y-2">
               <Label htmlFor="className">
-                Class Name <span className="text-destructive">*</span>
+                {isTeachingGroup ? 'Group Name' : 'Class Name'} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="className"
-                placeholder="e.g. A, B, Red"
-                {...register('name', { required: 'Class name is required' })}
+                placeholder={isTeachingGroup ? 'e.g. Accounting A, Revision Group' : 'e.g. A, B, Red'}
+                {...register('name', { required: isTeachingGroup ? 'Group name is required' : 'Class name is required' })}
               />
               {errors.name && (
                 <p className="text-xs text-destructive">{errors.name.message}</p>
@@ -173,11 +193,32 @@ export function ClassFormDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="capacity">Capacity</Label>
+              <Label htmlFor="capacity">{isTeachingGroup ? 'Expected Learners' : 'Capacity'}</Label>
               <Input
                 id="capacity"
                 type="number"
                 {...register('capacity', { valueAsNumber: true, min: 1 })}
+              />
+              {isTeachingGroup && (
+                <p className="text-xs text-muted-foreground">
+                  You can leave this as an estimate. Learners can be added later when you want online assignments.
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-start justify-between gap-3 rounded-md border p-3">
+              <div className="min-w-0">
+                <Label htmlFor="isHomeroom" className="text-sm font-medium">
+                  Set as my homeroom {isTeachingGroup ? 'group' : 'class'}
+                </Label>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Only one {isTeachingGroup ? 'group' : 'class'} can be your homeroom at a time.
+                </p>
+              </div>
+              <Switch
+                id="isHomeroom"
+                checked={isHomeroom}
+                onCheckedChange={(checked: boolean) => setValue('isHomeroom', checked)}
               />
             </div>
           </div>
@@ -194,8 +235,8 @@ export function ClassFormDialog({
               {isLoading
                 ? 'Saving...'
                 : initialData
-                  ? 'Update Class'
-                  : 'Create Class'}
+                  ? isTeachingGroup ? 'Update Group' : 'Update Class'
+                  : isTeachingGroup ? 'Create Group' : 'Create Class'}
             </Button>
           </DialogFooter>
         </form>
