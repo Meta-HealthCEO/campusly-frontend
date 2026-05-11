@@ -6,9 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { TeachingScopePicker } from '@/components/curriculum/TeachingScopePicker';
 
 export default function TeacherSettingsPage() {
   const user = useAuthStore((state) => state.user);
+  const isStandaloneTeacher = user?.isStandaloneTeacher === true;
 
   return (
     <div className="space-y-6">
@@ -51,6 +53,8 @@ export default function TeacherSettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {isStandaloneTeacher && <TeachingScopePicker />}
     </div>
   );
 }
