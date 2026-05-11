@@ -69,6 +69,7 @@ export function ClassFormDialog({
   });
 
   const selectedGradeId = watch('gradeId');
+  const selectedSubjectId = watch('subjectId');
   const isHomeroom = watch('isHomeroom');
   const { subjects } = useTeacherSubjects(open && selectedGradeId ? selectedGradeId : undefined);
 
@@ -154,10 +155,10 @@ export function ClassFormDialog({
                 </span>
               </Label>
               <Select
+                value={selectedSubjectId ?? 'none'}
                 onValueChange={(val: unknown) =>
                   setValue('subjectId', val === 'none' ? undefined : (val as string))
                 }
-                defaultValue={initialData?.subjectId ?? 'none'}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={isTeachingGroup ? 'No subject' : 'Homeroom (no subject)'} />
