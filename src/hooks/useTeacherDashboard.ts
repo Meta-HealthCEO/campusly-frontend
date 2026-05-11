@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapList, unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
-import type { Homework, TimetableSlot } from '@/types';
+import type { Homework, SchoolClass, TimetableSlot } from '@/types';
 
 interface AbsentRecord {
   id: string;
@@ -29,6 +29,60 @@ interface DashboardData {
   refresh: () => Promise<void>;
 }
 
+type DashboardClass = SchoolClass & { _id?: string; teacherId?: unknown };
+
+function resolveMaybeId(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (typeof value !== 'object' || value === null) return '';
+
+  const record = value as { id?: unknown; _id?: unknown };
+  if (typeof record.id === 'string') return record.id;
+  if (typeof record._id === 'string') return record._id;
+  return '';
+}
+
+function classIdOf(classItem: DashboardClass): string {
+  return resolveMaybeId(classItem.id) || resolveMaybeId(classItem._id);
+}
+
+function teacherIdOf(classItem: DashboardClass): string {
+  return resolveMaybeId(classItem.teacherId);
+}
+
+function formatLocalDateParam(date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function toAbsentRecord(item: Record<string, unknown>): AbsentRecord {
+  const student =
+    typeof item.student === 'object' && item.student !== null
+      ? (item.student as Record<string, unknown>)
+      : typeof item.studentId === 'object' && item.studentId !== null
+        ? (item.studentId as Record<string, unknown>)
+        : {};
+
+  const user =
+    typeof student.user === 'object' && student.user !== null
+      ? (student.user as Record<string, unknown>)
+      : typeof student.userId === 'object' && student.userId !== null
+        ? (student.userId as Record<string, unknown>)
+        : {};
+
+  const fullName = [
+    item.studentName,
+    [user.firstName, user.lastName].filter(Boolean).join(' '),
+    student.admissionNumber,
+  ].find((value) => typeof value === 'string' && value.trim().length > 0);
+
+  return {
+    id: resolveMaybeId(item.id) || resolveMaybeId(item._id),
+    studentName: typeof fullName === 'string' ? fullName.trim() : 'Student',
+  };
+}
+
 export function useTeacherDashboard(): DashboardData {
   const { user } = useAuthStore();
   const [timetable, setTimetable] = useState<TimetableSlot[]>([]);
@@ -41,16 +95,18 @@ export function useTeacherDashboard(): DashboardData {
 
   const fetchData = useCallback(async () => {
     if (!user?.id) return;
+
+    const isStandaloneTeacher = user.isStandaloneTeacher === true;
+
     try {
       const today = new Date()
         .toLocaleDateString('en-US', { weekday: 'long' })
         .toLowerCase();
 
-      const [timetableRes, homeworkRes, absentRes, classesRes] =
+      const [timetableRes, homeworkRes, classesRes] =
         await Promise.allSettled([
           apiClient.get(`/academic/timetable/teacher/${user.id}`),
           apiClient.get('/homework'),
-          apiClient.get('/attendance/absentees', { params: { date: new Date().toISOString() } }),
           apiClient.get('/academic/classes'),
         ]);
 
@@ -68,6 +124,18 @@ export function useTeacherDashboard(): DashboardData {
             (a, b) => (a.period as number) - (b.period as number),
           );
         setTimetable(todaySlots as unknown as TimetableSlot[]);
+      }
+
+      let myClasses: DashboardClass[] = [];
+
+      // Classes count
+      if (classesRes.status === 'fulfilled') {
+        const arr = unwrapList<DashboardClass>(classesRes.value);
+        myClasses = arr.filter((classItem) => {
+          const teacherId = teacherIdOf(classItem);
+          return !teacherId || teacherId === user.id;
+        });
+        setClassCount(myClasses.length);
       }
 
       // Homework + submission counts (fetched in parallel)
@@ -93,7 +161,7 @@ export function useTeacherDashboard(): DashboardData {
           const graded = subs.filter(
             (s) => s.grade !== undefined && s.grade !== null,
           ).length;
-          totalUngraded += submitted;
+          totalUngraded += Math.max(submitted - graded, 0);
           if (submitted > 0) {
             withCounts.push({
               id: hw._id,
@@ -110,32 +178,61 @@ export function useTeacherDashboard(): DashboardData {
         setUngradedCount(totalUngraded);
       }
 
-      // Absentees
-      if (absentRes.status === 'fulfilled') {
-        const arr = unwrapList<Record<string, unknown>>(absentRes.value);
-        setAbsentToday(
-          arr.map((a) => ({
-            id: (a.id as string) ?? '',
-            studentName: `${
-              (a.studentName as string) ??
-              ((a.student as Record<string, unknown>)?.user as Record<string, unknown>)
-                ?.firstName ??
-              ''
-            } ${
-              ((a.student as Record<string, unknown>)?.user as Record<string, unknown>)
-                ?.lastName ?? ''
-            }`.trim(),
-          })),
-        );
+      if (isStandaloneTeacher) {
+        setAbsentToday([]);
+      } else {
+        const classIds = myClasses.map(classIdOf).filter(Boolean);
+        if (classIds.length === 0) {
+          setAbsentToday([]);
+        } else {
+          const absenteeResults = await Promise.allSettled(
+            classIds.map((classId) =>
+              apiClient.get('/attendance/absentees', {
+                params: { classId, date: formatLocalDateParam() },
+              }),
+            ),
+          );
+
+          const absentRecords = absenteeResults.flatMap((result) =>
+            result.status === 'fulfilled'
+              ? unwrapList<Record<string, unknown>>(result.value).map(toAbsentRecord)
+              : [],
+          );
+          setAbsentToday(absentRecords);
+        }
       }
 
-      // Classes count
-      if (classesRes.status === 'fulfilled') {
-        const arr = unwrapList<Record<string, unknown>>(classesRes.value);
-        const myClasses = arr.filter(
-          (c) => (c.teacherId as string) === user.id,
+      if (classesRes.status !== 'fulfilled') {
+        setClassCount(0);
+      }
+
+      if (homeworkRes.status !== 'fulfilled') {
+        setPendingHomework([]);
+        setUngradedCount(0);
+      }
+
+      if (timetableRes.status !== 'fulfilled') {
+        setTimetable([]);
+      }
+
+      if (classesRes.status !== 'fulfilled' && !isStandaloneTeacher) {
+        setAbsentToday([]);
+      }
+
+      // Each section above already falls back to a sane empty state when its
+      // own request rejects (setClassCount(0), setPendingHomework([]), etc.)
+      // — so a partial failure should NOT noise-toast or short-circuit the
+      // dashboard. Just log per-section failures for diagnostics.
+      const failed = [
+        ['timetable', timetableRes],
+        ['homework', homeworkRes],
+        ['classes', classesRes],
+      ].filter(([, r]) => (r as { status: string }).status === 'rejected');
+      if (failed.length > 0) {
+        console.warn(
+          '[teacher-dashboard] some sections failed to load',
+          failed.map(([k]) => k),
         );
-        setClassCount(myClasses.length);
       }
     } catch (err: unknown) {
       console.error('Failed to load teacher dashboard', err);
@@ -143,7 +240,7 @@ export function useTeacherDashboard(): DashboardData {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, user?.isStandaloneTeacher]);
 
   useEffect(() => {
     fetchData();
