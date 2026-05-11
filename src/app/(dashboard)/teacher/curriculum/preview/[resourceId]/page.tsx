@@ -13,6 +13,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { BlockRenderer } from '@/components/content/renderers/BlockRenderer';
 import { useContentLibrary } from '@/hooks/useContentLibrary';
+import { usePaperImport } from '@/hooks/usePaperImport';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import type {
   ContentResourceItem,
@@ -41,6 +42,7 @@ export default function TeacherPreviewResourcePage() {
   const router = useRouter();
   const resourceId = params.resourceId as string;
   const { getResource } = useContentLibrary();
+  const { sourceUrl } = usePaperImport();
 
   const [resource, setResource] = useState<ContentResourceItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,7 +81,7 @@ export default function TeacherPreviewResourcePage() {
     return () => { cancelled = true; };
   }, [resourceId, getResource]);
 
-  // Preview-mode attempt handler — shows correct answer without saving
+  // Preview mode shows a result without saving a student attempt.
   const handlePreviewAttempt = async (
     blockId: string,
     _response: string,
@@ -107,7 +109,7 @@ export default function TeacherPreviewResourcePage() {
       return next;
     });
 
-    toast.info('Preview mode — student answers would be graded here');
+    toast.info('Preview mode: student answers would be graded here');
     return result;
   };
 
@@ -163,11 +165,30 @@ export default function TeacherPreviewResourcePage() {
         <CardContent className="p-3 flex items-center gap-2 text-sm">
           <Eye className="size-4 text-primary shrink-0" />
           <span>
-            <strong>Teacher Preview</strong> — This is how students see this resource.
+            <strong>Teacher Preview</strong>: This is how students see this resource.
             Interactive blocks are viewable but answers are not recorded.
           </span>
         </CardContent>
       </Card>
+
+      {/* Source import attribution */}
+      {resource.sourceImport && (
+        <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
+          <span className="font-medium">Source:</span>{' '}
+          <span>{resource.sourceImport.filename}</span>
+          {' · '}
+          <span>pages {resource.sourceImport.pageRange.start}–{resource.sourceImport.pageRange.end}</span>
+          {' · '}
+          <a
+            href={sourceUrl(resource.sourceImport.jobId)}
+            target="_blank"
+            rel="noreferrer"
+            className="underline"
+          >
+            Download original
+          </a>
+        </div>
+      )}
 
       {/* Resource metadata */}
       <div className="flex flex-wrap gap-2">

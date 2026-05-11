@@ -73,6 +73,7 @@ function isStandaloneTeacherPathAllowed(pathname: string): boolean {
     '/teacher/papers',
     '/teacher/grades',
     '/teacher/homework',
+    '/teacher/curriculum/import',
     '/teacher/settings',
   ];
 

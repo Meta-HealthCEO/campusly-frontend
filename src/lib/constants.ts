@@ -9,7 +9,7 @@ import {
   Compass, Target, Clipboard, Newspaper,
   CalendarCheck, CalendarCog, Crown, DoorOpen, UserPlus,
   AlertTriangle, Calculator, Library, Camera,
-  CheckSquare, Video, PlayCircle, FileQuestion,
+  CheckSquare, Video, PlayCircle, FileQuestion, ScanLine,
   type LucideIcon
 } from 'lucide-react';
 import type { PermissionFlag } from '@/types';
@@ -457,6 +457,7 @@ export const TEACHER_NAV: NavItem[] = [
   { label: 'Dashboard', href: ROUTES.TEACHER_DASHBOARD, icon: Home },
   { label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen },
   { label: 'Quick Make', href: ROUTES.TEACHER_QUICK_MAKE, icon: Sparkles, badge: 'AI' },
+  { label: 'Import Paper', href: '/teacher/curriculum/import', icon: ScanLine, badge: 'AI' },
   {
     label: 'Classes',
     href: ROUTES.TEACHER_CLASSES,
@@ -532,6 +533,7 @@ export const STANDALONE_TEACHER_NAV: NavItem[] = [
   { label: 'Teaching Groups', href: ROUTES.TEACHER_CLASSES, icon: Users },
   { label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen },
   { label: 'Quick Make', href: ROUTES.TEACHER_QUICK_MAKE, icon: Sparkles, badge: 'AI' },
+  { label: 'Import Paper', href: '/teacher/curriculum/import', icon: ScanLine, badge: 'AI' },
   { label: 'Resources', href: ROUTES.TEACHER_CURRICULUM_CONTENT, icon: BookOpen },
   { label: 'Textbooks', href: '/teacher/curriculum/textbooks', icon: BookMarked },
   { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
