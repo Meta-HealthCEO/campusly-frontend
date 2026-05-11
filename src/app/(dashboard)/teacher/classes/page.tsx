@@ -115,7 +115,9 @@ export default function TeacherClassesPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All subjects</SelectItem>
-              <SelectItem value="homeroom">Homeroom only</SelectItem>
+              {!isStandaloneTeacher && (
+                <SelectItem value="homeroom">Homeroom only</SelectItem>
+              )}
               {distinctSubjects.map((s) => (
                 <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
               ))}
@@ -172,7 +174,7 @@ export default function TeacherClassesPage() {
           onSubmit={handleEditClass}
           copyMode={isStandaloneTeacher ? 'teachingGroup' : 'class'}
           grades={grades}
-          initialData={{ name: editEntry.class.name, gradeId: editEntry.class.gradeId ?? resolveId(editEntry.class.grade), capacity: editEntry.class.capacity ?? 35, subjectId: editEntry.subject?.id }}
+          initialData={{ name: editEntry.class.name, gradeId: resolveId(editEntry.class.gradeId) || resolveId(editEntry.class.grade), capacity: editEntry.class.capacity ?? 35, subjectId: editEntry.subject?.id }}
           isLoading={editLoading} />
       )}
 
