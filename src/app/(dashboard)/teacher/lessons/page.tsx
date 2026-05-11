@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useLessons } from '@/hooks/useLessons';
 import { useAcademicLookups } from '@/hooks/useAcademicLookups';
+import { useAllCurriculumSubjects } from '@/hooks/useAllCurriculumSubjects';
 import { LessonListFilters } from '@/components/lessons/LessonListFilters';
 import { LessonListTable } from '@/components/lessons/LessonListTable';
 import { LessonCalendar } from '@/components/lessons/LessonCalendar';
@@ -18,8 +19,31 @@ type LessonsView = 'list' | 'calendar';
 
 export default function LessonsPage() {
   const { items, loading, filters, setFilters, deleteLesson } = useLessons();
-  const { classes, subjects } = useAcademicLookups();
+  const { classes, subjects: academicSubjects } = useAcademicLookups();
+  const { subjects: capsSubjects } = useAllCurriculumSubjects();
   const [view, setView] = useState<LessonsView>('list');
+
+  // Merge academic + CAPS subjects, deduped by lowercase name. The backend
+  // filter accepts either ID flavour (academic Subject _id OR CurriculumNode
+  // subject _id) per the resolveSubjectOrGradeIds fallback chain, so either
+  // option in this list works correctly when selected.
+  const subjects = (() => {
+    const seen = new Set<string>();
+    const merged: Array<{ _id: string; name: string }> = [];
+    for (const s of academicSubjects) {
+      const key = s.name.trim().toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push({ _id: s._id, name: s.name });
+    }
+    for (const s of capsSubjects) {
+      const key = s.title.trim().toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push({ _id: s.id, name: s.title });
+    }
+    return merged.sort((a, b) => a.name.localeCompare(b.name));
+  })();
 
   return (
     <div className="space-y-6">
