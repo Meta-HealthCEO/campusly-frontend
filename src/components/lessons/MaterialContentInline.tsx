@@ -56,7 +56,7 @@ export function MaterialContentInline({ material, enabled }: Props) {
         if (
           material.kind === 'worksheet'
           || material.kind === 'activity'
-          || material.kind === 'notes'
+          || material.kind === 'study_notes'
           || material.kind === 'worked_example'
         ) {
           const id = extractId(material.contentResourceId);
@@ -134,7 +134,7 @@ export function MaterialContentInline({ material, enabled }: Props) {
 
       {(material.kind === 'worksheet'
         || material.kind === 'activity'
-        || material.kind === 'notes'
+        || material.kind === 'study_notes'
         || material.kind === 'worked_example') && (
         <ContentBlocksList blocks={resourceBlocks} />
       )}

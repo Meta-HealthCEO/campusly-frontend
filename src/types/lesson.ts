@@ -30,7 +30,7 @@ export type LessonMaterialKind =
   | 'reading'
   | 'worksheet'
   | 'activity'
-  | 'notes'
+  | 'study_notes'
   | 'worked_example'
   | 'quiz'
   | 'practice_questions'
@@ -90,7 +90,7 @@ export interface ActivityMaterial extends LessonMaterialBase {
 }
 
 export interface NotesMaterial extends LessonMaterialBase {
-  kind: 'notes';
+  kind: 'study_notes';
   contentResourceId?: string;
 }
 
@@ -162,7 +162,15 @@ export interface Lesson {
   /** Optional — standalone teachers omit these; the topic carries them instead. */
   subjectId?: string | { _id: string; name: string; code?: string } | null;
   gradeId?: string | { _id: string; name: string; level?: number } | null;
-  curriculumNodeId: string | { _id: string; title: string; code?: string };
+  curriculumNodeId:
+    | string
+    | {
+        _id: string;
+        title: string;
+        code?: string;
+        subjectId?: string | { _id: string; title: string; code?: string } | null;
+        gradeId?: string | { _id: string; title: string; code?: string } | null;
+      };
   /** SA term derived from the topic on create. May be null. */
   termNumber?: number | null;
   title: string;

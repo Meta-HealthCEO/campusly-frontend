@@ -24,7 +24,7 @@ const TILES: Tile[] = [
   { kind: 'reading',            label: 'Reading',            icon: BookOpen,        desc: 'Textbook section + optional comprehension Qs' },
   { kind: 'worksheet',          label: 'Worksheet',          icon: FileText,        desc: 'Practice problems' },
   { kind: 'activity',           label: 'Activity',           icon: Activity,        desc: 'Hands-on or group activity' },
-  { kind: 'notes',              label: 'Notes',              icon: NotebookPen,     desc: 'Concept exposition or recap' },
+  { kind: 'study_notes',        label: 'Notes',              icon: NotebookPen,     desc: 'Concept exposition or recap' },
   { kind: 'worked_example',     label: 'Worked Example',     icon: Lightbulb,       desc: 'Step-by-step model solution' },
   { kind: 'quiz',               label: 'Quiz',               icon: ListChecks,      desc: 'Link an existing quiz' },
   { kind: 'practice_questions', label: 'Practice Questions', icon: ListPlus,        desc: 'Bank-generated questions' },

@@ -74,10 +74,10 @@ export function MaterialDrawer({
           existing={existing?.kind === 'activity' ? existing : undefined}
         />
       )}
-      {drawer.kind === 'notes' && (
+      {drawer.kind === 'study_notes' && (
         <NotesDrawer
           onSubmit={submit}
-          existing={existing?.kind === 'notes' ? existing : undefined}
+          existing={existing?.kind === 'study_notes' ? existing : undefined}
         />
       )}
       {drawer.kind === 'worked_example' && (

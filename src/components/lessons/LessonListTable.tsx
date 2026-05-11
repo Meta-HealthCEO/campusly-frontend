@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
   DropdownMenu,
@@ -20,10 +21,17 @@ interface Props {
   onDelete: (id: string) => Promise<void>;
 }
 
-function populatedName(field: Lesson['subjectId']): string {
-  if (!field) return '—';
-  if (typeof field === 'string') return field;
-  return field.name ?? '—';
+function subjectName(lesson: Lesson): string {
+  const direct = lesson.subjectId;
+  if (direct && typeof direct !== 'string' && direct.name) return direct.name;
+  const node = lesson.curriculumNodeId;
+  if (node && typeof node !== 'string') {
+    const nodeSubject = node.subjectId;
+    if (nodeSubject && typeof nodeSubject !== 'string' && nodeSubject.title) {
+      return nodeSubject.title;
+    }
+  }
+  return '—';
 }
 
 function readClassName(rel: LessonAssignment['classId']): string {
@@ -61,6 +69,7 @@ function nextScheduled(assignments: LessonAssignment[]): string {
 }
 
 export function LessonListTable({ items, onDelete }: Props) {
+  const router = useRouter();
   const [pendingDelete, setPendingDelete] = useState<Lesson | null>(null);
 
   const handleConfirmDelete = async () => {
@@ -74,20 +83,8 @@ export function LessonListTable({ items, onDelete }: Props) {
       accessorKey: 'title',
       header: 'Title',
       cell: ({ row }) => (
-        <Link
-          href={`/teacher/lessons/${row.original._id}`}
-          className="font-medium text-primary hover:underline truncate block max-w-80"
-        >
+        <span className="font-medium text-primary line-clamp-2">
           {row.original.title}
-        </Link>
-      ),
-    },
-    {
-      id: 'classes',
-      header: 'Classes',
-      cell: ({ row }) => (
-        <span className="truncate block max-w-48">
-          {formatClasses(row.original.assignedClasses)}
         </span>
       ),
     },
@@ -96,7 +93,16 @@ export function LessonListTable({ items, onDelete }: Props) {
       header: 'Subject',
       cell: ({ row }) => (
         <span className="truncate block max-w-40">
-          {populatedName(row.original.subjectId)}
+          {subjectName(row.original)}
+        </span>
+      ),
+    },
+    {
+      id: 'classes',
+      header: 'Classes',
+      cell: ({ row }) => (
+        <span className="truncate block max-w-48">
+          {formatClasses(row.original.assignedClasses)}
         </span>
       ),
     },
@@ -110,11 +116,6 @@ export function LessonListTable({ items, onDelete }: Props) {
       ),
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => <LessonStatusPill status={row.original.status} />,
-    },
-    {
       id: 'materials',
       header: 'Materials',
       cell: ({ row }) => (
@@ -124,38 +125,49 @@ export function LessonListTable({ items, onDelete }: Props) {
       ),
     },
     {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <LessonStatusPill status={row.original.status} />,
+    },
+    {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={<Button variant="ghost" size="icon-sm" aria-label="Lesson actions" />}
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              render={<Link href={`/teacher/lessons/${row.original._id}`} />}
+        <div onClick={(e) => e.stopPropagation()}>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={<Button variant="ghost" size="icon-sm" aria-label="Lesson actions" />}
             >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Open
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={() => setPendingDelete(row.original)}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <MoreHorizontal className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                render={<Link href={`/teacher/lessons/${row.original._id}`} />}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setPendingDelete(row.original)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       ),
     },
   ];
 
   return (
     <>
-      <DataTable columns={columns} data={items} />
+      <DataTable
+        columns={columns}
+        data={items}
+        onRowClick={(lesson) => router.push(`/teacher/lessons/${lesson._id}`)}
+      />
       <ConfirmDialog
         open={pendingDelete !== null}
         onOpenChange={(open) => !open && setPendingDelete(null)}

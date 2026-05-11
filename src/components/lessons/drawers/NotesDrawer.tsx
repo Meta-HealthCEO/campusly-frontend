@@ -11,7 +11,7 @@ interface Props {
 export function NotesDrawer({ onSubmit, existing }: Props) {
   return (
     <ContentBackedDrawerBase
-      kind="notes"
+      kind="study_notes"
       contentType="study_notes"
       onSubmit={onSubmit}
       existing={existing}
