@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, FileText, GraduationCap } from 'lucide-react';
+import { ArrowLeft, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,11 +21,11 @@ interface Props {
   lesson: Lesson;
   updateLesson: (patch: Partial<Lesson>) => Promise<Lesson>;
   patchStatus: (status: LessonStatus) => Promise<Lesson>;
-  onExport: (mode: 'teacher' | 'student') => Promise<void> | void;
-  exporting: 'teacher' | 'student' | null;
   assignClass: (classId: string, scheduledDate: string) => Promise<Lesson>;
   unassignClass: (classId: string) => Promise<Lesson>;
   updateAssignment: (classId: string, patch: UpdateAssignmentPayload) => Promise<Lesson>;
+  /** Opens the right-side actions drawer (Slideshow, PDFs, etc.). */
+  onOpenActions: () => void;
 }
 
 function readRel<T extends { name?: string; title?: string }>(
@@ -76,11 +76,10 @@ export function LessonHeader({
   lesson,
   updateLesson,
   patchStatus,
-  onExport,
-  exporting,
   assignClass,
   unassignClass,
   updateAssignment,
+  onOpenActions,
 }: Props) {
   const [titleDraft, setTitleDraft] = useState(lesson.title);
   const [editingTitle, setEditingTitle] = useState(false);
@@ -166,30 +165,16 @@ export function LessonHeader({
           )}
           <LessonStatusMenu status={lesson.status} onChange={patchStatus} />
         </div>
-        <div className="flex flex-wrap gap-2 shrink-0">
+        <div className="shrink-0">
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            disabled={exporting !== null}
-            onClick={() => void onExport('teacher')}
+            size="default"
+            onClick={onOpenActions}
+            className="w-full sm:w-auto"
           >
-            {exporting === 'teacher'
-              ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-              : <FileText className="mr-1.5 h-3.5 w-3.5" />}
-            Teacher Pack
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={exporting !== null}
-            onClick={() => void onExport('student')}
-          >
-            {exporting === 'student'
-              ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-              : <GraduationCap className="mr-1.5 h-3.5 w-3.5" />}
-            Student Pack
+            <Sparkles className="mr-2 h-4 w-4 text-primary" />
+            Actions
           </Button>
         </div>
       </div>

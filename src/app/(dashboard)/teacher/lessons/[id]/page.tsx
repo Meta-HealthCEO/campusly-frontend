@@ -1,6 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -15,6 +16,7 @@ import {
   PHASE_DROPPABLE_PREFIX,
 } from '@/components/lessons/LessonPhaseSection';
 import { MaterialDrawer } from '@/components/lessons/drawers/MaterialDrawer';
+import { LessonActionsDrawer } from '@/components/lessons/LessonActionsDrawer';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { LESSON_PHASES, type LessonPhase } from '@/types/lesson';
 
@@ -28,6 +30,7 @@ export default function LessonWorkspacePage() {
 
   const lessonHook = useLesson(lessonId);
   const exportHook = useLessonExport();
+  const [actionsOpen, setActionsOpen] = useState(false);
 
   if (lessonHook.loading) return <LoadingSpinner />;
   if (!lessonHook.lesson) {
@@ -101,17 +104,10 @@ export default function LessonWorkspacePage() {
           lesson={lesson}
           updateLesson={lessonHook.updateLesson}
           patchStatus={lessonHook.patchStatus}
-          onExport={(mode) =>
-            exportHook.download(
-              lesson._id,
-              mode,
-              `${lesson.title}-${mode}.pdf`,
-            )
-          }
-          exporting={exportHook.downloading}
           assignClass={lessonHook.assignClass}
           unassignClass={lessonHook.unassignClass}
           updateAssignment={lessonHook.updateAssignment}
+          onOpenActions={() => setActionsOpen(true)}
         />
 
         <LessonGenerateAllBanner
@@ -138,6 +134,28 @@ export default function LessonWorkspacePage() {
           lessonHasAssignedClass={(lesson.assignedClasses?.length ?? 0) > 0}
           addMaterial={lessonHook.addMaterial}
           regenerateMaterial={lessonHook.regenerateMaterial}
+        />
+
+        <LessonActionsDrawer
+          lessonId={lesson._id}
+          lessonTitle={lesson.title}
+          open={actionsOpen}
+          onClose={() => setActionsOpen(false)}
+          onExportPdf={(mode) =>
+            exportHook.download(
+              lesson._id,
+              mode,
+              `${lesson.title}-${mode}.pdf`,
+            )
+          }
+          exportingPdf={exportHook.downloading}
+          onExportSlides={() =>
+            exportHook.downloadSlides(
+              lesson._id,
+              `${lesson.title}.pptx`,
+            )
+          }
+          exportingSlides={exportHook.downloadingSlides}
         />
       </div>
     </DndContext>
