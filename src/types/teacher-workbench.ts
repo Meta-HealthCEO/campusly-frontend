@@ -242,11 +242,14 @@ export interface PaperModeration {
 export interface PlannedAssessment {
   title: string;
   type: AssessmentPlanType;
+  assessmentType?: AssessmentPlanType;
   plannedDate: string;
   marks: number;
+  totalMarks?: number;
   weight: number;
   topicIds: string[];
   assessmentId: string | null;
+  linkedPaperId?: string | null;
   status: PlanStatus;
 }
 
@@ -277,4 +280,8 @@ export interface WeightingInfo {
   requiredInformalWeight: number;
   actualInformalWeight: number;
   totalWeight: number;
+  totalRequiredWeight?: number;
+  assessmentCount?: number;
+  byType?: Partial<Record<AssessmentPlanType, number>>;
+  requiredByType?: Partial<Record<AssessmentPlanType, number>>;
 }

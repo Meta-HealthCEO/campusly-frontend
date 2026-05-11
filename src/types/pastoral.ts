@@ -40,7 +40,7 @@ export type ReferralOutcome =
   | 'no_further_action';
 
 // Prefixed to avoid conflicts with other modules
-export type PastoralRiskLevel = 'low' | 'medium' | 'high';
+export type PastoralRiskLevel = 'low' | 'medium' | 'high' | 'critical';
 
 // ---- Core Entities ----
 
@@ -164,9 +164,16 @@ export interface CounselorCaseload {
 
 export interface PastoralReport {
   reportType: string;
-  period: { startDate: string; endDate: string };
+  period?: { startDate: string; endDate: string };
+  year?: number;
   data: Array<Record<string, unknown>>;
   totalReferrals?: number;
+}
+
+export interface PastoralReports {
+  reasons: PastoralReport | null;
+  sessions: PastoralReport | null;
+  outcomes: PastoralReport | null;
 }
 
 // ---- Payload Types ----

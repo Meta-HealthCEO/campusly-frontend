@@ -9,6 +9,8 @@ export interface UserPermissions {
   isBursar: boolean;
   isReceptionist: boolean;
   isCounselor: boolean;
+  isStandaloneTeacher: boolean;
+  isStandaloneCoach: boolean;
 }
 
 export interface PermissionUser {

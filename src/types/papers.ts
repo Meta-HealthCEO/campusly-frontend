@@ -45,11 +45,12 @@ interface PaperQuestionBase {
   position: number;
   modelAnswer?: string | null;
   markingGuideline?: string | null;
+  options?: PaperQuestionOption[];
   diagram?: PaperDiagram | null;
 }
 
 export interface BankRefQuestion extends PaperQuestionBase {
-  questionId: string;
+  questionId: string | PopulatedPaperQuestionRef;
   /** Populated from question bank when read; not present on create */
   questionText?: string | null;
 }
@@ -92,6 +93,21 @@ export interface PopulatedCreator {
   _id: string;
   firstName: string;
   lastName: string;
+}
+
+export interface PaperQuestionOption {
+  label: string;
+  text: string;
+  isCorrect?: boolean;
+}
+
+export interface PopulatedPaperQuestionRef {
+  _id: string;
+  stem: string;
+  type?: string;
+  options?: PaperQuestionOption[];
+  answer?: string;
+  markingRubric?: string;
 }
 
 // ─── CAPS compliance (optional snapshot stored alongside paper) ──────────────
@@ -175,7 +191,7 @@ export interface AIPaperSectionConfig {
 }
 
 export interface GeneratePaperRequest {
-  schoolId: string;
+  schoolId?: string;
   subjectId: string;
   gradeId: string;
   topicIds: string[];
@@ -194,7 +210,7 @@ export interface GeneratePaperRequest {
 
 export interface CreatePaperManualInput {
   title: string;
-  schoolId: string;
+  schoolId?: string;
   subjectId: string;
   gradeId: string;
   topicIds: string[];
@@ -215,5 +231,6 @@ export interface AddQuestionInput {
   position: number;
   modelAnswer?: string;
   markingGuideline?: string;
+  options?: PaperQuestionOption[];
   diagram?: { tikz: string; caption?: string };
 }
