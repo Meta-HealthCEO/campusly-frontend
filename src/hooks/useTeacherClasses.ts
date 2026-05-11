@@ -18,7 +18,11 @@ export interface TeacherClassEntry {
 }
 
 interface TeachingLoadResponse {
-  homeroom: { class: SchoolClass; students: Student[] } | null;
+  homeroom: {
+    class: SchoolClass;
+    subject?: SubjectTaught | null;
+    students: Student[];
+  } | null;
   subjectClasses: {
     class: SchoolClass;
     subject: SubjectTaught;
@@ -72,7 +76,7 @@ export function useTeacherClasses() {
         if (data.homeroom) {
           result.push({
             class: data.homeroom.class,
-            subject: null,
+            subject: data.homeroom.subject ?? null,
             students: data.homeroom.students ?? [],
             isHomeroom: true,
           });
