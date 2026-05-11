@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Loader2, FileText, GraduationCap } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowLeft, Loader2, FileText, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -126,6 +127,15 @@ export function LessonHeader({
 
   return (
     <header className="rounded-lg border bg-card p-4 space-y-4">
+      {/* Row 0 — Back link to lesson list */}
+      <Link
+        href="/teacher/lessons"
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="h-3 w-3" />
+        All lessons
+      </Link>
+
       {/* Row 1 — Title (left) + Status + Export actions (right) */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3 min-w-0 flex-1">
