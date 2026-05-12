@@ -164,13 +164,6 @@ export const ROUTES = {
   STUDENT_CAREERS_BURSARIES: '/student/careers/bursaries',
   STUDENT_PORTFOLIO: '/student/portfolio',
 
-  // Student — Courses
-  STUDENT_COURSES: '/student/courses',
-  STUDENT_COURSE_HOME: (id: string) => `/student/courses/${id}`,
-  STUDENT_LESSON_PLAYER: (id: string, lessonId: string) =>
-    `/student/courses/${id}/learn/${lessonId}`,
-  STUDENT_CERTIFICATE: (id: string) => `/student/courses/${id}/certificate`,
-
   // Parent — Careers
   PARENT_CAREERS: '/parent/careers',
   PARENT_PORTFOLIO: '/parent/portfolio',
@@ -479,7 +472,6 @@ export const TEACHER_NAV: NavItem[] = [
   { label: 'Mark Papers', href: ROUTES.TEACHER_CURRICULUM_MARK_PAPERS, icon: Camera, badge: 'AI' },
   { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
   { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
-  { label: 'Resources', href: ROUTES.TEACHER_CURRICULUM_CONTENT, icon: BookMarked },
   { label: 'Curriculum', href: ROUTES.TEACHER_CURRICULUM, icon: Library },
   {
     label: 'Courses',
@@ -539,11 +531,10 @@ export const STANDALONE_TEACHER_NAV: NavItem[] = [
   { label: 'Teaching Groups', href: ROUTES.TEACHER_CLASSES, icon: Users },
   { label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen },
   { label: 'Import Paper', href: '/teacher/curriculum/import', icon: ScanLine, badge: 'AI' },
-  { label: 'Resources', href: ROUTES.TEACHER_CURRICULUM_CONTENT, icon: BookOpen },
   { label: 'Textbooks', href: '/teacher/curriculum/textbooks', icon: BookMarked },
   { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
   { label: 'Test Papers', href: '/teacher/papers', icon: FileText },
-  { label: 'Practice Questions', href: ROUTES.TEACHER_CURRICULUM_QUESTIONS, icon: FileQuestion },
+  { label: 'Question Bank', href: ROUTES.TEACHER_CURRICULUM_QUESTIONS, icon: FileQuestion },
   { label: 'Mark Papers', href: ROUTES.TEACHER_CURRICULUM_MARK_PAPERS, icon: Camera, badge: 'AI' },
   { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
   { label: 'CAPS Browser', href: ROUTES.TEACHER_CURRICULUM, icon: Library },
