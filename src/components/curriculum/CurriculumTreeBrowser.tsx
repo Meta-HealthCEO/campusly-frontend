@@ -70,11 +70,20 @@ function TreeNodeRow({
   const leaf = LEAF_TYPES.includes(node.type) || isKnownEmptyTopic;
 
   const handleRowClick = () => {
+    // Topics are selectable AND expandable. A row click on a topic does both:
+    // selects it (so consumers don't have to find the small "Select" button)
+    // and expands its children for further drill-down. Non-topic non-leaf
+    // rows just toggle expansion. Leaves only select.
     if (leaf) {
       onSelect(node);
-    } else {
-      void onToggle(node.id);
+      return;
     }
+    if (node.type === 'topic') {
+      onSelect(node);
+      void onToggle(node.id);
+      return;
+    }
+    void onToggle(node.id);
   };
 
   return (
