@@ -117,14 +117,17 @@ export function useClassesPageState() {
     }
   }, [deleteTarget, deleteClass, isStandaloneTeacher]);
 
-  const handleAddStudent = useCallback(async (data: Record<string, unknown>) => {
-    if (!selectedEntry) return;
-    const classId = resolveId(selectedEntry.class);
-    const rawGrade = selectedEntry.class.gradeId;
+  const handleAddStudent = useCallback(async (
+    data: Record<string, unknown>,
+    targetEntry: TeacherClassEntry | null = selectedEntry,
+  ) => {
+    if (!targetEntry) return;
+    const classId = resolveId(targetEntry.class);
+    const rawGrade = targetEntry.class.gradeId;
     const gradeId = (typeof rawGrade === 'object' && rawGrade !== null
       ? resolveId(rawGrade as { id?: string; _id?: string })
       : (rawGrade as string | undefined))
-      ?? resolveId(selectedEntry.class.grade);
+      ?? resolveId(targetEntry.class.grade);
     if (!classId || !gradeId) throw new Error(isStandaloneTeacher ? 'No teaching group selected' : 'No class selected');
     setAddStudentLoading(true);
     try {
@@ -132,7 +135,7 @@ export function useClassesPageState() {
     } catch (err: unknown) {
       console.error('Failed to add student', err);
       toast.error(extractErrorMessage(err, 'Failed to add student'));
-      throw err; // let dialog show its own error / not close
+      throw err;
     } finally { setAddStudentLoading(false); }
   }, [selectedEntry, addStudent, isStandaloneTeacher, user]);
 

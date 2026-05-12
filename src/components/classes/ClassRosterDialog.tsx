@@ -27,7 +27,6 @@ interface ClassRosterDialogProps {
   onInvite: (student: Student) => void;
   invitingId: string | null;
   onAddStudents: () => void;
-  onAssignExisting: () => void;
   onRemoveStudent?: (studentId: string) => void;
 }
 
@@ -38,7 +37,6 @@ export function ClassRosterDialog({
   onInvite,
   invitingId,
   onAddStudents,
-  onAssignExisting,
   onRemoveStudent,
 }: ClassRosterDialogProps) {
   const [studentSearch, setStudentSearch] = useState('');
@@ -138,9 +136,6 @@ export function ClassRosterDialog({
             )}
             <Button size="sm" variant="outline" onClick={onAddStudents} className="gap-1 shrink-0">
               <Plus className="h-4 w-4" /> Add {learnerLabelPlural}
-            </Button>
-            <Button size="sm" variant="outline" onClick={onAssignExisting} className="shrink-0">
-              Assign Existing
             </Button>
           </div>
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,6 +20,7 @@ import { BookOpen, Plus, Search } from 'lucide-react';
 import { resolveId } from '@/lib/api-helpers';
 import { useClassesPageState, entryKey } from '@/hooks/useClassesPageState';
 import { useAuthStore } from '@/stores/useAuthStore';
+import type { TeacherClassEntry } from '@/hooks/useTeacherClasses';
 import type { Student } from '@/types';
 
 export default function TeacherClassesPage() {
@@ -49,6 +51,17 @@ export default function TeacherClassesPage() {
     handleEditClass, handleRemoveStudent, handleInviteSubmit,
     handleAssignStudent,
   } = useClassesPageState();
+
+  // Tracks which entry the AddStudentDialog should target. Set when the user
+  // either clicks the "Add learners" icon on a card OR the "Add Learners"
+  // button inside the open roster. Kept distinct from `selectedKey` so the
+  // roster doesn't auto-open behind the add dialog.
+  const [addTargetEntry, setAddTargetEntry] = useState<TeacherClassEntry | null>(null);
+
+  const openAddStudent = (entry: TeacherClassEntry) => {
+    setAddTargetEntry(entry);
+    setShowAddStudent(true);
+  };
 
   if (loading) {
     return (
@@ -148,10 +161,7 @@ export default function TeacherClassesPage() {
               entryKey={entryKey(entry)}
               copyMode={isStandaloneTeacher ? 'teachingGroup' : 'class'}
               onViewRoster={() => setSelectedKey(entryKey(entry))}
-              onAddStudents={() => {
-                setSelectedKey(entryKey(entry));
-                setShowAddStudent(true);
-              }}
+              onAddStudents={() => openAddStudent(entry)}
               onEdit={() => setEditEntry(entry)}
               onDelete={() => setDeleteTarget(resolveId(entry.class))}
             />
@@ -162,7 +172,7 @@ export default function TeacherClassesPage() {
       <ClassRosterDialog entry={selectedEntry} onClose={() => setSelectedKey(null)}
         copyMode={isStandaloneTeacher ? 'teachingGroup' : 'class'}
         onInvite={(student: Student) => setInviteTarget(student)} invitingId={invitingId}
-        onAddStudents={() => setShowAddStudent(true)} onAssignExisting={() => setShowAssignStudent(true)}
+        onAddStudents={() => { if (selectedEntry) openAddStudent(selectedEntry); }}
         onRemoveStudent={handleRemoveStudent}
       />
 
@@ -188,7 +198,15 @@ export default function TeacherClassesPage() {
           isLoading={editLoading} />
       )}
 
-      <StudentAddDialog open={showAddStudent} onOpenChange={setShowAddStudent} onAddStudent={handleAddStudent} isLoading={addStudentLoading} />
+      <StudentAddDialog
+        open={showAddStudent}
+        onOpenChange={(o) => {
+          setShowAddStudent(o);
+          if (!o) setAddTargetEntry(null);
+        }}
+        onAddStudent={(data) => handleAddStudent(data, addTargetEntry)}
+        isLoading={addStudentLoading}
+      />
 
       <AssignStudentDialog open={showAssignStudent} onOpenChange={setShowAssignStudent}
         classId={resolveId(selectedEntry?.class)}
