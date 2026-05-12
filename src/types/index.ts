@@ -73,3 +73,4 @@ export * from './assessment-structure';
 // Import directly from '@/types/marking' instead of from '@/types'.
 // export * from './marking';
 export * from './teacher-settings';
+export * from './lesson-student';
