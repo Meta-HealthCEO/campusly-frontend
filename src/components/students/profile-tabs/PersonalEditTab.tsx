@@ -97,27 +97,22 @@ export function PersonalEditTab({ form, onChange }: Props) {
         />
       </div>
       <div className="space-y-1">
-        <Label htmlFor="previousSchool">Previous School</Label>
+        <Label htmlFor="email">Email</Label>
         <Input
-          id="previousSchool"
-          value={form.previousSchool ?? ''}
-          onChange={(e) => onChange({ previousSchool: e.target.value })}
+          id="email"
+          type="email"
+          placeholder="Used for portal login (optional)"
+          value={form.email ?? ''}
+          onChange={(e) => onChange({ email: e.target.value })}
         />
       </div>
-      <div className="space-y-1 sm:col-span-2">
-        <Label htmlFor="additionalLanguages">Additional Languages</Label>
+      <div className="space-y-1">
+        <Label htmlFor="phone">Phone</Label>
         <Input
-          id="additionalLanguages"
-          placeholder="Comma-separated, e.g. Zulu, Xhosa"
-          value={(form.additionalLanguages ?? []).join(', ')}
-          onChange={(e) =>
-            onChange({
-              additionalLanguages: e.target.value
-                .split(',')
-                .map((s) => s.trim())
-                .filter(Boolean),
-            })
-          }
+          id="phone"
+          type="tel"
+          value={form.phone ?? ''}
+          onChange={(e) => onChange({ phone: e.target.value })}
         />
       </div>
     </div>

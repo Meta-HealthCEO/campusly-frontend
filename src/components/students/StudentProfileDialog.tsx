@@ -15,7 +15,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useStudentEditor } from '@/hooks/useStudentEditor';
 import type { StudentProfileFormData } from '@/hooks/useStudentEditor';
 import { PersonalEditTab } from './profile-tabs/PersonalEditTab';
-import { ContactEditTab } from './profile-tabs/ContactEditTab';
 import { MedicalEditTab } from './profile-tabs/MedicalEditTab';
 import { EnrolmentEditTab } from './profile-tabs/EnrolmentEditTab';
 
@@ -115,15 +114,11 @@ export function StudentProfileDialog({ studentId, onClose }: StudentProfileDialo
             <Tabs defaultValue="personal">
               <TabsList className="flex-wrap mb-4">
                 <TabsTrigger value="personal">Personal</TabsTrigger>
-                <TabsTrigger value="contact">Contact</TabsTrigger>
                 <TabsTrigger value="medical">Medical</TabsTrigger>
                 <TabsTrigger value="enrolment">Enrolment</TabsTrigger>
               </TabsList>
               <TabsContent value="personal">
                 <PersonalEditTab form={form} onChange={handleChange} />
-              </TabsContent>
-              <TabsContent value="contact">
-                <ContactEditTab form={form} onChange={handleChange} />
               </TabsContent>
               <TabsContent value="medical">
                 <MedicalEditTab form={form} onChange={handleChange} />

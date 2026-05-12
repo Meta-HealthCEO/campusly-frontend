@@ -15,8 +15,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PersonalEditTab } from '@/components/students/profile-tabs/PersonalEditTab';
-import { ContactEditTab } from '@/components/students/profile-tabs/ContactEditTab';
-import { MedicalEditTab } from '@/components/students/profile-tabs/MedicalEditTab';
 import type { StudentProfileFormData } from '@/hooks/useStudentEditor';
 
 interface PendingStudent {
@@ -172,24 +170,9 @@ export function StudentAddDialog({
 
           <TabsContent value="manual" className="flex-1 overflow-y-auto py-2">
             <p className="mb-3 text-xs text-muted-foreground">
-              First and last name are required. Admission number is generated automatically if you leave it blank. All other fields can be filled later.
+              First and last name are required. Admission number is generated automatically if blank. Everything else can be filled later from the student&apos;s profile.
             </p>
-            <Tabs defaultValue="personal">
-              <TabsList className="flex-wrap mb-4">
-                <TabsTrigger value="personal">Personal</TabsTrigger>
-                <TabsTrigger value="contact">Contact</TabsTrigger>
-                <TabsTrigger value="medical">Medical</TabsTrigger>
-              </TabsList>
-              <TabsContent value="personal">
-                <PersonalEditTab form={form} onChange={handleChange} />
-              </TabsContent>
-              <TabsContent value="contact">
-                <ContactEditTab form={form} onChange={handleChange} />
-              </TabsContent>
-              <TabsContent value="medical">
-                <MedicalEditTab form={form} onChange={handleChange} />
-              </TabsContent>
-            </Tabs>
+            <PersonalEditTab form={form} onChange={handleChange} />
             <DialogFooter className="mt-4 gap-2 sm:gap-2">
               <Button
                 variant="outline"
