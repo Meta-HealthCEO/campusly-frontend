@@ -41,12 +41,19 @@ interface CreateClassPayload {
 }
 
 interface AddStudentPayload {
-  firstName: string;
-  lastName: string;
-  admissionNumber: string;
+  // Routing fields supplied by the page (always present)
   gradeId: string;
   classId: string;
   schoolId: string;
+  // Profile fields — firstName/lastName/admissionNumber are required at the
+  // dialog level but typed as optional here so the spread-merge in the page
+  // handler doesn't have to assert them. The backend will reject if missing.
+  firstName?: string;
+  lastName?: string;
+  admissionNumber?: string;
+  // Everything else from StudentProfileFormData is also optional. Index
+  // signature lets the dialog spread the full form in.
+  [key: string]: unknown;
 }
 
 

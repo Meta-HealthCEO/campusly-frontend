@@ -9,12 +9,15 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Trash2, UserPlus } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { PersonalEditTab } from '@/components/students/profile-tabs/PersonalEditTab';
+import { ContactEditTab } from '@/components/students/profile-tabs/ContactEditTab';
+import { MedicalEditTab } from '@/components/students/profile-tabs/MedicalEditTab';
+import type { StudentProfileFormData } from '@/hooks/useStudentEditor';
 
 interface PendingStudent {
   firstName: string;
@@ -22,12 +25,20 @@ interface PendingStudent {
   admissionNumber: string;
 }
 
+export type AddStudentPayload = Partial<StudentProfileFormData>;
+
 interface StudentAddDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddStudent: (data: PendingStudent) => Promise<void>;
+  onAddStudent: (data: AddStudentPayload) => Promise<void>;
   isLoading: boolean;
 }
+
+const EMPTY_FORM: Partial<StudentProfileFormData> = {
+  firstName: '',
+  lastName: '',
+  admissionNumber: '',
+};
 
 export function StudentAddDialog({
   open,
@@ -35,59 +46,44 @@ export function StudentAddDialog({
   onAddStudent,
   isLoading,
 }: StudentAddDialogProps) {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [admissionNumber, setAdmissionNumber] = useState('');
-  const [pendingStudents, setPendingStudents] = useState<PendingStudent[]>([]);
+  const [form, setForm] = useState<Partial<StudentProfileFormData>>(EMPTY_FORM);
   const [csvText, setCsvText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0, errors: [] as string[] });
 
   const resetForm = () => {
-    setFirstName('');
-    setLastName('');
-    setAdmissionNumber('');
-    setPendingStudents([]);
+    setForm(EMPTY_FORM);
     setCsvText('');
     setCsvErrors([]);
     setProgress({ current: 0, total: 0, errors: [] });
   };
 
-  const handleAddToPending = () => {
-    if (!firstName.trim() || !lastName.trim() || !admissionNumber.trim()) {
-      toast.error('All fields are required');
+  function handleChange(patch: Partial<StudentProfileFormData>) {
+    setForm((prev) => ({ ...prev, ...patch }));
+  }
+
+  const submitOne = async (closeOnSuccess: boolean) => {
+    if (!form.firstName?.trim() || !form.lastName?.trim() || !form.admissionNumber?.trim()) {
+      toast.error('First name, last name, and admission number are required');
       return;
     }
-    setPendingStudents((prev) => [
-      ...prev,
-      {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        admissionNumber: admissionNumber.trim(),
-      },
-    ]);
-    setFirstName('');
-    setLastName('');
-    setAdmissionNumber('');
-  };
-
-  const removePending = (index: number) => {
-    setPendingStudents((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const submitPending = async () => {
-    if (pendingStudents.length === 0) return;
     setSubmitting(true);
     try {
-      for (const s of pendingStudents) {
-        await onAddStudent(s);
+      await onAddStudent(form);
+      toast.success(`${form.firstName} ${form.lastName} added`);
+      if (closeOnSuccess) {
+        resetForm();
+        onOpenChange(false);
+      } else {
+        // Keep dialog open for adding the next student. Reset only the form.
+        setForm(EMPTY_FORM);
       }
-      toast.success(`${pendingStudents.length} student(s) added`);
-      resetForm();
-      onOpenChange(false);
     } catch (err: unknown) {
-      console.error('Failed to add students', err);
-      toast.error('Failed to add some students');
+      console.error('Failed to add student', err);
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Failed to add student';
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -164,72 +160,49 @@ export function StudentAddDialog({
         onOpenChange(o);
       }}
     >
-      <DialogContent className="flex flex-col max-h-[85vh] sm:max-w-lg">
+      <DialogContent className="flex flex-col max-h-[85vh] sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Add Students</DialogTitle>
         </DialogHeader>
         <Tabs defaultValue="manual" className="flex-1 overflow-hidden flex flex-col">
           <TabsList>
-            <TabsTrigger value="manual">Manual Entry</TabsTrigger>
-            <TabsTrigger value="csv">CSV Paste</TabsTrigger>
+            <TabsTrigger value="manual">Single — full profile</TabsTrigger>
+            <TabsTrigger value="csv">CSV — bulk minimal</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="manual" className="flex-1 overflow-y-auto space-y-4 py-2">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="space-y-1">
-                <Label>First Name <span className="text-destructive">*</span></Label>
-                <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label>Last Name <span className="text-destructive">*</span></Label>
-                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label>Admission # <span className="text-destructive">*</span></Label>
-                <Input value={admissionNumber} onChange={(e) => setAdmissionNumber(e.target.value)} />
-              </div>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddToPending}
-              className="gap-1"
-            >
-              <UserPlus className="h-4 w-4" /> Add to list
-            </Button>
-
-            {pendingStudents.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">
-                  {pendingStudents.length} student(s) ready
-                </p>
-                {pendingStudents.map((s, i) => (
-                  <div
-                    key={`${s.admissionNumber}-${i}`}
-                    className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
-                  >
-                    <span className="truncate">
-                      {s.firstName} {s.lastName} ({s.admissionNumber})
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removePending(i)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <DialogFooter>
+          <TabsContent value="manual" className="flex-1 overflow-y-auto py-2">
+            <p className="mb-3 text-xs text-muted-foreground">
+              First name, last name, and admission number are required. All other fields are optional and can be filled later.
+            </p>
+            <Tabs defaultValue="personal">
+              <TabsList className="flex-wrap mb-4">
+                <TabsTrigger value="personal">Personal</TabsTrigger>
+                <TabsTrigger value="contact">Contact</TabsTrigger>
+                <TabsTrigger value="medical">Medical</TabsTrigger>
+              </TabsList>
+              <TabsContent value="personal">
+                <PersonalEditTab form={form} onChange={handleChange} />
+              </TabsContent>
+              <TabsContent value="contact">
+                <ContactEditTab form={form} onChange={handleChange} />
+              </TabsContent>
+              <TabsContent value="medical">
+                <MedicalEditTab form={form} onChange={handleChange} />
+              </TabsContent>
+            </Tabs>
+            <DialogFooter className="mt-4 gap-2 sm:gap-2">
               <Button
-                onClick={submitPending}
-                disabled={busy || pendingStudents.length === 0}
+                variant="outline"
+                onClick={() => submitOne(false)}
+                disabled={busy}
               >
-                {busy ? 'Adding...' : `Done (${pendingStudents.length})`}
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save and add another'}
+              </Button>
+              <Button
+                onClick={() => submitOne(true)}
+                disabled={busy}
+              >
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save and close'}
               </Button>
             </DialogFooter>
           </TabsContent>
