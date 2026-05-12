@@ -204,7 +204,6 @@ export const ROUTES = {
   TEACHER_AI_PAPERS: '/teacher/ai-tools/papers',
   TEACHER_LESSONS: '/teacher/lessons',
   TEACHER_LESSON_NEW: '/teacher/lessons/new',
-  TEACHER_QUICK_MAKE: '/teacher/quick-make',
   TEACHER_SUBSTITUTES: '/teacher/substitutes',
 
   // Teacher — Virtual Classroom
@@ -223,7 +222,6 @@ export const ROUTES = {
   TEACHER_CURRICULUM_QUESTIONS: '/teacher/curriculum/questions',
   TEACHER_CURRICULUM_ASSESSMENTS: '/teacher/curriculum/assessments',
   TEACHER_CURRICULUM_PREVIEW: '/teacher/curriculum/preview',
-  TEACHER_CURRICULUM_AI_STUDIO: '/teacher/curriculum/ai-studio',
   TEACHER_CURRICULUM_PAPERS: '/teacher/curriculum/papers',
   TEACHER_CURRICULUM_MARK_PAPERS: '/teacher/curriculum/mark-papers',
   TEACHER_ASSESSMENT_STRUCTURES: '/teacher/curriculum/assessment-structure',

@@ -1,14 +1,14 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { AlertTriangle, BookOpen, Library, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { AlertTriangle, BookOpen, FileText, Library } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { CurriculumTreeBrowser } from '@/components/curriculum/CurriculumTreeBrowser';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -20,10 +20,10 @@ import {
 import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { ROUTES } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 import type { CurriculumNodeItem } from '@/types/curriculum-structure';
 
 export default function TeacherCurriculumPage() {
-  const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const {
     frameworks,
@@ -66,16 +66,9 @@ export default function TeacherCurriculumPage() {
     <div className="space-y-6">
       <PageHeader
         title="CAPS Browser"
-        description="Browse the curriculum map by phase, grade, subject, term, topic, and subtopic. Creation happens in AI Studio."
-      >
-        <Button
-          onClick={() => router.push(ROUTES.TEACHER_CURRICULUM_AI_STUDIO)}
-          className="gap-2"
-        >
-          <Sparkles className="size-4" />
-          Open AI Studio
-        </Button>
-      </PageHeader>
+        description="Browse the curriculum map by phase, grade, subject, term, topic, and subtopic. Use a topic from here when planning a lesson or generating a paper."
+      />
+
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <Card>
@@ -141,13 +134,22 @@ export default function TeacherCurriculumPage() {
                     </p>
                   </div>
                 </div>
-                <Button
-                  className="w-full gap-2"
-                  onClick={() => router.push(ROUTES.TEACHER_CURRICULUM_AI_STUDIO)}
-                >
-                  <Sparkles className="size-4" />
-                  Create From Curriculum
-                </Button>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Link
+                    href={ROUTES.TEACHER_LESSONS}
+                    className={cn(buttonVariants({ variant: 'outline' }), 'flex-1 gap-2')}
+                  >
+                    <BookOpen className="size-4" />
+                    Plan a lesson
+                  </Link>
+                  <Link
+                    href="/teacher/papers/new"
+                    className={cn(buttonVariants({ variant: 'outline' }), 'flex-1 gap-2')}
+                  >
+                    <FileText className="size-4" />
+                    Create a paper
+                  </Link>
+                </div>
               </>
             ) : (
               <div className="rounded-lg border border-dashed p-5 text-sm text-muted-foreground">
