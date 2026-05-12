@@ -10,6 +10,7 @@ import {
   CalendarCheck, CalendarCog, Crown, DoorOpen, UserPlus,
   AlertTriangle, Calculator, Library, Camera,
   CheckSquare, Video, PlayCircle, FileQuestion, ScanLine,
+  User,
   type LucideIcon
 } from 'lucide-react';
 import type { PermissionFlag } from '@/types';
@@ -402,18 +403,25 @@ export const PARENT_NAV: NavItem[] = [
   },
 ];
 
+// Phase 1 — always visible (the 6 MVP items for the standalone-teacher student MVP)
+// Phase 2 — module-gated, hidden until the school enables that module
 export const STUDENT_NAV: NavItem[] = [
+  // Phase 1 (always visible)
   { label: 'Dashboard', href: ROUTES.STUDENT_DASHBOARD, icon: Home },
-  { label: 'Homework', href: ROUTES.STUDENT_HOMEWORK, icon: ClipboardList },
-  { label: 'Timetable', href: ROUTES.STUDENT_TIMETABLE, icon: Clock },
-  { label: 'Grades', href: ROUTES.STUDENT_GRADES, icon: BarChart3 },
-  { label: 'Library', href: ROUTES.STUDENT_LIBRARY, icon: BookMarked, module: 'library' },
-  { label: 'Courses', href: ROUTES.STUDENT_COURSES, icon: GraduationCap, module: 'courses' },
-  { label: 'Achievements', href: ROUTES.STUDENT_ACHIEVEMENTS, icon: Award },
-  { label: 'Wallet', href: ROUTES.STUDENT_WALLET, icon: Wallet, module: 'wallet' },
-  { label: 'My Sports', href: ROUTES.STUDENT_SPORTS, icon: Trophy, module: 'sports' },
-  { label: 'Wellbeing', href: ROUTES.STUDENT_WELLBEING, icon: Heart, module: 'incident_wellbeing' },
-  { label: 'AI Tutor', href: ROUTES.STUDENT_AI_TUTOR, icon: Sparkles, module: 'ai_tools' },
+  { label: 'Lessons',   href: '/student/lessons',        icon: BookOpen },
+  { label: 'Homework',  href: ROUTES.STUDENT_HOMEWORK,   icon: ClipboardList },
+  { label: 'Tests',     href: '/student/tests',          icon: FileText },
+  { label: 'AI Tutor',  href: ROUTES.STUDENT_AI_TUTOR,   icon: Sparkles },
+  { label: 'Profile',   href: '/student/profile',        icon: User },
+
+  // Phase 2 (module-gated)
+  { label: 'Timetable',     href: ROUTES.STUDENT_TIMETABLE,     icon: Clock,    module: 'academic' },
+  { label: 'Grades',        href: ROUTES.STUDENT_GRADES,        icon: BarChart3, module: 'academic' },
+  { label: 'Wallet',        href: ROUTES.STUDENT_WALLET,        icon: Wallet,   module: 'wallet' },
+  { label: 'Library',       href: ROUTES.STUDENT_LIBRARY,       icon: BookMarked, module: 'library' },
+  { label: 'Achievements',  href: ROUTES.STUDENT_ACHIEVEMENTS,  icon: Award,    module: 'achiever' },
+  { label: 'My Sports',     href: ROUTES.STUDENT_SPORTS,        icon: Trophy,   module: 'sports' },
+  { label: 'Wellbeing',     href: ROUTES.STUDENT_WELLBEING,     icon: Heart,    module: 'incident_wellbeing' },
   {
     label: 'Career Guidance', href: ROUTES.STUDENT_CAREERS, icon: Compass, module: 'careers',
     children: [
@@ -425,6 +433,7 @@ export const STUDENT_NAV: NavItem[] = [
       { label: 'Portfolio', href: ROUTES.STUDENT_PORTFOLIO, icon: BookOpen },
     ],
   },
+  { label: 'Classroom',     href: '/student/classroom',         icon: Video,    module: 'academic' },
 ];
 
 export const SUPERADMIN_NAV: NavItem[] = [
