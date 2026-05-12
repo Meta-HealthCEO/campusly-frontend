@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, type KeyboardEvent } from 'react';
+import { useEffect, useState, useRef, type KeyboardEvent } from 'react';
 import { Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,11 +9,18 @@ interface ChatInputProps {
   onSend: (message: string) => void;
   disabled: boolean;
   placeholder?: string;
+  initialValue?: string;
 }
 
-export function ChatInput({ onSend, disabled, placeholder }: ChatInputProps) {
-  const [text, setText] = useState('');
+export function ChatInput({ onSend, disabled, placeholder, initialValue }: ChatInputProps) {
+  const [text, setText] = useState(initialValue ?? '');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (initialValue) setText(initialValue);
+    // Seed once on mount from the initial query-param context.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSend = () => {
     const trimmed = text.trim();

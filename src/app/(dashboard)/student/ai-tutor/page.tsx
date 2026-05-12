@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Menu, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useAITutor } from '@/hooks/useAITutor';
 import { useSubjects } from '@/hooks/useAcademics';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
@@ -23,6 +24,10 @@ import {
 import type { SendMessagePayload } from '@/types';
 
 export default function StudentAITutorPage() {
+  const searchParams = useSearchParams();
+  const initialSubjectId = searchParams.get('subjectId') ?? '';
+  const initialContext = searchParams.get('context') ?? '';
+
   const { student, loading: studentLoading } = useCurrentStudent();
   const { subjects, loading: subjectsLoading } = useSubjects();
   const {
@@ -36,13 +41,20 @@ export default function StudentAITutorPage() {
     startNewConversation,
   } = useAITutor();
 
-  const [selectedSubjectId, setSelectedSubjectId] = useState('');
+  const [selectedSubjectId, setSelectedSubjectId] = useState(initialSubjectId);
   const [selectedSubjectName, setSelectedSubjectName] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     loadConversations();
   }, [loadConversations]);
+
+  useEffect(() => {
+    if (initialSubjectId && subjects.length > 0 && !selectedSubjectName) {
+      const s = subjects.find((sub) => sub.id === initialSubjectId);
+      if (s) setSelectedSubjectName(s.name);
+    }
+  }, [initialSubjectId, subjects, selectedSubjectName]);
 
   if (studentLoading || subjectsLoading) return <LoadingSpinner />;
 
@@ -135,6 +147,7 @@ export default function StudentAITutorPage() {
             conversation={currentConversation}
             onSend={handleSend}
             sending={sending}
+            initialPrompt={initialContext || undefined}
           />
         </div>
       </div>

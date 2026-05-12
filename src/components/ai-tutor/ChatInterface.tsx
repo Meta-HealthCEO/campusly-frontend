@@ -10,9 +10,11 @@ interface ChatInterfaceProps {
   conversation: TutorConversation | null;
   onSend: (message: string) => void;
   sending: boolean;
+  initialPrompt?: string;
 }
 
-export function ChatInterface({ conversation, onSend, sending }: ChatInterfaceProps) {
+export function ChatInterface({ conversation, onSend, sending, initialPrompt }: ChatInterfaceProps) {
+  const seededInput = initialPrompt ? `Help me understand: ${initialPrompt}` : undefined;
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,7 +38,12 @@ export function ChatInterface({ conversation, onSend, sending }: ChatInterfacePr
             </p>
           </div>
         </div>
-        <ChatInput onSend={onSend} disabled={sending} placeholder="Select a subject to begin..." />
+        <ChatInput
+          onSend={onSend}
+          disabled={sending}
+          placeholder="Select a subject to begin..."
+          initialValue={seededInput}
+        />
       </div>
     );
   }
@@ -60,7 +67,7 @@ export function ChatInterface({ conversation, onSend, sending }: ChatInterfacePr
           </div>
         )}
       </div>
-      <ChatInput onSend={onSend} disabled={sending} />
+      <ChatInput onSend={onSend} disabled={sending} initialValue={seededInput} />
     </div>
   );
 }
