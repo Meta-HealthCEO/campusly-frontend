@@ -1,107 +1,159 @@
 'use client';
 
 import Link from 'next/link';
-import { BookOpen, Calendar, Wallet, Trophy, Clock, AlertTriangle } from 'lucide-react';
+import { BookOpen, ClipboardList, FileText, Sparkles, AlertTriangle, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { StatCard } from '@/components/shared/StatCard';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { AnnouncementBanner } from '@/components/announcements/AnnouncementBanner';
-import { FeaturedBanner } from '@/components/school-news/FeaturedBanner';
-import { useCurrentStudent } from '@/hooks/useCurrentStudent';
+import { StatCard } from '@/components/shared/StatCard';
 import { useStudentDashboard } from '@/hooks/useStudentDashboard';
-import { useStudentHomeworkDashboard } from '@/hooks/useStudentHomeworkDashboard';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 
 export default function StudentDashboard() {
+  const { dashboard, loading } = useStudentDashboard();
   const { student } = useCurrentStudent();
-  const { homework, submissions, wallet, timetable, loading } = useStudentDashboard();
-  const { counts: hwCounts } = useStudentHomeworkDashboard();
+  if (loading || !dashboard) return <LoadingSpinner />;
 
-  if (loading) return <LoadingSpinner />;
-
-  const firstName = student?.user?.firstName ?? student?.firstName ?? 'Student';
-  const pendingHomework = homework.filter((hw) => {
-    const submitted = submissions.find((s) => s.homeworkId === hw._id);
-    return !submitted;
-  });
-
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-  const todayClasses = timetable
-    .filter((slot) => slot.day === today)
-    .sort((a, b) => a.period - b.period);
+  const firstName =
+    student?.user?.firstName ?? student?.firstName ?? 'Student';
 
   return (
     <div className="space-y-6">
-      <PageHeader title={`Welcome back, ${firstName}!`} description="Here is your overview for today" />
+      <PageHeader
+        title={`Welcome back, ${firstName}!`}
+        description={new Date().toLocaleDateString('en-ZA', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+        })}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatCard title="Due This Week" value={String(hwCounts?.dueThisWeek ?? 0)} icon={BookOpen} description="Homework pending" />
-        <StatCard title="Overdue" value={String(hwCounts?.overdue ?? 0)} icon={AlertTriangle} description="Late, not submitted" />
-        <StatCard title="Awaiting Grading" value={String(hwCounts?.awaitingGrading ?? 0)} icon={Clock} description="AI grading in progress" />
-        <StatCard title="Today's Classes" value={String(todayClasses.length)} icon={Calendar} description={`${today.charAt(0).toUpperCase() + today.slice(1)} schedule`} />
-        <StatCard title="Wallet Balance" value={wallet ? formatCurrency(wallet.balance) : 'R0.00'} icon={Wallet} description="Tuck shop funds" />
-        <StatCard title="House Points" value={student?.house ? String(student.house.points) : '0'} icon={Trophy} description={student?.house?.name || 'No house'} />
-      </div>
-
-      <AnnouncementBanner limit={3} />
-
-      <FeaturedBanner limit={3} />
-
-      <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg">Upcoming Homework</CardTitle>
-            <Link href="/student/homework" className="text-sm text-primary hover:underline">View all</Link>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Most recent lesson</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {pendingHomework.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No pending homework. You are all caught up!</p>
+          <CardContent>
+            {dashboard.recentLesson ? (
+              <Link
+                href={`/student/lessons/${dashboard.recentLesson.id}`}
+                className="block space-y-1 group"
+              >
+                <p className="font-medium truncate group-hover:text-primary">
+                  {dashboard.recentLesson.title}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {dashboard.recentLesson.subject}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(dashboard.recentLesson.scheduledDate).toLocaleDateString()}
+                </p>
+              </Link>
             ) : (
-              pendingHomework.slice(0, 3).map((hw) => (
-                <Link key={hw._id} href={`/student/homework/${hw._id}`} className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">{hw.title}</p>
-                    {/* TODO: lookup subject name via useSubjects(hw.subjectId) */}
-                    <p className="text-xs text-muted-foreground capitalize">{hw.type}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">Due {formatDate(hw.dueDate)}</span>
-                  </div>
-                </Link>
-              ))
+              <p className="text-sm text-muted-foreground">No lessons yet.</p>
             )}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg">Today&apos;s Classes</CardTitle>
-            <Link href="/student/timetable" className="text-sm text-primary hover:underline">Full timetable</Link>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Next homework</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {todayClasses.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No classes scheduled today.</p>
+          <CardContent>
+            {dashboard.nextHomework ? (
+              <Link
+                href={`/student/homework/${dashboard.nextHomework.id}`}
+                className="block space-y-1 group"
+              >
+                <p className="font-medium truncate group-hover:text-primary">
+                  {dashboard.nextHomework.title}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {dashboard.nextHomework.subject}
+                </p>
+                <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                  <Clock className="h-3 w-3" /> Due{' '}
+                  {new Date(dashboard.nextHomework.dueAt).toLocaleDateString()}
+                </p>
+              </Link>
             ) : (
-              todayClasses.map((slot) => (
-                <div key={slot.id ?? `${slot.day}-${slot.period}`} className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
-                      P{slot.period}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{slot.subject?.name ?? 'Subject'}</p>
-                      <p className="text-xs text-muted-foreground">{slot.room}</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{slot.startTime} - {slot.endTime}</span>
-                </div>
-              ))
+              <p className="text-sm text-muted-foreground">All caught up.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Next test</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {dashboard.nextTest ? (
+              <Link
+                href={`/student/tests/${dashboard.nextTest.paperId}`}
+                className="block space-y-1 group"
+              >
+                <p className="font-medium truncate group-hover:text-primary">
+                  {dashboard.nextTest.title}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {dashboard.nextTest.subject}
+                </p>
+                {dashboard.nextTest.dueAt && (
+                  <p className="text-xs text-muted-foreground">
+                    Due {new Date(dashboard.nextTest.dueAt).toLocaleDateString()}
+                  </p>
+                )}
+              </Link>
+            ) : (
+              <p className="text-sm text-muted-foreground">No tests scheduled.</p>
             )}
           </CardContent>
         </Card>
       </div>
+
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
+        <StatCard
+          title="Lessons this week"
+          value={String(dashboard.counts.lessonsThisWeek)}
+          icon={BookOpen}
+        />
+        <StatCard
+          title="Homework due"
+          value={String(dashboard.counts.homeworkDueThisWeek)}
+          icon={ClipboardList}
+        />
+        <StatCard
+          title="Tests scheduled"
+          value={String(dashboard.counts.testsScheduled)}
+          icon={FileText}
+        />
+        <StatCard
+          title="Overdue"
+          value={String(dashboard.counts.homeworkOverdue)}
+          icon={AlertTriangle}
+        />
+      </div>
+
+      <Card className="bg-primary/5 border-primary/20">
+        <CardContent className="flex items-center justify-between p-4 gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+              <Sparkles className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Need help with something?</p>
+              <p className="text-xs text-muted-foreground">
+                Your AI Tutor can explain any topic.
+              </p>
+            </div>
+          </div>
+          <Link href="/student/ai-tutor">
+            <button className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+              Open AI Tutor
+            </button>
+          </Link>
+        </CardContent>
+      </Card>
     </div>
   );
 }
