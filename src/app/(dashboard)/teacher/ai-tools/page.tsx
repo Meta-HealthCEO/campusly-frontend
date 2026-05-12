@@ -1,5 +1,0 @@
-import { redirect } from 'next/navigation';
-
-export default function DeprecatedAIToolsRedirect() {
-  redirect('/teacher/curriculum/ai-studio');
-}
