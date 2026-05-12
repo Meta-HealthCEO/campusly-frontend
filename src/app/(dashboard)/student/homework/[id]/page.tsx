@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,11 @@ import { ReadingSubmissionForm } from '@/components/homework/ReadingSubmissionFo
 export default function StudentHomeworkDetailPage() {
   const params = useParams();
   const homeworkId = params.id as string;
+  const searchParams = useSearchParams();
+  const fromParam = searchParams.get('from');
+  const fromLessonId = fromParam?.startsWith('lesson:') ? fromParam.slice(7) : null;
+  const backHref = fromLessonId ? `/student/lessons/${fromLessonId}` : '/student/homework';
+  const backLabel = fromLessonId ? 'Back to lesson' : 'Back to Homework';
   const { detail, submission, loading, submitHomework } =
     useStudentHomeworkDetail(homeworkId);
 
@@ -29,10 +34,10 @@ export default function StudentHomeworkDetailPage() {
         title="Homework Not Found"
         description="The homework assignment does not exist."
         action={
-          <Link href="/student/homework">
+          <Link href={backHref}>
             <Button variant="outline">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
+              {backLabel}
             </Button>
           </Link>
         }
@@ -47,11 +52,11 @@ export default function StudentHomeworkDetailPage() {
   return (
     <div className="space-y-6">
       <Link
-        href="/student/homework"
+        href={backHref}
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to Homework
+        {backLabel}
       </Link>
 
       <PageHeader title={detail.title} description="" />
@@ -76,9 +81,15 @@ export default function StudentHomeworkDetailPage() {
             <span className="text-muted-foreground">Due:</span>
             <span>{formatDate(detail.dueAt)}</span>
           </div>
-          {detail.sourceLesson && (
+          {detail.sourceLesson && !fromLessonId && (
             <div className="text-sm text-muted-foreground">
-              From lesson: {detail.sourceLesson.title}
+              From lesson:{' '}
+              <Link
+                href={`/student/lessons/${detail.sourceLesson.id}`}
+                className="text-primary hover:underline"
+              >
+                {detail.sourceLesson.title}
+              </Link>
             </div>
           )}
         </CardContent>
