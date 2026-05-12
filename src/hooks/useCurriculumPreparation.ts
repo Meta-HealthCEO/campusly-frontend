@@ -184,6 +184,7 @@ export interface UseCurriculumPreparationResult {
 
 export function useCurriculumPreparation(): UseCurriculumPreparationResult {
   const { user } = useAuthStore();
+  const isStandaloneTeacher = user?.isStandaloneTeacher === true;
   const { subjects, loading: subjectsLoading, refetch: refetchSubjects } = useSubjects();
   const { grades, loading: gradesLoading, refetch: refetchGrades } = useGrades();
 
@@ -223,11 +224,34 @@ export function useCurriculumPreparation(): UseCurriculumPreparationResult {
       return;
     }
 
+    // Standalone teachers reference the curriculum tree directly: the topic
+    // node has denormalized gradeId/subjectId pointing at CurriculumNode IDs.
+    // No school-side Grade/Subject records to find or create.
+    if (isStandaloneTeacher) {
+      const denormGrade = node.gradeId;
+      const denormSubject = node.subjectId;
+      const denormTerm = node.termNumber ?? context.term;
+      if (denormGrade && denormSubject && denormTerm) {
+        setGradeId(denormGrade);
+        setSubjectId(denormSubject);
+        setTerm(denormTerm);
+        setContextStatus('ready');
+        setContextError(null);
+        return;
+      }
+      setContextStatus('error');
+      setContextError('This curriculum node is missing grade or subject metadata. Pick a topic or subtopic.');
+      return;
+    }
+
     setContextStatus('preparing');
     setContextError(null);
-  }, []);
+  }, [isStandaloneTeacher]);
 
   useEffect(() => {
+    // Standalone teachers resolve subject/grade synchronously in apply() —
+    // skip the school-side find/create flow.
+    if (isStandaloneTeacher) return;
     if (!selectedNode || !curriculumContext || !user?.schoolId || subjectsLoading || gradesLoading) {
       return;
     }
