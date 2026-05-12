@@ -4,6 +4,7 @@ export { RubricEditorDialog } from './RubricEditorDialog';
 export { QuizResultsView } from './QuizResultsView';
 export { SubmissionViewer } from './SubmissionViewer';
 export { QuizAttemptUI } from './QuizAttemptUI';
+export { QuizPlayer } from './QuizPlayer';
 export { ProgressDashboard } from './ProgressDashboard';
 export { StrugglingStudentsAlert } from './StrugglingStudentsAlert';
 export { getMaterialColumns } from './MaterialColumns';
