@@ -2300,6 +2300,7 @@ import {
   FileText, BookOpen, Sparkles, ClipboardList, Pencil,
   ExternalLink, GraduationCap, Library,
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { StudentLessonMaterial } from '@/types';
 import { LessonResourceReader } from './LessonResourceReader';
 import { QuizPlayer } from '@/components/learning/QuizPlayer';
@@ -2381,8 +2382,21 @@ export function LessonMaterialCard({ material, lessonId }: { material: StudentLe
         </CardContent>
       </Card>
       <LessonResourceReader open={readerOpen} onOpenChange={setReaderOpen} material={material} />
-      {isQuiz && material.quiz && playerOpen && (
-        <QuizPlayer quizId={material.quiz.id} mode={material.kind === 'practice_questions' ? 'practice' : 'scored'} />
+      {isQuiz && material.quiz && (
+        <Dialog open={playerOpen} onOpenChange={setPlayerOpen}>
+          <DialogContent className="flex flex-col max-h-[85vh] sm:max-w-3xl">
+            <DialogHeader>
+              <DialogTitle className="truncate">{material.title}</DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto py-2">
+              <QuizPlayer
+                quizId={material.quiz.id}
+                mode={material.kind === 'practice_questions' ? 'practice' : 'scored'}
+                onComplete={() => setPlayerOpen(false)}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </>
   );
@@ -3321,18 +3335,14 @@ Create `FE: src/app/(dashboard)/student/profile/page.tsx`:
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
-import { useState } from 'react';
 
 export default function StudentProfilePage() {
   const { user, loading } = useAuthStore();
   const { student } = useCurrentStudent();
-  const [emailOptIn, setEmailOptIn] = useState(true); // TODO: load from /api/auth/me preference once exposed
 
   if (loading || !user) return <LoadingSpinner />;
 
@@ -3343,7 +3353,7 @@ export default function StudentProfilePage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <PageHeader title="Profile" description="Your account details and preferences." />
+      <PageHeader title="Profile" description="Your account details." />
 
       <Card>
         <CardHeader><CardTitle className="text-base">Account</CardTitle></CardHeader>
@@ -3359,22 +3369,12 @@ export default function StudentProfilePage() {
           </div>
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader><CardTitle className="text-base">Preferences</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="email-opt">Email notifications</Label>
-            <Switch id="email-opt" checked={emailOptIn} onCheckedChange={setEmailOptIn} />
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
 ```
 
-If `Switch` isn't in the UI primitives, use a checkbox or omit the preferences card and TODO it.
+Preferences card (email opt-in, theme) is deferred to Phase 2 — no backend endpoint exists for student-self preference updates yet, and shipping local-only state would be a half-finished feature. Add the card when the preference endpoint lands.
 
 - [ ] **Step 2: Manual smoke**
 
