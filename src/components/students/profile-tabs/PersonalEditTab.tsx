@@ -39,6 +39,7 @@ export function PersonalEditTab({ form, onChange }: Props) {
         <Label htmlFor="admissionNumber">Admission Number</Label>
         <Input
           id="admissionNumber"
+          placeholder="Auto-generated if blank"
           value={form.admissionNumber ?? ''}
           onChange={(e) => onChange({ admissionNumber: e.target.value })}
         />

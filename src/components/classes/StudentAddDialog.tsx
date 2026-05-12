@@ -63,8 +63,8 @@ export function StudentAddDialog({
   }
 
   const submitOne = async (closeOnSuccess: boolean) => {
-    if (!form.firstName?.trim() || !form.lastName?.trim() || !form.admissionNumber?.trim()) {
-      toast.error('First name, last name, and admission number are required');
+    if (!form.firstName?.trim() || !form.lastName?.trim()) {
+      toast.error('First name and last name are required');
       return;
     }
     setSubmitting(true);
@@ -172,7 +172,7 @@ export function StudentAddDialog({
 
           <TabsContent value="manual" className="flex-1 overflow-y-auto py-2">
             <p className="mb-3 text-xs text-muted-foreground">
-              First name, last name, and admission number are required. All other fields are optional and can be filled later.
+              First and last name are required. Admission number is generated automatically if you leave it blank. All other fields can be filled later.
             </p>
             <Tabs defaultValue="personal">
               <TabsList className="flex-wrap mb-4">
