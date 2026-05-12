@@ -147,7 +147,7 @@ export default function TeacherClassesPage() {
               entry={entry}
               entryKey={entryKey(entry)}
               copyMode={isStandaloneTeacher ? 'teachingGroup' : 'class'}
-              onClick={() => setSelectedKey(entryKey(entry))}
+              onViewRoster={() => setSelectedKey(entryKey(entry))}
               onAddStudents={() => {
                 setSelectedKey(entryKey(entry));
                 setShowAddStudent(true);

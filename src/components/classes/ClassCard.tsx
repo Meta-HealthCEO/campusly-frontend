@@ -10,7 +10,7 @@ interface ClassCardProps {
   entry: TeacherClassEntry;
   entryKey: string;
   copyMode?: 'class' | 'teachingGroup';
-  onClick: () => void;
+  onViewRoster: () => void;
   onAddStudents: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -27,7 +27,7 @@ function readGradeName(entry: TeacherClassEntry): string {
   return entry.class.grade?.name ?? entry.class.gradeName ?? '';
 }
 
-export function ClassCard({ entry, entryKey: key, copyMode = 'class', onClick, onAddStudents, onEdit, onDelete }: ClassCardProps) {
+export function ClassCard({ entry, entryKey: key, copyMode = 'class', onViewRoster, onAddStudents, onEdit, onDelete }: ClassCardProps) {
   const cls = entry.class;
   const studentCount = entry.students?.length ?? 0;
   const expected = cls.capacity ?? 0;
@@ -40,11 +40,7 @@ export function ClassCard({ entry, entryKey: key, copyMode = 'class', onClick, o
   const subjectName = entry.subject?.name;
 
   return (
-    <Card
-      key={key}
-      className="cursor-pointer transition-colors hover:bg-muted/50 relative group"
-      onClick={onClick}
-    >
+    <Card key={key} className="relative">
       <CardContent className="p-4 space-y-3">
         {/* Header: title + actions */}
         <div className="flex items-start justify-between gap-3">
@@ -55,9 +51,20 @@ export function ClassCard({ entry, entryKey: key, copyMode = 'class', onClick, o
             <Button
               variant="ghost"
               size="icon-sm"
+              aria-label={isTeachingGroup ? 'View learners' : 'View students'}
+              title={isTeachingGroup ? 'View learners' : 'View students'}
+              onClick={onViewRoster}
+              className="hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              <Users className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
               aria-label={isTeachingGroup ? 'Add learners' : 'Add students'}
               title={isTeachingGroup ? 'Add learners' : 'Add students'}
-              onClick={(e) => { e.stopPropagation(); onAddStudents(); }}
+              onClick={onAddStudents}
+              className="hover:bg-primary/10 hover:text-primary transition-colors"
             >
               <UserPlus className="h-4 w-4" />
             </Button>
@@ -66,7 +73,8 @@ export function ClassCard({ entry, entryKey: key, copyMode = 'class', onClick, o
               size="icon-sm"
               aria-label={isTeachingGroup ? 'Edit teaching group' : 'Edit class'}
               title={isTeachingGroup ? 'Edit teaching group' : 'Edit class'}
-              onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              onClick={onEdit}
+              className="hover:bg-accent hover:text-accent-foreground transition-colors"
             >
               <Pencil className="h-4 w-4" />
             </Button>
@@ -75,9 +83,10 @@ export function ClassCard({ entry, entryKey: key, copyMode = 'class', onClick, o
               size="icon-sm"
               aria-label={isTeachingGroup ? 'Delete teaching group' : 'Delete class'}
               title={isTeachingGroup ? 'Delete teaching group' : 'Delete class'}
-              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              onClick={onDelete}
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors"
             >
-              <Trash2 className="h-4 w-4 text-destructive" />
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         </div>
