@@ -58,10 +58,8 @@ function isStandaloneTeacherPathAllowed(pathname: string): boolean {
 
   const allowedPrefixes = [
     '/teacher/onboarding',
-    '/teacher/ai-assistant',
     '/teacher/classes',
     '/teacher/students',
-    '/teacher/curriculum/ai-studio',
     '/teacher/curriculum/textbooks',
     '/teacher/curriculum/content',
     '/teacher/curriculum/questions',

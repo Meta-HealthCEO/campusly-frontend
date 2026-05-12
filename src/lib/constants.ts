@@ -456,7 +456,6 @@ export const COACH_NAV: NavItem[] = [
 export const TEACHER_NAV: NavItem[] = [
   { label: 'Dashboard', href: ROUTES.TEACHER_DASHBOARD, icon: Home },
   { label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen },
-  { label: 'Quick Make', href: ROUTES.TEACHER_QUICK_MAKE, icon: Sparkles, badge: 'AI' },
   { label: 'Import Paper', href: '/teacher/curriculum/import', icon: ScanLine, badge: 'AI' },
   {
     label: 'Classes',
@@ -532,7 +531,6 @@ export const STANDALONE_TEACHER_NAV: NavItem[] = [
   { label: 'Home', href: ROUTES.TEACHER_DASHBOARD, icon: Home },
   { label: 'Teaching Groups', href: ROUTES.TEACHER_CLASSES, icon: Users },
   { label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen },
-  { label: 'Quick Make', href: ROUTES.TEACHER_QUICK_MAKE, icon: Sparkles, badge: 'AI' },
   { label: 'Import Paper', href: '/teacher/curriculum/import', icon: ScanLine, badge: 'AI' },
   { label: 'Resources', href: ROUTES.TEACHER_CURRICULUM_CONTENT, icon: BookOpen },
   { label: 'Textbooks', href: '/teacher/curriculum/textbooks', icon: BookMarked },

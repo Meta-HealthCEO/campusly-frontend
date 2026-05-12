@@ -9,7 +9,7 @@ import { DashboardSkeleton } from '@/components/shared/skeletons';
 import {
   ClipboardList, AlertTriangle, Users, Calendar,
   CheckSquare, PenLine, BarChart3, School, RefreshCw,
-  Sparkles, FileText, BookOpen, Settings,
+  FileText, BookOpen, Settings,
 } from 'lucide-react';
 import { AnnouncementBanner } from '@/components/announcements/AnnouncementBanner';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -119,10 +119,8 @@ export default function TeacherDashboard() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {isStandaloneTeacher ? (
               <>
-                <Link href="/teacher/curriculum/ai-studio?tool=lesson"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><BookOpen className="h-6 w-6 text-primary" /><span>Plan Lesson</span></Button></Link>
-                <Link href="/teacher/curriculum/ai-studio?tool=resource"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><Sparkles className="h-6 w-6 text-primary" /><span>Make Material</span></Button></Link>
-                <Link href="/teacher/curriculum/ai-studio?tool=homework"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><ClipboardList className="h-6 w-6 text-primary" /><span>Set Homework</span></Button></Link>
-                <Link href="/teacher/curriculum/ai-studio?tool=paper"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><FileText className="h-6 w-6 text-primary" /><span>Generate Paper</span></Button></Link>
+                <Link href="/teacher/lessons/new"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><BookOpen className="h-6 w-6 text-primary" /><span>New Lesson</span></Button></Link>
+                <Link href="/teacher/papers/new"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><FileText className="h-6 w-6 text-primary" /><span>New Test Paper</span></Button></Link>
               </>
             ) : (
               <>
