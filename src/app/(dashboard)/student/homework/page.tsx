@@ -1,28 +1,25 @@
 'use client';
 
+import { ClipboardList } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { BookOpen } from 'lucide-react';
-import { useStudentHomeworkList } from '@/hooks/useStudentHomework';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { HomeworkSection } from '@/components/student/HomeworkSection';
+import { useStudentHomeworkList } from '@/hooks/useStudentHomework';
 
 export default function StudentHomeworkPage() {
-  const { items, grouped, loading } = useStudentHomeworkList();
+  const { grouped, loading, items } = useStudentHomeworkList();
 
   if (loading) return <LoadingSpinner />;
 
   if (items.length === 0) {
     return (
       <div className="space-y-6">
-        <PageHeader
-          title="My Homework"
-          description="View and submit your homework assignments"
-        />
+        <PageHeader title="Homework" description="Track and submit your assignments." />
         <EmptyState
-          icon={BookOpen}
-          title="No Homework"
-          description="You have no homework assignments at the moment."
+          icon={ClipboardList}
+          title="No homework"
+          description="You don't have any homework right now."
         />
       </div>
     );
@@ -30,29 +27,28 @@ export default function StudentHomeworkPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="My Homework"
-        description="View and submit your homework assignments"
+      <PageHeader title="Homework" description="Track and submit your assignments." />
+      <HomeworkSection
+        title="Overdue"
+        items={grouped.overdue}
+        variant="destructive"
+        defaultOpen
       />
-
-      <div className="space-y-4">
-        <HomeworkSection
-          title="Overdue"
-          items={grouped.overdue}
-          variant="destructive"
-        />
-        <HomeworkSection title="Due this week" items={grouped.dueThisWeek} />
-        <HomeworkSection
-          title="Submitted"
-          items={grouped.submitted}
-          defaultOpen={false}
-        />
-        <HomeworkSection
-          title="Graded"
-          items={grouped.graded}
-          defaultOpen={false}
-        />
-      </div>
+      <HomeworkSection
+        title="Due this week"
+        items={grouped.dueThisWeek}
+        defaultOpen
+      />
+      <HomeworkSection
+        title="Submitted"
+        items={grouped.submitted}
+        defaultOpen={false}
+      />
+      <HomeworkSection
+        title="Graded"
+        items={grouped.graded}
+        defaultOpen={false}
+      />
     </div>
   );
 }
