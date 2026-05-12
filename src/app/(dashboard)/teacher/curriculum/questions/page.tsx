@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { FileQuestion, Sparkles, Upload, Search, AlertTriangle } from 'lucide-react';
+import { FileQuestion, Upload, Search, AlertTriangle } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -162,19 +162,16 @@ export default function TeacherQuestionsPage() {
         title={user?.isStandaloneTeacher ? 'Practice Questions' : 'Question Bank'}
         description="Reusable questions for revision, homework, and assessment papers."
       >
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Link href="/teacher/curriculum/ai-studio?tool=questions">
-            <Button className="w-full sm:w-auto">
-              <Sparkles className="mr-2 size-4" />
-              Generate in AI Studio
-            </Button>
-          </Link>
-          <Button variant="outline" onClick={() => setUploadOpen(true)}>
-            <Upload className="mr-2 size-4" />
-            Upload Paper
-          </Button>
-        </div>
+        <Button variant="outline" onClick={() => setUploadOpen(true)}>
+          <Upload className="mr-2 size-4" />
+          Upload Paper
+        </Button>
       </PageHeader>
+
+      <p className="text-sm text-muted-foreground">
+        Practice questions are usually generated inside a Lesson.{' '}
+        <Link href="/teacher/lessons" className="underline">Open a lesson</Link> to add them.
+      </p>
 
       {/* ─── Filters ──────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
@@ -278,20 +275,12 @@ export default function TeacherQuestionsPage() {
         <EmptyState
           icon={FileQuestion}
           title="No questions found"
-          description="Generate questions with AI or upload a paper to get started."
+          description="Upload a paper to extract questions, or open a lesson to generate questions with AI."
           action={
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Link href="/teacher/curriculum/ai-studio?tool=questions">
-                <Button className="w-full sm:w-auto">
-                  <Sparkles className="mr-2 size-4" />
-                  Generate in AI Studio
-                </Button>
-              </Link>
-              <Button variant="outline" onClick={() => setUploadOpen(true)}>
-                <Upload className="mr-2 size-4" />
-                Upload Paper
-              </Button>
-            </div>
+            <Button variant="outline" onClick={() => setUploadOpen(true)}>
+              <Upload className="mr-2 size-4" />
+              Upload Paper
+            </Button>
           }
         />
       ) : (

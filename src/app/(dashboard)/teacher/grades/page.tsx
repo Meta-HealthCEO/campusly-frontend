@@ -189,7 +189,7 @@ export default function TeacherGradesPage() {
             </div>
 
             <div className="sm:ml-auto">
-              <Link href="/teacher/papers">
+              <Link href="/teacher/papers/new">
                 <Button variant="outline">
                   <FileText className="mr-2 h-4 w-4" />
                   Create Paper

@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BookOpen, Search, Plus, AlertTriangle, Sparkles, FileText, ClipboardList, NotebookPen } from 'lucide-react';
+import { BookOpen, Search, Plus, AlertTriangle, FileText, ClipboardList, NotebookPen } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -161,18 +162,16 @@ export default function TeacherContentBrowserPage() {
         title="Resources"
         description="Printable and assignable lesson materials. Lesson plans, homework, test papers, and question bank items live in their own sections."
       >
-        <Button
-          onClick={() => router.push('/teacher/curriculum/ai-studio?tool=resource')}
-          className="gap-2"
-        >
-          <Sparkles className="size-4" />
-          Generate Resource
-        </Button>
         <Button onClick={() => setFormOpen(true)} variant="outline" className="gap-2">
           <Plus className="size-4" />
           Create Manually
         </Button>
       </PageHeader>
+
+      <p className="text-sm text-muted-foreground">
+        Resources are usually generated inside a Lesson.{' '}
+        <Link href="/teacher/lessons" className="underline">Open a lesson</Link> to add AI-generated materials.
+      </p>
 
       <Card>
         <CardContent className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-4">
