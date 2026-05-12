@@ -148,6 +148,10 @@ export default function TeacherClassesPage() {
               entryKey={entryKey(entry)}
               copyMode={isStandaloneTeacher ? 'teachingGroup' : 'class'}
               onClick={() => setSelectedKey(entryKey(entry))}
+              onAddStudents={() => {
+                setSelectedKey(entryKey(entry));
+                setShowAddStudent(true);
+              }}
               onEdit={() => setEditEntry(entry)}
               onDelete={() => setDeleteTarget(resolveId(entry.class))}
             />

@@ -3,7 +3,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users, Trash2, Pencil, Home } from 'lucide-react';
+import { Users, Trash2, Pencil, Home, UserPlus } from 'lucide-react';
 import type { TeacherClassEntry } from '@/hooks/useTeacherClasses';
 
 interface ClassCardProps {
@@ -11,6 +11,7 @@ interface ClassCardProps {
   entryKey: string;
   copyMode?: 'class' | 'teachingGroup';
   onClick: () => void;
+  onAddStudents: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }
@@ -26,7 +27,7 @@ function readGradeName(entry: TeacherClassEntry): string {
   return entry.class.grade?.name ?? entry.class.gradeName ?? '';
 }
 
-export function ClassCard({ entry, entryKey: key, copyMode = 'class', onClick, onEdit, onDelete }: ClassCardProps) {
+export function ClassCard({ entry, entryKey: key, copyMode = 'class', onClick, onAddStudents, onEdit, onDelete }: ClassCardProps) {
   const cls = entry.class;
   const studentCount = entry.students?.length ?? 0;
   const expected = cls.capacity ?? 0;
@@ -54,7 +55,17 @@ export function ClassCard({ entry, entryKey: key, copyMode = 'class', onClick, o
             <Button
               variant="ghost"
               size="icon-sm"
+              aria-label={isTeachingGroup ? 'Add learners' : 'Add students'}
+              title={isTeachingGroup ? 'Add learners' : 'Add students'}
+              onClick={(e) => { e.stopPropagation(); onAddStudents(); }}
+            >
+              <UserPlus className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
               aria-label={isTeachingGroup ? 'Edit teaching group' : 'Edit class'}
+              title={isTeachingGroup ? 'Edit teaching group' : 'Edit class'}
               onClick={(e) => { e.stopPropagation(); onEdit(); }}
             >
               <Pencil className="h-4 w-4" />
@@ -63,6 +74,7 @@ export function ClassCard({ entry, entryKey: key, copyMode = 'class', onClick, o
               variant="ghost"
               size="icon-sm"
               aria-label={isTeachingGroup ? 'Delete teaching group' : 'Delete class'}
+              title={isTeachingGroup ? 'Delete teaching group' : 'Delete class'}
               onClick={(e) => { e.stopPropagation(); onDelete(); }}
             >
               <Trash2 className="h-4 w-4 text-destructive" />
