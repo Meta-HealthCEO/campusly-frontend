@@ -335,19 +335,39 @@ export function useParentsList() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await apiClient.get('/parents');
-        const arr = extractArray(unwrapResponse(res));
-        setParents(arr.map((p) => {
-          const userRaw = p.user as Record<string, unknown> | undefined;
+        const all: Record<string, unknown>[] = [];
+        let page = 1;
+        let totalPages = 1;
+        do {
+          const res = await apiClient.get('/parents', { params: { page, limit: 100 } });
+          const raw = unwrapResponse(res);
+          all.push(...extractArray(raw));
+          const rawTotalPages = raw && typeof raw === 'object' && !Array.isArray(raw)
+            ? (raw as Record<string, unknown>).totalPages
+            : undefined;
+          totalPages = typeof rawTotalPages === 'number' ? rawTotalPages : 1;
+          page += 1;
+        } while (page <= totalPages);
+
+        const mapped = all.map((p) => {
+          const populatedUser = typeof p.userId === 'object' && p.userId !== null
+            ? p.userId as Record<string, unknown>
+            : undefined;
+          const userRaw = populatedUser ?? (p.user as Record<string, unknown> | undefined);
+          const userId = typeof p.userId === 'string' ? p.userId : userRaw ? mapId(userRaw) : '';
           return {
             id: mapId(p),
-            userId: (p.userId as string) ?? '',
+            userId,
             firstName: (userRaw?.firstName as string) ?? (p.firstName as string) ?? '',
             lastName: (userRaw?.lastName as string) ?? (p.lastName as string) ?? '',
             email: (userRaw?.email as string) ?? (p.email as string) ?? '',
             relationship: (p.relationship as string) ?? undefined,
           };
-        }));
+        }).filter((parent) => parent.userId);
+
+        const unique = new Map<string, ParentOption>();
+        mapped.forEach((parent) => unique.set(parent.userId, parent));
+        setParents(Array.from(unique.values()));
       } catch (err: unknown) {
         const status = (err as { response?: { status?: number } })?.response?.status;
         if (status !== 403) console.error('Failed to load parents');

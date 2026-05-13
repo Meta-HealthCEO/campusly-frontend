@@ -28,6 +28,10 @@ interface IncidentFilters {
   limit?: number;
 }
 
+function normalizeIncident(incident: Incident & { _id?: string }): Incident {
+  return { ...incident, id: incident.id ?? incident._id ?? '' };
+}
+
 export function useIncidents() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [total, setTotal] = useState(0);
@@ -51,10 +55,10 @@ export function useIncidents() {
 
       const response = await apiClient.get('/incidents', { params });
       const data = unwrapResponse<IncidentListResult>(response);
-      setIncidents(data.items ?? []);
+      setIncidents((data.items ?? []).map((incident) => normalizeIncident(incident as Incident & { _id?: string })));
       setTotal(data.total ?? 0);
     } catch (err: unknown) {
-      console.error('Failed to fetch incidents', err);
+      console.warn(extractErrorMessage(err, 'Failed to fetch incidents'));
     } finally {
       setLoading(false);
     }
@@ -64,10 +68,11 @@ export function useIncidents() {
     try {
       const response = await apiClient.get(`/incidents/${id}`);
       const data = unwrapResponse<Incident>(response);
-      setSelectedIncident(data);
-      return data;
+      const incident = normalizeIncident(data as Incident & { _id?: string });
+      setSelectedIncident(incident);
+      return incident;
     } catch (err: unknown) {
-      console.error('Failed to fetch incident', err);
+      console.warn(extractErrorMessage(err, 'Failed to fetch incident'));
       return null;
     }
   }, []);
@@ -75,13 +80,13 @@ export function useIncidents() {
   const createIncident = useCallback(async (data: CreateIncidentPayload) => {
     const response = await apiClient.post('/incidents', data);
     toast.success('Incident reported successfully');
-    return unwrapResponse<Incident>(response);
+    return normalizeIncident(unwrapResponse<Incident>(response) as Incident & { _id?: string });
   }, []);
 
   const updateIncident = useCallback(async (id: string, data: UpdateIncidentPayload) => {
     const response = await apiClient.put(`/incidents/${id}`, data);
     toast.success('Incident updated');
-    return unwrapResponse<Incident>(response);
+    return normalizeIncident(unwrapResponse<Incident>(response) as Incident & { _id?: string });
   }, []);
 
   const deleteIncident = useCallback(async (id: string) => {
@@ -98,7 +103,7 @@ export function useIncidents() {
       setActions(data);
       return data;
     } catch (err: unknown) {
-      console.error('Failed to fetch actions', err);
+      console.warn(extractErrorMessage(err, 'Failed to fetch actions'));
       return [];
     }
   }, []);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
@@ -11,7 +11,9 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import type { CreateIncidentPayload, IncidentType, SeverityLevel } from '@/types';
+import { useTeacherClasses } from '@/hooks/useTeacherClasses';
+import { resolveId } from '@/lib/api-helpers';
+import type { CreateIncidentPayload, IncidentType, SeverityLevel, PartyRole, Student } from '@/types';
 
 const INCIDENT_TYPES: { value: IncidentType; label: string }[] = [
   { value: 'bullying', label: 'Bullying' },
@@ -32,6 +34,21 @@ const SEVERITY_LEVELS: { value: SeverityLevel; label: string }[] = [
   { value: 'critical', label: 'Critical' },
 ];
 
+const PARTY_ROLES: { value: PartyRole; label: string }[] = [
+  { value: 'victim', label: 'Affected learner' },
+  { value: 'witness', label: 'Witness' },
+  { value: 'bystander', label: 'Bystander' },
+  { value: 'perpetrator', label: 'Alleged perpetrator' },
+];
+
+function studentLabel(student: Student): string {
+  const rawStudent = student as Omit<Student, 'userId'> & { userId?: string | { firstName?: string; lastName?: string } };
+  const populatedUser = typeof rawStudent.userId === 'object' ? rawStudent.userId : undefined;
+  const firstName = student.user?.firstName ?? populatedUser?.firstName ?? student.firstName ?? '';
+  const lastName = student.user?.lastName ?? populatedUser?.lastName ?? student.lastName ?? '';
+  return `${firstName} ${lastName}`.trim() || student.admissionNumber || 'Unnamed student';
+}
+
 interface IncidentReportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -41,8 +58,11 @@ interface IncidentReportDialogProps {
 export function IncidentReportDialog({
   open, onOpenChange, onSubmit,
 }: IncidentReportDialogProps) {
+  const { students, loading: studentsLoading } = useTeacherClasses();
   const [type, setType] = useState<IncidentType>('other');
   const [severity, setSeverity] = useState<SeverityLevel>('low');
+  const [studentId, setStudentId] = useState('');
+  const [partyRole, setPartyRole] = useState<PartyRole>('victim');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
@@ -51,9 +71,15 @@ export function IncidentReportDialog({
   const [immediateAction, setImmediateAction] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const studentOptions = useMemo(() => students
+    .map((student) => ({ id: resolveId(student), label: studentLabel(student) }))
+    .filter((student) => student.id), [students]);
+
   const resetForm = () => {
     setType('other');
     setSeverity('low');
+    setStudentId('');
+    setPartyRole('victim');
     setTitle('');
     setDescription('');
     setLocation('');
@@ -69,12 +95,13 @@ export function IncidentReportDialog({
       await onSubmit({
         type, severity, title, description, location: location || undefined,
         incidentDate, incidentTime: incidentTime || undefined,
+        involvedParties: studentId ? [{ studentId, role: partyRole }] : undefined,
         immediateActionTaken: immediateAction || undefined,
       });
       resetForm();
       onOpenChange(false);
     } catch (err: unknown) {
-      console.error('Failed to submit incident', err);
+      console.warn('Failed to submit incident', err);
     } finally {
       setSubmitting(false);
     }
@@ -119,6 +146,36 @@ export function IncidentReportDialog({
             <Label>Description <span className="text-destructive">*</span></Label>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe what happened..." rows={4} />
+          </div>
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label>Involved Learner</Label>
+              <Select value={studentId} onValueChange={(value) => setStudentId(value ?? '')} disabled={studentsLoading}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={studentsLoading ? 'Loading learners...' : 'Select learner'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {studentOptions.length === 0 ? (
+                    <div className="px-2 py-1.5 text-sm text-muted-foreground">No learners in your classes</div>
+                  ) : (
+                    studentOptions.map((student) => (
+                      <SelectItem key={student.id} value={student.id}>{student.label}</SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Role</Label>
+              <Select value={partyRole} onValueChange={(value) => { if (value) setPartyRole(value as PartyRole); }}>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {PARTY_ROLES.map((role) => (
+                    <SelectItem key={role.value} value={role.value}>{role.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
             <div className="space-y-1">

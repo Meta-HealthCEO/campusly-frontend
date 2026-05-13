@@ -54,7 +54,7 @@ function filterByPermission(
 }
 
 function isStandaloneTeacherPathAllowed(pathname: string): boolean {
-  if (pathname === '/teacher' || pathname === '/teacher/curriculum') return true;
+  if (pathname === '/teacher') return true;
 
   const allowedPrefixes = [
     '/teacher/onboarding',
@@ -71,6 +71,7 @@ function isStandaloneTeacherPathAllowed(pathname: string): boolean {
     '/teacher/papers',
     '/teacher/grades',
     '/teacher/homework',
+    '/teacher/assignments',
     '/teacher/curriculum/import',
     '/teacher/settings',
   ];
@@ -111,7 +112,10 @@ export default function DashboardLayout({
     if (user.isStandaloneTeacher) return STANDALONE_TEACHER_NAV;
     const roleBaseline = NAV_BY_ROLE[user.role] ?? ADMIN_NAV;
     const composed = composeNav(user, roleBaseline);
-    const moduleFiltered = school ? filterByModule(composed, school.modulesEnabled) : composed;
+    const enabledModules = school?.modulesEnabled ?? [];
+    const moduleFiltered = user.role === 'student' || school
+      ? filterByModule(composed, enabledModules)
+      : composed;
     return filterByPermission(moduleFiltered, hasPermission);
   }, [user, school, hasPermission]);
 

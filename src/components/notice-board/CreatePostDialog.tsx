@@ -43,6 +43,7 @@ export function CreatePostDialog({
   });
 
   const pinned = watch('pinned');
+  const hasBoard = Boolean(editPost) || scopeOptions.length > 0;
 
   useEffect(() => {
     if (open) {
@@ -95,11 +96,15 @@ export function CreatePostDialog({
                     <SelectValue placeholder="Select board" />
                   </SelectTrigger>
                   <SelectContent>
-                    {scopeOptions.map((opt) => (
-                      <SelectItem key={`${opt.scope}:${opt.id}`} value={`${opt.scope}:${opt.id}`}>
-                        {opt.name}
-                      </SelectItem>
-                    ))}
+                    {scopeOptions.length === 0 ? (
+                      <SelectItem value="__none__" disabled>No class boards available</SelectItem>
+                    ) : (
+                      scopeOptions.map((opt) => (
+                        <SelectItem key={`${opt.scope}:${opt.id}`} value={`${opt.scope}:${opt.id}`}>
+                          {opt.name}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -139,7 +144,7 @@ export function CreatePostDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || !hasBoard}>
               {isSubmitting ? 'Saving...' : editPost ? 'Update' : 'Post'}
             </Button>
           </DialogFooter>

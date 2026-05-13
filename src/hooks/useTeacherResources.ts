@@ -15,6 +15,7 @@ export interface ResourceSummary {
 export function useTeacherResources(filters?: {
   subjectId?: string;
   gradeId?: string;
+  curriculumNodeId?: string;
 }): {
   resources: ResourceSummary[];
   loading: boolean;
@@ -26,6 +27,7 @@ export function useTeacherResources(filters?: {
     const params: Record<string, string> = { status: 'published' };
     if (filters?.subjectId) params.subjectId = filters.subjectId;
     if (filters?.gradeId) params.gradeId = filters.gradeId;
+    if (filters?.curriculumNodeId) params.curriculumNodeId = filters.curriculumNodeId;
 
     const controller = new AbortController();
     apiClient
@@ -38,7 +40,7 @@ export function useTeacherResources(filters?: {
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [filters?.subjectId, filters?.gradeId]);
+  }, [filters?.subjectId, filters?.gradeId, filters?.curriculumNodeId]);
 
   return { resources, loading };
 }

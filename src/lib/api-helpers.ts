@@ -51,11 +51,17 @@ export function extractErrorMessage(
 ): string {
   if (typeof err === 'object' && err !== null) {
     const axiosErr = err as {
-      response?: { data?: { error?: string; message?: string } };
+      response?: { data?: { error?: string; message?: string; errors?: string } };
     };
+    const apiError = axiosErr.response?.data?.error;
+    const apiMessage = axiosErr.response?.data?.message;
+    const validationDetails = axiosErr.response?.data?.errors;
+    if (apiMessage && validationDetails) {
+      return `${apiMessage}: ${validationDetails}`;
+    }
     return (
-      axiosErr.response?.data?.error ??
-      axiosErr.response?.data?.message ??
+      apiError ??
+      apiMessage ??
       fallback
     );
   }

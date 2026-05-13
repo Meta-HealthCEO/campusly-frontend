@@ -89,12 +89,12 @@ export function useLeave() {
     reviewComment?: string;
     substituteTeacherId?: string;
   }) => {
-    const response = await apiClient.patch(`/leave/requests/${id}/review`, data);
+    const response = await apiClient.put(`/leave/requests/${id}/review`, data);
     return unwrapResponse<LeaveRequest>(response);
   }, []);
 
   const cancelRequest = useCallback(async (id: string) => {
-    const response = await apiClient.patch(`/leave/requests/${id}/cancel`);
+    const response = await apiClient.put(`/leave/requests/${id}/cancel`);
     return unwrapResponse<LeaveRequest>(response);
   }, []);
 

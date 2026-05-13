@@ -22,7 +22,8 @@ export function useTeacherSubjects(gradeId?: string) {
     async function fetch() {
       setLoading(true);
       try {
-        const params = gradeId ? { gradeId } : undefined;
+        const params: Record<string, string | number> = { limit: 100 };
+        if (gradeId) params.gradeId = gradeId;
         const res = await apiClient.get('/academic/subjects', { params });
         if (!cancelled) setSubjects(unwrapList<Subject>(res));
       } catch (err: unknown) {

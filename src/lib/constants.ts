@@ -8,8 +8,8 @@ import {
   Heart, Upload, Shirt, Trophy, Sparkles,
   Compass, Target, Clipboard, Newspaper,
   CalendarCheck, CalendarCog, Crown, DoorOpen, UserPlus,
-  AlertTriangle, Calculator, Library, Camera,
-  CheckSquare, Video, PlayCircle, FileQuestion, ScanLine,
+  AlertTriangle, Calculator,
+  CheckSquare, Video, PlayCircle, FileQuestion, ScanLine, ScrollText,
   User,
   type LucideIcon
 } from 'lucide-react';
@@ -211,7 +211,6 @@ export const ROUTES = {
   TEACHER_CONFERENCES: '/teacher/conferences',
 
   // Teacher — Curriculum
-  TEACHER_CURRICULUM: '/teacher/curriculum',
   TEACHER_CURRICULUM_CONTENT: '/teacher/curriculum/content',
   TEACHER_CURRICULUM_QUESTIONS: '/teacher/curriculum/questions',
   TEACHER_CURRICULUM_ASSESSMENTS: '/teacher/curriculum/assessments',
@@ -403,6 +402,7 @@ export const STUDENT_NAV: NavItem[] = [
   { label: 'Dashboard', href: ROUTES.STUDENT_DASHBOARD, icon: Home },
   { label: 'Lessons',   href: '/student/lessons',        icon: BookOpen },
   { label: 'Homework',  href: ROUTES.STUDENT_HOMEWORK,   icon: ClipboardList },
+  { label: 'Assignments', href: '/student/assignments',  icon: ScrollText },
   { label: 'Tests',     href: '/student/tests',          icon: FileText },
   { label: 'AI Tutor',  href: ROUTES.STUDENT_AI_TUTOR,   icon: Sparkles },
   { label: 'Profile',   href: '/student/profile',        icon: User },
@@ -455,8 +455,7 @@ export const COACH_NAV: NavItem[] = [
 
 export const TEACHER_NAV: NavItem[] = [
   { label: 'Dashboard', href: ROUTES.TEACHER_DASHBOARD, icon: Home },
-  { label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen },
-  { label: 'Import Paper', href: '/teacher/curriculum/import', icon: ScanLine, badge: 'AI' },
+  { label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen, badge: 'AI' },
   {
     label: 'Classes',
     href: ROUTES.TEACHER_CLASSES,
@@ -468,11 +467,11 @@ export const TEACHER_NAV: NavItem[] = [
   },
   { label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
   { label: 'Attendance', href: ROUTES.TEACHER_ATTENDANCE, icon: ClipboardList },
-  { label: 'Test Papers', href: '/teacher/papers', icon: FileText },
-  { label: 'Mark Papers', href: ROUTES.TEACHER_CURRICULUM_MARK_PAPERS, icon: Camera, badge: 'AI' },
+  { label: 'Test Papers', href: '/teacher/papers', icon: FileText, badge: 'AI' },
+  { label: 'Assignments', href: '/teacher/assignments', icon: ScrollText, badge: 'AI' },
   { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
   { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
-  { label: 'Curriculum', href: ROUTES.TEACHER_CURRICULUM, icon: Library },
+  { label: 'Digitise Paper', href: '/teacher/curriculum/import', icon: ScanLine, badge: 'AI' },
   {
     label: 'Courses',
     href: ROUTES.TEACHER_COURSES,
@@ -529,15 +528,14 @@ export const TEACHER_NAV: NavItem[] = [
 export const STANDALONE_TEACHER_NAV: NavItem[] = [
   { label: 'Home', href: ROUTES.TEACHER_DASHBOARD, icon: Home },
   { label: 'Teaching Groups', href: ROUTES.TEACHER_CLASSES, icon: Users },
-  { label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen },
-  { label: 'Import Paper', href: '/teacher/curriculum/import', icon: ScanLine, badge: 'AI' },
+  { label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen, badge: 'AI' },
   { label: 'Textbooks', href: '/teacher/curriculum/textbooks', icon: BookMarked },
   { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
-  { label: 'Test Papers', href: '/teacher/papers', icon: FileText },
+  { label: 'Assignments', href: '/teacher/assignments', icon: ScrollText, badge: 'AI' },
+  { label: 'Test Papers', href: '/teacher/papers', icon: FileText, badge: 'AI' },
   { label: 'Question Bank', href: ROUTES.TEACHER_CURRICULUM_QUESTIONS, icon: FileQuestion },
-  { label: 'Mark Papers', href: ROUTES.TEACHER_CURRICULUM_MARK_PAPERS, icon: Camera, badge: 'AI' },
   { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
-  { label: 'CAPS Browser', href: ROUTES.TEACHER_CURRICULUM, icon: Library },
+  { label: 'Digitise Paper', href: '/teacher/curriculum/import', icon: ScanLine, badge: 'AI' },
   { label: 'Settings', href: '/teacher/settings', icon: Settings },
 ];
 

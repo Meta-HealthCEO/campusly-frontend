@@ -3,17 +3,16 @@
 import { useEffect, useState } from 'react';
 import apiClient from '@/lib/api-client';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { unwrapList } from '@/lib/api-helpers';
+import { unwrapResponse } from '@/lib/api-helpers';
 
 interface StudentRecord {
   _id: string;
   id?: string;
-  userId?: string;
 }
 
 /**
- * Resolves the current user's Student document _id by looking up /students
- * where student.userId === user.id. Returns null while loading or if no match.
+ * Resolves the current user's Student document id.
+ * Returns null while loading or if no student record exists.
  */
 export function useMyStudentId(): { studentId: string | null; loading: boolean } {
   const user = useAuthStore((s) => s.user);
@@ -22,15 +21,16 @@ export function useMyStudentId(): { studentId: string | null; loading: boolean }
 
   useEffect(() => {
     if (!user?.id || !user?.schoolId) {
+      setStudentId(null);
       setLoading(false);
       return;
     }
+    setLoading(true);
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiClient.get('/students', { params: { schoolId: user.schoolId } });
-        const list = unwrapList<StudentRecord>(res);
-        const match = list.find((s) => s.userId === user.id);
+        const res = await apiClient.get('/students/me');
+        const match = unwrapResponse<StudentRecord>(res);
         if (!cancelled) {
           setStudentId(match?._id ?? match?.id ?? null);
         }

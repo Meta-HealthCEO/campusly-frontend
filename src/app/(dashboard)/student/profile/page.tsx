@@ -14,7 +14,7 @@ export default function StudentProfilePage() {
 
   if (isLoading || studentLoading || !user) return <LoadingSpinner />;
 
-  const className = student?.class?.name ?? '—';
+  const className = student?.class?.name ?? '-';
 
   // Teacher first/last names live on teacher.user, not directly on the teacher.
   const teacherUser = student?.class?.teacher?.user;
@@ -47,7 +47,7 @@ export default function StudentProfilePage() {
             </div>
           )}
           <div className="pt-2">
-            <Link href="/auth/reset-password">
+            <Link href="/forgot-password">
               <Button variant="outline" size="sm">
                 Change password
               </Button>

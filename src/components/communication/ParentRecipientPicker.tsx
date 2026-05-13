@@ -18,6 +18,7 @@ export function ParentRecipientPicker({
   parents, selectedIds, onChange, loading,
 }: ParentRecipientPickerProps) {
   const addRecipient = (userId: string) => {
+    if (userId === '__none__') return;
     if (!selectedIds.includes(userId)) {
       onChange([...selectedIds, userId]);
     }
@@ -38,12 +39,18 @@ export function ParentRecipientPicker({
           <SelectValue placeholder={loading ? 'Loading parents...' : 'Add parent...'} />
         </SelectTrigger>
         <SelectContent>
-          {parents.map((parent) => (
-            <SelectItem key={parent.id} value={parent.userId || parent.id}>
-              {parent.firstName} {parent.lastName}
-              {parent.relationship ? ` (${parent.relationship})` : ''}
+          {parents.length === 0 ? (
+            <SelectItem value="__none__" disabled>
+              No parent recipients available
             </SelectItem>
-          ))}
+          ) : (
+            parents.map((parent) => (
+              <SelectItem key={parent.id} value={parent.userId || parent.id}>
+                {parent.firstName} {parent.lastName}
+                {parent.relationship ? ` (${parent.relationship})` : ''}
+              </SelectItem>
+            ))
+          )}
         </SelectContent>
       </Select>
       {selectedIds.length > 0 && (

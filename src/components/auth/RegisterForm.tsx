@@ -16,6 +16,9 @@ interface RegisterFormProps {
   isLoading: boolean;
 }
 
+const nativeSelectClassName =
+  'flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30 dark:[&>option]:bg-card dark:[&>option]:text-card-foreground';
+
 export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
   const {
     register,
@@ -80,7 +83,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
             <select
               id="schoolType"
               {...register('schoolType')}
-              className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className={nativeSelectClassName}
             >
               <option value="primary">Primary School</option>
               <option value="secondary">Secondary School</option>
@@ -199,7 +202,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
             <select
               id="province"
               {...register('province')}
-              className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className={nativeSelectClassName}
             >
               <option value="">Select province</option>
               {SA_PROVINCES.map((province) => (
@@ -231,7 +234,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
       <Button
         type="submit"
         disabled={isLoading}
-        className="h-10 w-full bg-blue-600 hover:bg-blue-700"
+        className="h-10 w-full bg-blue-600 text-white hover:bg-blue-700 hover:text-white disabled:text-white/70"
         size="lg"
       >
         {isLoading ? (

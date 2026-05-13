@@ -94,7 +94,7 @@ export function LeaveRequestDialog({
         <div className="flex-1 overflow-y-auto py-4 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="leaveType">Leave Type <span className="text-destructive">*</span></Label>
-            <Select value={leaveType || undefined} onValueChange={(val: unknown) => setLeaveType(val as LeaveType)}>
+            <Select value={leaveType || ''} onValueChange={(val: unknown) => setLeaveType(val as LeaveType)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select leave type" />
               </SelectTrigger>

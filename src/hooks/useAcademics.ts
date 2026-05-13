@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapList } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
-import type { Grade, SchoolClass, Subject, Assessment, TimetableSlot, Student } from '@/types';
+import type { Grade, SchoolClass, Subject, Assessment, TimetableSlot } from '@/types';
 
 interface StaffMember {
   id: string;
@@ -19,10 +19,10 @@ export function useGrades() {
   const fetchGrades = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await apiClient.get('/academic/grades');
+      const res = await apiClient.get('/academic/grades', { params: { limit: 100 } });
       setGrades(unwrapList<Grade>(res));
     } catch {
-      console.error('Failed to load grades');
+      console.warn('Failed to load grades');
     } finally {
       setLoading(false);
     }
@@ -46,7 +46,7 @@ export function useClasses(gradeId?: string) {
       const res = await apiClient.get('/academic/classes', { params });
       setClasses(unwrapList<SchoolClass>(res));
     } catch {
-      console.error('Failed to load classes');
+      console.warn('Failed to load classes');
     } finally {
       setLoading(false);
     }
@@ -68,7 +68,7 @@ export function useSubjects() {
       const res = await apiClient.get('/academic/subjects');
       setSubjects(unwrapList<Subject>(res));
     } catch {
-      console.error('Failed to load subjects');
+      console.warn('Failed to load subjects');
     } finally {
       setLoading(false);
     }
@@ -89,7 +89,7 @@ export function useStaff() {
         const res = await apiClient.get('/staff');
         setStaff(unwrapList<StaffMember>(res));
       } catch {
-        console.error('Failed to load staff');
+        console.warn('Failed to load staff');
       } finally {
         setLoading(false);
       }
@@ -121,7 +121,7 @@ export function useAssessments(filters?: {
       const res = await apiClient.get('/academic/assessments', { params });
       setAssessments(unwrapList<Assessment>(res));
     } catch {
-      console.error('Failed to load assessments');
+      console.warn('Failed to load assessments');
     } finally {
       setLoading(false);
     }
@@ -143,7 +143,7 @@ export function useTimetable(classId?: string) {
       const res = await apiClient.get(`/academic/timetable/class/${classId}`);
       setEntries(unwrapList<TimetableSlot>(res));
     } catch {
-      console.error('Failed to load timetable');
+      console.warn('Failed to load timetable');
     } finally {
       setLoading(false);
     }
