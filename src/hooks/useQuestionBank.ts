@@ -41,23 +41,32 @@ export function useQuestionBank() {
   const [questions, setQuestions] = useState<QuestionItem[]>([]);
   const [questionsTotal, setQuestionsTotal] = useState(0);
   const [questionsLoading, setQuestionsLoading] = useState(false);
+  const [questionsError, setQuestionsError] = useState<string | null>(null);
 
   // ─── Papers state ───────────────────────────────────────────────────────
   const [papers, setPapers] = useState<AssessmentPaperItem[]>([]);
   const [papersTotal, setPapersTotal] = useState(0);
   const [papersLoading, setPapersLoading] = useState(false);
+  const [papersError, setPapersError] = useState<string | null>(null);
 
   // ─── Questions CRUD ─────────────────────────────────────────────────────
 
   const fetchQuestions = useCallback(async (filters?: QBQuestionFilters) => {
     setQuestionsLoading(true);
+    setQuestionsError(null);
     try {
       const res = await apiClient.get(`${BASE}/questions`, { params: filters });
       const data = unwrapResponse<QuestionsListResponse>(res);
       setQuestions(data.questions ?? []);
       setQuestionsTotal(data.total ?? 0);
+      return true;
     } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to load questions'));
+      const message = extractErrorMessage(err, 'Failed to load questions');
+      setQuestions([]);
+      setQuestionsTotal(0);
+      setQuestionsError(message);
+      toast.error(message);
+      return false;
     } finally {
       setQuestionsLoading(false);
     }
@@ -124,13 +133,20 @@ export function useQuestionBank() {
 
   const fetchPapers = useCallback(async (filters?: PaperFilters) => {
     setPapersLoading(true);
+    setPapersError(null);
     try {
       const res = await apiClient.get(`${BASE}/papers`, { params: filters });
       const data = unwrapResponse<PapersListResponse>(res);
       setPapers(data.papers ?? []);
       setPapersTotal(data.total ?? 0);
+      return true;
     } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to load papers'));
+      const message = extractErrorMessage(err, 'Failed to load papers');
+      setPapers([]);
+      setPapersTotal(0);
+      setPapersError(message);
+      toast.error(message);
+      return false;
     } finally {
       setPapersLoading(false);
     }
@@ -162,7 +178,11 @@ export function useQuestionBank() {
 
   const addQuestionToPaper = useCallback(
     async (paperId: string, data: AddQuestionToPaperPayload) => {
-      const res = await apiClient.post(`${BASE}/papers/${paperId}/questions`, data);
+      const { sectionIndex, ...body } = data;
+      const res = await apiClient.post(
+        `${BASE}/papers/${paperId}/sections/${sectionIndex}/questions`,
+        body,
+      );
       const paper = unwrapResponse<AssessmentPaperItem>(res);
       toast.success('Question added to paper');
       return paper;
@@ -173,7 +193,7 @@ export function useQuestionBank() {
   const removeQuestionFromPaper = useCallback(
     async (paperId: string, sectionIndex: number, questionIndex: number) => {
       const res = await apiClient.delete(
-        `${BASE}/papers/${paperId}/questions/${sectionIndex}/${questionIndex}`,
+        `${BASE}/papers/${paperId}/sections/${sectionIndex}/questions/${questionIndex}`,
       );
       const paper = unwrapResponse<AssessmentPaperItem>(res);
       toast.success('Question removed from paper');
@@ -251,6 +271,7 @@ export function useQuestionBank() {
     questions,
     questionsTotal,
     questionsLoading,
+    questionsError,
     // Questions actions
     fetchQuestions,
     getQuestion,
@@ -265,6 +286,7 @@ export function useQuestionBank() {
     papers,
     papersTotal,
     papersLoading,
+    papersError,
     // Papers actions
     fetchPapers,
     getPaper,

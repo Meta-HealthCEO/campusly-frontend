@@ -81,9 +81,8 @@ export function PaperWizardManualConfig({ onCreate }: Props) {
         <p className="font-medium">Manual Mode</p>
         <p className="text-muted-foreground">
           Define empty sections now. After creating, you&apos;ll add questions
-          on the paper detail page from the Question Bank.{' '}
-          <strong>Question Bank is currently empty</strong> — questions are
-          added in Module 4.
+          on the paper detail page from the Question Bank or as custom
+          questions.
         </p>
       </div>
 

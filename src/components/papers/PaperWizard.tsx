@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useTeacherPapers } from '@/hooks/useTeacherPapers';
-import { useAuthStore } from '@/stores/useAuthStore';
 import { Button } from '@/components/ui/button';
 import type { AIPaperSectionConfig } from '@/types/papers';
 import { PaperWizardStep1, type PaperMetadataState } from './PaperWizardStep1';
@@ -33,11 +32,23 @@ const INITIAL_METADATA: PaperMetadataState = {
   difficulty: 'medium',
 };
 
-export function PaperWizard({ onComplete, onCancel }: Props) {
-  const user = useAuthStore((s) => s.user);
-  const schoolId = user?.schoolId ?? '';
+const PAPER_TYPE_LABELS: Record<PaperMetadataState['paperType'], string> = {
+  class_test: 'Class Test',
+  assignment: 'Assignment',
+  mid_year: 'Mid-Year Exam',
+  trial: 'Trial Exam',
+  final: 'Final Exam',
+  custom: 'Paper',
+};
 
-  const { generatePaperWithAI, createPaperManual } = useTeacherPapers();
+function titleFor(metadata: PaperMetadataState): string {
+  const explicitTitle = metadata.title.trim();
+  if (explicitTitle) return explicitTitle;
+  return `Term ${metadata.term} ${PAPER_TYPE_LABELS[metadata.paperType]} ${metadata.year}`;
+}
+
+export function PaperWizard({ onComplete, onCancel }: Props) {
+  const { generatePaperWithAI, createPaperManual } = useTeacherPapers(false);
 
   const [step, setStep] = useState<1 | 2>(1);
   const [mode, setMode] = useState<'ai' | 'manual'>('ai');
@@ -52,7 +63,7 @@ export function PaperWizard({ onComplete, onCancel }: Props) {
   ): Promise<void> => {
     const result = await generatePaperWithAI({
       ...metadata,
-      schoolId,
+      title: titleFor(metadata),
       sectionConfig,
     });
     if (result?.paperId) onComplete(result.paperId);
@@ -63,7 +74,7 @@ export function PaperWizard({ onComplete, onCancel }: Props) {
   ): Promise<void> => {
     const paper = await createPaperManual({
       ...metadata,
-      schoolId,
+      title: titleFor(metadata),
       sections,
     });
     if (paper?._id) onComplete(paper._id);
@@ -82,20 +93,20 @@ export function PaperWizard({ onComplete, onCancel }: Props) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Step 2 of 2 — Configure</h2>
+      <h2 className="text-lg font-semibold">Generate Paper</h2>
 
       <div className="flex flex-col sm:flex-row gap-2">
         <Button
           variant={mode === 'ai' ? 'default' : 'outline'}
           onClick={() => setMode('ai')}
         >
-          Generate with AI
+          AI Generated
         </Button>
         <Button
           variant={mode === 'manual' ? 'default' : 'outline'}
           onClick={() => setMode('manual')}
         >
-          Build manually
+          Build Manually
         </Button>
       </div>
 

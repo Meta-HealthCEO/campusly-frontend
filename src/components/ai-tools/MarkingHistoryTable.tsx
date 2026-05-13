@@ -127,6 +127,7 @@ export function MarkingHistoryTable({
         title="Publish to Gradebook"
         description={pendingMarking ? `Publishing marks for ${pendingMarking.studentName}` : undefined}
         submitting={publishing}
+        classId={pendingMarking?.classId ?? undefined}
         onConfirm={async (assessmentId, comment) => {
           if (!pendingId) return;
           setPublishing(true);

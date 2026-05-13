@@ -40,8 +40,17 @@ export function MarkingResults({
   const [publishOpen, setPublishOpen] = useState(false);
   const [publishing, setPublishing] = useState(false);
 
+  // Re-sync local question state when the marking changes (e.g. opening a
+  // different marking from the History tab). Without this, the local state
+  // stays pinned to the first marking ever rendered by this component.
+  useEffect(() => {
+    setQuestions(marking.questions);
+    setDirty(false);
+  }, [marking.id, marking.questions]);
+
   const { getPaperById } = useTeacherPapers();
   const [paperVersion, setPaperVersion] = useState<number | null>(null);
+  const [paperSubjectId, setPaperSubjectId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (marking.paperType !== 'assessment') return;
@@ -49,6 +58,14 @@ export function MarkingResults({
     void getPaperById(marking.paperId).then((p) => {
       if (cancelled) return;
       setPaperVersion(p?.version ?? null);
+      // subjectId may come back as a populated { _id, name } or a plain string.
+      const rawSubject = (p as { subjectId?: unknown } | null)?.subjectId;
+      if (typeof rawSubject === 'string') {
+        setPaperSubjectId(rawSubject);
+      } else if (rawSubject && typeof rawSubject === 'object') {
+        const s = rawSubject as { id?: string; _id?: string };
+        setPaperSubjectId(s.id ?? s._id);
+      }
     });
     return () => { cancelled = true; };
   }, [marking.paperId, marking.paperType, getPaperById]);
@@ -238,6 +255,8 @@ export function MarkingResults({
         title="Publish to Gradebook"
         description={`Publishing marks for ${marking.studentName}`}
         submitting={publishing}
+        classId={marking.classId ?? undefined}
+        subjectId={paperSubjectId}
         onConfirm={async (assessmentId, comment) => {
           setPublishing(true);
           await onPublish(assessmentId, comment);

@@ -1,15 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, FileText, Trash2, Eye } from 'lucide-react';
+import { Plus, FileText, Trash2, Eye, Users } from 'lucide-react';
 import { useTeacherPapers } from '@/hooks/useTeacherPapers';
 import type { Paper, PaperStatus } from '@/types/papers';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -21,6 +19,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
+import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 
 function statusVariant(status: PaperStatus): 'default' | 'secondary' | 'outline' {
   if (status === 'finalised') return 'default';
@@ -29,15 +28,11 @@ function statusVariant(status: PaperStatus): 'default' | 'secondary' | 'outline'
 }
 
 function subjectName(paper: Paper): string {
-  return typeof paper.subjectId === 'object' && paper.subjectId
-    ? paper.subjectId.name
-    : '';
+  return typeof paper.subjectId === 'object' && paper.subjectId ? paper.subjectId.name : '';
 }
 
 function gradeName(paper: Paper): string {
-  return typeof paper.gradeId === 'object' && paper.gradeId
-    ? paper.gradeId.name
-    : '';
+  return typeof paper.gradeId === 'object' && paper.gradeId ? paper.gradeId.name : '';
 }
 
 export default function TeacherPapersPage() {
@@ -53,13 +48,95 @@ export default function TeacherPapersPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const hasActiveFilters = Boolean(filters.search || filters.status);
 
+  const columns = useMemo<ColumnDef<Paper>[]>(() => [
+    {
+      accessorKey: 'title',
+      header: 'Title',
+      cell: ({ row }) => (
+        <span className="font-medium">{row.original.title}</span>
+      ),
+    },
+    {
+      id: 'subject',
+      header: 'Subject',
+      accessorFn: (row) => subjectName(row),
+    },
+    {
+      id: 'grade',
+      header: 'Grade',
+      accessorFn: (row) => gradeName(row),
+    },
+    {
+      accessorKey: 'term',
+      header: 'Term',
+      cell: ({ row }) => `Term ${row.original.term}`,
+    },
+    {
+      accessorKey: 'totalMarks',
+      header: 'Marks',
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => (
+        <Badge variant={statusVariant(row.original.status)} className="capitalize">
+          {row.original.status}
+        </Badge>
+      ),
+    },
+    {
+      id: 'assignments',
+      header: 'Classes',
+      enableSorting: false,
+      cell: ({ row }) => {
+        const count = row.original.assignments?.length ?? 0;
+        if (count === 0) return <span className="text-xs text-muted-foreground">Unassigned</span>;
+        return (
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <Users className="h-3 w-3" /> {count} class{count === 1 ? '' : 'es'}
+          </span>
+        );
+      },
+    },
+    {
+      id: 'actions',
+      header: '',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-1">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`/teacher/papers/${row.original._id}`);
+            }}
+          >
+            <Eye className="mr-1 h-3 w-3" /> Open
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              setConfirmDeleteId(row.original._id);
+            }}
+            aria-label="Delete paper"
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      ),
+    },
+  ], [router]);
+
   if (loading) return <LoadingSpinner />;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Test Papers"
-        description="Generate, edit, and download CAPS-aligned papers and memos."
+        description="Generate, edit, and assign CAPS-aligned papers. Assigned papers can be taken digitally or printed for the class."
       >
         <Link href="/teacher/papers/new" className="inline-block">
           <Button>
@@ -70,29 +147,13 @@ export default function TeacherPapersPage() {
       </PageHeader>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div className="space-y-1 flex-1 sm:max-w-sm">
-          <label className="text-xs text-muted-foreground">Search</label>
-          <Input
-            value={filters.search ?? ''}
-            onChange={(event) =>
-              setFilters({
-                ...filters,
-                search: event.target.value || undefined,
-              })
-            }
-            placeholder="Search paper title..."
-          />
-        </div>
         <div className="space-y-1 sm:w-44">
           <label className="text-xs text-muted-foreground">Status</label>
           <Select
             value={filters.status ?? 'all'}
             onValueChange={(value) => {
               const nextStatus = value && value !== 'all' ? value : undefined;
-              setFilters({
-                ...filters,
-                status: nextStatus,
-              });
+              setFilters({ ...filters, status: nextStatus });
             }}
           >
             <SelectTrigger className="w-full">
@@ -114,11 +175,10 @@ export default function TeacherPapersPage() {
             Clear filters
           </Button>
         )}
+        <p className="text-xs text-muted-foreground sm:ml-auto">
+          Showing {papers.length} of {total} papers
+        </p>
       </div>
-
-      <p className="text-xs text-muted-foreground">
-        Showing {papers.length} of {total} papers
-      </p>
 
       {papers.length === 0 ? (
         <EmptyState
@@ -139,51 +199,13 @@ export default function TeacherPapersPage() {
           }
         />
       ) : (
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {papers.map((paper: Paper) => {
-            const meta = [
-              subjectName(paper),
-              gradeName(paper),
-              `Term ${paper.term}`,
-              `${paper.totalMarks} marks`,
-            ]
-              .filter(Boolean)
-              .join(' \u00B7 ');
-            return (
-              <Card key={paper._id}>
-                <CardContent className="p-4 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-medium truncate">{paper.title}</h3>
-                    <Badge variant={statusVariant(paper.status)}>
-                      {paper.status}
-                    </Badge>
-                  </div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {meta}
-                  </div>
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => router.push(`/teacher/papers/${paper._id}`)}
-                    >
-                      <Eye className="mr-1 h-3 w-3" />
-                      Open
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setConfirmDeleteId(paper._id)}
-                      aria-label="Delete paper"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        <DataTable
+          columns={columns}
+          data={papers}
+          searchKey="title"
+          searchPlaceholder="Search by title..."
+          onRowClick={(p) => router.push(`/teacher/papers/${p._id}`)}
+        />
       )}
 
       <ConfirmDialog

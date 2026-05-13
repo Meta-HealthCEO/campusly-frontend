@@ -13,6 +13,7 @@ export interface QuestionLite {
 interface UseQuestionBankLibraryParams {
   subjectId: string;
   gradeId?: string;
+  curriculumNodeId?: string;
   q?: string;
 }
 
@@ -37,44 +38,50 @@ interface UseQuestionBankLibraryResult {
 export function useQuestionBankLibrary(
   params: UseQuestionBankLibraryParams,
 ): UseQuestionBankLibraryResult {
-  const { subjectId, gradeId, q } = params;
+  const { subjectId, gradeId, curriculumNodeId, q } = params;
   const [questions, setQuestions] = useState<QuestionLite[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!subjectId) {
-      setQuestions([]);
-      return;
-    }
     let cancelled = false;
-    setLoading(true);
 
-    const query: Record<string, string | number> = {
-      subjectId,
-      limit: 50,
-    };
-    if (gradeId) query.gradeId = gradeId;
-    if (q && q.trim()) query.search = q.trim();
+    async function fetchQuestions(): Promise<void> {
+      if (!subjectId) {
+        if (!cancelled) {
+          setQuestions([]);
+          setLoading(false);
+        }
+        return;
+      }
 
-    apiClient
-      .get('/question-bank/questions', { params: query })
-      .then((res: AxiosResponse) => {
-        if (cancelled) return;
-        setQuestions(unwrapList<QuestionLite>(res, 'questions'));
-      })
-      .catch((err: unknown) => {
+      setLoading(true);
+
+      const query: Record<string, string | number> = {
+        subjectId,
+        limit: 50,
+      };
+      if (gradeId) query.gradeId = gradeId;
+      if (curriculumNodeId) query.curriculumNodeId = curriculumNodeId;
+      if (q && q.trim()) query.search = q.trim();
+
+      try {
+        const res: AxiosResponse = await apiClient.get('/question-bank/questions', { params: query });
+        if (!cancelled) setQuestions(unwrapList<QuestionLite>(res, 'questions'));
+      } catch (err: unknown) {
         if (cancelled) return;
         console.error('Failed to load question bank library', err);
         setQuestions([]);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    }
+
+    void fetchQuestions();
 
     return () => {
       cancelled = true;
     };
-  }, [subjectId, gradeId, q]);
+  }, [subjectId, gradeId, curriculumNodeId, q]);
 
   return { questions, loading };
 }

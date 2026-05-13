@@ -14,11 +14,18 @@ import {
 } from '@/components/ui/select';
 import { ArrowLeft, Users, PenTool } from 'lucide-react';
 import { getStudentDisplayName } from '@/lib/student-helpers';
-import type { Student } from '@/types';
+import { resolveId } from '@/lib/api-helpers';
+import type { Student, PopulatedId } from '@/types';
+
+export interface MarkingStudentSelectValue {
+  studentId?: string;
+  studentName: string;
+  classId?: string;
+}
 
 interface MarkingStudentSelectProps {
   students: Student[];
-  onSelect: (data: { studentId?: string; studentName: string }) => void;
+  onSelect: (data: MarkingStudentSelectValue) => void;
   onBack: () => void;
 }
 
@@ -34,7 +41,11 @@ export function MarkingStudentSelect({ students, onSelect, onBack }: MarkingStud
   const handleContinue = () => {
     if (mode === 'select' && selectedStudent) {
       const { full } = getStudentDisplayName(selectedStudent);
-      onSelect({ studentId: selectedStudent.id, studentName: full });
+      // student.classId may be a populated object after backend population —
+      // resolveId normalises both shapes to a string id.
+      const classId =
+        resolveId(selectedStudent.classId as unknown as PopulatedId) || undefined;
+      onSelect({ studentId: selectedStudent.id, studentName: full, classId });
     } else if (mode === 'type' && manualName.trim()) {
       onSelect({ studentName: manualName.trim() });
     }

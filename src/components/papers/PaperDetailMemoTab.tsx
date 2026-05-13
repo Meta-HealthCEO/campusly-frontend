@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Trash2 } from 'lucide-react';
+import { getPaperQuestionText } from '@/lib/paper-question';
 import type {
   Paper,
   PaperMemo,
@@ -46,13 +47,14 @@ function MemoAnswerCard({
     (s: number, m: MarkAllocation) => s + m.marks,
     0,
   );
+  const questionText = paperQ ? getPaperQuestionText(paperQ) : '';
   return (
     <Card>
       <CardContent className="p-4 space-y-3">
         <p className="text-sm font-medium">{ans.questionNumber}</p>
-        {paperQ?.questionText && (
+        {questionText && (
           <p className="text-xs text-muted-foreground italic line-clamp-2">
-            {paperQ.questionText}
+            {questionText}
           </p>
         )}
 
@@ -162,7 +164,7 @@ function MemoAnswerCard({
 }
 
 export function PaperDetailMemoTab({ paper, memo, onChanged }: Props) {
-  const { updateMemo } = useTeacherPapers();
+  const { updateMemo } = useTeacherPapers(false);
   const [sections, setSections] = useState<MemoSection[]>(memo.sections);
   const [saving, setSaving] = useState(false);
 

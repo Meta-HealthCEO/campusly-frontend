@@ -18,6 +18,8 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { PaperDetailPaperTab } from '@/components/papers/PaperDetailPaperTab';
 import { PaperDetailMemoTab } from '@/components/papers/PaperDetailMemoTab';
+import { PaperDetailAssignmentsTab } from '@/components/papers/PaperDetailAssignmentsTab';
+import { PaperDetailMarkingTab } from '@/components/papers/PaperDetailMarkingTab';
 import type { Paper, PaperMemo, PaperStatus } from '@/types/papers';
 
 function statusVariant(
@@ -168,6 +170,8 @@ export default function PaperDetailPage({
         <TabsList>
           <TabsTrigger value="paper">Paper</TabsTrigger>
           <TabsTrigger value="memo">Memo</TabsTrigger>
+          <TabsTrigger value="assignments">Assignments</TabsTrigger>
+          <TabsTrigger value="marking">Marking</TabsTrigger>
         </TabsList>
         <TabsContent value="paper">
           <PaperDetailPaperTab paper={paper} onChanged={reload} />
@@ -185,6 +189,12 @@ export default function PaperDetailPage({
               Memo not available yet.
             </p>
           )}
+        </TabsContent>
+        <TabsContent value="assignments">
+          <PaperDetailAssignmentsTab paper={paper} />
+        </TabsContent>
+        <TabsContent value="marking">
+          <PaperDetailMarkingTab paper={paper} />
         </TabsContent>
       </Tabs>
     </div>

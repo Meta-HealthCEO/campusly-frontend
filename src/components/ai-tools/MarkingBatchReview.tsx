@@ -14,27 +14,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { resolveId } from '@/lib/api-helpers';
+import { getStudentDisplayName } from '@/lib/student-helpers';
 import type { MarkingBatch, ConfirmBatchAssignment } from '@/types/marking';
-import type { Student } from '@/types';
+import type { PopulatedId } from '@/types';
 
 interface Props {
   batch: MarkingBatch;
   onConfirmed: () => void;
 }
 
-function fullName(s: Student): string {
-  return (
-    `${s.firstName ?? s.user?.firstName ?? ''} ${s.lastName ?? s.user?.lastName ?? ''}`.trim() ||
-    'Unknown'
-  );
-}
-
 export function MarkingBatchReview({ batch, onConfirmed }: Props) {
   const { confirmBatch } = useTeacherMarkingBatch();
   const { students: allStudents, loading: studentsLoading } = useTeacherStudents();
 
+  // /students populates classId — it can come back as a string OR a populated
+  // { _id, name, ... } object. Always resolve to a string before comparing.
   const students = useMemo(
-    () => allStudents.filter((s) => s.classId === batch.classId),
+    () => allStudents.filter(
+      (s) => resolveId(s.classId as unknown as PopulatedId) === batch.classId,
+    ),
     [allStudents, batch.classId],
   );
 
@@ -63,7 +62,7 @@ export function MarkingBatchReview({ batch, onConfirmed }: Props) {
         assignments.push({
           imageFilenames: filenames,
           studentId,
-          studentName: student ? fullName(student) : studentId,
+          studentName: student ? getStudentDisplayName(student).full : studentId,
         });
       }
 
@@ -75,7 +74,7 @@ export function MarkingBatchReview({ batch, onConfirmed }: Props) {
         assignments.push({
           imageFilenames: match.imageFilenames,
           studentId: selectedId,
-          studentName: student ? fullName(student) : selectedId,
+          studentName: student ? getStudentDisplayName(student).full : selectedId,
         });
       });
 
@@ -133,7 +132,7 @@ export function MarkingBatchReview({ batch, onConfirmed }: Props) {
                     <SelectItem value="none">— skip this group —</SelectItem>
                     {students.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
-                        {fullName(s)} ({s.admissionNumber})
+                        {getStudentDisplayName(s).full} ({s.admissionNumber})
                       </SelectItem>
                     ))}
                   </SelectContent>

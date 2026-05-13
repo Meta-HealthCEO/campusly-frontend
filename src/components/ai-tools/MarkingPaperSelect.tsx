@@ -13,28 +13,48 @@ import {
 } from '@/components/ui/select';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { FileText } from 'lucide-react';
+import { AlertTriangle, FileText, RefreshCw } from 'lucide-react';
 import type { MarkingPaperOption } from '@/hooks/useTeacherMarking';
 
 interface MarkingPaperSelectProps {
   papers: MarkingPaperOption[];
   loading: boolean;
+  error?: string | null;
+  onRetry?: () => void;
   onSelect: (paper: MarkingPaperOption) => void;
 }
 
-export function MarkingPaperSelect({ papers, loading, onSelect }: MarkingPaperSelectProps) {
+export function MarkingPaperSelect({ papers, loading, error, onRetry, onSelect }: MarkingPaperSelectProps) {
   const [selectedId, setSelectedId] = useState('');
 
   const selectedPaper = papers.find((p) => p.id === selectedId) ?? null;
 
   if (loading) return <LoadingSpinner />;
 
+  if (error) {
+    return (
+      <EmptyState
+        icon={AlertTriangle}
+        title="Could not load papers"
+        description={error}
+        action={
+          onRetry ? (
+            <Button variant="outline" onClick={onRetry}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Try again
+            </Button>
+          ) : undefined
+        }
+      />
+    );
+  }
+
   if (papers.length === 0) {
     return (
       <EmptyState
         icon={FileText}
         title="No papers available"
-        description="Generate an AI paper or create an assessment paper first."
+        description="Create and finalise an assessment paper first, then return here to mark handwritten answers."
       />
     );
   }

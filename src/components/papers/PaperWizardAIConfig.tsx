@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Trash2, Sparkles } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import type { AIPaperSectionConfig } from '@/types/papers';
 
 interface Props {
@@ -12,58 +11,81 @@ interface Props {
   onGenerate: (sections: AIPaperSectionConfig[]) => Promise<void>;
 }
 
-function letterFor(index: number): string {
-  return String.fromCharCode(65 + Math.min(index, 25));
+type PlanId = 'balanced' | 'exam' | 'single';
+
+const PLANS: Array<{
+  id: PlanId;
+  label: string;
+  desc: string;
+}> = [
+  { id: 'balanced', label: 'Balanced', desc: 'Short and structured questions' },
+  { id: 'exam', label: 'Exam Style', desc: 'Three sections with mixed demand' },
+  { id: 'single', label: 'Single Section', desc: 'One clean paper section' },
+];
+
+function splitMarks(totalMarks: number, weights: number[]): number[] {
+  const raw = weights.map((weight) => Math.max(1, Math.round(totalMarks * weight)));
+  const used = raw.slice(0, -1).reduce((sum, marks) => sum + marks, 0);
+  raw[raw.length - 1] = Math.max(1, totalMarks - used);
+  return raw;
 }
 
-export function PaperWizardAIConfig({ totalMarks, onGenerate }: Props) {
-  const [sections, setSections] = useState<AIPaperSectionConfig[]>([
+function sectionsForPlan(plan: PlanId, totalMarks: number): AIPaperSectionConfig[] {
+  if (plan === 'single') {
+    return [
+      {
+        title: 'Section A',
+        questionCount: Math.max(3, Math.round(totalMarks / 10)),
+        sectionMarks: totalMarks,
+      },
+    ];
+  }
+
+  if (plan === 'exam') {
+    const [sectionA, sectionB, sectionC] = splitMarks(totalMarks, [0.3, 0.4, 0.3]);
+    return [
+      {
+        title: 'Section A',
+        instructions: 'Short questions',
+        questionCount: 6,
+        sectionMarks: sectionA,
+      },
+      {
+        title: 'Section B',
+        instructions: 'Structured questions',
+        questionCount: 4,
+        sectionMarks: sectionB,
+      },
+      {
+        title: 'Section C',
+        instructions: 'Extended response',
+        questionCount: 2,
+        sectionMarks: sectionC,
+      },
+    ];
+  }
+
+  const [sectionA, sectionB] = splitMarks(totalMarks, [0.4, 0.6]);
+  return [
     {
       title: 'Section A',
+      instructions: 'Core knowledge and routine questions',
       questionCount: 5,
-      sectionMarks: Math.floor(totalMarks / 2) || 1,
+      sectionMarks: sectionA,
     },
     {
       title: 'Section B',
-      questionCount: 3,
-      sectionMarks: Math.ceil(totalMarks / 2) || 1,
+      instructions: 'Structured application questions',
+      questionCount: 4,
+      sectionMarks: sectionB,
     },
-  ]);
+  ];
+}
+
+export function PaperWizardAIConfig({ totalMarks, onGenerate }: Props) {
+  const [plan, setPlan] = useState<PlanId>('balanced');
   const [generating, setGenerating] = useState(false);
-
-  const addSection = (): void => {
-    setSections((prev: AIPaperSectionConfig[]) => [
-      ...prev,
-      {
-        title: `Section ${letterFor(prev.length)}`,
-        questionCount: 3,
-        sectionMarks: 10,
-      },
-    ]);
-  };
-
-  const removeSection = (idx: number): void => {
-    setSections((prev: AIPaperSectionConfig[]) =>
-      prev.filter((_: AIPaperSectionConfig, i: number) => i !== idx),
-    );
-  };
-
-  const updateSection = (
-    idx: number,
-    patch: Partial<AIPaperSectionConfig>,
-  ): void => {
-    setSections((prev: AIPaperSectionConfig[]) =>
-      prev.map((s: AIPaperSectionConfig, i: number) =>
-        i === idx ? { ...s, ...patch } : s,
-      ),
-    );
-  };
-
-  const totalSectionMarks = sections.reduce(
-    (sum: number, s: AIPaperSectionConfig) => sum + (s.sectionMarks || 0),
-    0,
-  );
-  const marksMismatch = totalSectionMarks !== totalMarks;
+  const sections = useMemo(() => sectionsForPlan(plan, totalMarks), [plan, totalMarks]);
 
   const handleGenerate = async (): Promise<void> => {
     setGenerating(true);
@@ -75,103 +97,52 @@ export function PaperWizardAIConfig({ totalMarks, onGenerate }: Props) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-md border bg-muted/30 p-3 text-sm">
-        <p className="font-medium">AI Generation</p>
-        <p className="text-muted-foreground">
-          Configure sections — Claude will generate CAPS-aligned questions
-          matching your topics and difficulty. Generation usually takes ~30
-          seconds.
-        </p>
+    <div className="space-y-5">
+      <div className="space-y-3">
+        <h3 className="text-base font-semibold">Paper Structure</h3>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {PLANS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setPlan(item.id)}
+              className={cn(
+                'rounded-lg border p-3 text-left transition-colors',
+                plan === item.id
+                  ? 'border-primary bg-primary/5'
+                  : 'border-input hover:bg-muted',
+              )}
+            >
+              <span className="block text-sm font-semibold">{item.label}</span>
+              <span className="mt-1 block text-xs text-muted-foreground">{item.desc}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="space-y-3">
-        {sections.map((s: AIPaperSectionConfig, idx: number) => (
-          <div key={idx} className="rounded-md border p-3 space-y-3">
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-sm font-medium">Section {idx + 1}</p>
-              {sections.length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeSection(idx)}
-                  aria-label={`Remove section ${idx + 1}`}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+      <div className="grid gap-2">
+        {sections.map((section) => (
+          <div
+            key={section.title}
+            className="flex items-center justify-between rounded-lg border bg-muted/20 px-3 py-2 text-sm"
+          >
+            <div>
+              <p className="font-medium">{section.title}</p>
+              {section.instructions && (
+                <p className="text-xs text-muted-foreground">{section.instructions}</p>
               )}
             </div>
-
-            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
-              <div className="sm:col-span-2 space-y-1">
-                <Label>Title</Label>
-                <Input
-                  value={s.title}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    updateSection(idx, { title: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-1">
-                <Label>Questions</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={s.questionCount}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    updateSection(idx, { questionCount: Number(e.target.value) })
-                  }
-                />
-              </div>
-              <div className="space-y-1">
-                <Label>Marks</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={200}
-                  value={s.sectionMarks}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    updateSection(idx, { sectionMarks: Number(e.target.value) })
-                  }
-                />
-              </div>
-              <div className="sm:col-span-2 space-y-1">
-                <Label>Instructions (optional)</Label>
-                <Input
-                  value={s.instructions ?? ''}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    updateSection(idx, { instructions: e.target.value })
-                  }
-                  placeholder="e.g. Answer all questions in this section."
-                />
-              </div>
+            <div className="text-right text-xs text-muted-foreground">
+              <p>{section.sectionMarks} marks</p>
+              <p>{section.questionCount} questions</p>
             </div>
           </div>
         ))}
       </div>
 
-      <Button variant="outline" size="sm" onClick={addSection}>
-        <Plus className="h-4 w-4 mr-1" />
-        Add Section
-      </Button>
-
-      <div
-        className={`text-sm ${
-          marksMismatch ? 'text-destructive' : 'text-muted-foreground'
-        }`}
-      >
-        Total marks: {totalSectionMarks} / {totalMarks}
-        {marksMismatch ? ' (must match)' : ' OK'}
-      </div>
-
-      <Button
-        onClick={handleGenerate}
-        disabled={generating || marksMismatch || sections.length === 0}
-        className="w-full"
-      >
-        <Sparkles className="h-4 w-4 mr-2" />
-        {generating ? 'Generating... (this takes ~30s)' : 'Generate Paper'}
+      <Button onClick={handleGenerate} disabled={generating} className="w-full" size="lg">
+        <Sparkles className="mr-2 h-4 w-4" />
+        {generating ? 'Generating paper and memo...' : 'Generate Paper and Memo'}
       </Button>
     </div>
   );

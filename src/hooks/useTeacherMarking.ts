@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
-import { unwrapResponse, unwrapList } from '@/lib/api-helpers';
+import { extractErrorMessage, unwrapResponse, unwrapList } from '@/lib/api-helpers';
 
 interface MarkingQuestion {
   questionNumber: string;
@@ -48,9 +48,46 @@ export interface MarkingPaperOption {
   title: string;
   type: 'generated' | 'assessment';
   maxMarks: number;
+  status?: string;
 }
 
 export type { PaperMarking, MarkingQuestion, PaperMarkingImage };
+
+function resolveRefName(ref: unknown): string {
+  if (typeof ref !== 'object' || ref === null) return '';
+  const obj = ref as Record<string, unknown>;
+  return typeof obj.name === 'string' ? obj.name : '';
+}
+
+function formatPaperType(value: unknown): string {
+  return String(value ?? 'paper')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
+function mapAssessmentPaper(raw: Record<string, unknown>): MarkingPaperOption | null {
+  const id = String(raw.id ?? raw._id ?? '');
+  if (!id || raw.isDeleted === true || raw.status === 'archived') return null;
+
+  const subject = resolveRefName(raw.subjectId);
+  const grade = resolveRefName(raw.gradeId);
+  const meta = [
+    subject,
+    grade,
+    raw.term ? `Term ${raw.term}` : '',
+    formatPaperType(raw.paperType),
+  ].filter(Boolean);
+  const status = typeof raw.status === 'string' ? raw.status : undefined;
+  const statusLabel = status && status !== 'finalised' ? ` (${formatPaperType(status)})` : '';
+
+  return {
+    id,
+    title: `${String(raw.title ?? 'Untitled paper')}${statusLabel}${meta.length ? ` - ${meta.join(' - ')}` : ''}`,
+    type: 'assessment',
+    maxMarks: Number(raw.totalMarks ?? 0),
+    status,
+  };
+}
 
 export function useTeacherMarking() {
   const [loading, setLoading] = useState(false);
@@ -58,6 +95,36 @@ export function useTeacherMarking() {
   const [currentMarking, setCurrentMarking] = useState<PaperMarking | null>(null);
   const [papers, setPapers] = useState<MarkingPaperOption[]>([]);
   const [papersLoading, setPapersLoading] = useState(false);
+  const [papersError, setPapersError] = useState<string | null>(null);
+
+  const markPaperFromText = useCallback(async (
+    paperId: string,
+    paperType: 'generated' | 'assessment',
+    studentName: string,
+    answers: Array<{ questionNumber: string; answer: string }>,
+    options?: { studentId?: string; classId?: string },
+  ): Promise<PaperMarking | null> => {
+    setLoading(true);
+    try {
+      const res = await apiClient.post('/ai-tools/mark-paper-text', {
+        paperId,
+        paperType,
+        studentName,
+        studentId: options?.studentId,
+        classId: options?.classId,
+        answers,
+      });
+      const marking = unwrapResponse<PaperMarking>(res);
+      setCurrentMarking(marking);
+      return marking;
+    } catch (err: unknown) {
+      console.error('Failed to mark paper (text)', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to mark paper. Please try again.');
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const markPaper = useCallback(async (
     paperId: string,
@@ -90,9 +157,14 @@ export function useTeacherMarking() {
     }
   }, []);
 
-  const getMarkings = useCallback(async (paperId: string): Promise<void> => {
+  const getMarkings = useCallback(async (paperId?: string): Promise<void> => {
     try {
-      const res = await apiClient.get('/ai-tools/markings', { params: { paperId } });
+      // Backend treats paperId as optional — omit it to fetch ALL of the
+      // teacher's markings. The History tab needs this so a teacher can land
+      // on it directly without first selecting a paper.
+      const params: Record<string, string | number> = { limit: 100 };
+      if (paperId) params.paperId = paperId;
+      const res = await apiClient.get('/ai-tools/markings', { params });
       const raw = unwrapResponse<{ markings: PaperMarking[]; total: number }>(res);
       setMarkings(raw.markings ?? []);
     } catch (err: unknown) {
@@ -149,39 +221,28 @@ export function useTeacherMarking() {
 
   const fetchPapers = useCallback(async () => {
     setPapersLoading(true);
+    setPapersError(null);
     try {
-      const [genRes, assessRes] = await Promise.allSettled([
-        apiClient.get('/ai-tools/papers'),
-        apiClient.get('/curriculum/papers'),
-      ]);
-      const combined: MarkingPaperOption[] = [];
-      if (genRes.status === 'fulfilled') {
-        const genPapers = unwrapList<Record<string, unknown>>(genRes.value);
-        for (const p of genPapers) {
-          if (p.status === 'generating') continue;
-          combined.push({
-            id: (p.id ?? p._id) as string,
-            title: `${p.subject as string} - Grade ${p.grade as number} - ${p.topic as string} (AI Paper)`,
-            type: 'generated',
-            maxMarks: (p.totalMarks ?? 0) as number,
-          });
-        }
-      }
-      if (assessRes.status === 'fulfilled') {
-        const assessPapers = unwrapList<Record<string, unknown>>(assessRes.value);
-        for (const p of assessPapers) {
-          combined.push({
-            id: (p.id ?? p._id) as string,
-            title: ((p.title ?? p.name ?? 'Assessment') as string) + ' (Assessment)',
-            type: 'assessment',
-            maxMarks: (p.totalMarks ?? 0) as number,
-          });
-        }
-      }
+      const res = await apiClient.get('/question-bank/papers', {
+        params: { limit: 100 },
+      });
+      const combined = unwrapList<Record<string, unknown>>(res)
+        .map(mapAssessmentPaper)
+        .filter((p): p is MarkingPaperOption => p !== null)
+        .sort((a, b) => {
+          if (a.status === 'finalised' && b.status !== 'finalised') return -1;
+          if (a.status !== 'finalised' && b.status === 'finalised') return 1;
+          return a.title.localeCompare(b.title);
+        });
       setPapers(combined);
+      return true;
     } catch (err: unknown) {
+      const message = extractErrorMessage(err, 'Could not load papers.');
+      setPapers([]);
+      setPapersError(message);
       console.error('Failed to load papers', err);
-      toast.error('Could not load papers.');
+      toast.error(message);
+      return false;
     } finally {
       setPapersLoading(false);
     }
@@ -193,11 +254,14 @@ export function useTeacherMarking() {
     currentMarking,
     papers,
     papersLoading,
+    papersError,
     markPaper,
+    markPaperFromText,
     getMarkings,
     getMarking,
     updateMarking,
     publishMarking,
     fetchPapers,
+    setCurrentMarking,
   };
 }

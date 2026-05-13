@@ -108,6 +108,11 @@ export interface PopulatedPaperQuestionRef {
   options?: PaperQuestionOption[];
   answer?: string;
   markingRubric?: string;
+  // 'draft' / 'pending_review' / 'approved' / 'rejected' — used by the
+  // paper-detail tab to show a "Save to bank" button only when the
+  // question hasn't been committed yet.
+  status?: 'draft' | 'pending_review' | 'approved' | 'rejected';
+  source?: 'system' | 'ai_generated' | 'teacher';
 }
 
 // ─── CAPS compliance (optional snapshot stored alongside paper) ──────────────
@@ -118,6 +123,143 @@ export interface CapsComplianceReport {
 }
 
 // ─── Paper ───────────────────────────────────────────────────────────────────
+
+export const PAPER_ASSIGNMENT_MODES = ['digital', 'paper'] as const;
+export type PaperAssignmentMode = (typeof PAPER_ASSIGNMENT_MODES)[number];
+
+export interface PaperAssignment {
+  _id: string;
+  classId: string;
+  mode: PaperAssignmentMode;
+  releaseAt: string | null;
+  dueAt: string | null;
+  assignedBy: string;
+  assignedAt: string;
+}
+
+// ─── Student test-take + teacher review ────────────────────────────────────
+
+export type SubmissionStatus =
+  | 'not_started'
+  | 'in_progress'
+  | 'submitted'
+  | 'graded'
+  | 'published';
+
+export interface AssignedPaperSummary {
+  paperId: string;
+  assignmentId: string;
+  title: string;
+  subjectName: string;
+  gradeName: string;
+  term: number;
+  totalMarks: number;
+  duration: number;
+  mode: PaperAssignmentMode;
+  releaseAt: string | null;
+  dueAt: string | null;
+  submissionStatus: SubmissionStatus;
+  submissionId: string | null;
+  submittedAt: string | null;
+}
+
+export interface StudentPaperOption {
+  label: string;
+  text: string;
+}
+
+export interface StudentPaperQuestion {
+  questionNumber: string;
+  questionText: string;
+  marks: number;
+  type: string;
+  options: StudentPaperOption[];
+  diagramSvgUrl: string | null;
+}
+
+export interface StudentPaperSection {
+  title: string;
+  instructions: string;
+  questions: StudentPaperQuestion[];
+}
+
+export interface StudentPaperView {
+  paperId: string;
+  title: string;
+  subjectName: string;
+  gradeName: string;
+  term: number;
+  totalMarks: number;
+  duration: number;
+  paperVersion: number;
+  sections: StudentPaperSection[];
+}
+
+export interface SubmissionAnswer {
+  questionNumber: string;
+  answer: string;
+  selectedOption: string | null;
+}
+
+export interface SubmissionResult {
+  submissionId: string;
+  status: Exclude<SubmissionStatus, 'not_started'>;
+  answers: SubmissionAnswer[];
+  markingId: string | null;
+}
+
+export interface SubmissionSummary {
+  submissionId: string;
+  paperId: string;
+  classId: string;
+  studentId: string;
+  studentName: string;
+  status: Exclude<SubmissionStatus, 'not_started'>;
+  submittedAt: string | null;
+  markingId: string | null;
+}
+
+// ─── Per-paper marking workspace (roster) ─────────────────────────────────
+
+export type PaperMarkingStatus =
+  | 'processing'
+  | 'completed'
+  | 'needs_review'
+  | 'failed'
+  | 'published';
+
+export interface RosterStudent {
+  studentId: string;
+  studentName: string;
+  admissionNumber: string;
+  submission: {
+    submissionId: string;
+    status: Exclude<SubmissionStatus, 'not_started'>;
+    submittedAt: string | null;
+  } | null;
+  marking: {
+    markingId: string;
+    status: PaperMarkingStatus;
+    totalMarks: number;
+    maxMarks: number;
+    percentage: number;
+    paperMismatch: boolean;
+  } | null;
+}
+
+export interface RosterClass {
+  classId: string;
+  className: string;
+  mode: PaperAssignmentMode;
+  studentCount: number;
+  students: RosterStudent[];
+}
+
+export interface PaperMarkingRoster {
+  paperId: string;
+  paperType: 'assessment';
+  classes: RosterClass[];
+}
 
 export interface Paper {
   _id: string;
@@ -139,6 +281,7 @@ export interface Paper {
   status: PaperStatus;
   createdBy: string | PopulatedCreator;
   capsCompliance?: CapsComplianceReport | null;
+  assignments?: PaperAssignment[];
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -190,6 +333,20 @@ export interface AIPaperSectionConfig {
   sectionMarks: number;
 }
 
+export const PAPER_QUESTION_TYPES = [
+  'mcq', 'short_answer', 'structured', 'essay', 'calculation',
+] as const;
+export type PaperQuestionType = (typeof PAPER_QUESTION_TYPES)[number];
+
+export interface QuestionTypeWeight {
+  type: PaperQuestionType;
+  weight: number;
+}
+
+export interface PaperDefaults {
+  questionTypeMix: QuestionTypeWeight[];
+}
+
 export interface GeneratePaperRequest {
   schoolId?: string;
   subjectId: string;
@@ -204,6 +361,13 @@ export interface GeneratePaperRequest {
   title: string;
   sectionConfig: AIPaperSectionConfig[];
   instructions?: string;
+  // Optional teacher-controlled question structure. Each entry weights one
+  // paper question type as a percentage of total marks; sum must be ~100.
+  questionTypeMix?: QuestionTypeWeight[];
+  // Opt-in: seed the paper from previously-saved bank questions, then
+  // AI-fill the deficit. Default false → every question is freshly authored
+  // and saved as a draft (teacher commits to bank explicitly later).
+  useExistingBank?: boolean;
 }
 
 // ─── Manual create / mutation inputs ─────────────────────────────────────────

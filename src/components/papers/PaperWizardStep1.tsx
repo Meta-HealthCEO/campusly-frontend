@@ -4,9 +4,11 @@ import { useMemo } from 'react';
 import { useTeacherSubjects } from '@/hooks/useTeacherSubjects';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import { useCurriculumTopics, type CurriculumTopic } from '@/hooks/useCurriculumTopics';
+import { resolveId } from '@/lib/api-helpers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { CurriculumTopicSelectionList } from '@/components/curriculum/CurriculumTopicSelectionList';
 import {
   Select,
   SelectContent,
@@ -14,26 +16,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 import type { PaperType, PaperDifficulty } from '@/types/papers';
 import type { SchoolClass, Subject } from '@/types';
 
-const PAPER_TYPES: PaperType[] = [
-  'class_test',
-  'assignment',
-  'mid_year',
-  'trial',
-  'final',
-  'custom',
+const PAPER_TYPES: Array<{
+  value: PaperType;
+  label: string;
+  desc: string;
+  marks: number;
+  duration: number;
+}> = [
+  { value: 'class_test', label: 'Class Test', desc: 'Focused term assessment', marks: 50, duration: 60 },
+  { value: 'assignment', label: 'Assignment', desc: 'Take-home or research task', marks: 40, duration: 60 },
+  { value: 'mid_year', label: 'Mid-Year Exam', desc: 'Broader exam coverage', marks: 100, duration: 120 },
+  { value: 'trial', label: 'Trial Exam', desc: 'High-stakes exam practice', marks: 150, duration: 180 },
+  { value: 'final', label: 'Final Exam', desc: 'End-of-year assessment', marks: 150, duration: 180 },
+  { value: 'custom', label: 'Custom', desc: 'Teacher-defined paper', marks: 50, duration: 60 },
 ];
 
-const PAPER_TYPE_LABELS: Record<PaperType, string> = {
-  class_test: 'Class Test',
-  assignment: 'Assignment',
-  mid_year: 'Mid-Year Exam',
-  trial: 'Trial Exam',
-  final: 'Final Exam',
-  custom: 'Custom',
-};
+const LENGTH_PRESETS = [
+  { label: 'Quick', marks: 30, duration: 30 },
+  { label: 'Standard', marks: 50, duration: 60 },
+  { label: 'Full', marks: 100, duration: 120 },
+];
+
+const DIFFICULTY_OPTIONS: Array<{ value: PaperDifficulty; label: string; dot: string }> = [
+  { value: 'easy', label: 'Foundation', dot: 'bg-emerald-500' },
+  { value: 'medium', label: 'Standard', dot: 'bg-amber-500' },
+  { value: 'hard', label: 'Advanced', dot: 'bg-foreground' },
+];
 
 export interface PaperMetadataState {
   title: string;
@@ -55,8 +67,29 @@ interface Props {
   onNext: () => void;
 }
 
+type ClassWithGrade = Omit<SchoolClass, 'gradeId'> & {
+  gradeId?: string | { id?: string; _id?: string; name?: string };
+  gradeName?: string;
+};
+
+type EntityWithId = {
+  id?: string;
+  _id?: string;
+};
+
+function entityId(entity: EntityWithId): string {
+  return entity.id ?? entity._id ?? '';
+}
+
+function classGradeName(cls: ClassWithGrade): string {
+  if (cls.grade?.name) return cls.grade.name;
+  if (cls.gradeName) return cls.gradeName;
+  if (typeof cls.gradeId === 'object' && cls.gradeId?.name) return cls.gradeId.name;
+  return 'Grade';
+}
+
 export function PaperWizardStep1({ value, onChange, onCancel, onNext }: Props) {
-  const { subjects } = useTeacherSubjects();
+  const { subjects } = useTeacherSubjects(value.gradeId || undefined);
   const { classes } = useTeacherClasses();
   const { topics, loading: topicsLoading } = useCurriculumTopics({
     subjectId: value.subjectId,
@@ -65,66 +98,79 @@ export function PaperWizardStep1({ value, onChange, onCancel, onNext }: Props) {
 
   const gradeOptions = useMemo(() => {
     const map = new Map<string, string>();
-    for (const c of classes as SchoolClass[]) {
-      const gid = c.gradeId;
-      const gname = c.grade?.name ?? c.gradeName ?? 'Grade';
-      if (gid && !map.has(gid)) map.set(gid, gname);
+    for (const cls of classes as ClassWithGrade[]) {
+      const id = resolveId(cls.gradeId);
+      if (id && !map.has(id)) map.set(id, classGradeName(cls));
     }
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [classes]);
 
+  const subjectOptions = useMemo(() => (
+    (subjects as Array<Subject & EntityWithId>)
+      .map((subject) => ({
+        id: entityId(subject),
+        name: subject.name,
+      }))
+      .filter((subject) => subject.id)
+  ), [subjects]);
+
+  const selectedGradeName = gradeOptions.find((grade) => grade.id === value.gradeId)?.name;
+  const selectedSubjectName = subjectOptions.find((subject) => subject.id === value.subjectId)?.name;
+  const selectedPaperType = PAPER_TYPES.find((type) => type.value === value.paperType);
+  const topicOptions = useMemo(() => (
+    topics.map((topic: CurriculumTopic) => ({
+      id: topic._id,
+      title: topic.title,
+      code: topic.code,
+    }))
+  ), [topics]);
   const canAdvance = !!(
-    value.title.trim() &&
     value.subjectId &&
     value.gradeId &&
     value.topicIds.length > 0 &&
     value.totalMarks > 0 &&
-    value.duration > 0
+    value.totalMarks <= 500 &&
+    value.duration > 0 &&
+    value.duration <= 480 &&
+    value.year >= 2000 &&
+    value.year <= 2100
   );
 
-  const toggleTopic = (id: string): void => {
-    const next = value.topicIds.includes(id)
-      ? value.topicIds.filter((t: string) => t !== id)
-      : [...value.topicIds, id];
-    onChange({ topicIds: next });
+  const choosePaperType = (paperType: (typeof PAPER_TYPES)[number]): void => {
+    onChange({
+      paperType: paperType.value,
+      totalMarks: paperType.marks,
+      duration: paperType.duration,
+    });
   };
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Step 1 of 2 — Metadata</h2>
+    <div className="space-y-6">
+      <div className="space-y-1">
+        <h2 className="text-lg font-semibold">Paper Setup</h2>
+        <p className="text-sm text-muted-foreground">
+          Choose the CAPS coverage, then let AI build the paper and memo.
+        </p>
+      </div>
 
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-        <div className="sm:col-span-2 space-y-2">
-          <Label htmlFor="paper-title">
-            Title <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="paper-title"
-            value={value.title}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              onChange({ title: e.target.value })
-            }
-            placeholder="e.g. Term 2 Maths Test"
-          />
-        </div>
-
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-2">
           <Label>
-            Subject <span className="text-destructive">*</span>
+            Grade <span className="text-destructive">*</span>
           </Label>
           <Select
-            value={value.subjectId}
-            onValueChange={(val: unknown) =>
-              onChange({ subjectId: val as string, topicIds: [] })
+            value={value.gradeId || null}
+            onValueChange={(nextValue: string | null) =>
+              onChange({ gradeId: nextValue ?? '', subjectId: '', topicIds: [] })
             }
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select subject" />
+            <SelectTrigger className="h-11 w-full">
+              <SelectValue placeholder="Select grade">{selectedGradeName}</SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {(subjects as Subject[]).map((s: Subject) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.name}
+              {gradeOptions.map((grade: { id: string; name: string }) => (
+                <SelectItem key={grade.id} value={grade.id}>
+                  {grade.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -133,21 +179,22 @@ export function PaperWizardStep1({ value, onChange, onCancel, onNext }: Props) {
 
         <div className="space-y-2">
           <Label>
-            Grade <span className="text-destructive">*</span>
+            Subject <span className="text-destructive">*</span>
           </Label>
           <Select
-            value={value.gradeId}
-            onValueChange={(val: unknown) =>
-              onChange({ gradeId: val as string, topicIds: [] })
+            value={value.subjectId || null}
+            onValueChange={(nextValue: string | null) =>
+              onChange({ subjectId: nextValue ?? '', topicIds: [] })
             }
+            disabled={!value.gradeId}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select grade" />
+            <SelectTrigger className="h-11 w-full">
+              <SelectValue placeholder="Select subject">{selectedSubjectName}</SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {gradeOptions.map((g: { id: string; name: string }) => (
-                <SelectItem key={g.id} value={g.id}>
-                  {g.name}
+              {subjectOptions.map((subject: { id: string; name: string }) => (
+                <SelectItem key={subject.id} value={subject.id}>
+                  {subject.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -158,160 +205,183 @@ export function PaperWizardStep1({ value, onChange, onCancel, onNext }: Props) {
           <Label>
             Term <span className="text-destructive">*</span>
           </Label>
-          <Select
-            value={String(value.term)}
-            onValueChange={(val: unknown) => onChange({ term: Number(val as string) })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[1, 2, 3, 4].map((t: number) => (
-                <SelectItem key={t} value={String(t)}>
-                  Term {t}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="paper-year">Year</Label>
-          <Input
-            id="paper-year"
-            type="number"
-            min={2000}
-            max={2100}
-            value={value.year}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              onChange({ year: Number(e.target.value) })
-            }
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Paper Type</Label>
-          <Select
-            value={value.paperType}
-            onValueChange={(val: unknown) => onChange({ paperType: val as PaperType })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PAPER_TYPES.map((t: PaperType) => (
-                <SelectItem key={t} value={t}>
-                  {PAPER_TYPE_LABELS[t]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="paper-duration">Duration (min)</Label>
-          <Input
-            id="paper-duration"
-            type="number"
-            min={5}
-            max={480}
-            value={value.duration}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              onChange({ duration: Number(e.target.value) })
-            }
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="paper-marks">Total Marks</Label>
-          <Input
-            id="paper-marks"
-            type="number"
-            min={1}
-            max={500}
-            value={value.totalMarks}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              onChange({ totalMarks: Number(e.target.value) })
-            }
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Difficulty</Label>
-          <Select
-            value={value.difficulty}
-            onValueChange={(val: unknown) => onChange({ difficulty: val as PaperDifficulty })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {(['easy', 'medium', 'hard'] as PaperDifficulty[]).map((d: PaperDifficulty) => (
-                <SelectItem key={d} value={d}>
-                  {d.charAt(0).toUpperCase() + d.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="sm:col-span-2 space-y-2">
-          <Label>
-            CAPS Topics <span className="text-destructive">*</span>
-          </Label>
-          {!value.subjectId || !value.gradeId ? (
-            <p className="text-sm text-muted-foreground">
-              Select subject and grade first.
-            </p>
-          ) : topicsLoading ? (
-            <p className="text-sm text-muted-foreground">Loading topics...</p>
-          ) : topics.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No CAPS topics for this subject and grade.
-            </p>
-          ) : (
-            <div className="max-h-48 overflow-y-auto border rounded-md">
-              {topics.map((t: CurriculumTopic) => {
-                const checked = value.topicIds.includes(t._id);
-                return (
-                  <label
-                    key={t._id}
-                    className="flex items-start gap-2 p-2 cursor-pointer hover:bg-muted"
-                  >
-                    <input
-                      type="checkbox"
-                      className="mt-1"
-                      checked={checked}
-                      onChange={() => toggleTopic(t._id)}
-                    />
-                    <div className="text-sm min-w-0 flex-1">
-                      <div className="font-medium truncate">{t.title}</div>
-                      {t.code && (
-                        <div className="text-xs text-muted-foreground truncate">
-                          {t.code}
-                        </div>
-                      )}
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
-          )}
-          {value.topicIds.length > 0 && (
-            <p className="text-xs text-muted-foreground">
-              {value.topicIds.length} topic
-              {value.topicIds.length === 1 ? '' : 's'} selected
-            </p>
-          )}
+          <div className="grid grid-cols-4 gap-2">
+            {[1, 2, 3, 4].map((term) => (
+              <button
+                key={term}
+                type="button"
+                onClick={() => onChange({ term, topicIds: [] })}
+                className={cn(
+                  'h-11 rounded-lg border text-sm font-medium transition-colors',
+                  value.term === term
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-input bg-background hover:bg-muted',
+                )}
+              >
+                {term}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 pt-4">
+      <section className="space-y-3">
+        <Label>
+          CAPS Topics <span className="text-destructive">*</span>
+        </Label>
+        {!value.subjectId || !value.gradeId ? (
+          <div className="rounded-lg border bg-muted/30 px-4 py-5 text-sm text-muted-foreground">
+            Select a grade and subject.
+          </div>
+        ) : (
+          <CurriculumTopicSelectionList
+            topics={topicOptions}
+            selectedIds={value.topicIds}
+            onSelectedIdsChange={(topicIds) => onChange({ topicIds })}
+            multiple
+            loading={topicsLoading}
+            emptyText="No CAPS topics found for this selection."
+            searchPlaceholder="Search CAPS topics..."
+          />
+        )}
+      </section>
+
+      <section className="space-y-3">
+        <Label>Paper Type</Label>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {PAPER_TYPES.map((paperType) => (
+            <button
+              key={paperType.value}
+              type="button"
+              onClick={() => choosePaperType(paperType)}
+              className={cn(
+                'rounded-lg border p-3 text-left transition-colors',
+                value.paperType === paperType.value
+                  ? 'border-primary bg-primary/5'
+                  : 'border-input hover:bg-muted',
+              )}
+            >
+              <span className="block text-sm font-semibold">{paperType.label}</span>
+              <span className="mt-1 block text-xs text-muted-foreground">{paperType.desc}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <section className="space-y-3">
+          <Label>Length</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {LENGTH_PRESETS.map((preset) => {
+              const active = value.totalMarks === preset.marks && value.duration === preset.duration;
+              return (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => onChange({ totalMarks: preset.marks, duration: preset.duration })}
+                  className={cn(
+                    'rounded-lg border px-3 py-2 text-center transition-colors',
+                    active ? 'border-primary bg-primary/5' : 'border-input hover:bg-muted',
+                  )}
+                >
+                  <span className="block text-sm font-medium">{preset.label}</span>
+                  <span className="text-xs text-muted-foreground">{preset.marks} marks</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <Label>Difficulty</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {DIFFICULTY_OPTIONS.map((difficulty) => (
+              <button
+                key={difficulty.value}
+                type="button"
+                onClick={() => onChange({ difficulty: difficulty.value })}
+                className={cn(
+                  'rounded-lg border px-3 py-2 text-center transition-colors',
+                  value.difficulty === difficulty.value
+                    ? 'border-primary bg-primary/5'
+                    : 'border-input hover:bg-muted',
+                )}
+              >
+                <span className="inline-flex items-center justify-center gap-1.5 text-sm font-medium">
+                  <span className={cn('h-2 w-2 rounded-full', difficulty.dot)} />
+                  {difficulty.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <details className="rounded-lg border px-4 py-3">
+        <summary className="cursor-pointer text-sm font-medium">Advanced details</summary>
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div className="space-y-2 sm:col-span-3">
+            <Label htmlFor="paper-title">Paper name</Label>
+            <Input
+              id="paper-title"
+              value={value.title}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                onChange({ title: event.target.value })
+              }
+              placeholder={`${selectedGradeName ?? 'Grade'} ${selectedPaperType?.label ?? 'Paper'} Term ${value.term}`}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="paper-year">Year</Label>
+            <Input
+              id="paper-year"
+              type="number"
+              min={2000}
+              max={2100}
+              value={value.year}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                onChange({ year: Number(event.target.value) })
+              }
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="paper-duration">Duration</Label>
+            <Input
+              id="paper-duration"
+              type="number"
+              min={5}
+              max={480}
+              value={value.duration}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                onChange({ duration: Number(event.target.value) })
+              }
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="paper-marks">Total Marks</Label>
+            <Input
+              id="paper-marks"
+              type="number"
+              min={1}
+              max={500}
+              value={value.totalMarks}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                onChange({ totalMarks: Number(event.target.value) })
+              }
+            />
+          </div>
+        </div>
+      </details>
+
+      <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-between">
         <Button variant="outline" onClick={onCancel}>
           Cancel
         </Button>
         <Button onClick={onNext} disabled={!canAdvance}>
-          Next: Configure
+          Next: Generate
         </Button>
       </div>
     </div>

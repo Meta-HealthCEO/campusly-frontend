@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -50,12 +50,13 @@ export function PublishToGradebookDialog({
   const [assessmentId, setAssessmentId] = useState('');
   const [comment, setComment] = useState('');
 
-  useEffect(() => {
-    if (open) {
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
       setAssessmentId('');
       setComment('');
     }
-  }, [open]);
+    onOpenChange(nextOpen);
+  };
 
   const handleSubmit = async () => {
     if (!assessmentId) return;
@@ -66,7 +67,7 @@ export function PublishToGradebookDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="flex flex-col max-h-[85vh]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -86,7 +87,7 @@ export function PublishToGradebookDialog({
               </div>
             ) : assessments.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No assessments found. Create one in Curriculum → Assessments first.
+                No assessments found. Create and finalise a paper first.
               </p>
             ) : (
               <Select onValueChange={(v: string | null) => { if (v) setAssessmentId(v); }}>

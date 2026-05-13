@@ -12,6 +12,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  getPaperQuestionAnswer,
+  getPaperQuestionGuideline,
+  getPaperQuestionOptions,
+  getPaperQuestionText,
+  getPaperQuestionType,
+} from '@/lib/paper-question';
 import type { PaperQuestion } from '@/types/papers';
 
 interface Props {
@@ -29,27 +36,41 @@ export function QuestionEditDialog({
   open,
   onClose,
 }: Props) {
-  const { updateQuestion } = useTeacherPapers();
+  const { updateQuestion } = useTeacherPapers(false);
   const [questionText, setQuestionText] = useState<string>(
-    question.questionText ?? '',
+    getPaperQuestionText(question),
   );
   const [marks, setMarks] = useState<number>(question.marks);
   const [modelAnswer, setModelAnswer] = useState<string>(
-    question.modelAnswer ?? '',
+    getPaperQuestionAnswer(question),
   );
   const [markingGuideline, setMarkingGuideline] = useState<string>(
-    question.markingGuideline ?? '',
+    getPaperQuestionGuideline(question),
   );
+  const options = getPaperQuestionOptions(question);
+  const questionType = getPaperQuestionType(question);
   const [saving, setSaving] = useState(false);
+  const isInlineQuestion = question.questionId === null;
+  const canSave = marks > 0 && (!isInlineQuestion || questionText.trim().length > 0);
 
   const handleSave = async (): Promise<void> => {
     setSaving(true);
     try {
-      await updateQuestion(paperId, sectionIdx, question.position, {
-        questionText,
+      const patch: {
+        questionText?: string;
+        marks: number;
+        modelAnswer?: string;
+        markingGuideline?: string;
+      } = {
         marks,
-        modelAnswer,
-        markingGuideline,
+        modelAnswer: modelAnswer.trim(),
+        markingGuideline: markingGuideline.trim(),
+      };
+      if (questionText.trim() || isInlineQuestion) {
+        patch.questionText = questionText.trim();
+      }
+      await updateQuestion(paperId, sectionIdx, question.position, {
+        ...patch,
       });
       await onClose();
     } finally {
@@ -92,6 +113,31 @@ export function QuestionEditDialog({
               className="w-full sm:w-32"
             />
           </div>
+          {options.length > 0 && (
+            <div className="space-y-2">
+              <Label>
+                {questionType === 'true_false' ? 'Answer Options' : 'Multiple Choice Options'}
+              </Label>
+              <div className="space-y-2">
+                {options.map((option) => (
+                  <div
+                    key={`${option.label}-${option.text}`}
+                    className="flex items-start gap-2 rounded-md border bg-muted/20 px-3 py-2 text-sm"
+                  >
+                    <span className="font-semibold">{option.label}.</span>
+                    <span className="min-w-0 flex-1 whitespace-pre-wrap break-words">
+                      {option.text}
+                    </span>
+                    {option.isCorrect && (
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                        Correct
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="space-y-1">
             <Label htmlFor="qe-model">Model Answer</Label>
             <Textarea
@@ -119,7 +165,7 @@ export function QuestionEditDialog({
           >
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
+          <Button onClick={handleSave} disabled={saving || !canSave}>
             {saving ? 'Saving...' : 'Save'}
           </Button>
         </div>

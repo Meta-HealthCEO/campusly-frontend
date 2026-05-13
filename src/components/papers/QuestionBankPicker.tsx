@@ -13,6 +13,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Props {
   paperId: string;
@@ -32,6 +34,9 @@ export function QuestionBankPicker({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [marks, setMarks] = useState(2);
+  const [customQuestionText, setCustomQuestionText] = useState('');
+  const [customModelAnswer, setCustomModelAnswer] = useState('');
+  const [customMarkingGuideline, setCustomMarkingGuideline] = useState('');
   const [busy, setBusy] = useState(false);
 
   const { questions, loading } = useQuestionBankLibrary({
@@ -39,7 +44,7 @@ export function QuestionBankPicker({
     gradeId,
     q: search,
   });
-  const { addQuestion } = useTeacherPapers();
+  const { addQuestion } = useTeacherPapers(false);
 
   const handleAdd = async (questionId: string): Promise<void> => {
     setBusy(true);
@@ -51,6 +56,29 @@ export function QuestionBankPicker({
       });
       if (result) {
         await onAdded();
+        setOpen(false);
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleAddCustom = async (): Promise<void> => {
+    if (!customQuestionText.trim()) return;
+    setBusy(true);
+    try {
+      const result = await addQuestion(paperId, sectionIdx, {
+        questionText: customQuestionText.trim(),
+        marks,
+        position: 0,
+        modelAnswer: customModelAnswer.trim(),
+        markingGuideline: customMarkingGuideline.trim(),
+      });
+      if (result) {
+        await onAdded();
+        setCustomQuestionText('');
+        setCustomModelAnswer('');
+        setCustomMarkingGuideline('');
         setOpen(false);
       }
     } finally {
@@ -113,6 +141,58 @@ export function QuestionBankPicker({
                 </Button>
               </div>
             ))}
+          </div>
+          <div className="border-t pt-4 space-y-3">
+            <p className="text-sm font-medium">Add Custom Question</p>
+            <div className="space-y-1">
+              <Label htmlFor="custom-question-text">Question</Label>
+              <Textarea
+                id="custom-question-text"
+                value={customQuestionText}
+                onChange={(e) => setCustomQuestionText(e.target.value)}
+                rows={4}
+                placeholder="Type the question exactly as it should appear on the paper."
+              />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-[96px_1fr]">
+              <div className="space-y-1">
+                <Label htmlFor="custom-question-marks">Marks</Label>
+                <Input
+                  id="custom-question-marks"
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={marks}
+                  onChange={(e) => setMarks(Number(e.target.value))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="custom-question-answer">Model Answer</Label>
+                <Input
+                  id="custom-question-answer"
+                  value={customModelAnswer}
+                  onChange={(e) => setCustomModelAnswer(e.target.value)}
+                  placeholder="Optional"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="custom-question-guideline">Marking Guideline</Label>
+              <Textarea
+                id="custom-question-guideline"
+                value={customMarkingGuideline}
+                onChange={(e) => setCustomMarkingGuideline(e.target.value)}
+                rows={2}
+                placeholder="Optional"
+              />
+            </div>
+            <Button
+              type="button"
+              onClick={() => void handleAddCustom()}
+              disabled={busy || !customQuestionText.trim() || marks < 1}
+            >
+              Add Custom Question
+            </Button>
           </div>
         </div>
       </DialogContent>

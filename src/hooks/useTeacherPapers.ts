@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import apiClient from '@/lib/api-client';
-import { unwrapResponse, unwrapList } from '@/lib/api-helpers';
+import { extractErrorMessage, unwrapResponse } from '@/lib/api-helpers';
 import { toast } from 'sonner';
 import type {
   Paper,
@@ -20,11 +20,25 @@ interface PaperFilters {
   term?: number;
   year?: number;
   status?: string;
+  paperType?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+interface PaperListResponse {
+  papers: Paper[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 interface UseTeacherPapersResult {
   papers: Paper[];
   loading: boolean;
+  total: number;
+  page: number;
+  limit: number;
   fetchPapers: (overrideFilters?: PaperFilters) => Promise<void>;
   filters: PaperFilters;
   setFilters: (f: PaperFilters) => void;
@@ -66,10 +80,13 @@ interface UseTeacherPapersResult {
   deletePaper: (id: string) => Promise<boolean>;
 }
 
-export function useTeacherPapers(): UseTeacherPapersResult {
+export function useTeacherPapers(autoFetch = true): UseTeacherPapersResult {
   const [papers, setPapers] = useState<Paper[]>([]);
   const [loading, setLoading] = useState(false);
-  const [filters, setFiltersState] = useState<PaperFilters>({});
+  const [filters, setFiltersState] = useState<PaperFilters>({ page: 1, limit: 100 });
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(100);
 
   const fetchPapers = useCallback(async (
     overrideFilters?: PaperFilters,
@@ -78,29 +95,42 @@ export function useTeacherPapers(): UseTeacherPapersResult {
     try {
       const params = overrideFilters ?? filters;
       const res = await apiClient.get(API_PREFIX, { params });
-      setPapers(unwrapList<Paper>(res));
+      const data = unwrapResponse<PaperListResponse | Paper[]>(res);
+      if (Array.isArray(data)) {
+        setPapers(data);
+        setTotal(data.length);
+        setPage(1);
+        setLimit(data.length || 100);
+      } else {
+        setPapers(data.papers ?? []);
+        setTotal(data.total ?? 0);
+        setPage(data.page ?? 1);
+        setLimit(data.limit ?? 100);
+      }
     } catch (err: unknown) {
-      console.error('Failed to load papers', err);
+      const msg = extractErrorMessage(err, 'Failed to load papers');
+      toast.error(msg);
       setPapers([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
   }, [filters]);
 
   useEffect(() => {
+    if (!autoFetch) return;
     void fetchPapers();
-  }, [fetchPapers]);
+  }, [autoFetch, fetchPapers]);
 
   const setFilters = useCallback((f: PaperFilters): void => {
-    setFiltersState(f);
+    setFiltersState({ page: 1, limit: 100, ...f });
   }, []);
 
   const getPaperById = useCallback(async (id: string): Promise<Paper | null> => {
     try {
       const res = await apiClient.get(`${API_PREFIX}/${id}`);
       return unwrapResponse<Paper>(res);
-    } catch (err: unknown) {
-      console.error(err);
+    } catch {
       return null;
     }
   }, []);
@@ -109,8 +139,7 @@ export function useTeacherPapers(): UseTeacherPapersResult {
     try {
       const res = await apiClient.get(`${API_PREFIX}/${id}/memo`);
       return unwrapResponse<PaperMemo>(res);
-    } catch (err: unknown) {
-      console.error(err);
+    } catch {
       return null;
     }
   }, []);
@@ -125,7 +154,7 @@ export function useTeacherPapers(): UseTeacherPapersResult {
       toast.success('Paper generated');
       return { paperId };
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'AI generation failed');
+      toast.error(extractErrorMessage(err, 'AI generation failed'));
       return null;
     }
   }, []);
@@ -139,7 +168,7 @@ export function useTeacherPapers(): UseTeacherPapersResult {
       toast.success('Paper created');
       return paper;
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Create failed');
+      toast.error(extractErrorMessage(err, 'Create failed'));
       return null;
     }
   }, []);
@@ -152,7 +181,7 @@ export function useTeacherPapers(): UseTeacherPapersResult {
       const res = await apiClient.put(`${API_PREFIX}/${id}`, patch);
       return unwrapResponse<Paper>(res);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Update failed');
+      toast.error(extractErrorMessage(err, 'Update failed'));
       return null;
     }
   }, []);
@@ -169,7 +198,7 @@ export function useTeacherPapers(): UseTeacherPapersResult {
       );
       return unwrapResponse<Paper>(res);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Add failed');
+      toast.error(extractErrorMessage(err, 'Add failed'));
       return null;
     }
   }, []);
@@ -187,7 +216,7 @@ export function useTeacherPapers(): UseTeacherPapersResult {
       );
       return unwrapResponse<Paper>(res);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Update failed');
+      toast.error(extractErrorMessage(err, 'Update failed'));
       return null;
     }
   }, []);
@@ -203,7 +232,7 @@ export function useTeacherPapers(): UseTeacherPapersResult {
       );
       return unwrapResponse<Paper>(res);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Regenerate failed');
+      toast.error(extractErrorMessage(err, 'Regenerate failed'));
       return null;
     }
   }, []);
@@ -219,7 +248,7 @@ export function useTeacherPapers(): UseTeacherPapersResult {
       );
       return true;
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Delete failed');
+      toast.error(extractErrorMessage(err, 'Delete failed'));
       return false;
     }
   }, []);
@@ -232,7 +261,7 @@ export function useTeacherPapers(): UseTeacherPapersResult {
       await apiClient.put(`${API_PREFIX}/${paperId}/memo`, { sections });
       return true;
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Memo update failed');
+      toast.error(extractErrorMessage(err, 'Memo update failed'));
       return false;
     }
   }, []);
@@ -244,7 +273,7 @@ export function useTeacherPapers(): UseTeacherPapersResult {
       toast.success('Paper finalised');
       return paper;
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Finalise failed');
+      toast.error(extractErrorMessage(err, 'Finalise failed'));
       return null;
     }
   }, []);
@@ -263,9 +292,9 @@ export function useTeacherPapers(): UseTeacherPapersResult {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      window.URL.revokeObjectURL(url);
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Download failed');
+      toast.error(extractErrorMessage(err, 'Download failed'));
     }
   }, []);
 
@@ -283,9 +312,9 @@ export function useTeacherPapers(): UseTeacherPapersResult {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      window.URL.revokeObjectURL(url);
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Download failed');
+      toast.error(extractErrorMessage(err, 'Download failed'));
     }
   }, []);
 
@@ -293,9 +322,10 @@ export function useTeacherPapers(): UseTeacherPapersResult {
     try {
       await apiClient.delete(`${API_PREFIX}/${id}`);
       await fetchPapers();
+      toast.success('Paper deleted');
       return true;
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Delete failed');
+      toast.error(extractErrorMessage(err, 'Delete failed'));
       return false;
     }
   }, [fetchPapers]);
@@ -303,6 +333,9 @@ export function useTeacherPapers(): UseTeacherPapersResult {
   return {
     papers,
     loading,
+    total,
+    page,
+    limit,
     fetchPapers,
     filters,
     setFilters,

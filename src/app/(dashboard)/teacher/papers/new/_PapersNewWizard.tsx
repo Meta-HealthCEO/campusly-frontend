@@ -1,80 +1,40 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, ChevronLeft, ChevronRight, FileText, Loader2 } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { WizardFooter } from '@/components/shared/WizardFooter';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { CurriculumTreeBrowser } from '@/components/curriculum/CurriculumTreeBrowser';
+import { CurriculumTreeBrowser, type CurriculumTreeBrowserSelectContext } from '@/components/curriculum/CurriculumTreeBrowser';
 import { NodePicker } from '@/components/curriculum/NodePicker';
-import { cn } from '@/lib/utils';
 import { extractErrorMessage } from '@/lib/api-helpers';
+import { displayNodeTitle } from '@/lib/curriculum-display';
 import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { useCurriculumPreparation, extractCurriculumContext, contextsMatch } from '@/hooks/useCurriculumPreparation';
 import { useTeacherPapers } from '@/hooks/useTeacherPapers';
+import { useSubjectPaperDefaults } from '@/hooks/useSubjectPaperDefaults';
 import {
   PAPER_TYPES, PAPER_DIFFICULTIES, buildPaperSections, paperTypeLabel,
 } from './_constants';
+import { StepIndicator, ContextBadge } from './_indicators';
+import { QuestionMixEditor, DEFAULT_QUESTION_MIX } from './_QuestionMixEditor';
 import type { CurriculumNodeItem } from '@/types';
-import type { PaperDifficulty, PaperType } from '@/types/papers';
-import type { CurriculumContextStatus } from '@/hooks/useCurriculumPreparation';
-import { CheckCircle2, Loader2 as Spin } from 'lucide-react';
-
-// ─── Step indicator ────────────────────────────────────────────────────────
-
-const STEPS = [
-  { number: 1, label: 'Topics' },
-  { number: 2, label: 'Details' },
-  { number: 3, label: 'Generate' },
-];
-
-function StepIndicator({ current }: { current: number }) {
-  return (
-    <nav aria-label="New paper progress">
-      <ol className="flex items-center justify-between gap-2">
-        {STEPS.map((step, index) => {
-          const complete = current > step.number;
-          const active = current === step.number;
-          return (
-            <li key={step.number} className="flex flex-1 items-center gap-2">
-              <div className="flex items-center gap-2">
-                <span className={cn('flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold', complete && 'bg-primary text-primary-foreground', active && 'bg-primary text-primary-foreground ring-4 ring-primary/20', !complete && !active && 'bg-muted text-muted-foreground')}>
-                  {complete ? <Check className="h-4 w-4" /> : step.number}
-                </span>
-                <span className={cn('hidden text-xs font-medium sm:inline', active ? 'text-foreground' : 'text-muted-foreground')}>{step.label}</span>
-              </div>
-              {index < STEPS.length - 1 && (
-                <div className={cn('hidden h-0.5 flex-1 rounded-full sm:block', complete ? 'bg-primary' : 'bg-muted')} />
-              )}
-            </li>
-          );
-        })}
-      </ol>
-    </nav>
-  );
-}
-
-// ─── Context status badge ──────────────────────────────────────────────────
-
-function ContextBadge({ status, error }: { status: CurriculumContextStatus; error: string | null }) {
-  if (status === 'ready') return <Badge variant="outline" className="gap-1 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="h-3.5 w-3.5" />Ready</Badge>;
-  if (status === 'preparing') return <Badge variant="outline" className="gap-1"><Spin className="h-3.5 w-3.5 animate-spin" />Preparing context</Badge>;
-  if (status === 'error') return <span className="text-sm text-destructive">{error ?? 'Missing subject, grade, or term context.'}</span>;
-  return null;
-}
+import type { PaperDifficulty, PaperType, QuestionTypeWeight } from '@/types/papers';
 
 // ─── Main wizard ───────────────────────────────────────────────────────────
 
 export function PapersNewWizard() {
   const router = useRouter();
-  const { frameworks, selectedFramework, searchNodes, loadNode } = useCurriculumStructure();
+  const {
+    frameworks, selectedFramework, searchNodes, loadNode, resolveAncestors,
+  } = useCurriculumStructure();
   const { generatePaperWithAI } = useTeacherPapers(false);
   const prep = useCurriculumPreparation();
 
@@ -88,6 +48,34 @@ export function PapersNewWizard() {
   const [paperYear, setPaperYear] = useState(new Date().getFullYear());
   const [instructions, setInstructions] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [questionMix, setQuestionMix] = useState<QuestionTypeWeight[]>(DEFAULT_QUESTION_MIX);
+  // Tracks whether the teacher has explicitly edited the mix in this wizard
+  // session — used to decide if we should prefill from subject defaults when
+  // a subject resolves later.
+  const [mixTouched, setMixTouched] = useState(false);
+  // Opt-in: pull from the teacher's curated Question Bank vs. generate
+  // every question fresh. Default OFF — fresh generations don't risk
+  // recycling questions the teacher hasn't committed to the bank yet.
+  const [useExistingBank, setUseExistingBank] = useState(false);
+
+  const subjectDefaults = useSubjectPaperDefaults(prep.subjectId || undefined);
+
+  // When the resolved subject has saved defaults, prefill the wizard with
+  // them — but only if the teacher hasn't edited the mix manually yet.
+  useEffect(() => {
+    if (mixTouched) return;
+    const saved = subjectDefaults.defaults?.questionTypeMix;
+    if (saved && saved.length > 0) setQuestionMix(saved);
+  }, [subjectDefaults.defaults, mixTouched]);
+
+  const handleMixChange = useCallback((next: QuestionTypeWeight[]) => {
+    setQuestionMix(next);
+    setMixTouched(true);
+  }, []);
+
+  const handleSaveMixAsDefault = useCallback(async () => {
+    await subjectDefaults.saveDefaults(questionMix);
+  }, [subjectDefaults, questionMix]);
 
   const selectedTopicIds = selectedNodes.map((n) => n.id);
   const selectedFrameworkMeta = frameworks.find((f) => f.id === selectedFramework);
@@ -102,8 +90,33 @@ export function PapersNewWizard() {
     prep.contextStatus === 'ready' &&
     Boolean(prep.subjectId && prep.gradeId && prep.term);
 
-  const handleTopicSelect = useCallback((node: CurriculumNodeItem) => {
-    const nextContext = extractCurriculumContext(node);
+  // Map of node.id → resolved ancestors. Populated as nodes are selected so
+  // we don't re-fetch when toggling the same node. Ancestors are how
+  // extractCurriculumContext finds subject/grade names — the leaf node's own
+  // `code` is unreliable for arbitrary imported curricula.
+  const [ancestorsByNode, setAncestorsByNode] = useState<Record<string, CurriculumNodeItem[]>>({});
+
+  const handleTopicSelect = useCallback(async (
+    node: CurriculumNodeItem,
+    ctx?: CurriculumTreeBrowserSelectContext,
+  ) => {
+    // CurriculumTreeBrowser fires onSelect TWICE per click: first synchronously
+    // with `ctx.ancestors = []` (a "snappy UI" hint), then again after its
+    // async resolveAncestors completes with the real chain. The snappy
+    // emission would race against our own async work and un-toggle a freshly
+    // selected node — swallow it. The search picker calls with ctx=undefined,
+    // which we still process (we resolve ancestors ourselves on that path).
+    if (ctx && (!ctx.ancestors || ctx.ancestors.length === 0)) return;
+
+    let ancestors = ctx?.ancestors ?? ancestorsByNode[node.id] ?? [];
+    if (ancestors.length === 0) {
+      ancestors = await resolveAncestors(node);
+    }
+    if (ancestors.length > 0) {
+      setAncestorsByNode((prev) => (prev[node.id] ? prev : { ...prev, [node.id]: ancestors }));
+    }
+
+    const nextContext = extractCurriculumContext(node, ancestors);
     if (!nextContext) {
       toast.error('Choose a CAPS topic or subtopic that includes subject, grade, and term.');
       return;
@@ -111,28 +124,37 @@ export function PapersNewWizard() {
     setSelectedNodes((prev) => {
       const alreadySelected = prev.some((item) => item.id === node.id);
       const next = alreadySelected ? prev.filter((item) => item.id !== node.id) : [...prev, node];
-      const primaryContext = prev[0] ? extractCurriculumContext(prev[0]) : nextContext;
+      const primaryAncestors = prev[0] ? ancestorsByNode[prev[0].id] ?? [] : ancestors;
+      const primaryContext = prev[0] ? extractCurriculumContext(prev[0], primaryAncestors) : nextContext;
       if (!alreadySelected && primaryContext && !contextsMatch(primaryContext, nextContext)) {
         toast.error('For one paper, choose topics from the same subject, grade, and term.');
         return prev;
       }
-      prep.apply(next[0] ?? null);
+      const primary = next[0] ?? null;
+      const primaryAncestorsForApply = primary ? (ancestorsByNode[primary.id] ?? ancestors) : undefined;
+      prep.apply(primary, primaryAncestorsForApply);
       return next;
     });
-  }, [prep]);
+  }, [prep, ancestorsByNode, resolveAncestors]);
 
   const handleRemoveNode = useCallback((nodeId: string) => {
     setSelectedNodes((prev) => {
       const next = prev.filter((item) => item.id !== nodeId);
-      prep.apply(next[0] ?? null);
+      const primary = next[0] ?? null;
+      const primaryAncestors = primary ? ancestorsByNode[primary.id] : undefined;
+      prep.apply(primary, primaryAncestors);
       return next;
     });
-  }, [prep]);
+  }, [prep, ancestorsByNode]);
 
   const handleGenerate = useCallback(async () => {
     if (!prep.subjectId || !prep.gradeId || !prep.term) return;
     setGenerating(true);
     try {
+      // Drop any zero-weight rows — the BE schema accepts 0% but the AI
+      // prompt is clearer without them. Skip the field entirely if the
+      // remaining mix is empty (preserves legacy "no type targeting").
+      const cleanedMix = questionMix.filter((m) => m.weight > 0);
       const generated = await generatePaperWithAI({
         subjectId: prep.subjectId,
         gradeId: prep.gradeId,
@@ -146,6 +168,8 @@ export function PapersNewWizard() {
         title: computedTitle,
         sectionConfig: buildPaperSections(paperMarks),
         instructions: instructions.trim() || undefined,
+        questionTypeMix: cleanedMix.length > 0 ? cleanedMix : undefined,
+        useExistingBank,
       });
       if (generated?.paperId) {
         toast.success('Paper generated successfully');
@@ -156,10 +180,25 @@ export function PapersNewWizard() {
     } finally {
       setGenerating(false);
     }
-  }, [prep.subjectId, prep.gradeId, prep.term, selectedTopicIds, paperYear, paperType, paperDuration, paperMarks, paperDifficulty, computedTitle, instructions, generatePaperWithAI, router]);
+  }, [prep.subjectId, prep.gradeId, prep.term, selectedTopicIds, paperYear, paperType, paperDuration, paperMarks, paperDifficulty, computedTitle, instructions, questionMix, useExistingBank, generatePaperWithAI, router]);
+
+  const stepHandlers = {
+    1: { onNext: () => setStep(2), nextDisabled: !canContinueFromTopics },
+    2: { onNext: () => setStep(3), nextDisabled: false, nextLabel: 'Review and Generate' },
+    3: {
+      onNext: () => void handleGenerate(),
+      nextDisabled: generating,
+      nextLoading: generating,
+      nextLabel: generating ? 'Generating…' : 'Generate Paper with AI',
+      isFinal: true,
+      nextIcon: generating ? undefined : <FileText className="ml-2 h-4 w-4" />,
+    },
+  } as const;
+
+  const current = stepHandlers[step as 1 | 2 | 3];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="space-y-6 pb-24">
       <StepIndicator current={step} />
 
       {/* ── Step 1: Topic picker (tree left, cart right) ─────────── */}
@@ -175,19 +214,34 @@ export function PapersNewWizard() {
             <ContextBadge status={prep.contextStatus} error={prep.contextError} />
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-3">
-            {/* Tree on the left — spans 2 of 3 cols on desktop */}
-            <Card className="lg:col-span-2">
+          {/* Fixed-width cart, flexible tree — at full screen width a 2:1
+              grid would leave the cart hundreds of pixels wider than the
+              ~10-item list needs. */}
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+            {/* Tree on the left */}
+            <Card>
               <CardContent className="space-y-4">
                 <Tabs defaultValue="browse">
                   <TabsList><TabsTrigger value="browse">Browse</TabsTrigger><TabsTrigger value="search">Search</TabsTrigger></TabsList>
                   <TabsContent value="browse" className="mt-3">
                     <div className="max-h-[64vh] min-h-96 overflow-y-auto rounded-md border p-1">
-                      <CurriculumTreeBrowser frameworkId={selectedFramework} selectedNodeId={prep.selectedNode?.id ?? null} selectedNodeIds={selectedNodes.map((n) => n.id)} onSelect={handleTopicSelect} />
+                      <CurriculumTreeBrowser
+                        frameworkId={selectedFramework}
+                        selectedNodeId={prep.selectedNode?.id ?? null}
+                        selectedNodeIds={selectedNodes.map((n) => n.id)}
+                        onSelect={(node, ctx) => void handleTopicSelect(node, ctx)}
+                      />
                     </div>
                   </TabsContent>
                   <TabsContent value="search" className="mt-3">
-                    <NodePicker frameworkId={selectedFramework} value={prep.selectedNode?.id ?? null} onChange={(_nodeId, node) => { if (node) handleTopicSelect(node); }} onSearch={searchNodes} onLoadNode={loadNode} placeholder="Search for a topic, subtopic, or assessment standard..." />
+                    <NodePicker
+                      frameworkId={selectedFramework}
+                      value={prep.selectedNode?.id ?? null}
+                      onChange={(_nodeId, node) => { if (node) void handleTopicSelect(node); }}
+                      onSearch={searchNodes}
+                      onLoadNode={loadNode}
+                      placeholder="Search for a topic, subtopic, or assessment standard..."
+                    />
                   </TabsContent>
                 </Tabs>
               </CardContent>
@@ -210,7 +264,7 @@ export function PapersNewWizard() {
                   <ul className="space-y-2">
                     {selectedNodes.map((node) => (
                       <li key={node.id} className="flex items-start justify-between gap-2 rounded-md border bg-primary/5 px-3 py-2">
-                        <span className="min-w-0 flex-1 text-sm leading-snug">{node.title}</span>
+                        <span className="min-w-0 flex-1 text-sm leading-snug">{displayNodeTitle(node)}</span>
                         <button
                           type="button"
                           className="shrink-0 text-xs text-muted-foreground hover:text-destructive"
@@ -232,14 +286,6 @@ export function PapersNewWizard() {
                     </p>
                   </div>
                 )}
-
-                <Button
-                  className="w-full gap-1"
-                  onClick={() => setStep(2)}
-                  disabled={!canContinueFromTopics}
-                >
-                  Paper details<ChevronRight className="h-4 w-4" />
-                </Button>
               </CardContent>
             </Card>
           </div>
@@ -298,13 +344,31 @@ export function PapersNewWizard() {
                 <Label>Special Instructions</Label>
                 <Textarea value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="Add any specific instructions, e.g. more exam-style questions, South African examples, simpler language." className="min-h-24" />
               </div>
+              <QuestionMixEditor
+                value={questionMix}
+                onChange={handleMixChange}
+                onSaveAsDefault={prep.subjectId ? handleSaveMixAsDefault : undefined}
+                saving={subjectDefaults.saving}
+                subjectDefault={subjectDefaults.defaults?.questionTypeMix ?? null}
+              />
+              <label className="col-span-full flex items-start gap-3 rounded-lg border bg-muted/20 p-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useExistingBank}
+                  onChange={(e) => setUseExistingBank(e.target.checked)}
+                  className="mt-1 h-4 w-4"
+                />
+                <span className="text-sm space-y-0.5">
+                  <span className="font-medium block">Reuse my saved Practice Questions</span>
+                  <span className="text-xs text-muted-foreground block">
+                    Pull matching questions from your curated bank first, then AI-fill any
+                    deficit. Off by default — fresh papers don&apos;t recycle anything until
+                    you&apos;ve explicitly committed questions to your bank from previous papers.
+                  </span>
+                </span>
+              </label>
             </CardContent>
           </Card>
-
-          <div className="flex justify-between">
-            <Button variant="outline" onClick={() => setStep(1)}><ChevronLeft className="mr-1 h-4 w-4" />Back</Button>
-            <Button onClick={() => setStep(3)}>Review and Generate<ChevronRight className="ml-1 h-4 w-4" /></Button>
-          </div>
         </div>
       )}
 
@@ -327,23 +391,28 @@ export function PapersNewWizard() {
             <div className="rounded-lg border p-3">
               <p className="text-sm font-medium">Curriculum coverage</p>
               <div className="mt-2 flex flex-wrap gap-2">
-                {selectedNodes.map((node) => <Badge key={node.id} variant="outline" className="max-w-full truncate">{node.title}</Badge>)}
+                {selectedNodes.map((node) => <Badge key={node.id} variant="outline" className="max-w-full truncate">{displayNodeTitle(node)}</Badge>)}
               </div>
             </div>
             <div className="rounded-lg border p-3 text-sm">
               <p className="font-medium">{computedTitle}</p>
               <p className="text-muted-foreground">{paperTypeLabel(paperType)} — {paperMarks} marks — {paperDuration} min — {paperDifficulty}</p>
             </div>
-            <div className="flex justify-between">
-              <Button variant="outline" onClick={() => setStep(2)}><ChevronLeft className="mr-1 h-4 w-4" />Back</Button>
-              <Button onClick={() => void handleGenerate()} disabled={generating} size="lg">
-                {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
-                {generating ? 'Generating...' : 'Generate Paper with AI'}
-              </Button>
-            </div>
           </CardContent>
         </Card>
       )}
+
+      <WizardFooter
+        step={step}
+        totalSteps={3}
+        onBack={step > 1 ? () => setStep(step - 1) : undefined}
+        onNext={current.onNext}
+        nextLabel={'nextLabel' in current ? current.nextLabel : undefined}
+        nextIcon={'nextIcon' in current ? current.nextIcon : undefined}
+        nextDisabled={current.nextDisabled}
+        nextLoading={'nextLoading' in current ? current.nextLoading : undefined}
+        isFinal={'isFinal' in current ? current.isFinal : undefined}
+      />
     </div>
   );
 }
