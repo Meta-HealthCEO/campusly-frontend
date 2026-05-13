@@ -53,6 +53,7 @@ export function LessonMaterialCard({
   const isReadable = (['reading', 'study_notes', 'worked_example'] as const).some((k) => k === material.kind);
   const isWorksheet = (['worksheet', 'activity'] as const).some((k) => k === material.kind);
   const isQuiz = (['quiz', 'practice_questions'] as const).some((k) => k === material.kind);
+  const hasContentBlocks = (material.contentResource?.blocks?.length ?? 0) > 0;
 
   return (
     <>
@@ -73,17 +74,23 @@ export function LessonMaterialCard({
             {material.textbookRef && (
               <p className="text-xs text-muted-foreground inline-flex items-center gap-1">
                 <Library className="h-3 w-3" />
-                {material.textbookRef.title ?? 'Textbook'}
+                <span>{material.textbookRef.title ?? 'Textbook'}</span>
                 {material.textbookRef.pageStart !== undefined &&
-                  material.textbookRef.pageEnd !== undefined &&
-                  ` · pages ${material.textbookRef.pageStart}–${material.textbookRef.pageEnd}`}
+                  material.textbookRef.pageEnd !== undefined && (
+                    <span>
+                      - pages {material.textbookRef.pageStart}-{material.textbookRef.pageEnd}
+                    </span>
+                  )}
               </p>
             )}
             <div className="flex flex-wrap gap-2 pt-1">
               {isReadable && material.contentResource && (
                 <Button size="sm" onClick={() => setReaderOpen(true)}>Open</Button>
               )}
-              {isWorksheet && material.contentResource?.url && (
+              {isWorksheet && material.contentResource && hasContentBlocks && (
+                <Button size="sm" onClick={() => setReaderOpen(true)}>Open</Button>
+              )}
+              {isWorksheet && material.contentResource?.url && !hasContentBlocks && (
                 <a href={material.contentResource.url} target="_blank" rel="noopener noreferrer">
                   <Button size="sm" variant="outline" className="inline-flex items-center gap-1">
                     <ExternalLink className="h-3 w-3" /> Download

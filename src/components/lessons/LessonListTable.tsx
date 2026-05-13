@@ -14,11 +14,12 @@ import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { LessonStatusPill } from './LessonStatusPill';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import type { Lesson, LessonAssignment } from '@/types/lesson';
-import { MoreHorizontal, ExternalLink, Trash2 } from 'lucide-react';
+import { MoreHorizontal, ExternalLink, Trash2, Copy } from 'lucide-react';
 
 interface Props {
   items: Lesson[];
   onDelete: (id: string) => Promise<void>;
+  onClone?: (id: string) => Promise<unknown>;
 }
 
 function subjectName(lesson: Lesson): string {
@@ -68,7 +69,7 @@ function nextScheduled(assignments: LessonAssignment[]): string {
   return formatDate(new Date(planned[0]).toISOString());
 }
 
-export function LessonListTable({ items, onDelete }: Props) {
+export function LessonListTable({ items, onDelete, onClone }: Props) {
   const router = useRouter();
   const [pendingDelete, setPendingDelete] = useState<Lesson | null>(null);
 
@@ -147,6 +148,14 @@ export function LessonListTable({ items, onDelete }: Props) {
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Open
               </DropdownMenuItem>
+              {onClone && (
+                <DropdownMenuItem
+                  onClick={() => void onClone(row.original._id)}
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Duplicate
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 variant="destructive"
                 onClick={() => setPendingDelete(row.original)}

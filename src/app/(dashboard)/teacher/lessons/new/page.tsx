@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { LessonScaffoldPreview } from '@/components/lessons/LessonScaffoldPreview';
 import { NewLessonStep1 } from '@/components/lessons/NewLessonStep1';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { WizardFooter } from '@/components/shared/WizardFooter';
 import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { useLessonScaffold } from '@/hooks/useLessonScaffold';
 import type { ScaffoldedOutline } from '@/types/lesson';
@@ -73,16 +73,6 @@ export default function NewLessonPage() {
     }));
   };
 
-  const onScaffold = async () => {
-    try {
-      // Scaffold is curriculum-driven; subject/grade are optional context.
-      await runScaffold();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to generate outline';
-      toast.error(msg);
-    }
-  };
-
   const runScaffold = async () => {
     const result = await scaffold({
       curriculumNodeId: form.curriculumNodeId,
@@ -93,6 +83,15 @@ export default function NewLessonPage() {
     });
     setOutline(result);
     setStep(3);
+  };
+
+  const onScaffold = async () => {
+    try {
+      await runScaffold();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to generate outline';
+      toast.error(msg);
+    }
   };
 
   const onCreate = async (finalOutline: ScaffoldedOutline | null) => {
@@ -118,8 +117,38 @@ export default function NewLessonPage() {
     }
   };
 
+  const footerProps = (() => {
+    if (step === 1) {
+      return {
+        onNext: () => setStep(2),
+        nextDisabled: !form.curriculumNodeId,
+      };
+    }
+    if (step === 2) {
+      return {
+        onNext: () => void onScaffold(),
+        nextLabel: scaffolding ? 'Generating…' : 'Scaffold with AI',
+        nextLoading: scaffolding,
+        nextDisabled: scaffolding,
+        secondary: {
+          label: creating ? 'Creating…' : 'Skip & create empty',
+          onClick: () => void onCreate(null),
+          loading: creating,
+          disabled: creating,
+        },
+      };
+    }
+    return {
+      onNext: () => void onCreate(outline),
+      nextLabel: creating ? 'Creating…' : 'Create Lesson',
+      nextLoading: creating,
+      nextDisabled: creating || !outline,
+      isFinal: true,
+    };
+  })();
+
   return (
-    <div className="max-w-3xl mx-auto space-y-6 p-4">
+    <div className="max-w-3xl mx-auto space-y-6 p-4 pb-24">
       <div>
         <h1 className="text-2xl font-semibold">New Lesson</h1>
         <p className="text-sm text-muted-foreground">Step {step} of 3</p>
@@ -131,33 +160,19 @@ export default function NewLessonPage() {
           update={update}
           frameworkId={defaultFrameworkId}
           onTopicSelect={onTopicSelect}
-          onNext={() => setStep(2)}
         />
       )}
 
       {step === 2 && (
         <div className="space-y-4">
-          <div>
-            <Label>Anything specific to focus on? (optional)</Label>
-            <Textarea
-              value={form.hints}
-              onChange={(e) => update({ hints: e.target.value })}
-              placeholder="e.g. focus on factorising trinomials"
-              rows={4}
-              className="w-full mt-1"
-            />
-          </div>
-          <div className="flex flex-col sm:flex-row sm:justify-between gap-3">
-            <Button variant="ghost" onClick={() => setStep(1)}>Back</Button>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button variant="outline" disabled={creating} onClick={() => onCreate(null)}>
-                {creating ? 'Creating...' : 'Skip & create empty'}
-              </Button>
-              <Button disabled={scaffolding} onClick={onScaffold}>
-                {scaffolding ? 'Generating...' : 'Scaffold with AI'}
-              </Button>
-            </div>
-          </div>
+          <Label>Anything specific to focus on? (optional)</Label>
+          <Textarea
+            value={form.hints}
+            onChange={(e) => update({ hints: e.target.value })}
+            placeholder="e.g. focus on factorising trinomials"
+            rows={4}
+            className="w-full mt-1"
+          />
         </div>
       )}
 
@@ -173,14 +188,15 @@ export default function NewLessonPage() {
           ) : (
             <p className="text-sm text-muted-foreground">No outline yet — go back and scaffold.</p>
           )}
-          <div className="flex flex-col sm:flex-row sm:justify-between gap-3">
-            <Button variant="ghost" onClick={() => setStep(2)}>Back</Button>
-            <Button disabled={creating || !outline} onClick={() => onCreate(outline)}>
-              {creating ? 'Creating...' : 'Create Lesson'}
-            </Button>
-          </div>
         </div>
       )}
+
+      <WizardFooter
+        step={step}
+        totalSteps={3}
+        onBack={step > 1 ? () => setStep((step - 1) as Step) : undefined}
+        {...footerProps}
+      />
     </div>
   );
 }

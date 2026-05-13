@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ExerciseQuestionsList } from '@/components/homework/ExerciseQuestionsList';
 import { BlockRenderer } from '@/components/content/renderers/BlockRenderer';
@@ -204,7 +205,11 @@ function QuizSummary({ material }: { material: LessonMaterial & { kind: 'quiz' }
   return (
     <div className="text-sm space-y-1">
       <p>Linked quiz: <span className="font-medium">{title ?? id}</span></p>
-      {id && <a href={`/teacher/learning/quizzes/${id}`} target="_blank" rel="noreferrer" className="text-primary text-xs hover:underline">Open in Learning module →</a>}
+      {id && (
+        <Link href="/teacher/learning" className="text-primary text-xs hover:underline">
+          Open Learning module
+        </Link>
+      )}
     </div>
   );
 }

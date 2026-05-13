@@ -28,7 +28,7 @@ export function useTeacherLearning() {
   }, []);
 
   useEffect(() => {
-    loadData();
+    void Promise.resolve().then(loadData);
   }, [loadData]);
 
   return { classes, homework };

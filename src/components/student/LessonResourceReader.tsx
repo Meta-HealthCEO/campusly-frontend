@@ -7,8 +7,75 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { BlockRenderer } from '@/components/content/renderers/BlockRenderer';
 import { ExternalLink } from 'lucide-react';
-import type { StudentLessonMaterial } from '@/types';
+import type {
+  AttemptResult,
+  BlockInteractionState,
+  ContentBlockItem,
+  ContentBlockType,
+  StudentLessonMaterial,
+} from '@/types';
+
+const BLOCK_TYPES = new Set<ContentBlockType>([
+  'text',
+  'image',
+  'video',
+  'quiz',
+  'drag_drop',
+  'fill_blank',
+  'match_columns',
+  'ordering',
+  'hotspot',
+  'step_reveal',
+  'code',
+]);
+
+const NOOP_ATTEMPT_RESULT: AttemptResult = {
+  id: 'reader',
+  correct: false,
+  score: 0,
+  maxScore: 0,
+  attemptNumber: 0,
+};
+
+function defaultInteraction(blockId: string): BlockInteractionState {
+  return {
+    blockId,
+    answered: false,
+    correct: null,
+    score: 0,
+    maxScore: 0,
+    showExplanation: false,
+    hintsRevealed: 0,
+    attemptResult: null,
+  };
+}
+
+async function noopAttempt(): Promise<AttemptResult> {
+  return NOOP_ATTEMPT_RESULT;
+}
+
+function normalizeBlock(raw: unknown, index: number): ContentBlockItem {
+  const block = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
+  const rawType = typeof block.type === 'string' ? block.type : 'text';
+  const type = BLOCK_TYPES.has(rawType as ContentBlockType) ? (rawType as ContentBlockType) : 'text';
+  return {
+    blockId: typeof block.blockId === 'string' && block.blockId ? block.blockId : `student-block-${index}`,
+    type,
+    order: typeof block.order === 'number' ? block.order : index,
+    content: typeof block.content === 'string' ? block.content : '',
+    curriculumNodeId: typeof block.curriculumNodeId === 'string' ? block.curriculumNodeId : null,
+    cognitiveLevel: (block.cognitiveLevel as ContentBlockItem['cognitiveLevel']) ?? null,
+    points: typeof block.points === 'number' ? block.points : 0,
+    hints: Array.isArray(block.hints) ? block.hints.map(String) : [],
+    explanation: typeof block.explanation === 'string' ? block.explanation : '',
+    metadata:
+      block.metadata && typeof block.metadata === 'object'
+        ? (block.metadata as Record<string, unknown>)
+        : {},
+  };
+}
 
 interface Props {
   open: boolean;
@@ -19,6 +86,9 @@ interface Props {
 export function LessonResourceReader({ open, onOpenChange, material }: Props) {
   if (!material) return null;
   const resource = material.contentResource;
+  const blocks = (resource?.blocks ?? [])
+    .map(normalizeBlock)
+    .sort((a, b) => a.order - b.order);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -54,7 +124,20 @@ export function LessonResourceReader({ open, onOpenChange, material }: Props) {
               <ExternalLink className="h-4 w-4" /> Open external link
             </a>
           )}
-          {resource?.type === 'markdown' && (
+          {blocks.length > 0 && (
+            <div className="space-y-4">
+              {blocks.map((block) => (
+                <div key={block.blockId} className="rounded-lg border p-4">
+                  <BlockRenderer
+                    block={block}
+                    onAttempt={noopAttempt}
+                    interaction={defaultInteraction(block.blockId)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          {blocks.length === 0 && resource?.type === 'markdown' && (
             <article
               className="
                 max-w-none text-sm leading-relaxed text-foreground
@@ -77,6 +160,11 @@ export function LessonResourceReader({ open, onOpenChange, material }: Props) {
                 {resource.url ?? ''}
               </ReactMarkdown>
             </article>
+          )}
+          {resource && blocks.length === 0 && !resource.url && resource.type !== 'markdown' && (
+            <p className="text-sm text-muted-foreground">
+              No readable content blocks are attached to this material yet.
+            </p>
           )}
           {material.teacherNotes && (
             <div className="mt-4 rounded-md bg-muted p-3 text-sm">

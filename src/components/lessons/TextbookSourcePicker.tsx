@@ -156,7 +156,7 @@ export function TextbookSourcePicker({ value, onChange }: Props) {
         <div className="space-y-3">
           <div>
             <Label>Textbook <span className="text-destructive">*</span></Label>
-            <Select value={internal.textbookId || undefined}
+            <Select value={internal.textbookId || ''}
               onValueChange={(v: unknown) => updateInternal({ textbookId: String(v) })}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder={loading ? 'Loading textbooks…' : 'Select a textbook'} />
@@ -168,7 +168,7 @@ export function TextbookSourcePicker({ value, onChange }: Props) {
           </div>
           <div>
             <Label>Chapter</Label>
-            <Select value={internal.chapterId || undefined}
+            <Select value={internal.chapterId || ''}
               onValueChange={(v: unknown) => updateInternal({ chapterId: String(v) })}
               disabled={!internal.textbookId || chapters.length === 0}>
               <SelectTrigger className="w-full">

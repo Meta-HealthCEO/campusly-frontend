@@ -80,23 +80,23 @@ export function LessonMaterialCard({
   onUpdate,
   onOpenDrawer,
 }: Props) {
-  const sortable = useSortable({ id: material._id, data: { phase } });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: material._id, data: { phase } });
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(material.title);
   const inputRef = useRef<HTMLInputElement>(null);
   const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(sortable.transform),
-    transition: sortable.transition,
+    transform: CSS.Transform.toString(transform),
+    transition,
   };
   const isPlaceholder = !material.generatedAt;
-
-  // Re-sync the draft when the material's title changes from outside
-  // (e.g. another user edited it, or the lesson refetched after a save).
-  useEffect(() => {
-    if (!editing) setDraftTitle(material.title);
-  }, [material.title, editing]);
 
   // Focus the input when entering edit mode.
   useEffect(() => {
@@ -135,15 +135,15 @@ export function LessonMaterialCard({
 
   return (
     <Card
-      ref={sortable.setNodeRef}
+      ref={setNodeRef}
       style={style}
       className="p-4 hover:border-primary/30 transition-colors"
     >
       <div className="flex gap-2 items-start">
       <button
         type="button"
-        {...sortable.attributes}
-        {...sortable.listeners}
+        {...attributes}
+        {...listeners}
         className="cursor-grab text-muted-foreground touch-none"
         aria-label="Drag handle"
       >

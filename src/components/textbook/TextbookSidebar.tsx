@@ -31,7 +31,7 @@ export function TextbookSidebar({
         sidebarOpen
           ? 'fixed inset-0 z-40 bg-background/80 backdrop-blur-sm sm:static sm:z-auto sm:bg-transparent sm:backdrop-blur-none'
           : 'hidden sm:block'
-      } sm:w-56 shrink-0`}
+      } sm:w-56 shrink-0 sm:sticky sm:top-0 sm:self-start sm:max-h-[calc(100vh-2rem)] sm:overflow-y-auto`}
     >
       <div
         className={`${

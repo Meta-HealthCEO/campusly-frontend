@@ -25,15 +25,22 @@ export function useTextbooks() {
   const [textbooks, setTextbooks] = useState<TextbookItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   /* ── List ─────────────────────────────────────────────────── */
 
   const fetchTextbooks = useCallback(
     async (filters?: TextbookFilters) => {
-      if (!schoolId) return;
+      if (!schoolId) {
+        setTextbooks([]);
+        setTotal(0);
+        setError('School is not configured for this user.');
+        return false;
+      }
       setLoading(true);
+      setError(null);
       try {
-        const params: Record<string, unknown> = { ...filters };
+        const params: Record<string, unknown> = { limit: 500, ...filters };
         const response = await apiClient.get(BASE, { params });
         const raw = response.data.data ?? response.data;
         if (Array.isArray(raw)) {
@@ -46,9 +53,18 @@ export function useTextbooks() {
             : unwrapList<TextbookItem>(response);
           setTextbooks(arr);
           setTotal(typeof obj.total === 'number' ? obj.total : arr.length);
+        } else {
+          setTextbooks([]);
+          setTotal(0);
         }
+        return true;
       } catch (err: unknown) {
-        console.error('Failed to load textbooks:', extractErrorMessage(err));
+        const message = extractErrorMessage(err, 'Failed to load textbooks');
+        setTextbooks([]);
+        setTotal(0);
+        setError(message);
+        console.warn('Failed to load textbooks:', message);
+        return false;
       } finally {
         setLoading(false);
       }
@@ -263,7 +279,7 @@ export function useTextbooks() {
           ? (obj.resources as ContentResourceItem[])
           : unwrapList<ContentResourceItem>(response);
       } catch (err: unknown) {
-        console.error('Failed to search resources', err);
+        console.warn('Failed to search resources', err);
         return [];
       }
     },
@@ -274,6 +290,7 @@ export function useTextbooks() {
     textbooks,
     total,
     loading,
+    error,
     fetchTextbooks,
     getTextbook,
     createTextbook,

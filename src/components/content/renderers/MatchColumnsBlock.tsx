@@ -79,7 +79,7 @@ export function MatchColumnsBlock({ block, onSubmit, interaction }: MatchColumns
             <span className="text-muted-foreground text-xs hidden sm:block">&rarr;</span>
             <div className="w-full sm:w-48">
               <Select
-                value={matches[leftIdx] !== undefined ? String(matches[leftIdx]) : undefined}
+                value={matches[leftIdx] !== undefined ? String(matches[leftIdx]) : ''}
                 onValueChange={(val: unknown) => handleSelect(leftIdx, Number(val as string))}
                 disabled={answered}
               >

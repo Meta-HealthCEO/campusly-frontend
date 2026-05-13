@@ -21,11 +21,18 @@ export function useContentLibrary() {
   const [resources, setResources] = useState<ContentResourceItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchResources = useCallback(
     async (filters?: ResourceFilters) => {
-      if (!schoolId) return;
+      if (!schoolId) {
+        setResources([]);
+        setTotal(0);
+        setError('School is not configured for this user.');
+        return false;
+      }
       setLoading(true);
+      setError(null);
       try {
         const params: Record<string, unknown> = { ...filters };
         const response = await apiClient.get(BASE, { params });
@@ -40,9 +47,17 @@ export function useContentLibrary() {
             : unwrapList<ContentResourceItem>(response);
           setResources(arr);
           setTotal(typeof obj.total === 'number' ? obj.total : arr.length);
+        } else {
+          setResources([]);
+          setTotal(0);
         }
+        return true;
       } catch (err: unknown) {
-        console.error('Failed to load resources:', extractErrorMessage(err));
+        const message = extractErrorMessage(err, 'Failed to load resources');
+        setResources([]);
+        setTotal(0);
+        setError(message);
+        return false;
       } finally {
         setLoading(false);
       }
@@ -74,7 +89,7 @@ export function useContentLibrary() {
         return null;
       }
     },
-    [schoolId],
+    [],
   );
 
   const updateResource = useCallback(
@@ -140,8 +155,9 @@ export function useContentLibrary() {
         toast.success('Content generated \u2014 saved as draft');
         return unwrapResponse<ContentResourceItem>(response);
       } catch (err: unknown) {
-        toast.error(extractErrorMessage(err, 'Failed to generate content'));
-        return null;
+        const message = extractErrorMessage(err, 'Failed to generate content');
+        toast.error(message);
+        throw new Error(message);
       }
     },
     [],
@@ -164,6 +180,7 @@ export function useContentLibrary() {
     resources,
     total,
     loading,
+    error,
     fetchResources,
     getResource,
     createResource,

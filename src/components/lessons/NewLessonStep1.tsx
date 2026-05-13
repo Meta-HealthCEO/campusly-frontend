@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { TopicQuickPicker } from './TopicQuickPicker';
@@ -22,7 +21,6 @@ interface Props {
   update: (patch: Partial<NewLessonStep1Form>) => void;
   frameworkId: string;
   onTopicSelect: (node: CurriculumNodeItem) => void;
-  onNext: () => void;
 }
 
 export function NewLessonStep1({
@@ -30,13 +28,7 @@ export function NewLessonStep1({
   update,
   frameworkId,
   onTopicSelect,
-  onNext,
 }: Props) {
-  // The pack just needs a curriculum topic — subject/grade are derived from
-  // the topic's denormalized refs, so the only mandatory field is the topic.
-  // Class is no longer required at create time — assigned in the workspace.
-  const canProceed = !!form.curriculumNodeId;
-
   return (
     <div className="space-y-4">
       <TopicQuickPicker
@@ -76,10 +68,6 @@ export function NewLessonStep1({
             className="w-full"
           />
         </div>
-      </div>
-
-      <div className="flex justify-end">
-        <Button disabled={!canProceed} onClick={onNext}>Next</Button>
       </div>
     </div>
   );

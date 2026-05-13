@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -18,10 +19,26 @@ import { CalendarRange, BookOpen, Plus } from 'lucide-react';
 type LessonsView = 'list' | 'calendar';
 
 export default function LessonsPage() {
-  const { items, loading, filters, setFilters, deleteLesson } = useLessons();
+  const searchParams = useSearchParams();
+  const routeDateFrom = searchParams.get('dateFrom') ?? undefined;
+  const routeDateTo = searchParams.get('dateTo') ?? undefined;
+  const routeDateFilters = useMemo(() => ({
+    dateFrom: routeDateFrom,
+    dateTo: routeDateTo,
+  }), [routeDateFrom, routeDateTo]);
+  const { items, loading, filters, setFilters, deleteLesson, cloneLesson } = useLessons(routeDateFilters);
   const { classes, subjects: academicSubjects } = useAcademicLookups();
   const { subjects: capsSubjects } = useAllCurriculumSubjects();
   const [view, setView] = useState<LessonsView>('list');
+
+  useEffect(() => {
+    if (!routeDateFilters.dateFrom && !routeDateFilters.dateTo) return;
+    setFilters((current) => ({
+      ...current,
+      ...routeDateFilters,
+      page: 1,
+    }));
+  }, [routeDateFilters, setFilters]);
 
   // Merge academic + CAPS subjects, deduped by lowercase name. The backend
   // filter accepts either ID flavour (academic Subject _id OR CurriculumNode
@@ -89,7 +106,7 @@ export default function LessonsPage() {
               description="Create your first lesson to get started."
             />
           ) : (
-            <LessonListTable items={items} onDelete={deleteLesson} />
+            <LessonListTable items={items} onDelete={deleteLesson} onClone={cloneLesson} />
           )}
         </TabsContent>
 

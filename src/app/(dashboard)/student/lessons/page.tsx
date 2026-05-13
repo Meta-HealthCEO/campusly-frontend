@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BookOpen, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -11,16 +11,26 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LessonCard } from '@/components/student/LessonCard';
 import { useStudentLessons } from '@/hooks/useStudentLessons';
-import { useSubjects } from '@/hooks/useAcademics';
 import type { StudentLessonListFilters } from '@/types';
 
 export default function StudentLessonsPage() {
   const [filters, setFilters] = useState<StudentLessonListFilters>({});
   const [searchInput, setSearchInput] = useState('');
-  const { lessons, loading, refresh } = useStudentLessons(filters);
-  const { subjects } = useSubjects();
+  const { lessons, loading, refresh } = useStudentLessons();
+  const { lessons: lessonSubjectSource, refresh: refreshLessonSubjectSource } = useStudentLessons();
+  const subjectOptions = useMemo(() => {
+    const byId = new Map<string, string>();
+    for (const lesson of lessonSubjectSource) {
+      if (lesson.subjectId && lesson.subjectName) {
+        byId.set(lesson.subjectId, lesson.subjectName);
+      }
+    }
+    return Array.from(byId, ([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [lessonSubjectSource]);
 
   useEffect(() => { void refresh(filters); }, [filters, refresh]);
+  useEffect(() => { void refreshLessonSubjectSource({}); }, [refreshLessonSubjectSource]);
 
   function handleSearchKey(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter') {
@@ -60,7 +70,7 @@ export default function StudentLessonsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All subjects</SelectItem>
-            {subjects.map((s) => (
+            {subjectOptions.map((s) => (
               <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
             ))}
           </SelectContent>
