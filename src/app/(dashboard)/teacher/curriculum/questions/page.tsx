@@ -2,13 +2,15 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { FileQuestion, Upload, Search, AlertTriangle } from 'lucide-react';
+import { FileQuestion, Upload, Search, AlertTriangle, Trash2 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import {
-  QuestionCard, QuestionFormDialog, GenerateQuestionsDialog, UploadPaperDialog,
+  QuestionFormDialog, GenerateQuestionsDialog, UploadPaperDialog,
 } from '@/components/questions';
+import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -57,6 +59,7 @@ export default function TeacherQuestionsPage() {
     questions, questionsTotal, questionsLoading,
     questionsError,
     fetchQuestions, getQuestion, createQuestion, updateQuestion,
+    deleteQuestion,
     generateQuestions, extractFromPaper,
   } = useQuestionBank();
   const { subjects } = useSubjects();
@@ -68,7 +71,11 @@ export default function TeacherQuestionsPage() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [capsFilter, setCapsFilter] = useState('all');
   const [diffFilter, setDiffFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  // Default to 'approved' so the bank surface only shows committed questions.
+  // AI-generated drafts (which now live INLINE on papers — no Question doc
+  // until the teacher commits via Save-to-bank) wouldn't show here anyway,
+  // but legacy draft rows from the old auto-approve flow are hidden too.
+  const [statusFilter, setStatusFilter] = useState('approved');
   const [mineOnly, setMineOnly] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedNodeTitle, setSelectedNodeTitle] = useState<string | null>(null);
@@ -106,6 +113,100 @@ export default function TeacherQuestionsPage() {
       setEditOpen(true);
     }
   }, [getQuestion]);
+
+  const [pendingDelete, setPendingDelete] = useState<QuestionItem | null>(null);
+  const handleDelete = useCallback(async (id: string) => {
+    try {
+      await deleteQuestion(id);
+      await fetchQuestions(filters);
+    } catch (err: unknown) {
+      toast.error(extractErrorMessage(err, 'Failed to delete question'));
+    }
+  }, [deleteQuestion, fetchQuestions, filters]);
+
+  // ─── Table columns ─────────────────────────────────────────────────────
+  const questionColumns = useMemo<ColumnDef<QuestionItem>[]>(() => [
+    {
+      accessorKey: 'stem',
+      header: 'Question',
+      cell: ({ row }) => (
+        <span className="line-clamp-2 max-w-xl">{row.original.stem}</span>
+      ),
+    },
+    {
+      accessorKey: 'type',
+      header: 'Type',
+      cell: ({ row }) => (
+        <Badge variant="outline" className="capitalize text-xs">
+          {row.original.type.replace(/_/g, ' ')}
+        </Badge>
+      ),
+    },
+    {
+      id: 'capsLevel',
+      header: 'CAPS',
+      accessorFn: (row) => row.cognitiveLevel?.caps ?? '',
+      cell: ({ getValue }) => (
+        <span className="text-xs capitalize">
+          {String(getValue() ?? '').replace(/_/g, ' ')}
+        </span>
+      ),
+    },
+    { accessorKey: 'marks', header: 'Marks' },
+    { accessorKey: 'difficulty', header: 'Diff.' },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => {
+        const status = row.original.status;
+        const variant: 'default' | 'secondary' | 'outline' | 'destructive' =
+          status === 'approved' ? 'default'
+            : status === 'rejected' ? 'destructive'
+              : status === 'pending_review' ? 'secondary' : 'outline';
+        return (
+          <Badge variant={variant} className="capitalize text-xs">
+            {status.replace(/_/g, ' ')}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: 'source',
+      header: 'Source',
+      cell: ({ row }) => (
+        <span className="text-xs text-muted-foreground capitalize">
+          {row.original.source.replace(/_/g, ' ')}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'usageCount',
+      header: 'Used',
+      cell: ({ row }) => (
+        <span className="text-xs text-muted-foreground">
+          {row.original.usageCount}×
+        </span>
+      ),
+    },
+    {
+      id: 'actions',
+      header: '',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <Button
+          size="sm"
+          variant="ghost"
+          aria-label="Delete question"
+          onClick={(e) => {
+            e.stopPropagation();
+            setPendingDelete(row.original);
+          }}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      ),
+    },
+  ], []);
 
   const handleUpdate = useCallback(async (id: string, payload: UpdateQuestionPayload) => {
     try {
@@ -159,8 +260,8 @@ export default function TeacherQuestionsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={user?.isStandaloneTeacher ? 'Practice Questions' : 'Question Bank'}
-        description="Reusable questions for revision, homework, and assessment papers."
+        title="Question Bank"
+        description="Curated questions you've committed from past papers. Generate a new paper to add more, then bookmark the keepers."
       >
         <Button variant="outline" onClick={() => setUploadOpen(true)}>
           <Upload className="mr-2 size-4" />
@@ -284,11 +385,13 @@ export default function TeacherQuestionsPage() {
           }
         />
       ) : (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {questions.map((q: QuestionItem) => (
-            <QuestionCard key={q.id} question={q} onClick={handleCardClick} />
-          ))}
-        </div>
+        <DataTable
+          columns={questionColumns}
+          data={questions}
+          searchKey="stem"
+          searchPlaceholder="Search by question text..."
+          onRowClick={(q) => void handleCardClick(q)}
+        />
       )}
 
       {/* ─── Edit Dialog (existing questions only) ────────────────────── */}
@@ -331,6 +434,22 @@ export default function TeacherQuestionsPage() {
         onExtract={extractFromPaper}
         onSaveQuestions={handleSaveExtracted}
         onComplete={handleRefresh}
+      />
+
+      {/* ─── Delete Confirm ──────────────────────────────────── */}
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open: boolean) => { if (!open) setPendingDelete(null); }}
+        title="Delete this question?"
+        description={pendingDelete
+          ? `"${pendingDelete.stem.slice(0, 120)}${pendingDelete.stem.length > 120 ? '…' : ''}" will be soft-deleted from your bank. Existing papers that reference it keep working.`
+          : ''}
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={async () => {
+          if (pendingDelete) await handleDelete(pendingDelete.id);
+          setPendingDelete(null);
+        }}
       />
     </div>
   );

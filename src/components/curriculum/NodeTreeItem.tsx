@@ -7,7 +7,7 @@ import type { CurriculumNodeItem } from '@/types';
 
 interface NodeTreeItemProps {
   node: CurriculumNodeItem;
-  children: CurriculumNodeItem[];
+  childNodes: CurriculumNodeItem[];
   level: number;
   onExpand: (nodeId: string) => void;
   onEdit: (node: CurriculumNodeItem) => void;
@@ -30,7 +30,7 @@ const TYPE_COLORS: Record<string, string> = {
 
 export function NodeTreeItem({
   node,
-  children,
+  childNodes,
   level,
   onExpand,
   onEdit,
@@ -41,7 +41,7 @@ export function NodeTreeItem({
   isAdmin,
 }: NodeTreeItemProps) {
   const isExpanded = expandedNodes.has(node.id);
-  const hasChildren = children.length > 0;
+  const hasChildren = childNodes.length > 0;
   const paddingLeft = level * 24;
 
   return (
@@ -93,11 +93,11 @@ export function NodeTreeItem({
       </div>
 
       {isExpanded &&
-        children.map((child) => (
+        childNodes.map((child) => (
           <NodeTreeItem
             key={child.id}
             node={child}
-            children={childrenMap.get(child.id) ?? []}
+            childNodes={childrenMap.get(child.id) ?? []}
             level={level + 1}
             onExpand={onExpand}
             onEdit={onEdit}

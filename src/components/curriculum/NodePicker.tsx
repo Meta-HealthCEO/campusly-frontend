@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { displayNodeTitle } from '@/lib/curriculum-display';
 import type { CurriculumNodeItem } from '@/types';
 
 interface NodePickerProps {
@@ -100,7 +101,7 @@ export function NodePicker({
             <Badge variant="outline" className="text-[10px] px-1 py-0">
               {selectedNode.type}
             </Badge>
-            <span className="truncate">{selectedNode.title}</span>
+            <span className="truncate">{displayNodeTitle(selectedNode)}</span>
           </span>
         ) : (
           <span className="text-muted-foreground">{placeholder}</span>
@@ -140,8 +141,7 @@ export function NodePicker({
               <Badge variant="outline" className="text-[10px] px-1 py-0 shrink-0">
                 {node.type}
               </Badge>
-              <span className="flex-1 truncate">{node.title}</span>
-              <span className="text-[10px] text-muted-foreground">{node.code}</span>
+              <span className="flex-1 truncate">{displayNodeTitle(node)}</span>
             </button>
           ))}
         </div>

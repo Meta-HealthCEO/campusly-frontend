@@ -3,15 +3,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Check, ChevronLeft, ChevronRight, Loader2, ScanLine } from 'lucide-react';
+import { Check, ScanLine } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CurriculumTreeBrowser } from '@/components/curriculum/CurriculumTreeBrowser';
 import { NodePicker } from '@/components/curriculum/NodePicker';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { WizardFooter } from '@/components/shared/WizardFooter';
 import { UploadDropzone } from '@/components/paper-import/UploadDropzone';
 import { OptionsForm } from '@/components/paper-import/OptionsForm';
 import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
@@ -75,13 +76,13 @@ export default function ImportPaperPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
       <PageHeader
-        title="Import Paper Resource"
-        description="Upload a PDF or image of an existing worksheet, study notes, or paper — and we'll turn it into a digital resource."
+        title="Digitise Paper"
+        description="Upload a PDF or image of an existing worksheet, study notes, or paper — we'll turn it into a structured digital paper."
       >
         <Link href="/teacher/curriculum/import/jobs" className={cn(buttonVariants({ variant: 'outline' }))}>
-          My imports
+          My digitised papers
         </Link>
       </PageHeader>
 
@@ -210,37 +211,34 @@ export default function ImportPaperPage() {
                   {options.addExplanations && <li>· Add explanations</li>}
                 </ul>
               </div>
-              <Button size="lg" onClick={handleSubmit} disabled={submitting}>
-                {submitting
-                  ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  : <ScanLine className="mr-2 h-4 w-4" />}
-                {submitting ? 'Starting…' : 'Start Conversion'}
-              </Button>
             </CardContent>
           </Card>
         )}
-
-        <div className="flex justify-between">
-          <Button
-            variant="outline"
-            onClick={() => setStep(Math.max(1, step - 1))}
-            disabled={step === 1}
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" /> Back
-          </Button>
-          {step < 4 && (
-            <Button
-              onClick={() => setStep(step + 1)}
-              disabled={
-                (step === 1 && !canContinueFromCurriculum) ||
-                (step === 2 && !canContinueFromUpload)
-              }
-            >
-              Next <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
-          )}
-        </div>
       </div>
+
+      <WizardFooter
+        step={step}
+        totalSteps={STEPS.length}
+        onBack={step > 1 ? () => setStep(Math.max(1, step - 1)) : undefined}
+        onNext={
+          step < 4
+            ? () => setStep(step + 1)
+            : () => void handleSubmit()
+        }
+        nextLabel={
+          step < 4
+            ? 'Next'
+            : submitting ? 'Starting…' : 'Start Conversion'
+        }
+        nextIcon={step === 4 && !submitting ? <ScanLine className="ml-2 h-4 w-4" /> : undefined}
+        nextLoading={step === 4 ? submitting : false}
+        nextDisabled={
+          (step === 1 && !canContinueFromCurriculum) ||
+          (step === 2 && !canContinueFromUpload) ||
+          (step === 4 && submitting)
+        }
+        isFinal={step === 4}
+      />
     </div>
   );
 }

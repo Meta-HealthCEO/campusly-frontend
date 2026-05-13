@@ -30,22 +30,34 @@ export function NodeTree({
 
   useEffect(() => {
     if (!frameworkId) return;
-    setLoading(true);
-    setNodesByParent(new Map());
-    setExpandedNodes(new Set());
+    let cancelled = false;
 
-    fetchChildren(null)
-      .then((roots: CurriculumNodeItem[]) => {
-        setNodesByParent(new Map([['root', roots]]));
-      })
-      .catch(() => {
-        setNodesByParent(new Map());
-      })
-      .finally(() => setLoading(false));
+    void Promise.resolve().then(async () => {
+      if (cancelled) return;
+      setLoading(true);
+      setNodesByParent(new Map());
+      setExpandedNodes(new Set());
+
+      try {
+        const roots = await fetchChildren(null);
+        if (!cancelled) setNodesByParent(new Map([['root', roots]]));
+      } catch {
+        if (!cancelled) setNodesByParent(new Map());
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [frameworkId, fetchChildren, refreshKey]);
 
   const nodesByParentRef = useRef(nodesByParent);
-  nodesByParentRef.current = nodesByParent;
+
+  useEffect(() => {
+    nodesByParentRef.current = nodesByParent;
+  }, [nodesByParent]);
 
   const handleExpand = useCallback(async (nodeId: string) => {
     setExpandedNodes((prev) => {
@@ -94,7 +106,7 @@ export function NodeTree({
         <NodeTreeItem
           key={node.id}
           node={node}
-          children={nodesByParent.get(node.id) ?? []}
+          childNodes={nodesByParent.get(node.id) ?? []}
           level={0}
           onExpand={handleExpand}
           onEdit={onEdit}

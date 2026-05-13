@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCurriculumTree } from '@/hooks/useCurriculumTree';
+import { displayNodeTitle } from '@/lib/curriculum-display';
 import type { CurriculumNodeItem, CurriculumNodeType } from '@/types';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -39,6 +40,38 @@ interface TreeNodeRowProps {
 
 const LEAF_TYPES: CurriculumNodeType[] = ['subtopic', 'outcome'];
 
+// Phase code → seniority rank. Highest rank renders first so the FET phase
+// (Grades 10-12) appears at the top of the root list.
+const PHASE_RANK: Record<string, number> = { FET: 4, SP: 3, IP: 2, FP: 1 };
+
+function parsePhaseRank(node: CurriculumNodeItem): number {
+  const source = `${node.code ?? ''} ${node.title ?? ''}`;
+  const m = source.match(/\b(FET|SP|IP|FP)\b/i);
+  return PHASE_RANK[m?.[1]?.toUpperCase() ?? ''] ?? 0;
+}
+
+function parseGradeNum(node: CurriculumNodeItem): number {
+  const source = `${node.code ?? ''} ${node.title ?? ''}`;
+  const m = source.match(/GR(?:ADE)?\s*0?(\d{1,2})/i);
+  return m ? Number(m[1]) : -1;
+}
+
+// Sort siblings descending for the ordinal navigation tiers only: phase by
+// seniority (FET → FP), grade by number (12 → R). Subjects, terms, topics,
+// subtopics and outcomes keep the backend's natural order — term 1 → 4 is
+// chronological, subjects alphabetical, topics pedagogically ordered.
+function sortSiblingsDesc(nodes: CurriculumNodeItem[]): CurriculumNodeItem[] {
+  const first = nodes[0];
+  if (!first) return nodes;
+  if (first.type === 'phase') {
+    return [...nodes].sort((a, b) => parsePhaseRank(b) - parsePhaseRank(a));
+  }
+  if (first.type === 'grade') {
+    return [...nodes].sort((a, b) => parseGradeNum(b) - parseGradeNum(a));
+  }
+  return nodes;
+}
+
 const NODE_TYPE_COLORS: Record<CurriculumNodeType, string> = {
   phase:   'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
   grade:   'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
@@ -70,17 +103,13 @@ function TreeNodeRow({
   const leaf = LEAF_TYPES.includes(node.type) || isKnownEmptyTopic;
 
   const handleRowClick = () => {
-    // Topics are selectable AND expandable. A row click on a topic does both:
-    // selects it (so consumers don't have to find the small "Select" button)
-    // and expands its children for further drill-down. Non-topic non-leaf
-    // rows just toggle expansion. Leaves only select.
+    // Leaf rows (subtopic/outcome, plus topics with no children) select on
+    // row click — there's nothing to expand. All other rows, including
+    // topics with subtopics, only toggle expansion; the "Select" button on
+    // the right handles selection so the user doesn't accidentally select
+    // the parent topic when drilling down to its subtopics.
     if (leaf) {
       onSelect(node);
-      return;
-    }
-    if (node.type === 'topic') {
-      onSelect(node);
-      void onToggle(node.id);
       return;
     }
     void onToggle(node.id);
@@ -131,17 +160,16 @@ function TreeNodeRow({
           {node.type}
         </span>
 
-        {/* Title */}
+        {/* Title — friendlied via displayNodeTitle because some seeded
+             curricula store code-shaped titles like "CAPS-MATHEMATICS-GR1". */}
         <span className={['flex-1 truncate text-sm', isSelected ? 'font-semibold' : ''].join(' ')}>
-          {node.title}
+          {displayNodeTitle(node)}
         </span>
 
-        {/* Code */}
-        {node.code && (
-          <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
-            {node.code}
-          </span>
-        )}
+        {/* Code column intentionally omitted — the curriculum codes are long
+            internal identifiers (e.g. CAPS-ACCOUNTING-GR12-T1-COMPANIES-01)
+            that crowd every row without telling the user anything they don't
+            already see from the title + type badge. */}
 
         {/* Select button for nodes that can be used directly for generation. */}
         {(node.type === 'topic' || !leaf) && (
@@ -165,10 +193,11 @@ function TreeNodeRow({
         )}
       </div>
 
-      {/* Children rows */}
+      {/* Children rows — sorted descending where it makes sense (phase by
+           seniority, grade by number, term by number). */}
       {isExpanded && children && children.length > 0 && (
         <div>
-          {children.map((child: CurriculumNodeItem) => (
+          {sortSiblingsDesc(children).map((child: CurriculumNodeItem) => (
             <TreeNodeRow
               key={child.id}
               node={child}
@@ -281,7 +310,7 @@ export function CurriculumTreeBrowser({
   return (
     <div className="overflow-x-auto">
       <div className="min-w-[320px] space-y-0.5">
-        {rootNodes.map((node: CurriculumNodeItem) => (
+        {sortSiblingsDesc(rootNodes).map((node: CurriculumNodeItem) => (
           <TreeNodeRow
             key={node.id}
             node={node}

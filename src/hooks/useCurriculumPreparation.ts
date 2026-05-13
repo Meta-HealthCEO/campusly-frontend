@@ -101,12 +101,67 @@ export function inferTerm(node: CurriculumNodeItem): number | null {
   return term >= 1 && term <= 4 ? term : null;
 }
 
-export function extractCurriculumContext(node: CurriculumNodeItem): CurriculumGenerationContext | null {
+function parseGradeLevelFromText(text: string): number | null {
+  const m = text.match(/\bGR(?:ADE)?\s*0?(\d{1,2})\b/i) ?? text.match(/\bgrade\s*0?(\d{1,2})\b/i);
+  if (!m) return null;
+  const n = Number(m[1]);
+  return Number.isFinite(n) && n >= 0 && n <= 12 ? n : null;
+}
+
+function deriveSubjectCodeFromName(name: string): string {
+  return name.replace(/[^a-z0-9]/gi, '').toUpperCase();
+}
+
+/**
+ * Build a generation context from a leaf node.
+ *
+ * Strategy, in order:
+ *   1. **Ancestors** (preferred): find the `subject` and `grade` nodes in the
+ *      ancestor chain and read their titles directly. Use `node.termNumber`
+ *      (denormalized) for term. This is reliable regardless of the leaf
+ *      node's own code format.
+ *   2. **Regex on the leaf node's `code`** (legacy fallback): requires the
+ *      CAPS-XXX-GR10-T1 convention. Many imported nodes don't follow this,
+ *      so we only fall back when no ancestors are supplied.
+ *
+ * The tree browser passes ancestors via its `ctx` callback param.
+ * Search-based pickers (NodePicker) currently don't — callers should
+ * `resolveAncestors(node)` before invoking this function for that path.
+ */
+export function extractCurriculumContext(
+  node: CurriculumNodeItem,
+  ancestors?: CurriculumNodeItem[],
+): CurriculumGenerationContext | null {
+  // ── Strategy 1: ancestors + denormalized termNumber ────────────────────
+  if (ancestors && ancestors.length > 0) {
+    const subjectNode = ancestors.find((a) => a.type === 'subject');
+    const gradeNode = ancestors.find((a) => a.type === 'grade');
+    const term = node.termNumber ?? inferTerm(node)
+      ?? (ancestors.map((a) => a.termNumber).find((t): t is number => typeof t === 'number') ?? null);
+
+    if (subjectNode && gradeNode && term) {
+      const subjectName = subjectNode.title.trim();
+      const subjectCode = deriveSubjectCodeFromName(subjectName);
+      const gradeLevelValue = parseGradeLevelFromText(gradeNode.title)
+        ?? parseGradeLevelFromText(gradeNode.code);
+      if (subjectCode && gradeLevelValue !== null) {
+        return {
+          subjectCode,
+          subjectName: CAPS_SUBJECT_NAMES[subjectCode] ?? subjectName,
+          gradeLevel: gradeLevelValue,
+          gradeName: gradeNode.title.trim() || `Grade ${gradeLevelValue}`,
+          term,
+        };
+      }
+    }
+  }
+
+  // ── Strategy 2: legacy regex on the leaf node's code ───────────────────
   const source = `${node.code} ${node.title}`;
   const gradeMatch = source.match(/\bGR(?:ADE)?\s*0?(\d{1,2})\b/i)
     ?? source.match(/\bgrade\s*0?(\d{1,2})\b/i);
   const subjectMatch = node.code.match(/^CAPS-(.+?)-GR\d{1,2}(?:-|$)/i);
-  const term = inferTerm(node);
+  const term = node.termNumber ?? inferTerm(node);
 
   if (!gradeMatch || !subjectMatch || !term) return null;
 
@@ -172,7 +227,7 @@ export function subjectGradeIds(subject: AcademicSubjectRecord): string[] {
 
 export interface UseCurriculumPreparationResult {
   selectedNode: CurriculumNodeItem | null;
-  apply: (node: CurriculumNodeItem | null) => void;
+  apply: (node: CurriculumNodeItem | null, ancestors?: CurriculumNodeItem[]) => void;
   curriculumContext: CurriculumGenerationContext | null;
   contextStatus: CurriculumContextStatus;
   contextError: string | null;
@@ -184,7 +239,6 @@ export interface UseCurriculumPreparationResult {
 
 export function useCurriculumPreparation(): UseCurriculumPreparationResult {
   const { user } = useAuthStore();
-  const isStandaloneTeacher = user?.isStandaloneTeacher === true;
   const { subjects, loading: subjectsLoading, refetch: refetchSubjects } = useSubjects();
   const { grades, loading: gradesLoading, refetch: refetchGrades } = useGrades();
 
@@ -198,7 +252,7 @@ export function useCurriculumPreparation(): UseCurriculumPreparationResult {
 
   const preparedContextKeyRef = useRef<string | null>(null);
 
-  const apply = useCallback((node: CurriculumNodeItem | null) => {
+  const apply = useCallback((node: CurriculumNodeItem | null, ancestors?: CurriculumNodeItem[]) => {
     setSelectedNode(node);
     preparedContextKeyRef.current = null;
 
@@ -212,7 +266,7 @@ export function useCurriculumPreparation(): UseCurriculumPreparationResult {
       return;
     }
 
-    const context = extractCurriculumContext(node);
+    const context = extractCurriculumContext(node, ancestors);
     setCurriculumContext(context);
     setSubjectId('');
     setGradeId('');
@@ -224,34 +278,16 @@ export function useCurriculumPreparation(): UseCurriculumPreparationResult {
       return;
     }
 
-    // Standalone teachers reference the curriculum tree directly: the topic
-    // node has denormalized gradeId/subjectId pointing at CurriculumNode IDs.
-    // No school-side Grade/Subject records to find or create.
-    if (isStandaloneTeacher) {
-      const denormGrade = node.gradeId;
-      const denormSubject = node.subjectId;
-      const denormTerm = node.termNumber ?? context.term;
-      if (denormGrade && denormSubject && denormTerm) {
-        setGradeId(denormGrade);
-        setSubjectId(denormSubject);
-        setTerm(denormTerm);
-        setContextStatus('ready');
-        setContextError(null);
-        return;
-      }
-      setContextStatus('error');
-      setContextError('This curriculum node is missing grade or subject metadata. Pick a topic or subtopic.');
-      return;
-    }
-
+    // Every role — standalone teachers included — now flows through the
+    // school-side find-or-create logic below. Standalone teachers used to
+    // short-circuit and return CurriculumNode IDs, but the backend now
+    // materialises real Subject/Grade rows from their scope, so the cache
+    // populated by useSubjects()/useGrades() contains genuine school IDs.
     setContextStatus('preparing');
     setContextError(null);
-  }, [isStandaloneTeacher]);
+  }, []);
 
   useEffect(() => {
-    // Standalone teachers resolve subject/grade synchronously in apply() —
-    // skip the school-side find/create flow.
-    if (isStandaloneTeacher) return;
     if (!selectedNode || !curriculumContext || !user?.schoolId || subjectsLoading || gradesLoading) {
       return;
     }

@@ -44,7 +44,7 @@ export function useCurriculumStructure() {
         setSelectedFramework(defaultFw.id);
       }
     } catch (err: unknown) {
-      console.error('Failed to load frameworks', err);
+      console.warn('Failed to load frameworks', err);
     } finally {
       setLoading(false);
     }
@@ -78,7 +78,7 @@ export function useCurriculumStructure() {
       setNodes(result.nodes);
       setTotal(result.total);
     } catch (err: unknown) {
-      console.error('Failed to load nodes', err);
+      console.warn('Failed to load nodes', err);
     } finally {
       setLoading(false);
     }
@@ -153,6 +153,29 @@ export function useCurriculumStructure() {
     return unwrapResponse<CurriculumNodeItem>(response);
   }, []);
 
+  /**
+   * Walk the parentId chain to root, returning ancestors closest-first
+   * (immediate parent → ... → root). Each ancestor requires one network
+   * round-trip via loadNode — kept simple because curriculum depth maxes
+   * out at ~6 hops (phase → grade → subject → term → topic → subtopic).
+   */
+  const resolveAncestors = useCallback(async (node: CurriculumNodeItem): Promise<CurriculumNodeItem[]> => {
+    const chain: CurriculumNodeItem[] = [];
+    let parentId = node.parentId;
+    let hops = 0;
+    while (parentId && hops < 10) {
+      hops += 1;
+      try {
+        const parent = await loadNode(parentId);
+        chain.push(parent);
+        parentId = parent.parentId;
+      } catch {
+        break;
+      }
+    }
+    return chain;
+  }, [loadNode]);
+
   // ─── Init ────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -178,5 +201,6 @@ export function useCurriculumStructure() {
     fetchChildNodes,
     searchNodes,
     loadNode,
+    resolveAncestors,
   };
 }
