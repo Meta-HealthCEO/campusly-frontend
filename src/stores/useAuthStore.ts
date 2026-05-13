@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { scheduleTokenRefresh, cancelTokenRefresh } from '@/lib/token-refresh';
 import type { User, UserRole, AuthTokens, UserPermissions, PermissionFlag } from '@/types';
+import type { Subscription, Plan } from '@/types/subscription';
 
 const DEFAULT_PERMISSIONS: UserPermissions = {
   isSchoolPrincipal: false,
@@ -17,11 +18,14 @@ interface AuthState {
   user: User | null;
   tokens: AuthTokens | null;
   permissions: UserPermissions;
+  subscription: Subscription | null;
+  plan: Plan | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   setUser: (user: User) => void;
   setTokens: (tokens: AuthTokens) => void;
-  login: (user: User, tokens: AuthTokens) => void;
+  setSubscription: (sub: Subscription | null, plan: Plan | null) => void;
+  login: (user: User, tokens: AuthTokens, subscription?: Subscription | null, plan?: Plan | null) => void;
   logout: () => void;
   setLoading: (loading: boolean) => void;
   hasRole: (role: UserRole) => boolean;
@@ -46,6 +50,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   tokens: null,
   permissions: DEFAULT_PERMISSIONS,
+  subscription: null,
+  plan: null,
   isAuthenticated: false,
   isLoading: true,
   setUser: (user) => {
@@ -53,13 +59,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user, permissions: perms, isAuthenticated: true });
   },
   setTokens: (tokens) => set({ tokens }),
-  login: (user, tokens) => {
+  setSubscription: (subscription, plan) => set({ subscription, plan }),
+  login: (user, tokens, subscription = null, plan = null) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('accessToken', tokens.accessToken);
       localStorage.setItem('refreshToken', tokens.refreshToken);
     }
     const perms = parsePermissions(user as unknown as Record<string, unknown>);
-    set({ user, tokens, permissions: perms, isAuthenticated: true, isLoading: false });
+    set({ user, tokens, permissions: perms, subscription, plan, isAuthenticated: true, isLoading: false });
     scheduleTokenRefresh();
   },
   logout: () => {
@@ -68,7 +75,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
     }
-    set({ user: null, tokens: null, permissions: DEFAULT_PERMISSIONS, isAuthenticated: false, isLoading: false });
+    set({ user: null, tokens: null, permissions: DEFAULT_PERMISSIONS, subscription: null, plan: null, isAuthenticated: false, isLoading: false });
   },
   setLoading: (isLoading) => set({ isLoading }),
   hasRole: (role) => get().user?.role === role,
