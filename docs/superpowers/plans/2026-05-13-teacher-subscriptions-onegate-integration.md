@@ -984,6 +984,8 @@ Expected: FAIL — `OneGateClient` not exported.
 
 - [ ] **Step 4: Implement `client.ts`**
 
+> ⚠ **Spike finding (2026-05-13):** OneGate is Yii-based and expects `application/x-www-form-urlencoded` for POST/PUT bodies, NOT JSON. Sending JSON yields a 400 with field names reported as "blank" because the form parser sees no fields. The implementation below form-encodes all writes via `URLSearchParams`.
+
 ```ts
 // campusly-backend/src/lib/onegate/client.ts
 import axios, { type AxiosInstance, AxiosError } from 'axios';
@@ -1002,6 +1004,15 @@ export interface OneGateClientConfig {
   timeoutMs?: number;
 }
 
+function toForm(input: Record<string, unknown>): string {
+  const params = new URLSearchParams();
+  for (const [k, v] of Object.entries(input)) {
+    if (v === undefined || v === null) continue;
+    params.append(k, String(v));
+  }
+  return params.toString();
+}
+
 export class OneGateClient {
   private http: AxiosInstance;
 
@@ -1012,8 +1023,12 @@ export class OneGateClient {
     });
   }
 
-  private headers(): Record<string, string> {
-    return buildAuthHeaders({ salt: this.config.salt, orgId: this.config.orgId });
+  private headers(extra?: Record<string, string>): Record<string, string> {
+    return { ...buildAuthHeaders({ salt: this.config.salt, orgId: this.config.orgId }), ...(extra ?? {}) };
+  }
+
+  private formHeaders(): Record<string, string> {
+    return this.headers({ 'Content-Type': 'application/x-www-form-urlencoded' });
   }
 
   private async wrap<T>(promise: Promise<{ data: T }>): Promise<T> {
@@ -1033,11 +1048,11 @@ export class OneGateClient {
   }
 
   async createPaymentKey(input: CreatePaymentKeyInput): Promise<PaymentKeyResponse> {
-    return this.wrap(this.http.post<PaymentKeyResponse>('/api/v2/payment-key', input, { headers: this.headers() }));
+    return this.wrap(this.http.post<PaymentKeyResponse>('/api/v2/payment-key', toForm(input as never), { headers: this.formHeaders() }));
   }
 
   async chargeToken(guid: string, input: ChargeTokenInput): Promise<ChargeTokenResponse> {
-    return this.wrap(this.http.post<ChargeTokenResponse>(`/api/v2/customer-token/${guid}/pay`, input, { headers: this.headers() }));
+    return this.wrap(this.http.post<ChargeTokenResponse>(`/api/v2/customer-token/${guid}/pay`, toForm(input as never), { headers: this.formHeaders() }));
   }
 
   async getTransaction(id: number): Promise<GatewayTransactionResponse> {
@@ -1045,10 +1060,13 @@ export class OneGateClient {
   }
 
   async refundTransaction(id: number, amount?: number): Promise<RefundResponse> {
-    return this.wrap(this.http.put<RefundResponse>(`/api/v2/gateway-transaction/${id}/refund`, amount != null ? { amount } : {}, { headers: this.headers() }));
+    const body = amount != null ? toForm({ amount }) : '';
+    return this.wrap(this.http.put<RefundResponse>(`/api/v2/gateway-transaction/${id}/refund`, body, { headers: this.formHeaders() }));
   }
 }
 ```
+
+The nock-based test in Step 1 also needs `chargeToken` updated to match form-encoded body: change `nock(BASE).post('/api/v2/customer-token/guid-1/pay', { amount: 149, reference: 'inv_1' })` to `nock(BASE).post('/api/v2/customer-token/guid-1/pay', 'amount=149&reference=inv_1').matchHeader('Content-Type', /x-www-form-urlencoded/)`.
 
 - [ ] **Step 5: Run tests — confirm pass**
 
