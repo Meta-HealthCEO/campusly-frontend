@@ -3528,7 +3528,9 @@ git commit -m "feat(subscription): useEntitlement hook"
 
 ---
 
-### Task 5.5: `useCheckout` hook (loads widget script + launches modal)
+### Task 5.5: `useCheckout` hook (redirect to OneGate hosted page)
+
+> **Spike adjustment (2026-05-13):** Switched from widget to hosted-redirect. 3DS doesn't work in the v4 widget due to iframe-within-iframe sandboxing. The backend's `/checkout` endpoint now returns a `redirectUrl` (the `url` field from OneGate's payment-key response). The hook just navigates the browser to that URL.
 
 **Files:**
 - Create: `campusly-frontend/src/hooks/useCheckout.ts`
@@ -3541,87 +3543,60 @@ import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
-import { useSubscription } from './useSubscription';
 
-interface CheckoutInitResponse { paymentKey: string; sessionId: string; }
-
-declare global { interface Window { Checkout?: { init: (opts: CheckoutOptions) => void } } }
-
-interface CheckoutOptions {
+interface CheckoutInitResponse {
   paymentKey: string;
-  onComplete?: (data: unknown) => void;
-  onError?: (data: unknown) => void;
-}
-
-const CHECKOUT_JS = process.env.NEXT_PUBLIC_ONEGATE_CHECKOUT_JS
-  ?? 'https://payments.onegate.co.za/ext/checkout/v4/checkout.js';
-
-let scriptPromise: Promise<void> | null = null;
-
-function loadScript(): Promise<void> {
-  if (window.Checkout) return Promise.resolve();
-  if (scriptPromise) return scriptPromise;
-  scriptPromise = new Promise<void>((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = CHECKOUT_JS;
-    s.async = true;
-    s.onload = () => resolve();
-    s.onerror = () => { scriptPromise = null; reject(new Error('Failed to load OneGate Checkout')); };
-    document.body.appendChild(s);
-  });
-  return scriptPromise;
+  sessionId: string;
+  redirectUrl: string;
 }
 
 export function useCheckout() {
   const [loading, setLoading] = useState(false);
-  const { refetch } = useSubscription();
 
   const launch = useCallback(async (planCode: 'pro_monthly' | 'pro_annual') => {
     setLoading(true);
     try {
-      await loadScript();
       const res = await apiClient.post('/subscriptions/checkout', { planCode });
-      const { paymentKey, sessionId } = unwrapResponse<CheckoutInitResponse>(res);
-      if (!window.Checkout) throw new Error('Checkout SDK not loaded');
+      const { redirectUrl, sessionId } = unwrapResponse<CheckoutInitResponse>(res);
 
-      window.Checkout.init({
-        paymentKey,
-        onComplete: async () => {
-          toast.success('Card added — your trial is active');
-          await refetch();
-        },
-        onError: (err) => {
-          console.error('Checkout error:', err);
-          toast.error('Payment setup failed. Please try again.');
-        },
-      });
+      // Stash sessionId locally so /subscription/success can correlate after we return
+      sessionStorage.setItem('campusly.checkoutSession', sessionId);
+
+      // Full-page redirect to OneGate's hosted card page. User completes 3DS there,
+      // then OneGate redirects them to success_url / error_url we configured.
+      window.location.href = redirectUrl;
       return { sessionId };
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Checkout failed';
+      const msg = err instanceof Error ? err.message : 'Could not start checkout';
       toast.error(msg);
-      throw err;
-    } finally {
       setLoading(false);
+      throw err;
     }
-  }, [refetch]);
+  }, []);
 
   return { launch, loading };
 }
 ```
 
-- [ ] **Step 2: Add env var**
+- [ ] **Step 2: No widget script env var needed**
 
-Append to `campusly-frontend/.env.local`:
+Remove `NEXT_PUBLIC_ONEGATE_CHECKOUT_JS` if it was added. There is no client-side OneGate script in the redirect flow.
+
+- [ ] **Step 3: Backend `/checkout` returns `redirectUrl`**
+
+Update Task 3.3's controller to include `redirectUrl` in the response. The `startCheckout` service function already calls OneGate's `/payment-key` and receives `{ key, url, origin }` — return `url` as `redirectUrl` to the frontend along with `paymentKey` and `sessionId`. Update the response shape in `controller.ts`:
+
+```ts
+res.json({ data: { paymentKey: result.paymentKey, sessionId: result.sessionId, redirectUrl: result.redirectUrl } });
+```
+
+And in `service.ts` `startCheckout`, return `{ paymentKey, sessionId, redirectUrl: result.url }`.
+
+- [ ] **Step 4: Commit**
 
 ```
-NEXT_PUBLIC_ONEGATE_CHECKOUT_JS=https://payments.onegate.co.za/ext/checkout/v4/checkout.js
-```
-
-- [ ] **Step 3: Commit**
-
-```
-git add campusly-frontend/src/hooks/useCheckout.ts
-git commit -m "feat(subscription): useCheckout hook + widget loader"
+git add campusly-frontend/src/hooks/useCheckout.ts campusly-backend/src/modules/subscription/
+git commit -m "feat(subscription): useCheckout hook (hosted-redirect flow)"
 ```
 
 ---

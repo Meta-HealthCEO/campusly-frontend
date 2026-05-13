@@ -29,8 +29,13 @@
 
 ## 2. Gateway Overview
 
-> **⚠ P0 OPEN QUESTION — must be resolved by spike before any other implementation work begins.**
-> The Checkout Widget v4 token-on-file flow is documented in fragments across the OneGate API docs. We have not confirmed end-to-end how to capture a card token without charging the customer. The spec below assumes an **R1 verification charge that is immediately refunded** (a pattern used by Yoco, PayFast). If that doesn't work in UAT, the fallback options are: (a) charge the full first month upfront and shorten or remove the trial; (b) use `/api/v2/customer-token` flow if it can be wired to the widget; (c) re-evaluate the gateway choice. **Implementation step 0 is to validate this flow with the UAT test card before anything else is built.**
+> **✅ Spike completed 2026-05-13.** Decision: proceed with R1+refund pattern but **switch from widget to hosted-redirect flow** (Approach A from spec earlier draft). The Checkout Widget v4 cannot complete 3DS because the 3DS method form posts to a nested iframe that the browser sandboxes. Full-page redirect to OneGate's hosted card page handles 3DS at top-window level and works end-to-end. See [SPIKE_FINDINGS.md](../../../../campusly-backend/scripts/SPIKE_FINDINGS.md).
+>
+> **Additional findings baked into this spec:**
+> - All OneGate POST/PUT requests use `application/x-www-form-urlencoded`, not JSON
+> - The reusable card token is `transaction.token` (top-level field on the looked-up gateway-transaction), **not** `gateway_response_parameters.gatewayCardToken`
+> - `success_url` / `error_url` / `notify_url` must be HTTPS — `http://localhost` is rejected
+> - **Production readiness flag:** UAT demo card forces 3DS on recurring charges too. Production cards should use MIT (Merchant Initiated Transaction) exemption to bill silently. Confirm with OneGate support before launch and design dunning to handle a 3DS-required fallback (mark sub as "needs reverification", email user, retry after auth).
 
 OneGate is a Callpay-powered SA payment gateway. API V2.
 
@@ -276,7 +281,7 @@ Stale lock recovery: a second sweep releases `processingLockedAt` older than 10 
      ```
    - Store returned `key` on CheckoutSession
    - Return `{ paymentKey, sessionId }` to frontend
-3. **Frontend:** Load `checkout.js` v4 (lazy), `Checkout.init({ paymentKey, onComplete, onError })`. Modal opens, user enters card, OneGate handles 3DS.
+3. **Frontend:** Receive `{ paymentKey, sessionId, redirectUrl }` from backend. Set `window.location.href = redirectUrl` (the `url` field from OneGate's payment-key response, e.g. `https://payments.onegate.co.za/pay/hosted?payment_key=...&payment_type=credit_card`). User leaves Campusly, enters card on OneGate's hosted page, completes 3DS.
 4. **Webhook arrives** at `/api/webhooks/onegate`:
    - Persist `WebhookEvent` row (upsert on `gatewayTransactionId`)
    - If duplicate → 200 OK noop
@@ -534,7 +539,8 @@ The existing hardcoded 365-day `basic` tier in `campusly-backend/src/modules/aut
 
 | Risk | Severity | Mitigation |
 |---|---|---|
-| **R1 verification flow may not be how OneGate widget tokenisation works** | **P0** | Spike before any other implementation. Confirm with UAT card. If broken, choose fallback (charge first month upfront, or different endpoint, or gateway change). See §2 callout. |
+| ~~R1 verification flow may not be how OneGate widget tokenisation works~~ **RESOLVED 2026-05-13** | ~~P0~~ | Spike confirmed: R1+refund works via hosted-redirect flow (not widget). Form-encoded bodies required. See §2 callout. |
+| **Production cards must support MIT exemption for silent recurring billing** | **P0 (pre-launch)** | UAT demo card forces 3DS on every charge. Production confirmation needed: (1) ask OneGate support to enable MIT for our merchant, (2) verify with real card before launch, (3) design dunning fallback path for cards that DO require 3DS on recurring (mark sub as `needs_reverification`, email user, retry after they auth via redirect link). |
 | Webhook lost mid-flight | P1 | Cron reconciles via `GET /gateway-transaction/{id}` at next pass. Charges return inline so we rarely rely on webhook to know success. |
 | Concurrent cron processes same subscription | P1 | `processingLockedAt` optimistic lock + stale-lock recovery after 10 min |
 | Stored card expires between billing cycles | P1 | Pre-emptive expiry check before each charge; UI banner prompts card update |
