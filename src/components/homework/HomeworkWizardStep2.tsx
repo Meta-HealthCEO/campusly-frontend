@@ -1,6 +1,6 @@
 'use client';
-import { Button } from '@/components/ui/button';
 import { useTeacherHomeworkWizardStore } from '@/stores/useTeacherHomeworkWizardStore';
+import type { HomeworkWizardState } from '@/stores/useTeacherHomeworkWizardStore';
 import { QuizPicker } from './QuizPicker';
 import { ResourcePicker } from './ResourcePicker';
 import { HomeworkExercisePicker } from './HomeworkExercisePicker';
@@ -8,15 +8,15 @@ import { HomeworkExercisePicker } from './HomeworkExercisePicker';
 export function HomeworkWizardStep2() {
   const state = useTeacherHomeworkWizardStore();
 
-  const canAdvance =
-    (state.type === 'quiz' && !!state.quizId) ||
-    (state.type === 'reading' &&
-      !!state.contentResourceId &&
-      state.comprehensionQuestionIds.length > 0) ||
-    (state.type === 'exercise' && state.exerciseQuestionIds.length > 0);
-
   return (
     <div className="space-y-6">
+      <div className="space-y-1">
+        <h2 className="text-lg font-semibold">Choose Content</h2>
+        <p className="text-sm text-muted-foreground">
+          Pick the quiz, resource, or question set students will complete.
+        </p>
+      </div>
+
       {state.type === 'quiz' && (
         <QuizPicker
           subjectId={state.subjectId}
@@ -39,19 +39,22 @@ export function HomeworkWizardStep2() {
         <HomeworkExercisePicker
           subjectId={state.subjectId}
           gradeId={state.gradeId}
+          curriculumNodeId={state.curriculumNodeId}
           selectedIds={state.exerciseQuestionIds}
           onChange={(ids: string[]) => state.set({ exerciseQuestionIds: ids })}
         />
       )}
-
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={() => state.set({ step: 1 })}>
-          Back
-        </Button>
-        <Button onClick={() => state.set({ step: 3 })} disabled={!canAdvance}>
-          Next
-        </Button>
-      </div>
     </div>
+  );
+}
+
+/** Whether step 2's content selection is complete — read by the page footer. */
+export function isHomeworkStep2Ready(state: HomeworkWizardState): boolean {
+  return (
+    (state.type === 'quiz' && !!state.quizId) ||
+    (state.type === 'reading' &&
+      !!state.contentResourceId &&
+      state.comprehensionQuestionIds.length > 0) ||
+    (state.type === 'exercise' && state.exerciseQuestionIds.length > 0)
   );
 }

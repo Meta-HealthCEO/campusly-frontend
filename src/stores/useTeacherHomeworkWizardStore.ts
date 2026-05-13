@@ -22,7 +22,7 @@ export interface HomeworkWizardState {
   comprehensionQuestionIds: string[];
   exerciseQuestionIds: string[];
   // Wizard control
-  step: 1 | 2 | 3 | 4;
+  step: 1 | 2 | 3;
   // Setters
   set: (patch: Partial<HomeworkWizardState>) => void;
   reset: () => void;

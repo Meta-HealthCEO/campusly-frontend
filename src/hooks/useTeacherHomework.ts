@@ -22,6 +22,7 @@ export function useTeacherHomework() {
   >({});
   const [deleting, setDeleting] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchSubmissionCounts = useCallback(
     async (hwList: Homework[]) => {
@@ -46,9 +47,20 @@ export function useTeacherHomework() {
 
   useEffect(() => {
     async function fetchData() {
+      if (!user?.id) {
+        setHomeworkList([]);
+        setSubmissionCounts({});
+        setLoading(false);
+        return;
+      }
+
       try {
+        setLoading(true);
+        setError(null);
         const [hwRes, subjectsRes, classesRes] = await Promise.allSettled([
-          apiClient.get('/homework'),
+          apiClient.get('/homework', {
+            params: { teacherId: user.id, limit: 100 },
+          }),
           apiClient.get('/academic/subjects'),
           apiClient.get('/academic/classes'),
         ]);
@@ -60,6 +72,11 @@ export function useTeacherHomework() {
             (r) => normalizeHomework(r as Parameters<typeof normalizeHomework>[0]),
           );
           setHomeworkList(hwItems);
+        } else {
+          const message = extractErrorMessage(hwRes.reason, 'Could not load homework data');
+          setError(message);
+          toast.error(message);
+          setHomeworkList([]);
         }
 
         if (subjectsRes.status === 'fulfilled') {
@@ -71,12 +88,13 @@ export function useTeacherHomework() {
         }
 
         // Fetch submission counts for teacher's homework
-        const teacherHw = hwItems.filter((hw) => hw.teacherId === user?.id);
+        const teacherHw = hwItems.filter((hw) => hw.teacherId === user.id);
         if (teacherHw.length > 0) {
           await fetchSubmissionCounts(teacherHw);
+        } else {
+          setSubmissionCounts({});
         }
-      } catch (err: unknown) {
-        console.error('Failed to load homework data', err);
+      } catch {
         toast.error('Could not load homework data. Please refresh.');
       } finally {
         setLoading(false);
@@ -143,6 +161,7 @@ export function useTeacherHomework() {
     submissionCounts,
     deleting,
     loading,
+    error,
     createHomework,
     deleteHomework,
   };

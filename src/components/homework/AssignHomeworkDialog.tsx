@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -14,7 +14,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,
@@ -32,11 +31,46 @@ import type { ResourceType } from '@/types/content-library';
 const assignSchema = z.object({
   classId: z.string().min(1, 'Class is required'),
   dueDate: z.string().min(1, 'Due date is required'),
-  instructions: z.string(),
   totalMarks: z.string().min(1, 'Total marks is required'),
 });
 
 export type AssignHomeworkFormValues = z.infer<typeof assignSchema>;
+
+type HomeworkClass = Omit<SchoolClass, 'grade' | 'gradeId'> & {
+  _id?: string;
+  gradeId?: string | { id?: string; _id?: string; name?: string };
+  grade?: { name?: string };
+  gradeName?: string;
+};
+
+function classId(cls: HomeworkClass): string {
+  return cls.id ?? cls._id ?? '';
+}
+
+function isObjectIdLike(value: string): boolean {
+  return /^[0-9a-f]{24}$/i.test(value);
+}
+
+function getClassGradeName(cls: HomeworkClass): string {
+  if (cls.grade?.name) return cls.grade.name;
+  if (cls.gradeName) return cls.gradeName;
+  if (typeof cls.gradeId === 'object' && cls.gradeId?.name) return cls.gradeId.name;
+  return '';
+}
+
+function formatClassLabel(cls: HomeworkClass): string {
+  const id = classId(cls);
+  const gradeName = getClassGradeName(cls);
+  const className = cls.name && !isObjectIdLike(cls.name) ? cls.name : '';
+
+  if (className && gradeName && !className.toLowerCase().includes(gradeName.toLowerCase())) {
+    return `${gradeName} - ${className}`;
+  }
+
+  if (className) return className;
+  if (gradeName) return `${gradeName} Class`;
+  return id ? `Class ${id.slice(-6)}` : 'Class';
+}
 
 // ─── Props ─────────────────────────────────────────────────────────────────
 
@@ -66,23 +100,27 @@ export function AssignHomeworkDialog({
     handleSubmit,
     setValue,
     reset,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<AssignHomeworkFormValues>({
     resolver: zodResolver(assignSchema),
     defaultValues: {
       classId: '',
       dueDate: '',
-      instructions: '',
       totalMarks: String(defaultTotalMarks || 10),
     },
   });
+  const selectedClassId = useWatch({ control, name: 'classId' }) ?? '';
+  const classOptions = (classes as HomeworkClass[])
+    .map((cls) => ({ id: classId(cls), label: formatClassLabel(cls) }))
+    .filter((option) => option.id);
+  const selectedClassLabel = classOptions.find((option) => option.id === selectedClassId)?.label;
 
   useEffect(() => {
     if (open) {
       reset({
         classId: '',
         dueDate: '',
-        instructions: '',
         totalMarks: String(defaultTotalMarks || 10),
       });
     }
@@ -121,17 +159,21 @@ export function AssignHomeworkDialog({
               <Label>
                 Class <span className="text-destructive">*</span>
               </Label>
-              <Select onValueChange={(val: unknown) => setValue('classId', val as string)}>
+              <Select
+                value={selectedClassId || null}
+                onValueChange={(value: string | null) => {
+                  setValue('classId', value ?? '', { shouldDirty: true, shouldValidate: true });
+                }}
+              >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select class" />
+                  <SelectValue placeholder="Select class">
+                    {selectedClassLabel}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {classes.map((cls) => (
-                    <SelectItem
-                      key={cls.id ?? (cls as unknown as { _id: string })._id}
-                      value={cls.id ?? (cls as unknown as { _id: string })._id}
-                    >
-                      {cls.grade?.name ?? cls.gradeName ?? ''} {cls.name}
+                  {classOptions.map(({ id, label }) => (
+                    <SelectItem key={id} value={id}>
+                      {label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -175,15 +217,6 @@ export function AssignHomeworkDialog({
               )}
             </div>
 
-            {/* Instructions */}
-            <div className="space-y-2">
-              <Label htmlFor="assign-instructions">Additional Instructions</Label>
-              <Textarea
-                id="assign-instructions"
-                placeholder="Optional instructions for students..."
-                {...register('instructions')}
-              />
-            </div>
           </form>
         </div>
 

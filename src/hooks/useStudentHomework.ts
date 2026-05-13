@@ -118,8 +118,9 @@ export function useStudentHomeworkList(): StudentHomeworkListResult {
     setLoading(true);
     try {
       const sid = resolveId(student);
+      const classId = resolveId(student.classId);
       const [hwRes, subRes] = await Promise.allSettled([
-        apiClient.get('/homework'),
+        apiClient.get('/homework', { params: classId ? { classId } : undefined }),
         apiClient.get(`/homework/student/${sid}/submissions`),
       ]);
 

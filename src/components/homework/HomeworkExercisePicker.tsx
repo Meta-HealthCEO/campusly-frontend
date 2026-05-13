@@ -13,13 +13,25 @@ import { ExternalLink } from 'lucide-react';
 interface Props {
   subjectId: string;
   gradeId: string;
+  curriculumNodeId?: string;
   selectedIds: string[];
   onChange: (ids: string[]) => void;
 }
 
-export function HomeworkExercisePicker({ subjectId, gradeId, selectedIds, onChange }: Props) {
+export function HomeworkExercisePicker({
+  subjectId,
+  gradeId,
+  curriculumNodeId,
+  selectedIds,
+  onChange,
+}: Props) {
   const [search, setSearch] = useState('');
-  const { questions, loading } = useQuestionBankLibrary({ subjectId, gradeId, q: search });
+  const { questions, loading } = useQuestionBankLibrary({
+    subjectId,
+    gradeId,
+    curriculumNodeId,
+    q: search,
+  });
 
   const toggle = (id: string): void => {
     if (selectedIds.includes(id)) {

@@ -1,20 +1,16 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { ClassSubjectTopicPicker } from '@/components/curriculum/ClassSubjectTopicPicker';
 import { useTeacherHomeworkWizardStore } from '@/stores/useTeacherHomeworkWizardStore';
-import type { HomeworkWizardType } from '@/stores/useTeacherHomeworkWizardStore';
+import type { HomeworkWizardType, HomeworkWizardState } from '@/stores/useTeacherHomeworkWizardStore';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
+import { useCurriculumTopics } from '@/hooks/useCurriculumTopics';
 import { ClipboardList, BookOpen, Target } from 'lucide-react';
+import { getClassGradeId, type ClassLike } from '@/lib/teacher-labels';
+import type { Subject } from '@/types';
 
 const TYPE_OPTIONS: Array<{
   value: HomeworkWizardType;
@@ -45,39 +41,77 @@ const TYPE_OPTIONS: Array<{
 export function HomeworkWizardStep1() {
   const state = useTeacherHomeworkWizardStore();
   const { entries, classes } = useTeacherClasses();
+  const { topics, loading: topicsLoading } = useCurriculumTopics({
+    subjectId: state.subjectId,
+    gradeId: state.gradeId,
+  });
 
   const subjects = useMemo(() => {
-    const map = new Map<string, { id: string; name: string }>();
+    const map = new Map<string, Subject & { gradeIds?: string[] }>();
     for (const e of entries) {
-      if (e.subject && !map.has(e.subject.id)) {
-        map.set(e.subject.id, { id: e.subject.id, name: e.subject.name });
+      if (!e.subject) continue;
+      const gradeId = getClassGradeId(e.class as ClassLike);
+      const existing = map.get(e.subject.id);
+      if (existing) {
+        if (gradeId && !existing.gradeIds?.includes(gradeId)) {
+          existing.gradeIds = [...(existing.gradeIds ?? []), gradeId];
+        }
+        continue;
+      }
+      if (e.subject) {
+        map.set(e.subject.id, {
+          ...(e.subject as unknown as Subject),
+          id: e.subject.id,
+          name: e.subject.name,
+          code: e.subject.code,
+          gradeIds: gradeId ? [gradeId] : undefined,
+        } as unknown as Subject);
       }
     }
     return Array.from(map.values());
   }, [entries]);
 
-  const handleClassChange = (classId: string) => {
-    const cls = classes.find((c) => c.id === classId);
-    state.set({ classId, gradeId: cls?.gradeId ?? '' });
+  const needsTopic = state.type === 'reading' || state.type === 'exercise';
+
+  const handleTypeChange = (type: HomeworkWizardType) => {
+    state.set({
+      type,
+      quizId: '',
+      contentResourceId: '',
+      comprehensionQuestionIds: [],
+      exerciseQuestionIds: [],
+      title: state.title || `${TYPE_OPTIONS.find((option) => option.value === type)?.label ?? 'Homework'} homework`,
+    });
   };
 
-  const canAdvance =
-    !!state.type &&
-    state.title.trim().length > 0 &&
-    !!state.subjectId &&
-    !!state.classId &&
-    !!state.dueDate &&
-    state.totalMarks > 0 &&
-    (state.latePolicy !== 'penalty' ||
-      (state.latePenaltyPercent > 0 && state.latePenaltyPercent <= 100));
+  const handleClassChange = (classId: string, gradeId: string) => {
+    state.set({
+      classId,
+      gradeId,
+      subjectId: '',
+      curriculumNodeId: '',
+      quizId: '',
+      contentResourceId: '',
+      comprehensionQuestionIds: [],
+      exerciseQuestionIds: [],
+    });
+  };
+
+  const handleSubjectChange = (subjectId: string) => {
+    state.set({
+      subjectId,
+      curriculumNodeId: '',
+      quizId: '',
+      contentResourceId: '',
+      comprehensionQuestionIds: [],
+      exerciseQuestionIds: [],
+    });
+  };
 
   return (
     <div className="space-y-6">
-      {/* Type picker */}
       <div className="space-y-3">
-        <Label>
-          Type <span className="text-destructive">*</span>
-        </Label>
+        <Label>What are you assigning? <span className="text-destructive">*</span></Label>
         <div className="grid gap-3 sm:grid-cols-3">
           {TYPE_OPTIONS.map((opt) => {
             const Icon = opt.icon;
@@ -86,7 +120,7 @@ export function HomeworkWizardStep1() {
               <button
                 key={opt.value}
                 type="button"
-                onClick={() => state.set({ type: opt.value })}
+                onClick={() => handleTypeChange(opt.value)}
                 className={`flex flex-col gap-2 rounded-lg border p-4 text-left transition-colors hover:border-primary ${
                   selected ? 'border-primary bg-primary/5' : ''
                 }`}
@@ -100,8 +134,31 @@ export function HomeworkWizardStep1() {
         </div>
       </div>
 
-      {/* Metadata fields */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="space-y-2">
+        <Label>Curriculum context</Label>
+        <ClassSubjectTopicPicker
+          classes={classes}
+          subjects={subjects}
+          topics={topics}
+          topicsLoading={topicsLoading}
+          classId={state.classId}
+          subjectId={state.subjectId}
+          selectedTopicIds={state.curriculumNodeId ? [state.curriculumNodeId] : []}
+          onClassChange={handleClassChange}
+          onSubjectChange={handleSubjectChange}
+          onTopicIdsChange={(ids) => state.set({ curriculumNodeId: ids[0] ?? '' })}
+          requireTopic={needsTopic}
+          topicLabel="CAPS Topic"
+          topicHelpText={
+            needsTopic
+              ? 'Homework generation should be anchored to one CAPS topic.'
+              : 'Optional for quiz homework.'
+          }
+          topicEmptyText="No CAPS topics found for this class and subject."
+        />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor="hw-title">
             Title <span className="text-destructive">*</span>
@@ -124,52 +181,6 @@ export function HomeworkWizardStep1() {
             value={state.dueDate}
             onChange={(e) => state.set({ dueDate: e.target.value })}
           />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="hw-subject">
-            Subject <span className="text-destructive">*</span>
-          </Label>
-          <Select
-            value={state.subjectId || undefined}
-            onValueChange={(v: unknown) => {
-              if (typeof v === 'string') state.set({ subjectId: v });
-            }}
-          >
-            <SelectTrigger id="hw-subject" className="w-full">
-              <SelectValue placeholder="Choose subject" />
-            </SelectTrigger>
-            <SelectContent>
-              {subjects.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="hw-class">
-            Class <span className="text-destructive">*</span>
-          </Label>
-          <Select
-            value={state.classId || undefined}
-            onValueChange={(v: unknown) => {
-              if (typeof v === 'string') handleClassChange(v);
-            }}
-          >
-            <SelectTrigger id="hw-class" className="w-full">
-              <SelectValue placeholder="Choose class" />
-            </SelectTrigger>
-            <SelectContent>
-              {classes.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         <div className="space-y-2">
@@ -225,12 +236,22 @@ export function HomeworkWizardStep1() {
           </div>
         )}
       </div>
-
-      <div className="flex justify-end">
-        <Button onClick={() => state.set({ step: 2 })} disabled={!canAdvance}>
-          Next
-        </Button>
-      </div>
     </div>
+  );
+}
+
+/** Whether step 1's required fields are filled — read by the page footer. */
+export function isHomeworkStep1Ready(state: HomeworkWizardState): boolean {
+  const needsTopic = state.type === 'reading' || state.type === 'exercise';
+  return (
+    !!state.type &&
+    state.title.trim().length > 0 &&
+    !!state.subjectId &&
+    !!state.classId &&
+    (!needsTopic || !!state.curriculumNodeId) &&
+    !!state.dueDate &&
+    state.totalMarks > 0 &&
+    (state.latePolicy !== 'penalty' ||
+      (state.latePenaltyPercent > 0 && state.latePenaltyPercent <= 100))
   );
 }

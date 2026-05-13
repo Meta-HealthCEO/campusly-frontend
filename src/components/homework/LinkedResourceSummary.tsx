@@ -29,10 +29,10 @@ export function LinkedQuizSummary({ quiz }: { quiz: PopulatedQuizSummary | null 
         </p>
       </div>
       <Link
-        href={`/teacher/learning/quizzes/${quiz.id}`}
+        href="/teacher/learning"
         className="inline-flex items-center gap-1 text-sm text-primary hover:underline shrink-0"
       >
-        Open quiz <ExternalLink className="h-3.5 w-3.5" />
+        Open Learning <ExternalLink className="h-3.5 w-3.5" />
       </Link>
     </div>
   );

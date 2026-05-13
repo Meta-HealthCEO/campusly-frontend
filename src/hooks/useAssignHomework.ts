@@ -18,32 +18,34 @@ export function useAssignHomework() {
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [classesLoading, setClassesLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchClasses() {
-      try {
-        const res = await apiClient.get('/academic/classes');
-        setClasses(unwrapList<SchoolClass>(res));
-      } catch {
-        console.error('Failed to load classes');
-      } finally {
-        setClassesLoading(false);
-      }
+  const fetchClasses = useCallback(async () => {
+    setClassesLoading(true);
+    try {
+      const res = await apiClient.get('/academic/classes');
+      setClasses(unwrapList<SchoolClass>(res));
+    } catch {
+      setClasses([]);
+    } finally {
+      setClassesLoading(false);
     }
-    fetchClasses();
   }, []);
+
+  useEffect(() => {
+    void fetchClasses();
+  }, [fetchClasses]);
 
   const assignHomework = useCallback(
     async ({ resourceId, resourceTitle, subjectId, formData }: AssignPayload) => {
       try {
         const payload = {
+          type: 'reading' as const,
           title: resourceTitle,
-          description: formData.instructions || `Complete the resource: ${resourceTitle}`,
           subjectId,
           classId: formData.classId,
           schoolId: user?.schoolId,
           dueDate: new Date(formData.dueDate).toISOString(),
           totalMarks: Number(formData.totalMarks),
-          resourceId,
+          contentResourceId: resourceId,
         };
         await apiClient.post('/homework', payload);
         toast.success('Homework assigned successfully');
@@ -56,5 +58,5 @@ export function useAssignHomework() {
     [user?.schoolId],
   );
 
-  return { classes, classesLoading, assignHomework };
+  return { classes, classesLoading, refetchClasses: fetchClasses, assignHomework };
 }

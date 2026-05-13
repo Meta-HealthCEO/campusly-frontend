@@ -26,7 +26,7 @@ export function ResourcePicker({
   onSelect,
   onComprehensionReady,
 }: Props) {
-  const { resources, loading } = useTeacherResources({ subjectId, gradeId });
+  const { resources, loading } = useTeacherResources({ subjectId, gradeId, curriculumNodeId });
   const { generate, generating } = useComprehensionGenerator();
   const [generatedCount, setGeneratedCount] = useState(0);
 
