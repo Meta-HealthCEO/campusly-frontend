@@ -3,7 +3,7 @@
 import type { VideoLesson } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Play, Eye, Clock, Video } from 'lucide-react';
+import { Play, Eye, Video } from 'lucide-react';
 
 interface VideoCardProps {
   video: VideoLesson;
@@ -66,7 +66,7 @@ export function VideoCard({ video, onClick }: VideoCardProps) {
           <span className="truncate">{teacherName}</span>
           {video.subjectId && (
             <>
-              <span>·</span>
+              <span>-</span>
               <span className="truncate">{video.subjectId.name}</span>
             </>
           )}

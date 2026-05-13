@@ -65,6 +65,9 @@ export function useClassroomSocket(sessionId: string | null) {
 
     socket.on('connect', () => setConnected(true));
     socket.on('disconnect', () => setConnected(false));
+    socket.on('classroom:error', ({ message }: { message: string }) => {
+      console.warn('Classroom socket error:', message);
+    });
 
     socket.on('chat:message', (msg: ChatMessage) =>
       setMessages((prev) => [...prev, msg]),
@@ -113,7 +116,7 @@ export function useClassroomSocket(sessionId: string | null) {
   );
 
   const raiseHand = useCallback(() => emit('hand:raise', {}), [emit]);
-  const lowerHand = useCallback(() => emit('hand:lower', {}), [emit]);
+  const lowerHand = useCallback((userId?: string) => emit('hand:lower', userId ? { userId } : {}), [emit]);
 
   const createPoll = useCallback(
     (question: string, options: string[]) => emit('poll:create', { question, options }),

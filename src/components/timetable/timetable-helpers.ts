@@ -29,23 +29,27 @@ export const COLOR_PALETTE = [
 ];
 
 export function getSubjectId(slot: TimetableSlot): string {
-  const sid = slot.subjectId;
-  if (typeof sid === 'string') return sid;
-  if (sid && typeof sid === 'object' && 'id' in sid) return String((sid as { id: string }).id);
-  return '';
+  return resolveId(slot.subjectId) || resolveId((slot as unknown as { subject?: unknown }).subject);
 }
 
 export function getSubjectName(slot: TimetableSlot): string {
-  if (slot.subject && typeof slot.subject === 'object' && 'name' in slot.subject) {
-    return slot.subject.name;
+  const populatedSubject =
+    (slot as unknown as { subject?: unknown }).subject ??
+    (slot as unknown as { subjectId?: unknown }).subjectId;
+
+  if (populatedSubject && typeof populatedSubject === 'object' && 'name' in populatedSubject) {
+    return String((populatedSubject as { name?: string }).name || 'Subject');
   }
   return 'Subject';
 }
 
 export function getClassName(slot: TimetableSlot): string {
-  const cid = slot.classId;
-  if (cid && typeof cid === 'object' && 'name' in cid) {
-    return (cid as { name: string }).name;
+  const populatedClass =
+    (slot as unknown as { class?: unknown }).class ??
+    (slot as unknown as { classId?: unknown }).classId;
+
+  if (populatedClass && typeof populatedClass === 'object' && 'name' in populatedClass) {
+    return String((populatedClass as { name?: string }).name || '');
   }
   return '';
 }
@@ -60,5 +64,6 @@ export function resolveId(field: unknown): string {
 
 export function parseTimeToMinutes(t: string): number {
   const [h, m] = t.split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return Number.NaN;
   return h * 60 + m;
 }

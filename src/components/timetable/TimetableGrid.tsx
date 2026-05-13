@@ -4,8 +4,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
-  DAYS, DAY_LABELS_SHORT, COLOR_PALETTE,
-  getSubjectId, getSubjectName, getClassName, parseTimeToMinutes,
+  DAYS,
+  DAY_LABELS_SHORT,
+  COLOR_PALETTE,
+  getSubjectId,
+  getSubjectName,
+  getClassName,
+  parseTimeToMinutes,
 } from '@/components/timetable/timetable-helpers';
 import type { TimetableSlot, DayOfWeek } from '@/types';
 import type { TimetableConfig, PeriodTime } from '@/types/timetable-builder';
@@ -14,9 +19,15 @@ interface Props {
   config: TimetableConfig;
   timetable: TimetableSlot[];
   onSlotClick: (day: DayOfWeek, period: number, slot: TimetableSlot | null) => void;
+  editable?: boolean;
 }
 
-export function TimetableGrid({ config, timetable, onSlotClick }: Props) {
+export function TimetableGrid({
+  config,
+  timetable,
+  onSlotClick,
+  editable = false,
+}: Props) {
   const periodTimes = config.periodTimes;
   const breakAfterSet = useMemo(
     () => new Set(config.breakSlots.map((b) => b.afterPeriod)),
@@ -44,7 +55,6 @@ export function TimetableGrid({ config, timetable, onSlotClick }: Props) {
     return map;
   }, [timetable]);
 
-  // Current period indicator (updates every minute)
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const tick = () => setNow(new Date());
@@ -60,15 +70,19 @@ export function TimetableGrid({ config, timetable, onSlotClick }: Props) {
       document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
-  const currentDay = (['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const)[now.getDay()];
+
+  const currentDay = (
+    ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
+  )[now.getDay()];
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
   const currentPeriod = useMemo(() => {
     if (!DAYS.includes(currentDay as DayOfWeek)) return null;
     for (const pt of periodTimes) {
-      if (nowMinutes >= parseTimeToMinutes(pt.startTime) && nowMinutes < parseTimeToMinutes(pt.endTime)) {
-        return pt.period;
-      }
+      const start = parseTimeToMinutes(pt.startTime);
+      const end = parseTimeToMinutes(pt.endTime);
+      if (Number.isNaN(start) || Number.isNaN(end)) continue;
+      if (nowMinutes >= start && nowMinutes < end) return pt.period;
     }
     return null;
   }, [currentDay, nowMinutes, periodTimes]);
@@ -101,6 +115,7 @@ export function TimetableGrid({ config, timetable, onSlotClick }: Props) {
               currentPeriod={currentPeriod}
               currentDay={currentDay}
               onSlotClick={onSlotClick}
+              editable={editable}
             />
           ))}
         </tbody>
@@ -108,10 +123,6 @@ export function TimetableGrid({ config, timetable, onSlotClick }: Props) {
     </div>
   );
 }
-
-// ────────────────────────────────────────────────────────────────────────────
-// Sub-component: PeriodRow (keeps main component under 350 lines)
-// ────────────────────────────────────────────────────────────────────────────
 
 interface PeriodRowProps {
   periodTime: PeriodTime;
@@ -123,11 +134,20 @@ interface PeriodRowProps {
   currentPeriod: number | null;
   currentDay: string;
   onSlotClick: (day: DayOfWeek, period: number, slot: TimetableSlot | null) => void;
+  editable: boolean;
 }
 
 function PeriodRow({
-  periodTime, days, slotMap, subjectColorMap, breakAfterSet, breakSlots,
-  currentPeriod, currentDay, onSlotClick,
+  periodTime,
+  days,
+  slotMap,
+  subjectColorMap,
+  breakAfterSet,
+  breakSlots,
+  currentPeriod,
+  currentDay,
+  onSlotClick,
+  editable,
 }: PeriodRowProps) {
   const isCurrentPeriod = currentPeriod === periodTime.period;
   const breakInfo = breakAfterSet.has(periodTime.period)
@@ -139,38 +159,36 @@ function PeriodRow({
       <tr>
         <td className="border border-border p-2 text-xs text-muted-foreground whitespace-nowrap">
           <div className="font-medium">P{periodTime.period}</div>
-          <div>{periodTime.startTime}–{periodTime.endTime}</div>
+          <div>{periodTime.startTime}-{periodTime.endTime}</div>
         </td>
         {days.map((day) => {
           const slot = slotMap.get(`${day}-${periodTime.period}`) ?? null;
           const isNow = isCurrentPeriod && day === currentDay;
+          const emptyClassName =
+            'flex h-16 w-full items-center justify-center rounded-md border border-dashed border-border text-muted-foreground transition-colors';
+
           return (
             <td
               key={day}
               className={`border border-border p-1 ${isNow ? 'ring-2 ring-primary ring-inset' : ''}`}
             >
               {slot ? (
-                <button
-                  type="button"
+                <SlotCell
+                  slot={slot}
+                  colorClass={subjectColorMap.get(getSubjectId(slot)) ?? COLOR_PALETTE[0]}
+                  editable={editable}
                   onClick={() => onSlotClick(day, periodTime.period, slot)}
-                  className={`w-full rounded-md p-2 text-left transition-all hover:ring-2 hover:ring-primary/50 ${subjectColorMap.get(getSubjectId(slot)) ?? COLOR_PALETTE[0]}`}
-                >
-                  <div className="font-medium truncate">{getSubjectName(slot)}</div>
-                  {getClassName(slot) && (
-                    <div className="text-xs opacity-80 truncate">{getClassName(slot)}</div>
-                  )}
-                  {slot.room && (
-                    <div className="text-xs opacity-60 truncate">{slot.room}</div>
-                  )}
-                </button>
-              ) : (
+                />
+              ) : editable ? (
                 <button
                   type="button"
                   onClick={() => onSlotClick(day, periodTime.period, null)}
-                  className="flex h-16 w-full items-center justify-center rounded-md border border-dashed border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                  className={`${emptyClassName} hover:border-primary hover:text-primary`}
                 >
                   <Plus className="h-4 w-4" />
                 </button>
+              ) : (
+                <div className={`${emptyClassName} opacity-50`} aria-label="Free period" />
               )}
             </td>
           );
@@ -186,5 +204,42 @@ function PeriodRow({
         </tr>
       )}
     </>
+  );
+}
+
+function SlotCell({
+  slot,
+  colorClass,
+  editable,
+  onClick,
+}: {
+  slot: TimetableSlot;
+  colorClass: string;
+  editable: boolean;
+  onClick: () => void;
+}) {
+  const className = `w-full rounded-md p-2 text-left transition-all ${colorClass} ${
+    editable ? 'hover:ring-2 hover:ring-primary/50' : ''
+  }`;
+  const content = (
+    <>
+      <div className="font-medium truncate">{getSubjectName(slot)}</div>
+      {getClassName(slot) && (
+        <div className="text-xs opacity-80 truncate">{getClassName(slot)}</div>
+      )}
+      {slot.room && (
+        <div className="text-xs opacity-60 truncate">{slot.room}</div>
+      )}
+    </>
+  );
+
+  if (!editable) {
+    return <div className={className}>{content}</div>;
+  }
+
+  return (
+    <button type="button" onClick={onClick} className={className}>
+      {content}
+    </button>
   );
 }

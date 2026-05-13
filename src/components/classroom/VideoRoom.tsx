@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { LiveKitRoom, RoomAudioRenderer } from '@livekit/components-react';
 import { VideoLayout } from './VideoLayout';
 
@@ -8,9 +9,10 @@ interface VideoRoomProps {
   serverUrl: string;
   isTeacher: boolean;
   onDisconnected?: () => void;
+  children?: ReactNode;
 }
 
-export function VideoRoom({ token, serverUrl, isTeacher, onDisconnected }: VideoRoomProps) {
+export function VideoRoom({ token, serverUrl, isTeacher, onDisconnected, children }: VideoRoomProps) {
   if (!token || !serverUrl) {
     return (
       <div className="flex items-center justify-center w-full min-h-60 rounded-xl border-2 border-dashed border-muted bg-muted/20 p-6 text-center">
@@ -33,6 +35,7 @@ export function VideoRoom({ token, serverUrl, isTeacher, onDisconnected }: Video
     >
       <RoomAudioRenderer />
       <VideoLayout isTeacher={isTeacher} />
+      {children ? <div className="border-t bg-card p-3">{children}</div> : null}
     </LiveKitRoom>
   );
 }

@@ -12,7 +12,6 @@ export function useClassroomRecording(sessionId: string | null) {
 
   useEffect(() => {
     if (isRecording) {
-      setDuration(0);
       intervalRef.current = setInterval(() => {
         setDuration((d) => d + 1);
       }, 1000);
@@ -29,6 +28,7 @@ export function useClassroomRecording(sessionId: string | null) {
     if (!sessionId) return;
     try {
       await apiClient.post(`/classroom/sessions/${sessionId}/recording/start`);
+      setDuration(0);
       setIsRecording(true);
       toast.success('Recording started');
     } catch (err: unknown) {

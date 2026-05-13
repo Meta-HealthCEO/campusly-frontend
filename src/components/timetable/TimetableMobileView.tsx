@@ -4,8 +4,12 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Plus, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
-  DAYS, DAY_LABELS, COLOR_PALETTE,
-  getSubjectId, getSubjectName, getClassName,
+  DAYS,
+  DAY_LABELS,
+  COLOR_PALETTE,
+  getSubjectId,
+  getSubjectName,
+  getClassName,
 } from '@/components/timetable/timetable-helpers';
 import type { TimetableSlot, DayOfWeek } from '@/types';
 import type { TimetableConfig } from '@/types/timetable-builder';
@@ -14,9 +18,15 @@ interface Props {
   config: TimetableConfig;
   timetable: TimetableSlot[];
   onSlotClick: (day: DayOfWeek, period: number, slot: TimetableSlot | null) => void;
+  editable?: boolean;
 }
 
-export function TimetableMobileView({ config, timetable, onSlotClick }: Props) {
+export function TimetableMobileView({
+  config,
+  timetable,
+  onSlotClick,
+  editable = false,
+}: Props) {
   const periodTimes = config.periodTimes;
   const breakAfterSet = useMemo(
     () => new Set(config.breakSlots.map((b) => b.afterPeriod)),
@@ -59,9 +69,11 @@ export function TimetableMobileView({ config, timetable, onSlotClick }: Props) {
       document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
-  const todayDay = (['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const)[now.getDay()];
 
-  // Auto-scroll to today on mount
+  const todayDay = (
+    ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
+  )[now.getDay()];
+
   const todayRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -80,13 +92,11 @@ export function TimetableMobileView({ config, timetable, onSlotClick }: Props) {
             ref={isToday ? todayRef : undefined}
             className="rounded-lg border border-border"
           >
-            {/* Day header */}
             <div className="flex items-center gap-2 border-b border-border bg-muted/50 px-4 py-2.5">
               <h3 className="font-medium text-sm">{DAY_LABELS[day]}</h3>
               {isToday && <Badge variant="secondary" className="text-xs">Today</Badge>}
             </div>
 
-            {/* Period items */}
             <div className="divide-y divide-border">
               {periodTimes.map((pt) => {
                 const slot = slotMap.get(`${day}-${pt.period}`) ?? null;
@@ -97,25 +107,15 @@ export function TimetableMobileView({ config, timetable, onSlotClick }: Props) {
                 return (
                   <div key={pt.period}>
                     {slot ? (
-                      <button
-                        type="button"
+                      <MobileSlotCell
+                        slot={slot}
+                        period={pt.period}
+                        timeLabel={`${pt.startTime}-${pt.endTime}`}
+                        colorClass={subjectColorMap.get(getSubjectId(slot)) ?? COLOR_PALETTE[0]}
+                        editable={editable}
                         onClick={() => onSlotClick(day, pt.period, slot)}
-                        className={`flex w-full items-start gap-3 p-3 text-left transition-colors hover:bg-accent/50 ${subjectColorMap.get(getSubjectId(slot)) ?? COLOR_PALETTE[0]}`}
-                      >
-                        <div className="flex flex-col items-center shrink-0 pt-0.5">
-                          <span className="text-xs font-medium opacity-70">P{pt.period}</span>
-                          <Clock className="h-3 w-3 mt-0.5 opacity-50" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium truncate">{getSubjectName(slot)}</div>
-                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs opacity-80">
-                            {getClassName(slot) && <span>{getClassName(slot)}</span>}
-                            {slot.room && <span>{slot.room}</span>}
-                            <span>{pt.startTime}–{pt.endTime}</span>
-                          </div>
-                        </div>
-                      </button>
-                    ) : (
+                      />
+                    ) : editable ? (
                       <button
                         type="button"
                         onClick={() => onSlotClick(day, pt.period, null)}
@@ -126,9 +126,18 @@ export function TimetableMobileView({ config, timetable, onSlotClick }: Props) {
                         </div>
                         <div className="flex flex-1 items-center gap-2 rounded-md border border-dashed border-border px-3 py-2">
                           <Plus className="h-4 w-4 shrink-0" />
-                          <span className="text-sm">Free &middot; {pt.startTime}–{pt.endTime}</span>
+                          <span className="text-sm">Free &middot; {pt.startTime}-{pt.endTime}</span>
                         </div>
                       </button>
+                    ) : (
+                      <div className="flex w-full items-center gap-3 p-3 text-left text-muted-foreground/50">
+                        <div className="flex flex-col items-center shrink-0">
+                          <span className="text-xs font-medium">P{pt.period}</span>
+                        </div>
+                        <div className="flex flex-1 items-center rounded-md border border-dashed border-border px-3 py-2">
+                          <span className="text-sm">Free &middot; {pt.startTime}-{pt.endTime}</span>
+                        </div>
+                      </div>
                     )}
 
                     {breakInfo && (
@@ -146,5 +155,49 @@ export function TimetableMobileView({ config, timetable, onSlotClick }: Props) {
         );
       })}
     </div>
+  );
+}
+
+function MobileSlotCell({
+  slot,
+  period,
+  timeLabel,
+  colorClass,
+  editable,
+  onClick,
+}: {
+  slot: TimetableSlot;
+  period: number;
+  timeLabel: string;
+  colorClass: string;
+  editable: boolean;
+  onClick: () => void;
+}) {
+  const className = `flex w-full items-start gap-3 p-3 text-left transition-colors ${colorClass} ${
+    editable ? 'hover:bg-accent/50' : ''
+  }`;
+  const content = (
+    <>
+      <div className="flex flex-col items-center shrink-0 pt-0.5">
+        <span className="text-xs font-medium opacity-70">P{period}</span>
+        <Clock className="h-3 w-3 mt-0.5 opacity-50" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="font-medium truncate">{getSubjectName(slot)}</div>
+        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs opacity-80">
+          {getClassName(slot) && <span>{getClassName(slot)}</span>}
+          {slot.room && <span>{slot.room}</span>}
+          <span>{timeLabel}</span>
+        </div>
+      </div>
+    </>
+  );
+
+  if (!editable) return <div className={className}>{content}</div>;
+
+  return (
+    <button type="button" onClick={onClick} className={className}>
+      {content}
+    </button>
   );
 }

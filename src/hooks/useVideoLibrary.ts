@@ -9,12 +9,15 @@ export function useVideoLibrary(initialFilters?: VideoFilters) {
   const fetchVideos = async (filters?: VideoFilters) => {
     setLoading(true);
     try {
-      const params = filters ?? initialFilters ?? {};
+      const source = filters ?? initialFilters ?? {};
+      const params: Record<string, unknown> = { ...source };
+      if (source.isPublished !== undefined) params.published = source.isPublished;
+      delete params.isPublished;
       const response = await apiClient.get('/classroom/videos', { params });
       const raw = response.data.data ?? response.data;
-      setVideos(Array.isArray(raw) ? raw : raw.data ?? []);
+      setVideos(Array.isArray(raw) ? raw : raw.videos ?? raw.data ?? []);
     } catch (err: unknown) {
-      console.error('Failed to fetch video library', err);
+      console.warn('Failed to fetch video library', err);
     } finally {
       setLoading(false);
     }
@@ -29,7 +32,7 @@ export function useVideoLibrary(initialFilters?: VideoFilters) {
     videoId: string,
     payload: Partial<CreateVideoPayload>,
   ): Promise<VideoLesson> => {
-    const response = await apiClient.patch(`/classroom/videos/${videoId}`, payload);
+    const response = await apiClient.put(`/classroom/videos/${videoId}`, payload);
     return response.data.data ?? response.data;
   };
 

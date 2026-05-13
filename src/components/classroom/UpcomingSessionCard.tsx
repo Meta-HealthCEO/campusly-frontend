@@ -18,7 +18,7 @@ function formatDateTimeRange(start: string, end: string): string {
   const dateStr = s.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
   const startTime = s.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   const endTime = e.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-  return `${dateStr} · ${startTime} – ${endTime}`;
+  return `${dateStr} - ${startTime} to ${endTime}`;
 }
 
 export function UpcomingSessionCard({ session, onJoin, onStart }: UpcomingSessionCardProps) {

@@ -45,17 +45,6 @@ export function VideoFilter({ filters, onChange }: VideoFilterProps) {
         </div>
       </div>
 
-      {/* Subject */}
-      <div className="flex flex-col gap-1 w-full sm:w-44">
-        <Label className="text-xs text-muted-foreground">Subject</Label>
-        <Input
-          placeholder="Subject ID or name"
-          value={filters.subjectId ?? ''}
-          onChange={(e) => set({ subjectId: e.target.value || undefined })}
-          className="w-full"
-        />
-      </div>
-
       {/* Video Type */}
       <div className="flex flex-col gap-1 w-full sm:w-40">
         <Label className="text-xs text-muted-foreground">Type</Label>

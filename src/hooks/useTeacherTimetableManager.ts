@@ -33,7 +33,11 @@ export function useTeacherTimetableManager() {
   const hasConfig = Boolean(config && config.periodTimes.length > 0);
 
   const fetchTimetable = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setTimetable([]);
+      setLoading(false);
+      return;
+    }
     try {
       const res = await apiClient.get(`/academic/timetable/teacher/${user.id}`);
       setTimetable(unwrapList<TimetableSlot>(res));
@@ -151,6 +155,8 @@ export function useTeacherTimetableManager() {
     mutatingRef.current = true;
     try {
       await apiClient.delete(`/academic/timetable/${id}`);
+      await fetchTimetable();
+      mutatingRef.current = false;
       if (slotData) {
         toast.success('Timetable entry removed', {
           action: {
@@ -165,7 +171,6 @@ export function useTeacherTimetableManager() {
       } else {
         toast.success('Timetable entry removed');
       }
-      await fetchTimetable();
     } catch (err: unknown) {
       console.error('Failed to delete slot', err);
       toast.error(getErrorMessage(err, 'Failed to remove timetable entry.'));
