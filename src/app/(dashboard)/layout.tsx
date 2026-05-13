@@ -19,6 +19,8 @@ import {
   type NavItem,
 } from '@/lib/constants';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { TrialBanner } from '@/components/subscription/TrialBanner';
+import { DunningBanner } from '@/components/subscription/DunningBanner';
 import { composeNav } from './nav-config';
 import { useNotificationPoller } from '@/hooks/useNotificationPoller';
 import type { UserRole, PermissionFlag } from '@/types';
@@ -129,6 +131,8 @@ export default function DashboardLayout({
         <Sidebar items={navItems} />
         <div className="flex flex-1 flex-col overflow-hidden">
           <TopBar />
+          <TrialBanner />
+          <DunningBanner />
           <main className="flex-1 overflow-y-auto p-4 pb-20 lg:p-6 lg:pb-6">
             {children}
           </main>
