@@ -97,7 +97,6 @@ export function useClassesPageState() {
       toast.success(isStandaloneTeacher ? 'Teaching group created' : 'Class created');
       setShowCreateDialog(false);
     } catch (err: unknown) {
-      console.error('Failed to create class', err);
       toast.error(extractErrorMessage(err, isStandaloneTeacher ? 'Failed to create teaching group' : 'Failed to create class'));
     } finally { setCreateLoading(false); }
   }, [createClass, isStandaloneTeacher, user]);
@@ -131,10 +130,8 @@ export function useClassesPageState() {
     if (!classId || !gradeId) throw new Error(isStandaloneTeacher ? 'No teaching group selected' : 'No class selected');
     setAddStudentLoading(true);
     try {
-      await addStudent({ ...data, classId, gradeId, schoolId: user!.schoolId });
+      return await addStudent({ ...data, classId, gradeId, schoolId: user!.schoolId });
     } catch (err: unknown) {
-      console.error('Failed to add student', err);
-      toast.error(extractErrorMessage(err, 'Failed to add student'));
       throw err;
     } finally { setAddStudentLoading(false); }
   }, [selectedEntry, addStudent, isStandaloneTeacher, user]);
@@ -148,7 +145,6 @@ export function useClassesPageState() {
       toast.success(isStandaloneTeacher ? 'Teaching group updated' : 'Class updated');
       setEditEntry(null);
     } catch (err: unknown) {
-      console.error('Failed to update class', err);
       toast.error(extractErrorMessage(err, isStandaloneTeacher ? 'Failed to update teaching group' : 'Failed to update class'));
     } finally { setEditLoading(false); }
   }, [editEntry, updateClass, isStandaloneTeacher, user]);
@@ -158,7 +154,6 @@ export function useClassesPageState() {
       await removeStudent(studentId);
       toast.success('Student removed');
     } catch (err: unknown) {
-      console.error('Failed to remove student', err);
       toast.error(extractErrorMessage(err, 'Failed to remove student'));
     }
   }, [removeStudent]);
@@ -167,10 +162,10 @@ export function useClassesPageState() {
     setInvitingId(studentId);
     try {
       const result = await inviteStudent(studentId, email);
-      toast.success(`Invited! Temporary password: ${result.tempPassword}`);
-      setInviteTarget(null);
+      const channel = result.emailSent ? 'Email sent.' : 'Email could not be sent; use the temporary password manually.';
+      toast.success(`Portal credentials ready. ${channel} Temporary password: ${result.tempPassword}`);
+      return result;
     } catch (err: unknown) {
-      console.error('Failed to invite student', err);
       toast.error(extractErrorMessage(err, 'Failed to invite student'));
     } finally { setInvitingId(null); }
   }, [inviteStudent]);

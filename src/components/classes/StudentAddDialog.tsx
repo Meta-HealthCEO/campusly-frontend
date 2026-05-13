@@ -15,7 +15,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PersonalEditTab } from '@/components/students/profile-tabs/PersonalEditTab';
+import { extractErrorMessage } from '@/lib/api-helpers';
 import type { StudentProfileFormData } from '@/hooks/useStudentEditor';
+import type { AddStudentResult, StudentPortalCredentials } from '@/hooks/useTeacherClasses';
 
 interface PendingStudent {
   firstName: string;
@@ -24,11 +26,12 @@ interface PendingStudent {
 }
 
 export type AddStudentPayload = Partial<StudentProfileFormData>;
+type StudentAddTab = 'manual' | 'csv';
 
 interface StudentAddDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddStudent: (data: AddStudentPayload) => Promise<void>;
+  onAddStudent: (data: AddStudentPayload) => Promise<AddStudentResult | void>;
   isLoading: boolean;
 }
 
@@ -38,6 +41,33 @@ const EMPTY_FORM: Partial<StudentProfileFormData> = {
   admissionNumber: '',
 };
 
+function normaliseStudentPayload(form: Partial<StudentProfileFormData>): AddStudentPayload {
+  const payload: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(form)) {
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) continue;
+
+      payload[key] = key === 'dateOfBirth' && /^\d{4}-\d{2}-\d{2}$/.test(trimmed)
+        ? new Date(`${trimmed}T00:00:00.000Z`).toISOString()
+        : trimmed;
+      continue;
+    }
+
+    if (Array.isArray(value)) {
+      if (value.length > 0) payload[key] = value;
+      continue;
+    }
+
+    if (value !== undefined && value !== null) {
+      payload[key] = value;
+    }
+  }
+
+  return payload as AddStudentPayload;
+}
+
 export function StudentAddDialog({
   open,
   onOpenChange,
@@ -46,14 +76,18 @@ export function StudentAddDialog({
 }: StudentAddDialogProps) {
   const [form, setForm] = useState<Partial<StudentProfileFormData>>(EMPTY_FORM);
   const [csvText, setCsvText] = useState('');
+  const [activeTab, setActiveTab] = useState<StudentAddTab>('manual');
   const [submitting, setSubmitting] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0, errors: [] as string[] });
+  const [credentialBatch, setCredentialBatch] = useState<StudentPortalCredentials[]>([]);
 
   const resetForm = () => {
     setForm(EMPTY_FORM);
     setCsvText('');
+    setActiveTab('manual');
     setCsvErrors([]);
     setProgress({ current: 0, total: 0, errors: [] });
+    setCredentialBatch([]);
   };
 
   function handleChange(patch: Partial<StudentProfileFormData>) {
@@ -61,14 +95,20 @@ export function StudentAddDialog({
   }
 
   const submitOne = async (closeOnSuccess: boolean) => {
-    if (!form.firstName?.trim() || !form.lastName?.trim()) {
+    const payload = normaliseStudentPayload(form);
+
+    if (!payload.firstName?.trim() || !payload.lastName?.trim()) {
       toast.error('First name and last name are required');
       return;
     }
     setSubmitting(true);
     try {
-      await onAddStudent(form);
-      toast.success(`${form.firstName} ${form.lastName} added`);
+      const result = await onAddStudent(payload);
+      toast.success(`${payload.firstName} ${payload.lastName} added`);
+      if (result?.credentials) {
+        setCredentialBatch([result.credentials]);
+        return;
+      }
       if (closeOnSuccess) {
         resetForm();
         onOpenChange(false);
@@ -77,11 +117,7 @@ export function StudentAddDialog({
         setForm(EMPTY_FORM);
       }
     } catch (err: unknown) {
-      console.error('Failed to add student', err);
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Failed to add student';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to add student'));
     } finally {
       setSubmitting(false);
     }
@@ -115,19 +151,21 @@ export function StudentAddDialog({
     setCsvErrors(parseErrors);
 
     if (parsed.length === 0) {
-      if (parseErrors.length > 0) toast.error('All lines have errors — see details below');
+      if (parseErrors.length > 0) toast.error('All lines have errors - see details below');
       return;
     }
 
     setSubmitting(true);
     setProgress({ current: 0, total: parsed.length, errors: [] });
     const importErrors: string[] = [];
+    const importedCredentials: StudentPortalCredentials[] = [];
     try {
       for (let i = 0; i < parsed.length; i++) {
         try {
-          await onAddStudent(parsed[i]);
-        } catch {
-          importErrors.push(`Failed to add ${parsed[i].firstName} ${parsed[i].lastName}`);
+          const result = await onAddStudent(parsed[i]);
+          if (result?.credentials) importedCredentials.push(result.credentials);
+        } catch (err: unknown) {
+          importErrors.push(`${parsed[i].firstName} ${parsed[i].lastName}: ${extractErrorMessage(err, 'Failed to add student')}`);
         }
         setProgress(prev => ({ ...prev, current: i + 1, errors: [...importErrors] }));
       }
@@ -137,11 +175,15 @@ export function StudentAddDialog({
         : `${parsed.length} student(s) added from CSV`;
       if (succeeded > 0) toast.success(msg);
       else toast.error('All students failed to import');
-      resetForm();
-      setCsvErrors([]);
-      onOpenChange(false);
-    } catch (err: unknown) {
-      console.error('Failed to add CSV students', err);
+      if (importedCredentials.length > 0) {
+        setCredentialBatch(importedCredentials);
+        setActiveTab('manual');
+      } else {
+        resetForm();
+        setCsvErrors([]);
+        onOpenChange(false);
+      }
+    } catch {
       toast.error('Failed to add some students');
     } finally {
       setSubmitting(false);
@@ -149,6 +191,26 @@ export function StudentAddDialog({
   };
 
   const busy = isLoading || submitting;
+  const hasCredentials = credentialBatch.length > 0;
+  const loginUrl = typeof window === 'undefined' ? '/login' : `${window.location.origin}/login`;
+  const credentialText = hasCredentials
+    ? credentialBatch.map((credentials, index) => [
+      `Campusly student portal login ${credentialBatch.length > 1 ? index + 1 : ''}`.trim(),
+      `Email: ${credentials.loginEmail}`,
+      `Temporary password: ${credentials.tempPassword}`,
+      `Login: ${loginUrl}`,
+    ].join('\n')).join('\n\n')
+    : '';
+
+  const copyCredentials = async () => {
+    if (!credentialText) return;
+    try {
+      await navigator.clipboard.writeText(credentialText);
+      toast.success('Login details copied');
+    } catch {
+      toast.error('Could not copy login details');
+    }
+  };
 
   return (
     <Dialog
@@ -158,45 +220,71 @@ export function StudentAddDialog({
         onOpenChange(o);
       }}
     >
-      <DialogContent className="flex flex-col max-h-[85vh] sm:max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col gap-3 overflow-visible sm:max-w-5xl">
+        <DialogHeader className="pr-8">
           <DialogTitle>Add Students</DialogTitle>
         </DialogHeader>
-        <Tabs defaultValue="manual" className="flex-1 overflow-hidden flex flex-col">
-          <TabsList>
-            <TabsTrigger value="manual">Single — full profile</TabsTrigger>
-            <TabsTrigger value="csv">CSV — bulk minimal</TabsTrigger>
+        <Tabs
+          value={activeTab}
+          onValueChange={(value: unknown) => setActiveTab(value as StudentAddTab)}
+          className="min-h-[25rem] flex flex-col gap-3"
+        >
+          <TabsList className="shrink-0">
+            <TabsTrigger value="manual">Single - full profile</TabsTrigger>
+            <TabsTrigger value="csv">CSV - bulk minimal</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="manual" className="flex-1 overflow-y-auto py-2">
-            <p className="mb-3 text-xs text-muted-foreground">
+          <TabsContent value="manual" className="min-h-0 overflow-visible py-0">
+            {hasCredentials ? (
+              <div className="space-y-4 rounded-lg border bg-muted/30 p-4">
+                <div>
+                  <h3 className="text-sm font-semibold">Student portal login details</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Share these details with the student or parent. Passwords are shown once here.
+                  </p>
+                </div>
+                <div className="max-h-64 space-y-3 overflow-y-auto pr-1">
+                  {credentialBatch.map((credentials) => (
+                    <div key={`${credentials.loginEmail}-${credentials.tempPassword}`} className="rounded-md bg-background p-3">
+                      <div className="grid gap-3 text-sm sm:grid-cols-2">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Login email</p>
+                          <p className="font-medium break-all">{credentials.loginEmail}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Temporary password</p>
+                          <p className="font-medium">{credentials.tempPassword}</p>
+                        </div>
+                      </div>
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        <p>{credentials.emailSent ? 'Email sent to the login address.' : 'Email was not sent. Use the details above manually.'}</p>
+                        <p>{credentials.whatsappSent ? 'WhatsApp sent.' : credentials.whatsappSkippedReason}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <>
+            <p className="mb-2 text-xs text-muted-foreground">
               First and last name are required. Admission number is generated automatically if blank. Everything else can be filled later from the student&apos;s profile.
             </p>
-            <PersonalEditTab form={form} onChange={handleChange} />
-            <DialogFooter className="mt-4 gap-2 sm:gap-2">
-              <Button
-                variant="outline"
-                onClick={() => submitOne(false)}
-                disabled={busy}
-              >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save and add another'}
-              </Button>
-              <Button
-                onClick={() => submitOne(true)}
-                disabled={busy}
-              >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save and close'}
-              </Button>
-            </DialogFooter>
+            <PersonalEditTab
+              form={form}
+              onChange={handleChange}
+              className="gap-3 lg:grid-cols-3 [&_[data-slot=input]]:h-9 [&_[data-slot=phone-input-shell]]:h-9 [&_[data-slot=select-trigger]]:h-9"
+            />
+              </>
+            )}
           </TabsContent>
 
-          <TabsContent value="csv" className="flex-1 overflow-y-auto space-y-4 py-2">
+          <TabsContent value="csv" className="min-h-0 space-y-4 overflow-visible py-0">
             <div className="space-y-2">
               <Label>
                 Paste CSV (one student per line: firstName,lastName,admissionNumber)
               </Label>
               <Textarea
-                rows={8}
+                rows={6}
                 placeholder={`John,Doe,ADM001\nJane,Smith,ADM002`}
                 value={csvText}
                 onChange={(e) => { setCsvText(e.target.value); setCsvErrors([]); }}
@@ -226,16 +314,57 @@ export function StudentAddDialog({
                 )}
               </div>
             )}
-            <DialogFooter>
-              <Button
-                onClick={submitCsv}
-                disabled={busy || !csvText.trim()}
-              >
-                {busy ? 'Adding...' : 'Import'}
-              </Button>
-            </DialogFooter>
           </TabsContent>
         </Tabs>
+        <DialogFooter className="mt-1 gap-2 sm:gap-2">
+          {hasCredentials ? (
+            <>
+              <Button variant="outline" onClick={copyCredentials}>
+                Copy login details
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCredentialBatch([]);
+                  setForm(EMPTY_FORM);
+                }}
+              >
+                Add another
+              </Button>
+              <Button
+                onClick={() => {
+                  resetForm();
+                  onOpenChange(false);
+                }}
+              >
+                Done
+              </Button>
+            </>
+          ) : activeTab === 'manual' ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => submitOne(false)}
+                disabled={busy}
+              >
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save and add another'}
+              </Button>
+              <Button
+                onClick={() => submitOne(true)}
+                disabled={busy}
+              >
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save and close'}
+              </Button>
+            </>
+          ) : (
+            <Button
+              onClick={submitCsv}
+              disabled={busy || !csvText.trim()}
+            >
+              {busy ? 'Adding...' : 'Import'}
+            </Button>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

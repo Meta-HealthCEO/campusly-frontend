@@ -45,7 +45,7 @@ interface AddStudentPayload {
   gradeId: string;
   classId: string;
   schoolId: string;
-  // Profile fields — firstName/lastName/admissionNumber are required at the
+  // Profile fields - firstName/lastName/admissionNumber are required at the
   // dialog level but typed as optional here so the spread-merge in the page
   // handler doesn't have to assert them. The backend will reject if missing.
   firstName?: string;
@@ -56,6 +56,18 @@ interface AddStudentPayload {
   [key: string]: unknown;
 }
 
+export interface StudentPortalCredentials {
+  loginEmail: string;
+  tempPassword: string;
+  emailSent: boolean;
+  whatsappSent: boolean;
+  whatsappSkippedReason?: string;
+}
+
+export interface AddStudentResult {
+  student: Student;
+  credentials?: StudentPortalCredentials;
+}
 
 export function useTeacherClasses() {
   const [entries, setEntries] = useState<TeacherClassEntry[]>([]);
@@ -105,7 +117,6 @@ export function useTeacherClasses() {
         setEntries(result);
       } catch (err: unknown) {
         if ((err as { name?: string })?.name === 'CanceledError') return;
-        console.error('Failed to load teaching load', err);
         toast.error('Could not load classes. Please refresh.');
       } finally {
         if (!controller.signal.aborted) setLoading(false);
@@ -165,7 +176,9 @@ export function useTeacherClasses() {
   const addStudent = useCallback(async (data: AddStudentPayload) => {
     const res = await apiClient.post('/students', data);
     refetch();
-    return unwrapResponse<Student>(res);
+    const payload = unwrapResponse<Student | AddStudentResult>(res);
+    if ('student' in payload) return payload;
+    return { student: payload };
   }, [refetch]);
 
   const removeStudent = useCallback(async (studentId: string) => {
@@ -175,7 +188,7 @@ export function useTeacherClasses() {
 
   const inviteStudent = useCallback(async (studentId: string, email: string) => {
     const res = await apiClient.post(`/students/${studentId}/invite`, { email });
-    return unwrapResponse<{ tempPassword: string }>(res);
+    return unwrapResponse<StudentPortalCredentials>(res);
   }, []);
 
   const reassignStudent = useCallback(async (studentId: string, classId: string) => {
