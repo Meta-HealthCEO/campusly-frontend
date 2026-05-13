@@ -46,7 +46,7 @@ export function AssessmentInfoCard({ assessment, onEdit, onDelete }: Props) {
             </p>
             {paperId && (
               <Link
-                href={`/teacher/curriculum/assessments/${paperId}`}
+                href={`/teacher/papers/${paperId}`}
                 className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline"
               >
                 <FileText className="h-3 w-3" />

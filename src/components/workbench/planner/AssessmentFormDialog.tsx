@@ -29,7 +29,7 @@ const schema = z.object({
   type: z.enum(['test', 'exam', 'assignment', 'practical', 'project']),
   plannedDate: z.string().min(1, 'Date is required'),
   marks: z.number().min(1, 'Marks must be at least 1'),
-  weight: z.number().min(0).max(100, 'Weight must be 0–100'),
+  weight: z.number().min(0).max(100, 'Weight must be 0-100'),
   topicIds: z.array(z.string()),
 });
 
@@ -40,7 +40,9 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: PlannedAssessment) => void;
   initialData?: PlannedAssessment;
+  defaultDate?: string;
   topics: CurriculumTopic[];
+  loadingTopics?: boolean;
 }
 
 const TYPES: AssessmentPlanType[] = ['test', 'exam', 'assignment', 'practical', 'project'];
@@ -50,7 +52,9 @@ export function AssessmentFormDialog({
   onOpenChange,
   onSubmit,
   initialData,
+  defaultDate = '',
   topics,
+  loadingTopics = false,
 }: Props) {
   const {
     register,
@@ -72,6 +76,7 @@ export function AssessmentFormDialog({
   });
 
   const selectedTopicIds = watch('topicIds');
+  const selectedType = watch('type');
 
   useEffect(() => {
     if (open) {
@@ -85,10 +90,10 @@ export function AssessmentFormDialog({
           topicIds: initialData.topicIds,
         });
       } else {
-        reset({ title: '', type: 'test', plannedDate: '', marks: 100, weight: 0, topicIds: [] });
+        reset({ title: '', type: 'test', plannedDate: defaultDate, marks: 100, weight: 0, topicIds: [] });
       }
     }
-  }, [open, initialData, reset]);
+  }, [defaultDate, open, initialData, reset]);
 
   function handleFormSubmit(data: FormData) {
     onSubmit({
@@ -99,6 +104,7 @@ export function AssessmentFormDialog({
       weight: data.weight,
       topicIds: data.topicIds,
       assessmentId: initialData?.assessmentId ?? null,
+      linkedPaperId: initialData?.linkedPaperId ?? initialData?.assessmentId ?? null,
       status: initialData?.status ?? 'planned',
     });
     onOpenChange(false);
@@ -106,11 +112,18 @@ export function AssessmentFormDialog({
 
   function toggleTopic(topicId: string) {
     const current = selectedTopicIds ?? [];
-    if (current.includes(topicId)) {
-      setValue('topicIds', current.filter((id) => id !== topicId));
-    } else {
-      setValue('topicIds', [...current, topicId]);
-    }
+    const next = current.includes(topicId)
+      ? current.filter((id) => id !== topicId)
+      : [...current, topicId];
+    setValue('topicIds', next, { shouldDirty: true });
+  }
+
+  function handleTypeChange(value: AssessmentPlanType) {
+    setValue('type', value, { shouldDirty: true });
+  }
+
+  function topicIsSelected(topicId: string) {
+    return (selectedTopicIds ?? []).includes(topicId);
   }
 
   return (
@@ -136,9 +149,9 @@ export function AssessmentFormDialog({
           <div className="space-y-1.5">
             <Label>Type <span className="text-destructive">*</span></Label>
             <Select
-              defaultValue={initialData?.type ?? 'test'}
+              value={selectedType}
               onValueChange={(val: unknown) =>
-                setValue('type', val as AssessmentPlanType)
+                handleTypeChange(val as AssessmentPlanType)
               }
             >
               <SelectTrigger className="w-full">
@@ -182,25 +195,36 @@ export function AssessmentFormDialog({
             </div>
           </div>
 
-          {topics.length > 0 && (
-            <div className="space-y-2">
-              <Label>Topics Covered</Label>
+          <div className="space-y-2">
+            <Label>Topics Covered</Label>
+            {loadingTopics ? (
+              <p className="rounded-md border p-3 text-sm text-muted-foreground">Loading topics...</p>
+            ) : topics.length > 0 ? (
               <div className="space-y-1.5 max-h-40 overflow-y-auto border rounded-md p-2">
-                {topics.map((topic) => (
-                  <label
-                    key={topic.id}
-                    className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5"
-                  >
-                    <Checkbox
-                      checked={(selectedTopicIds ?? []).includes(topic.id)}
-                      onCheckedChange={() => toggleTopic(topic.id)}
-                    />
-                    <span className="text-sm truncate">{topic.name}</span>
-                  </label>
-                ))}
+                {topics.map((topic) => {
+                  const topicId = topic.id ?? topic._id ?? '';
+                  if (!topicId) return null;
+                  const label = topic.name || topic.title || 'Untitled topic';
+                  return (
+                    <label
+                      key={topicId}
+                      className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5"
+                    >
+                      <Checkbox
+                        checked={topicIsSelected(topicId)}
+                        onCheckedChange={() => toggleTopic(topicId)}
+                      />
+                      <span className="text-sm truncate">{label}</span>
+                    </label>
+                  );
+                })}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="rounded-md border p-3 text-sm text-muted-foreground">
+                No topics are available for this subject and term yet.
+              </p>
+            )}
+          </div>
         </form>
 
         <DialogFooter>

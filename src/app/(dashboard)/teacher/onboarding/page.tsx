@@ -9,10 +9,13 @@ import { useClasses, useGrades } from '@/hooks/useAcademics';
 import { SchoolSetupStep } from '@/components/onboarding/SchoolSetupStep';
 import type { SchoolSetupData } from '@/components/onboarding/SchoolSetupStep';
 import { GradesSubjectsStep } from '@/components/onboarding/GradesSubjectsStep';
-import { AddStudentsStep } from '@/components/onboarding/AddStudentsStep';
+import { AddStudentsStep, type PendingStudent } from '@/components/onboarding/AddStudentsStep';
+import { WizardFooter } from '@/components/shared/WizardFooter';
 import { GRADE_LEVELS } from '@/lib/constants';
 import { resolveId } from '@/lib/api-helpers';
 import type { Grade } from '@/types';
+
+const SCHOOL_SETUP_FORM_ID = 'teacher-onboarding-school-setup';
 
 export default function TeacherOnboardingPage() {
   const router = useRouter();
@@ -27,6 +30,16 @@ export default function TeacherOnboardingPage() {
   const [createdGrades, setCreatedGrades] = useState<Grade[]>([]);
   const [classByGradeId, setClassByGradeId] = useState<Record<string, string>>({});
   const [resumeChecked, setResumeChecked] = useState(false);
+
+  // Step 2 state
+  const [selectedGrades, setSelectedGrades] = useState<string[]>([]);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+
+  // Step 3 state
+  const [pendingStudents, setPendingStudents] = useState<PendingStudent[]>([]);
+  const [csvText, setCsvText] = useState('');
+  const [showCsv, setShowCsv] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const schoolName = useMemo(() => {
     if (!user) return '';
@@ -46,20 +59,18 @@ export default function TeacherOnboardingPage() {
     }
   }, [updateSchool]);
 
-  const handleGradesSubjects = useCallback(async (gradeNames: string[], subjectNames: string[]) => {
+  const handleGradesSubjects = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Create grades
       const newGrades: Grade[] = [];
-      for (const name of gradeNames) {
+      for (const name of selectedGrades) {
         const orderIndex = GRADE_LEVELS.indexOf(name as typeof GRADE_LEVELS[number]);
         const grade = await createGrade(name, orderIndex >= 0 ? orderIndex : 0);
         newGrades.push(grade);
       }
 
-      // Create subjects with all selected grade IDs
       const gradeIds = newGrades.map((g) => g.id);
-      for (const name of subjectNames) {
+      for (const name of selectedSubjects) {
         const code = name.substring(0, 3).toUpperCase();
         await createSubject(name, code, gradeIds);
       }
@@ -74,14 +85,14 @@ export default function TeacherOnboardingPage() {
       setClassByGradeId(nextClassByGradeId);
       await refetchGrades();
       await refetchClasses();
-      toast.success(`Created ${newGrades.length} grades, ${subjectNames.length} subjects, and ${newGrades.length} classes`);
+      toast.success(`Created ${newGrades.length} grades, ${selectedSubjects.length} subjects, and ${newGrades.length} classes`);
       setStep(3);
     } catch {
       toast.error('Failed to create grades/subjects');
     } finally {
       setIsLoading(false);
     }
-  }, [createClass, createGrade, createSubject, refetchClasses, refetchGrades]);
+  }, [selectedGrades, selectedSubjects, createClass, createGrade, createSubject, refetchClasses, refetchGrades]);
 
   const bulkCreateStudentsForSelectedGrades = useCallback(
     async (students: { firstName: string; lastName: string; gradeId: string }[]) => {
@@ -102,6 +113,26 @@ export default function TeacherOnboardingPage() {
     router.push('/teacher');
   }, [router]);
 
+  const submitStudents = useCallback(async () => {
+    if (pendingStudents.length === 0) {
+      handleFinish();
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const payload = pendingStudents.map(({ firstName, lastName, gradeId }) => ({
+        firstName, lastName, gradeId,
+      }));
+      const created = await bulkCreateStudentsForSelectedGrades(payload);
+      toast.success(`${created} student(s) added successfully`);
+      handleFinish();
+    } catch {
+      toast.error('Failed to add some students');
+    } finally {
+      setSubmitting(false);
+    }
+  }, [pendingStudents, bulkCreateStudentsForSelectedGrades, handleFinish]);
+
   useEffect(() => {
     if (resumeChecked || gradesLoading || classesLoading) return;
 
@@ -120,11 +151,48 @@ export default function TeacherOnboardingPage() {
   }, [classes, classesLoading, gradesLoading, resumeChecked]);
 
   const allGrades = createdGrades.length > 0 ? createdGrades : grades;
-
   const stepLabels = ['School Setup', 'Grades & Subjects', 'Students'];
+  const busy = isLoading || submitting;
+
+  const footer = (() => {
+    if (step === 1) {
+      return {
+        nextFormId: SCHOOL_SETUP_FORM_ID,
+        nextLabel: isLoading ? 'Saving…' : 'Next: Add Grades & Subjects',
+        nextLoading: isLoading,
+        nextDisabled: isLoading,
+      };
+    }
+    if (step === 2) {
+      return {
+        onNext: () => void handleGradesSubjects(),
+        nextLabel: isLoading ? 'Creating grades & subjects…' : 'Next: Add Students',
+        nextLoading: isLoading,
+        nextDisabled: isLoading || selectedGrades.length === 0 || selectedSubjects.length === 0,
+      };
+    }
+    return {
+      onNext: () => void submitStudents(),
+      nextLabel: busy
+        ? 'Adding students…'
+        : pendingStudents.length === 0
+          ? 'Finish'
+          : `Done — Add ${pendingStudents.length} Student${pendingStudents.length !== 1 ? 's' : ''}`,
+      nextLoading: busy,
+      nextDisabled: busy,
+      isFinal: true,
+      secondary: pendingStudents.length === 0
+        ? undefined
+        : {
+            label: 'Skip — add students later',
+            onClick: handleFinish,
+            disabled: busy,
+          },
+    };
+  })();
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 sm:py-12">
+    <div className="mx-auto max-w-2xl px-4 py-6 pb-24 sm:py-12">
       {/* Progress indicator */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
@@ -156,27 +224,37 @@ export default function TeacherOnboardingPage() {
         {step === 1 && (
           <SchoolSetupStep
             defaultName={schoolName}
+            formId={SCHOOL_SETUP_FORM_ID}
             onNext={handleSchoolSetup}
-            isLoading={isLoading}
           />
         )}
         {step === 2 && (
           <GradesSubjectsStep
-            onNext={handleGradesSubjects}
-            onBack={() => setStep(1)}
-            isLoading={isLoading}
+            selectedGrades={selectedGrades}
+            selectedSubjects={selectedSubjects}
+            onGradesChange={setSelectedGrades}
+            onSubjectsChange={setSelectedSubjects}
           />
         )}
         {step === 3 && (
           <AddStudentsStep
             grades={allGrades}
-            onBulkCreate={bulkCreateStudentsForSelectedGrades}
-            onBack={() => setStep(2)}
-            onFinish={handleFinish}
-            isLoading={isLoading}
+            pendingStudents={pendingStudents}
+            onPendingChange={setPendingStudents}
+            csvText={csvText}
+            onCsvTextChange={setCsvText}
+            showCsv={showCsv}
+            onShowCsvToggle={() => setShowCsv((prev) => !prev)}
           />
         )}
       </div>
+
+      <WizardFooter
+        step={step}
+        totalSteps={3}
+        onBack={step > 1 ? () => setStep(step - 1) : undefined}
+        {...footer}
+      />
     </div>
   );
 }

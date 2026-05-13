@@ -3,15 +3,32 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { WeightingInfo } from '@/types';
+import type { AssessmentPlanType, WeightingInfo } from '@/types';
 
 interface Props {
   weightings: WeightingInfo[];
 }
 
+const TYPE_LABELS: Record<AssessmentPlanType, string> = {
+  test: 'Tests',
+  exam: 'Exams',
+  assignment: 'Assignments',
+  practical: 'Practicals',
+  project: 'Projects',
+};
+
+const TYPE_ORDER: AssessmentPlanType[] = ['test', 'exam', 'assignment', 'practical', 'project'];
+
 function progressBarWidth(actual: number, required: number): number {
-  if (required === 0) return 0;
+  if (required <= 0) return Math.min(actual, 100);
   return Math.min((actual / required) * 100, 100);
+}
+
+function totalTone(total: number, required: number): string {
+  const target = required || 100;
+  if (Math.round(total) === Math.round(target)) return 'border-emerald-500 text-emerald-700';
+  if (total > target) return 'border-destructive text-destructive';
+  return 'border-amber-500 text-amber-700';
 }
 
 export function WeightingSidebar({ weightings }: Props) {
@@ -24,59 +41,57 @@ export function WeightingSidebar({ weightings }: Props) {
         {weightings.length === 0 && (
           <p className="text-xs text-muted-foreground">No weighting data available.</p>
         )}
-        {weightings.map((w) => {
-          const formalPct = progressBarWidth(w.actualFormalWeight, w.requiredFormalWeight);
-          const isUnbalanced = Math.round(w.totalWeight) !== 100;
+
+        {weightings.map((weighting) => {
+          const requiredTotal = weighting.totalRequiredWeight || 100;
+          const totalPct = progressBarWidth(weighting.totalWeight, requiredTotal);
 
           return (
-            <div key={w.subjectId} className="space-y-1.5">
+            <div key={weighting.subjectId} className="space-y-3">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-medium truncate">{w.subjectName}</span>
-                {isUnbalanced && (
-                  <Badge variant="destructive" className="text-xs shrink-0">
-                    {Math.round(w.totalWeight)}%
-                  </Badge>
-                )}
+                <span className="text-xs font-medium truncate">{weighting.subjectName}</span>
+                <Badge variant="outline" className={cn('text-xs shrink-0', totalTone(weighting.totalWeight, requiredTotal))}>
+                  {Math.round(weighting.totalWeight)}% / {requiredTotal}%
+                </Badge>
               </div>
 
               <div className="space-y-1">
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Formal</span>
-                  <span>
-                    {w.actualFormalWeight}% / {w.requiredFormalWeight}%
-                  </span>
+                  <span>Total planned</span>
+                  <span>{weighting.assessmentCount ?? 0} items</span>
                 </div>
-                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                   <div
                     className={cn(
                       'h-full rounded-full transition-all',
-                      formalPct >= 100 ? 'bg-emerald-500' : 'bg-primary',
+                      weighting.totalWeight > requiredTotal
+                        ? 'bg-destructive'
+                        : totalPct >= 100
+                          ? 'bg-emerald-500'
+                          : 'bg-primary',
                     )}
-                    style={{ width: `${formalPct}%` }}
+                    style={{ width: `${totalPct}%` }}
                   />
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Informal</span>
-                  <span>
-                    {w.actualInformalWeight}% / {w.requiredInformalWeight}%
-                  </span>
-                </div>
-                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                  <div
-                    className={cn(
-                      'h-full rounded-full transition-all',
-                      progressBarWidth(w.actualInformalWeight, w.requiredInformalWeight) >= 100
-                        ? 'bg-emerald-500'
-                        : 'bg-primary',
-                    )}
-                    style={{
-                      width: `${progressBarWidth(w.actualInformalWeight, w.requiredInformalWeight)}%`,
-                    }}
-                  />
-                </div>
+              <div className="space-y-2">
+                {TYPE_ORDER.map((type) => {
+                  const actual = Number(weighting.byType?.[type] ?? 0);
+                  const required = Number(weighting.requiredByType?.[type] ?? 0);
+                  if (actual === 0 && required === 0) return null;
+
+                  return (
+                    <div key={type} className="rounded-md border p-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium">{TYPE_LABELS[type]}</span>
+                        <span className="text-muted-foreground">
+                          {actual}%{required > 0 ? ` / ${required}%` : ''}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );

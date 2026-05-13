@@ -2,12 +2,13 @@ import { useCallback } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
-import type { Grade, Subject } from '@/types';
+import type { Grade, Subject, SchoolClass } from '@/types';
 
 interface CreateStudentPayload {
   firstName: string;
   lastName: string;
   gradeId: string;
+  classId: string;
 }
 
 interface SchoolUpdatePayload {
@@ -52,14 +53,24 @@ export function useTeacherOnboarding() {
     return unwrapResponse<Subject>(res);
   }, [schoolId]);
 
+  const createClass = useCallback(async (name: string, gradeId: string): Promise<SchoolClass> => {
+    const res = await apiClient.post('/academic/classes', {
+      name,
+      gradeId,
+      schoolId,
+      teacherId: user?.id,
+      capacity: 200,
+    });
+    return unwrapResponse<SchoolClass>(res);
+  }, [schoolId, user?.id]);
+
   const createStudent = useCallback(async (data: CreateStudentPayload): Promise<unknown> => {
+    const admissionNumber = `STU-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const res = await apiClient.post('/students', {
       ...data,
       schoolId,
-      email: `${data.firstName.toLowerCase()}.${data.lastName.toLowerCase()}@placeholder.campusly`,
-      dateOfBirth: '2010-01-01',
-      gender: 'other',
-      admissionNumber: `STU-${Date.now()}`,
+      email: `${admissionNumber.toLowerCase()}@students.campusly.local`,
+      admissionNumber,
     });
     return unwrapResponse(res);
   }, [schoolId]);
@@ -77,5 +88,5 @@ export function useTeacherOnboarding() {
     return created;
   }, [createStudent]);
 
-  return { updateSchool, createGrade, createSubject, createStudent, bulkCreateStudents };
+  return { updateSchool, createGrade, createSubject, createClass, createStudent, bulkCreateStudents };
 }

@@ -1,13 +1,15 @@
 'use client';
 
-import { CheckCircle, ClipboardCheck, BookOpen, Compass } from 'lucide-react';
+import {
+  CheckCircle, ClipboardCheck, BookOpen, FileText,
+} from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 const QUICK_LINKS = [
   { href: '/teacher/attendance', icon: ClipboardCheck, label: 'Take attendance' },
   { href: '/teacher/homework', icon: BookOpen, label: 'Assign homework' },
-  { href: '/teacher/curriculum', icon: Compass, label: 'Explore curriculum' },
+  { href: '/teacher/papers', icon: FileText, label: 'Build a test paper' },
 ] as const;
 
 interface OnboardingDoneStepProps {

@@ -49,43 +49,45 @@ export function useTeacherAssessments(params: {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!enabled) {
-      setAssessments([]);
-      setLoading(false);
-      return;
-    }
+    if (!enabled) return;
     let cancelled = false;
-    setLoading(true);
     const query: Record<string, string> = {};
     if (classId) query.classId = classId;
     if (subjectId) query.subjectId = subjectId;
 
-    apiClient
-      .get('/academic/assessments', { params: query })
-      .then((res: AxiosResponse) => {
-        if (cancelled) return;
-        const rows = unwrapList<RawAssessment>(res).map<AssessmentLite>((r) => ({
-          id: (r.id ?? r._id) ?? '',
-          name: r.name ?? '',
-          totalMarks: r.totalMarks ?? 0,
-          term: r.term ?? 0,
-          classId: r.classId ?? null,
-          subjectId: normaliseSubjectId(r.subjectId),
-          subjectName: normaliseSubjectName(r.subjectId),
-        }));
-        setAssessments(rows);
-      })
-      .catch(() => {
-        if (!cancelled) setAssessments([]);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+      setLoading(true);
+      return apiClient
+        .get('/academic/assessments', { params: query })
+        .then((res: AxiosResponse) => {
+          if (cancelled) return;
+          const rows = unwrapList<RawAssessment>(res).map<AssessmentLite>((r) => ({
+            id: (r.id ?? r._id) ?? '',
+            name: r.name ?? '',
+            totalMarks: r.totalMarks ?? 0,
+            term: r.term ?? 0,
+            classId: r.classId ?? null,
+            subjectId: normaliseSubjectId(r.subjectId),
+            subjectName: normaliseSubjectName(r.subjectId),
+          }));
+          setAssessments(rows);
+        })
+        .catch(() => {
+          if (!cancelled) setAssessments([]);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    });
 
     return () => {
       cancelled = true;
     };
   }, [classId, subjectId, enabled]);
 
-  return { assessments, loading };
+  return {
+    assessments: enabled ? assessments : [],
+    loading: enabled ? loading : false,
+  };
 }

@@ -1,12 +1,18 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Building2, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Building2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { SA_PROVINCES } from '@/lib/constants';
 
 const schoolSetupSchema = z.object({
@@ -19,8 +25,8 @@ type SchoolSetupData = z.infer<typeof schoolSetupSchema>;
 
 interface SchoolSetupStepProps {
   defaultName: string;
+  formId: string;
   onNext: (data: SchoolSetupData) => Promise<void>;
-  isLoading: boolean;
 }
 
 const SCHOOL_TYPES = [
@@ -29,8 +35,18 @@ const SCHOOL_TYPES = [
   { value: 'government', label: 'Government School' },
 ] as const;
 
-export function SchoolSetupStep({ defaultName, onNext, isLoading }: SchoolSetupStepProps) {
+const selectTriggerClassName =
+  'h-10 w-full justify-between bg-background text-foreground dark:bg-input/30 dark:text-white dark:hover:bg-input/40';
+
+const selectContentClassName =
+  'bg-popover text-popover-foreground dark:bg-[#111111] dark:text-white';
+
+const selectItemClassName =
+  'py-2 text-foreground data-[highlighted]:bg-[#2563EB] data-[highlighted]:text-white data-[selected]:bg-[#2563EB] data-[selected]:text-white dark:text-white';
+
+export function SchoolSetupStep({ defaultName, formId, onNext }: SchoolSetupStepProps) {
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors },
@@ -40,7 +56,7 @@ export function SchoolSetupStep({ defaultName, onNext, isLoading }: SchoolSetupS
   });
 
   return (
-    <form onSubmit={handleSubmit(onNext)} className="space-y-6">
+    <form id={formId} onSubmit={handleSubmit(onNext)} className="space-y-6">
       <div className="flex items-center gap-2 text-sm font-semibold">
         <Building2 className="h-4 w-4 text-[#2563EB]" />
         School / Classroom Details
@@ -68,15 +84,31 @@ export function SchoolSetupStep({ defaultName, onNext, isLoading }: SchoolSetupS
             <Label htmlFor="type">
               School Type <span className="text-destructive">*</span>
             </Label>
-            <select
-              id="type"
-              {...register('type')}
-              className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-            >
-              {SCHOOL_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </select>
+            <Controller
+              name="type"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value || null}
+                  onValueChange={(value: string | null) => field.onChange(value ?? '')}
+                >
+                  <SelectTrigger
+                    id="type"
+                    className={selectTriggerClassName}
+                    aria-invalid={!!errors.type}
+                  >
+                    <SelectValue placeholder="Select school type" />
+                  </SelectTrigger>
+                  <SelectContent className={selectContentClassName}>
+                    {SCHOOL_TYPES.map((t) => (
+                      <SelectItem key={t.value} value={t.value} className={selectItemClassName}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
             {errors.type && (
               <p className="text-xs text-destructive">{errors.type.message}</p>
             )}
@@ -86,16 +118,31 @@ export function SchoolSetupStep({ defaultName, onNext, isLoading }: SchoolSetupS
             <Label htmlFor="province">
               Province <span className="text-destructive">*</span>
             </Label>
-            <select
-              id="province"
-              {...register('province')}
-              className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-            >
-              <option value="">Select province</option>
-              {SA_PROVINCES.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
+            <Controller
+              name="province"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value || null}
+                  onValueChange={(value: string | null) => field.onChange(value ?? '')}
+                >
+                  <SelectTrigger
+                    id="province"
+                    className={selectTriggerClassName}
+                    aria-invalid={!!errors.province}
+                  >
+                    <SelectValue placeholder="Select province" />
+                  </SelectTrigger>
+                  <SelectContent className={selectContentClassName}>
+                    {SA_PROVINCES.map((p) => (
+                      <SelectItem key={p} value={p} className={selectItemClassName}>
+                        {p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
             {errors.province && (
               <p className="text-xs text-destructive">{errors.province.message}</p>
             )}
@@ -103,20 +150,6 @@ export function SchoolSetupStep({ defaultName, onNext, isLoading }: SchoolSetupS
         </div>
       </div>
 
-      <Button
-        type="submit"
-        disabled={isLoading}
-        className="h-10 w-full bg-[#2563EB] hover:bg-[#1d4ed8]"
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Saving...
-          </>
-        ) : (
-          'Next: Add Grades & Subjects'
-        )}
-      </Button>
     </form>
   );
 }

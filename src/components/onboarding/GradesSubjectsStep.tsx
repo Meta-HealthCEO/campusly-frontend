@@ -1,8 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { BookOpen, GraduationCap, Loader2, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { BookOpen, GraduationCap, Check } from 'lucide-react';
 import { GRADE_LEVELS } from '@/lib/constants';
 
 const SA_SUBJECTS = [
@@ -13,28 +11,30 @@ const SA_SUBJECTS = [
 ] as const;
 
 interface GradesSubjectsStepProps {
-  onNext: (grades: string[], subjects: string[]) => Promise<void>;
-  onBack: () => void;
-  isLoading: boolean;
+  selectedGrades: string[];
+  selectedSubjects: string[];
+  onGradesChange: (grades: string[]) => void;
+  onSubjectsChange: (subjects: string[]) => void;
 }
 
-export function GradesSubjectsStep({ onNext, onBack, isLoading }: GradesSubjectsStepProps) {
-  const [selectedGrades, setSelectedGrades] = useState<string[]>([]);
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
-
+export function GradesSubjectsStep({
+  selectedGrades, selectedSubjects, onGradesChange, onSubjectsChange,
+}: GradesSubjectsStepProps) {
   const toggleGrade = (grade: string) => {
-    setSelectedGrades((prev) =>
-      prev.includes(grade) ? prev.filter((g) => g !== grade) : [...prev, grade],
+    onGradesChange(
+      selectedGrades.includes(grade)
+        ? selectedGrades.filter((g) => g !== grade)
+        : [...selectedGrades, grade],
     );
   };
 
   const toggleSubject = (subject: string) => {
-    setSelectedSubjects((prev) =>
-      prev.includes(subject) ? prev.filter((s) => s !== subject) : [...prev, subject],
+    onSubjectsChange(
+      selectedSubjects.includes(subject)
+        ? selectedSubjects.filter((s) => s !== subject)
+        : [...selectedSubjects, subject],
     );
   };
-
-  const canProceed = selectedGrades.length > 0 && selectedSubjects.length > 0;
 
   return (
     <div className="space-y-6">
@@ -98,27 +98,6 @@ export function GradesSubjectsStep({ onNext, onBack, isLoading }: GradesSubjects
         <p className="text-xs text-muted-foreground">
           {selectedSubjects.length} subject{selectedSubjects.length !== 1 ? 's' : ''} selected
         </p>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Button type="button" variant="outline" onClick={onBack} className="h-10 w-full sm:w-auto">
-          Back
-        </Button>
-        <Button
-          type="button"
-          disabled={!canProceed || isLoading}
-          onClick={() => onNext(selectedGrades, selectedSubjects)}
-          className="h-10 w-full sm:flex-1 bg-[#2563EB] hover:bg-[#1d4ed8]"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating grades & subjects...
-            </>
-          ) : (
-            'Next: Add Students'
-          )}
-        </Button>
       </div>
     </div>
   );

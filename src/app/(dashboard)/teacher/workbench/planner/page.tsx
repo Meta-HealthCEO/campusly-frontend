@@ -150,7 +150,7 @@ export default function TermPlannerPage() {
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_.7fr_.7fr_auto]">
         <Select
-          value={selectedClass || undefined}
+          value={selectedClass || ''}
           disabled={loading || classes.length === 0}
           onValueChange={(val: unknown) => {
             setSelectedClass(val as string);
@@ -170,7 +170,7 @@ export default function TermPlannerPage() {
         </Select>
 
         <Select
-          value={selectedSubject || undefined}
+          value={selectedSubject || ''}
           disabled={!selectedClass || subjects.length === 0}
           onValueChange={(val: unknown) => {
             setSelectedSubject(val as string);
@@ -190,7 +190,7 @@ export default function TermPlannerPage() {
         </Select>
 
         <Select
-          value={selectedTerm || undefined}
+          value={selectedTerm || ''}
           onValueChange={(val: unknown) => {
             setSelectedTerm(val as string);
             resetPending();

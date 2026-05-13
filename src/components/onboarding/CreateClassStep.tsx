@@ -71,7 +71,7 @@ export function CreateClassStep({ onNext, onBack, isLoading }: CreateClassStepPr
               setValue('gradeName', val as string);
               setGradeError(null);
             }}
-            value={getValues('gradeName') || undefined}
+            value={getValues('gradeName') || ''}
           >
             <SelectTrigger id="gradeName" className="w-full">
               <SelectValue placeholder="Select a grade" />

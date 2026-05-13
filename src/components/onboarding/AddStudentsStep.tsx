@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { UserPlus, Upload, Loader2, Trash2 } from 'lucide-react';
+import { UserPlus, Upload, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,7 @@ const studentRowSchema = z.object({
 
 type StudentRow = z.infer<typeof studentRowSchema>;
 
-interface PendingStudent {
+export interface PendingStudent {
   firstName: string;
   lastName: string;
   gradeId: string;
@@ -28,26 +28,26 @@ interface PendingStudent {
 
 interface AddStudentsStepProps {
   grades: Grade[];
-  onCreateStudent: (data: { firstName: string; lastName: string; gradeId: string }) => Promise<unknown>;
-  onBulkCreate: (students: { firstName: string; lastName: string; gradeId: string }[]) => Promise<number>;
-  onBack: () => void;
-  onFinish: () => void;
-  isLoading: boolean;
+  pendingStudents: PendingStudent[];
+  onPendingChange: (next: PendingStudent[]) => void;
+  csvText: string;
+  onCsvTextChange: (next: string) => void;
+  showCsv: boolean;
+  onShowCsvToggle: () => void;
 }
+
+const nativeSelectClassName =
+  'flex h-9 w-full rounded-lg border border-input bg-background px-3 py-1 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30 dark:[&>option]:bg-card dark:[&>option]:text-card-foreground';
 
 export function AddStudentsStep({
   grades,
-  onCreateStudent,
-  onBulkCreate,
-  onBack,
-  onFinish,
-  isLoading,
+  pendingStudents,
+  onPendingChange,
+  csvText,
+  onCsvTextChange,
+  showCsv,
+  onShowCsvToggle,
 }: AddStudentsStepProps) {
-  const [pendingStudents, setPendingStudents] = useState<PendingStudent[]>([]);
-  const [csvText, setCsvText] = useState('');
-  const [showCsv, setShowCsv] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
   const { register, handleSubmit, reset, formState: { errors }, setValue } = useForm<StudentRow>({
     resolver: zodResolver(studentRowSchema),
     defaultValues: { firstName: '', lastName: '', gradeId: '' },
@@ -55,12 +55,12 @@ export function AddStudentsStep({
 
   const addStudent = (data: StudentRow) => {
     const grade = grades.find((g) => g.id === data.gradeId);
-    setPendingStudents((prev) => [...prev, { ...data, gradeName: grade?.name ?? data.gradeId }]);
+    onPendingChange([...pendingStudents, { ...data, gradeName: grade?.name ?? data.gradeId }]);
     reset();
   };
 
   const removeStudent = (index: number) => {
-    setPendingStudents((prev) => prev.filter((_, i) => i !== index));
+    onPendingChange(pendingStudents.filter((_, i) => i !== index));
   };
 
   const parseCsv = useCallback(() => {
@@ -84,33 +84,10 @@ export function AddStudentsStep({
       return;
     }
 
-    setPendingStudents((prev) => [...prev, ...parsed]);
-    setCsvText('');
+    onPendingChange([...pendingStudents, ...parsed]);
+    onCsvTextChange('');
     toast.success(`${parsed.length} student(s) parsed from CSV`);
-  }, [csvText, grades]);
-
-  const submitAll = async () => {
-    if (pendingStudents.length === 0) {
-      onFinish();
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const payload = pendingStudents.map(({ firstName, lastName, gradeId }) => ({
-        firstName, lastName, gradeId,
-      }));
-      const created = await onBulkCreate(payload);
-      toast.success(`${created} student(s) added successfully`);
-      onFinish();
-    } catch {
-      toast.error('Failed to add some students');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const busy = isLoading || submitting;
+  }, [csvText, grades, pendingStudents, onPendingChange, onCsvTextChange]);
 
   return (
     <div className="space-y-6">
@@ -138,7 +115,7 @@ export function AddStudentsStep({
               id="gradeId"
               {...register('gradeId')}
               onChange={(e) => setValue('gradeId', e.target.value)}
-              className="flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              className={nativeSelectClassName}
             >
               <option value="">Select grade</option>
               {grades.map((g) => (
@@ -159,7 +136,7 @@ export function AddStudentsStep({
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => setShowCsv(!showCsv)}
+          onClick={onShowCsvToggle}
           className="h-8 text-xs"
         >
           <Upload className="mr-1 h-3 w-3" /> {showCsv ? 'Hide' : 'Paste'} CSV
@@ -168,7 +145,7 @@ export function AddStudentsStep({
           <div className="mt-2 space-y-2">
             <textarea
               value={csvText}
-              onChange={(e) => setCsvText(e.target.value)}
+              onChange={(e) => onCsvTextChange(e.target.value)}
               rows={4}
               placeholder="First Name, Last Name, Grade&#10;John, Smith, Grade 4&#10;Jane, Doe, Grade 5"
               className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring"
@@ -196,37 +173,6 @@ export function AddStudentsStep({
           </div>
         </div>
       )}
-
-      {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Button type="button" variant="outline" onClick={onBack} className="h-10 w-full sm:w-auto">
-          Back
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onFinish}
-          disabled={busy}
-          className="h-10 w-full sm:w-auto"
-        >
-          Skip — add students later
-        </Button>
-        <Button
-          type="button"
-          disabled={busy || pendingStudents.length === 0}
-          onClick={submitAll}
-          className="h-10 w-full sm:flex-1 bg-[#2563EB] hover:bg-[#1d4ed8]"
-        >
-          {busy ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Adding students...
-            </>
-          ) : (
-            `Done — Add ${pendingStudents.length} Student${pendingStudents.length !== 1 ? 's' : ''}`
-          )}
-        </Button>
-      </div>
     </div>
   );
 }
