@@ -1,8 +1,19 @@
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
+import { AxiosError } from 'axios';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import type { CheckoutInitResponse } from '@/types/subscription';
+
+function checkoutErrorMessage(err: unknown): string {
+  if (err instanceof AxiosError) {
+    const body = err.response?.data as { error?: string; detail?: string } | undefined;
+    if (body?.detail) return `${body.error ?? 'Checkout failed'}: ${body.detail}`;
+    if (body?.error) return body.error;
+  }
+  if (err instanceof Error) return err.message;
+  return 'Could not start checkout';
+}
 
 export function useCheckout() {
   const [loading, setLoading] = useState(false);
@@ -21,8 +32,7 @@ export function useCheckout() {
       }
       return { sessionId };
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Could not start checkout';
-      toast.error(msg);
+      toast.error(checkoutErrorMessage(err));
       setLoading(false);
       throw err;
     }
