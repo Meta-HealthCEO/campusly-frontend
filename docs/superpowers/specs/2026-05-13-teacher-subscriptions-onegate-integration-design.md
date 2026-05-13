@@ -29,6 +29,9 @@
 
 ## 2. Gateway Overview
 
+> **⚠ P0 OPEN QUESTION — must be resolved by spike before any other implementation work begins.**
+> The Checkout Widget v4 token-on-file flow is documented in fragments across the OneGate API docs. We have not confirmed end-to-end how to capture a card token without charging the customer. The spec below assumes an **R1 verification charge that is immediately refunded** (a pattern used by Yoco, PayFast). If that doesn't work in UAT, the fallback options are: (a) charge the full first month upfront and shorten or remove the trial; (b) use `/api/v2/customer-token` flow if it can be wired to the widget; (c) re-evaluate the gateway choice. **Implementation step 0 is to validate this flow with the UAT test card before anything else is built.**
+
 OneGate is a Callpay-powered SA payment gateway. API V2.
 
 - **Base URL (UAT):** `https://payments.onegate.co.za`
@@ -96,7 +99,7 @@ Four new collections in `campusly-backend/src/modules/subscription/`.
 | `gatewayCustomerRef` | string \| null | Future use |
 | `schoolId`, `createdAt`, `updatedAt`, `isDeleted` | standard | |
 
-`School.subscription` embedded field stays as a denormalised cache (read-only mirror of `Subscription.{planCode, status, currentPeriodEnd}`) so existing code reading `school.subscription.tier` keeps working. The subscription service writes both atomically on every status change.
+`School.subscription` embedded field stays as a denormalised cache (read-only mirror of `Subscription.{planCode, status, currentPeriodEnd}`) so existing code reading `school.subscription.tier` keeps working. The cache is **eventually consistent** — the subscription service writes the cache immediately after writing the Subscription row, but the two writes aren't transactional. Read code should treat the cache as a fast path and re-read Subscription if it needs strong consistency (which entitlement middleware does on every request — it reads Subscription directly).
 
 ### 3.3 `Invoice` — one row per charge attempt (including trial-end first charge)
 
@@ -107,6 +110,7 @@ Four new collections in `campusly-backend/src/modules/subscription/`.
 | `planCode` | string | Plan at time of invoice |
 | `subtotal` | number | Cents excl. tax |
 | `tax` | number | Cents |
+| `taxRate` | number | Rate at time of issuance (snapshot — `Plan.taxRate` may change later) |
 | `total` | number | Cents |
 | `currency` | string | `ZAR` |
 | `status` | enum | `pending` \| `paid` \| `failed` \| `refunded` \| `partially_refunded` |
@@ -203,9 +207,9 @@ Four new collections in `campusly-backend/src/modules/subscription/`.
 5. **`active` → `past_due`** — recurring charge fails. `retryCount=1`, `nextRetryAt=now+2d`. Pro access stays enabled.
 6. **`past_due` → `active`** — retry succeeds. Reset retry state, roll `currentPeriodEnd` forward.
 7. **`past_due` → `unpaid` → `free`** — after 3 failed retries (intervals: +2d, +4d, +7d from previous attempt). `unpaid` is set briefly for audit; same cron run moves to `free`.
-8. **`active` → `canceled`** — user clicks cancel. `cancelAtPeriodEnd=true`, `canceledAt=now`. `status=canceled`. Pro access continues until `currentPeriodEnd`.
-9. **`canceled` → `free`** — cron sees `currentPeriodEnd <= now`. Set `status=free`, `endedAt=now`, null out billing fields.
-10. **`canceled` → `active`** — user un-cancels before `currentPeriodEnd`. `cancelAtPeriodEnd=false`, `canceledAt=null`, `status=active`.
+8. **`active` → `canceled`** — user clicks cancel. `cancelAtPeriodEnd=true`, `canceledAt=now`, `status=canceled`, `nextBillingAt=currentPeriodEnd` (so the cron picks them up for terminal cleanup). Pro access continues until `currentPeriodEnd`.
+9. **`canceled` → `free`** — cron sees `currentPeriodEnd <= now`. Set `status=free`, `endedAt=now`, null out billing fields including `nextBillingAt`.
+10. **`canceled` → `active`** — user un-cancels before `currentPeriodEnd`. `cancelAtPeriodEnd=false`, `canceledAt=null`, `status=active`, `nextBillingAt=currentPeriodEnd` (now means "next charge", not "cleanup").
 11. **Card expired pre-emption** — cron, before attempting a charge, checks if `cardExpiryYear/Month` is before current month. If so, skip charge, set `status=past_due`, `lastFailureReason='card_expired'`, surface "update card" banner.
 
 ### Cron
@@ -345,11 +349,15 @@ async function processDueSubscription(subId: ObjectId) {
 2. Upsert `WebhookEvent` on `gatewayTransactionId` (unique). If already `processed` → 200 OK noop.
 3. Optional: reject if source IP not in allowlist (configurable via env, off by default in UAT)
 4. Re-fetch the transaction via `GET /api/v2/gateway-transaction/{id}`. Use the response as truth.
-5. Route on `merchant_reference` prefix:
-   - `sub_` → CheckoutSession reconciliation (card tokenised)
-   - `inv_` → Invoice reconciliation (recurring charge)
+5. Route on `merchant_reference` prefix **and** payload shape:
+   - `sub_*` + `amount` field → tokenisation event (card captured)
+   - `sub_*` + `refunded_amount` field → R1 refund event (mark verification Invoice refunded)
+   - `inv_*` + `amount` field → subscription charge event (mark Invoice paid/failed)
+   - `inv_*` + `refunded_amount` field → support-issued refund (mark Invoice refunded; future)
 6. Apply the corresponding state transition. Persist `WebhookEvent.processedAt`.
 7. Return 200. Any failure leaves `WebhookEvent.status='failed'`; cron will reconcile via lookup on next billing cycle.
+
+**Rate limiting:** `/api/webhooks/onegate` is public by design (no auth header). Apply a per-IP rate limit (e.g. 60 req/min via existing express-rate-limit middleware) to prevent a hostile actor from forcing us to make unlimited lookup calls. When `ONEGATE_IP_ALLOWLIST` is set, only listed IPs bypass the limit; everything else is rejected with 403.
 
 ### 5.5 Idempotency surfaces
 
@@ -479,7 +487,18 @@ NEXT_PUBLIC_ONEGATE_CHECKOUT_JS=https://payments.onegate.co.za/ext/checkout/v4/c
 { code: 'pro_annual',  name: 'Pro Annual',  subscriberType: 'teacher', amountExclTax: 149000,interval: 'year',  trialDays: 14, entitlements: { aiGeneration: true,  paperGeneration: true,  maxClasses: null, advancedAnalytics: true }, isActive: true, displayOrder: 2 },
 ```
 
-Migration script: every existing standalone-teacher School gets a `free` Subscription row (status=free), preserving current behaviour. The existing hardcoded 365-day `basic` tier in `campusly-backend/src/modules/auth/service.ts:75-100` is removed (it never enforced anything).
+### Migration of existing standalone teachers
+
+Existing standalone teachers were created with `subscription.tier='basic'` and a hardcoded 365-day expiry, with no actual feature gating. To avoid breaking them on launch (e.g. a teacher with 3 classes when Free is `maxClasses: 1`), the migration grandfathers them:
+
+- For each existing standalone-teacher School: create a Subscription with `status=active`, `planCode=pro_monthly`, `currentPeriodStart=createdAt`, `currentPeriodEnd=<grandfather cutoff>`, `cardTokenGuid=null`, `cancelAtPeriodEnd=true`, `nextBillingAt=<grandfather cutoff>`.
+- Grandfather cutoff: **2026-08-13 (90 days from launch)** — gives existing users a 90-day Pro window to choose: add a card (becomes a real paying customer) or accept dropping to Free at cutoff.
+- On launch day, all grandfathered users see an in-app banner: "You're on Pro until [date]. Add a card to continue, or you'll move to Free."
+- Cron handles the drop to Free at cutoff automatically via existing canceled→free transition.
+
+The existing hardcoded 365-day `basic` tier in `campusly-backend/src/modules/auth/service.ts:75-100` is removed and replaced with a call to `subscriptionService.createInitialFreeSubscription(school._id)` for new signups.
+
+**Hookup point:** `auth/service.ts` (the standalone-teacher creation function) calls `subscriptionService.createInitialFreeSubscription(school._id)` immediately after creating the School document. The Subscription module exposes this single function as its initialisation API — auth never reaches into Subscription internals.
 
 ---
 
@@ -513,16 +532,22 @@ Migration script: every existing standalone-teacher School gets a `free` Subscri
 
 ## 11. Risks & Mitigations
 
-| Risk | Mitigation |
-|---|---|
-| Webhook lost mid-flight | Cron reconciles via `GET /gateway-transaction/{id}` at next pass. Charges return inline so we rarely rely on webhook to know success. |
-| Concurrent cron processes same subscription | `processingLockedAt` optimistic lock + stale-lock recovery after 10 min |
-| Stored card expires between billing cycles | Pre-emptive expiry check before each charge; UI banner prompts card update |
-| Trial-end charge declines | Drop to free with explanatory banner. Single attempt — no looping dunning during trial. |
-| R1 verification refund never arrives at customer | Refund logged as Invoice; manual reconciliation possible from billing page. Customer-visible "refund pending" if needed. |
-| Salt or API key leaked | Salt stays server-side. Frontend only receives single-use 15-min `payment_key`. Rotate salt in OneGate dashboard if compromised. |
-| OneGate downtime during checkout | `error_url` redirect plus toast; CheckoutSession marked `failed`; user can retry. |
-| Plan code typo | All gating reads from Plan rows; bad plan code → entitlement lookup returns `false`, fail-safe (locks Pro features) |
+| Risk | Severity | Mitigation |
+|---|---|---|
+| **R1 verification flow may not be how OneGate widget tokenisation works** | **P0** | Spike before any other implementation. Confirm with UAT card. If broken, choose fallback (charge first month upfront, or different endpoint, or gateway change). See §2 callout. |
+| Webhook lost mid-flight | P1 | Cron reconciles via `GET /gateway-transaction/{id}` at next pass. Charges return inline so we rarely rely on webhook to know success. |
+| Concurrent cron processes same subscription | P1 | `processingLockedAt` optimistic lock + stale-lock recovery after 10 min |
+| Stored card expires between billing cycles | P1 | Pre-emptive expiry check before each charge; UI banner prompts card update |
+| Trial-end charge declines | P2 | Drop to free with explanatory banner. Single attempt — no looping dunning during trial. |
+| R1 verification refund never arrives at customer | P2 | Refund logged as Invoice; manual reconciliation possible from billing page. Customer-visible "refund pending" if needed. |
+| Salt or API key leaked | P1 | Salt stays server-side. Frontend only receives single-use 15-min `payment_key`. Rotate salt in OneGate dashboard if compromised. |
+| OneGate downtime during checkout | P2 | `error_url` redirect plus toast; CheckoutSession marked `failed`; user can retry. |
+| Plan code typo | P2 | All gating reads from Plan rows; bad plan code → entitlement lookup returns `false`, fail-safe (locks Pro features) |
+| Systemic gateway outage (many charges failing simultaneously) | P1 | Cron emits a domain event when consecutive failures exceed threshold (e.g. 10 in a row); event handler logs `ERROR` level + writes to an `AdminAlert` collection; admin dashboard surfaces unresolved alerts. Email/Slack hookup deferred but the signal is there. |
+| Webhook endpoint flooded by hostile actor | P2 | Per-IP rate limit on `/api/webhooks/onegate`; IP allowlist enabled in production. |
+| PCI scope creep | P1 | **Hard rule: no card input field anywhere in Campusly UI.** Always use OneGate's Checkout Widget. If a future contributor wants to "save a UX click" by adding a card form, the answer is no — it would force us from SAQ A to SAQ A-EP and is not negotiable without a compliance review. |
+| Pricing change retroactively shifts old invoice math | P2 | Plan codes are **immutable** once issued. Price changes = new plan code (e.g. `pro_monthly_v2`); old plan marked `isActive=false`. Existing subscriptions keep their original `planCode`. `Invoice.taxRate` is snapshotted at issuance for the same reason. |
+| Cron tick latency (5-min granularity) | P3 | UI may briefly show "0 days left" before transition. Cosmetic only. If users complain, lower cron interval or trigger an on-demand transition when frontend polls `/me`. |
 
 ---
 
@@ -580,15 +605,16 @@ All files target the 350-line CLAUDE.md cap. Anything that would exceed it is de
 
 ## 13. Implementation Order
 
+0. **Tokenisation spike (P0 gate).** Wire just enough plumbing — OneGate client auth, one endpoint, the v4 widget on a throwaway page — to validate that we can capture a reusable card token using the UAT test card. Confirm the exact response/webhook shape. Decide whether to proceed with R1+refund, full first-month-upfront, or pivot. **No other work in this spec begins until this completes.**
 1. Backend models + Plan seed
-2. OneGate client wrapper + UAT smoke test (call `/services` endpoint, confirm auth works)
+2. OneGate client wrapper hardened from the spike code
 3. Subscription service (state machine without cron yet)
-4. Checkout + webhook endpoints
-5. Cron worker
-6. Migration: backfill `free` Subscription for existing Schools, remove hardcoded `basic` tier
-7. Frontend: types, useSubscription, useEntitlement
+4. Checkout + webhook endpoints (with rate limiting)
+5. Cron worker (including dunning + canceled-cleanup + alert emission on consecutive failures)
+6. Migration: grandfather existing standalone teachers as Pro (90-day window), backfill Free for any without subscriptions, remove hardcoded `basic` tier, wire `auth/service.ts` to `subscriptionService.createInitialFreeSubscription`
+7. Frontend: types, `useSubscription`, `useEntitlement`, `useAuthStore` subscription slice
 8. Frontend: pricing page + checkout launcher
-9. Frontend: banners + entitlement gating across existing Pro features
+9. Frontend: banners (trial countdown, dunning, grandfather window) + entitlement gating across existing Pro features
 10. Frontend: billing settings + cancel/resume
 11. End-to-end UAT validation with the OneGate test card
 
