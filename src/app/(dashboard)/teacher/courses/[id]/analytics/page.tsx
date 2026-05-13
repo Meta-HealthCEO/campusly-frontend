@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { RefreshCw, ArrowLeft, BarChart3 } from 'lucide-react';
+import { RefreshCw, ArrowLeft, BarChart3, Sparkles } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCardsSkeleton } from '@/components/shared/skeletons';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -11,13 +12,39 @@ import { AnalyticsStatCards } from '@/components/courses/AnalyticsStatCards';
 import { LessonDropOffChart } from '@/components/courses/LessonDropOffChart';
 import { ClassBreakdownTable } from '@/components/courses/ClassBreakdownTable';
 import { useCourseAnalytics } from '@/hooks/useCourseAnalytics';
+import { useEntitlement } from '@/hooks/useEntitlement';
+import { UpgradeModal } from '@/components/subscription/UpgradeModal';
 import { ROUTES } from '@/lib/constants';
 
 export default function CourseAnalyticsPage() {
   const params = useParams();
   const router = useRouter();
   const courseId = params.id as string;
-  const { data, loading, refreshing, refresh } = useCourseAnalytics(courseId);
+  const entitled = useEntitlement('advancedAnalytics');
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const { data, loading, refreshing, refresh } = useCourseAnalytics(entitled ? courseId : '');
+
+  if (!entitled) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Course Analytics"
+          description="Enrolment, completion, and engagement metrics"
+        />
+        <EmptyState
+          icon={Sparkles}
+          title="Advanced analytics is a Pro feature"
+          description="Track enrolment, completion, and engagement across your courses. Start a 14-day free trial."
+          action={
+            <Button size="lg" onClick={() => setUpgradeOpen(true)}>
+              <Sparkles className="w-4 h-4 mr-2" /> See plans
+            </Button>
+          }
+        />
+        <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature="advancedAnalytics" />
+      </div>
+    );
+  }
 
   if (loading) {
     return (

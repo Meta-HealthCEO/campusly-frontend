@@ -4,10 +4,15 @@ import { useAuthStore } from '@/stores/useAuthStore';
 const ENTITLED_STATUSES = new Set(['trialing', 'active', 'past_due']);
 
 export function useEntitlement(feature: string): boolean {
+  const user = useAuthStore((s) => s.user);
   const subscription = useAuthStore((s) => s.subscription);
   const plan = useAuthStore((s) => s.plan);
 
   return useMemo(() => {
+    // Pro-feature gating currently applies only to standalone teachers.
+    // School-tier users (admins, HODs, bursars) bypass this gate.
+    if (user && user.isStandaloneTeacher !== true) return true;
+
     if (!subscription || !plan) return false;
 
     const status = subscription.status;
@@ -23,5 +28,5 @@ export function useEntitlement(feature: string): boolean {
 
     if (!entitled) return false;
     return plan.entitlements[feature] === true;
-  }, [subscription, plan, feature]);
+  }, [user, subscription, plan, feature]);
 }
