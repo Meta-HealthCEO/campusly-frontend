@@ -11,12 +11,14 @@ const RISK_VARIANTS: Record<
   low: 'outline',
   medium: 'secondary',
   high: 'destructive',
+  critical: 'destructive',
 };
 
 const RISK_LABELS: Record<PastoralRiskLevel, string> = {
   low: 'Low Risk',
   medium: 'Medium Risk',
   high: 'High Risk',
+  critical: 'Critical Risk',
 };
 
 const RISK_CLASS_OVERRIDES: Partial<Record<PastoralRiskLevel, string>> = {

@@ -1,19 +1,20 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
-import type { CreateReferralPayload, ReferralReason, ReferralUrgency } from '@/types';
+import { useTeacherClasses } from '@/hooks/useTeacherClasses';
+import { resolveId } from '@/lib/api-helpers';
+import type { CreateReferralPayload, ReferralReason, ReferralUrgency, Student } from '@/types';
 
 const schema = z.object({
   studentId: z.string().min(1, 'Student ID is required'),
@@ -50,11 +51,27 @@ const URGENCIES: { value: ReferralUrgency; label: string }[] = [
   { value: 'critical', label: 'Critical' },
 ];
 
+function studentLabel(student: Student): string {
+  const rawStudent = student as Omit<Student, 'userId'> & { userId?: string | { firstName?: string; lastName?: string } };
+  const populatedUser = typeof rawStudent.userId === 'object'
+    ? rawStudent.userId
+    : undefined;
+  const firstName = student.user?.firstName ?? populatedUser?.firstName ?? student.firstName ?? '';
+  const lastName = student.user?.lastName ?? populatedUser?.lastName ?? student.lastName ?? '';
+  return `${firstName} ${lastName}`.trim() || student.admissionNumber || 'Unnamed student';
+}
+
 export function ReferralCreateDialog({ open, onOpenChange, onSubmit }: Props) {
+  const { students, loading: studentsLoading } = useTeacherClasses();
   const {
-    register, handleSubmit, setValue, reset,
+    register, handleSubmit, setValue, reset, watch,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
+
+  const selectedStudentId = watch('studentId') ?? '';
+  const studentOptions = useMemo(() => students
+    .map((student) => ({ id: resolveId(student), label: studentLabel(student) }))
+    .filter((student) => student.id), [students]);
 
   useEffect(() => {
     if (open) reset();
@@ -81,15 +98,32 @@ export function ReferralCreateDialog({ open, onOpenChange, onSubmit }: Props) {
         <div className="flex-1 overflow-y-auto py-2">
           <form id="referral-create-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-3">
             <div className="space-y-1">
-              <Label htmlFor="studentId">Student ID <span className="text-destructive">*</span></Label>
-              <Input id="studentId" {...register('studentId')} placeholder="Enter student ID" />
+              <Label>Student <span className="text-destructive">*</span></Label>
+              <Select
+                value={selectedStudentId}
+                onValueChange={(val) => { if (val) setValue('studentId', val, { shouldValidate: true }); }}
+                disabled={studentsLoading}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={studentsLoading ? 'Loading students...' : 'Select student'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {studentOptions.length === 0 ? (
+                    <div className="px-2 py-1.5 text-sm text-muted-foreground">No learners in your classes</div>
+                  ) : (
+                    studentOptions.map((student) => (
+                      <SelectItem key={student.id} value={student.id}>{student.label}</SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
               {errors.studentId && <p className="text-xs text-destructive">{errors.studentId.message}</p>}
             </div>
 
             <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label>Reason <span className="text-destructive">*</span></Label>
-                <Select onValueChange={(val: unknown) => setValue('reason', val as ReferralReason)}>
+                <Select onValueChange={(val) => { if (val) setValue('reason', val as ReferralReason, { shouldValidate: true }); }}>
                   <SelectTrigger className="w-full"><SelectValue placeholder="Select reason" /></SelectTrigger>
                   <SelectContent>
                     {REASONS.map((r) => (
@@ -102,7 +136,7 @@ export function ReferralCreateDialog({ open, onOpenChange, onSubmit }: Props) {
 
               <div className="space-y-1">
                 <Label>Urgency <span className="text-destructive">*</span></Label>
-                <Select onValueChange={(val: unknown) => setValue('urgency', val as ReferralUrgency)}>
+                <Select onValueChange={(val) => { if (val) setValue('urgency', val as ReferralUrgency, { shouldValidate: true }); }}>
                   <SelectTrigger className="w-full"><SelectValue placeholder="Select urgency" /></SelectTrigger>
                   <SelectContent>
                     {URGENCIES.map((u) => (

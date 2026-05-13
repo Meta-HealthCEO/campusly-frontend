@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import apiClient from '@/lib/api-client';
+import { extractErrorMessage } from '@/lib/api-helpers';
 import type {
   PastoralReferral,
   CreateReferralPayload,
@@ -12,7 +13,7 @@ export function usePastoralReferrals(initialFilters?: ReferralFilters) {
   const [referralsLoading, setReferralsLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
-  const fetchReferrals = async (params?: ReferralFilters) => {
+  const fetchReferrals = useCallback(async (params?: ReferralFilters) => {
     setReferralsLoading(true);
     try {
       const response = await apiClient.get('/pastoral/referrals', {
@@ -23,20 +24,20 @@ export function usePastoralReferrals(initialFilters?: ReferralFilters) {
       setReferrals(list);
       if (raw.total !== undefined) setTotal(raw.total as number);
     } catch (err: unknown) {
-      console.error('Failed to load referrals', err);
+      console.warn(extractErrorMessage(err, 'Failed to load referrals'));
     } finally {
       setReferralsLoading(false);
     }
-  };
+  }, [initialFilters]);
 
-  const createReferral = async (data: CreateReferralPayload): Promise<PastoralReferral> => {
+  const createReferral = useCallback(async (data: CreateReferralPayload): Promise<PastoralReferral> => {
     const response = await apiClient.post('/pastoral/referrals', data);
     const created = response.data.data ?? response.data;
     await fetchReferrals();
     return created as PastoralReferral;
-  };
+  }, [fetchReferrals]);
 
-  const updateReferral = async (
+  const updateReferral = useCallback(async (
     id: string,
     data: Partial<PastoralReferral>,
   ): Promise<PastoralReferral> => {
@@ -46,9 +47,9 @@ export function usePastoralReferrals(initialFilters?: ReferralFilters) {
       prev.map((r) => (r.id === id ? (updated as PastoralReferral) : r)),
     );
     return updated as PastoralReferral;
-  };
+  }, []);
 
-  const resolveReferral = async (
+  const resolveReferral = useCallback(async (
     id: string,
     data: ResolveReferralPayload,
   ): Promise<PastoralReferral> => {
@@ -58,12 +59,11 @@ export function usePastoralReferrals(initialFilters?: ReferralFilters) {
       prev.map((r) => (r.id === id ? (updated as PastoralReferral) : r)),
     );
     return updated as PastoralReferral;
-  };
+  }, []);
 
   useEffect(() => {
     void fetchReferrals();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchReferrals]);
 
   return {
     referrals,

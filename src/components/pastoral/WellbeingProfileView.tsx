@@ -17,7 +17,7 @@ interface WellbeingProfileViewProps {
 }
 
 function riskVariant(level: PastoralRiskLevel): 'default' | 'secondary' | 'destructive' {
-  if (level === 'high') return 'destructive';
+  if (level === 'high' || level === 'critical') return 'destructive';
   if (level === 'medium') return 'secondary';
   return 'default';
 }
@@ -56,6 +56,7 @@ function SectionRow({ label, value }: { label: string; value: string | number })
 export function WellbeingProfileView({ profile }: WellbeingProfileViewProps) {
   const { student, referrals, sessions, attendance, academic, behaviour, riskLevel, riskFactors } =
     profile;
+  const academicConnected = academic.trend !== 'Not connected';
 
   return (
     <div className="space-y-4">
@@ -68,7 +69,7 @@ export function WellbeingProfileView({ profile }: WellbeingProfileViewProps) {
                 {student.firstName} {student.lastName}
               </h2>
               <p className="text-sm text-muted-foreground">
-                Grade {student.grade}{student.class ? ` · ${student.class}` : ''}
+                Grade {student.grade || 'Unassigned'}{student.class ? ` - ${student.class}` : ''}
               </p>
             </div>
             <div className="flex flex-wrap gap-2 items-center">
@@ -187,7 +188,7 @@ export function WellbeingProfileView({ profile }: WellbeingProfileViewProps) {
               />
               <SectionRow label="Recent Absences" value={attendance.recentAbsences} />
               <SectionRow label="Pattern" value={attendance.pattern ?? 'None detected'} />
-              <SectionRow label="Trend" value={attendance.trend ?? '—'} />
+              <SectionRow label="Trend" value={attendance.trend ?? '-'} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -198,15 +199,15 @@ export function WellbeingProfileView({ profile }: WellbeingProfileViewProps) {
             <CardContent className="pt-4">
               <SectionRow
                 label="Overall Average"
-                value={`${academic.overallAverage.toFixed(1)}%`}
+                value={academicConnected ? `${academic.overallAverage.toFixed(1)}%` : 'Not connected'}
               />
               <SectionRow
                 label="Last Term Average"
-                value={`${academic.lastTermAverage.toFixed(1)}%`}
+                value={academicConnected ? `${academic.lastTermAverage.toFixed(1)}%` : 'Not connected'}
               />
               <SectionRow
                 label="Trend"
-                value={academic.trend ?? '—'}
+                value={academic.trend ?? '-'}
               />
               {academic.failingSubjects.length > 0 && (
                 <div className="mt-3">

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import apiClient from '@/lib/api-client';
+import { extractErrorMessage } from '@/lib/api-helpers';
 import type {
   CounselorSession,
   CreateSessionPayload,
@@ -11,7 +12,7 @@ export function usePastoralSessions(initialFilters?: SessionFilters) {
   const [sessionsLoading, setSessionsLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
-  const fetchSessions = async (params?: SessionFilters) => {
+  const fetchSessions = useCallback(async (params?: SessionFilters) => {
     setSessionsLoading(true);
     try {
       const response = await apiClient.get('/pastoral/sessions', {
@@ -22,20 +23,20 @@ export function usePastoralSessions(initialFilters?: SessionFilters) {
       setSessions(list);
       if (raw.total !== undefined) setTotal(raw.total as number);
     } catch (err: unknown) {
-      console.error('Failed to load sessions', err);
+      console.warn(extractErrorMessage(err, 'Failed to load sessions'));
     } finally {
       setSessionsLoading(false);
     }
-  };
+  }, [initialFilters]);
 
-  const createSession = async (data: CreateSessionPayload): Promise<CounselorSession> => {
+  const createSession = useCallback(async (data: CreateSessionPayload): Promise<CounselorSession> => {
     const response = await apiClient.post('/pastoral/sessions', data);
     const created = response.data.data ?? response.data;
     await fetchSessions();
     return created as CounselorSession;
-  };
+  }, [fetchSessions]);
 
-  const updateSession = async (
+  const updateSession = useCallback(async (
     id: string,
     data: Partial<CreateSessionPayload>,
   ): Promise<CounselorSession> => {
@@ -45,12 +46,11 @@ export function usePastoralSessions(initialFilters?: SessionFilters) {
       prev.map((s) => (s.id === id ? (updated as CounselorSession) : s)),
     );
     return updated as CounselorSession;
-  };
+  }, []);
 
   useEffect(() => {
     void fetchSessions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchSessions]);
 
   return {
     sessions,

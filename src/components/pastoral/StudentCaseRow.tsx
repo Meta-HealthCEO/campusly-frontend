@@ -22,7 +22,7 @@ const REASON_LABELS: Record<ReferralReason, string> = {
 };
 
 function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '—';
+  if (!dateStr) return '-';
   const d = new Date(dateStr);
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -96,7 +96,7 @@ export function StudentCaseRow({ caseItem, onClick }: StudentCaseRowProps) {
                 {isOverdue && ' (overdue)'}
               </>
             ) : (
-              '—'
+              '-'
             )}
           </span>
         </div>

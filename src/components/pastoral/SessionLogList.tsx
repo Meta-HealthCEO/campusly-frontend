@@ -82,7 +82,7 @@ export function SessionLogList({ sessions, onView }: Props) {
       header: 'Follow-Up Date',
       cell: ({ row }) => row.original.followUpDate
         ? new Date(row.original.followUpDate).toLocaleDateString()
-        : <span className="text-muted-foreground">—</span>,
+        : <span className="text-muted-foreground">-</span>,
     },
     {
       id: 'actions',

@@ -25,7 +25,7 @@ export function OverdueFollowUpAlert({ overdueList }: OverdueFollowUpAlertProps)
                 <span className="font-medium">
                   {item.studentId.firstName} {item.studentId.lastName}
                 </span>
-                {' — '}
+                {' - '}
                 {item.daysPastDue} day{item.daysPastDue !== 1 ? 's' : ''} past due
               </li>
             ),

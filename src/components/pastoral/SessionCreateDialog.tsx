@@ -36,6 +36,10 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: CreateSessionPayload) => Promise<void>;
+  studentOptions?: Array<{ id: string; label: string; detail?: string }>;
+  referralOptions?: Array<{ id: string; studentId: string; label: string }>;
+  defaultStudentId?: string;
+  defaultReferralId?: string;
 }
 
 const SESSION_TYPES: { value: PastoralSessionType; label: string }[] = [
@@ -52,24 +56,58 @@ const CONFIDENTIALITY: { value: ConfidentialityLevel; label: string; description
   { value: 'restricted', label: 'Restricted', description: 'Counselor eyes only' },
 ];
 
-export function SessionCreateDialog({ open, onOpenChange, onSubmit }: Props) {
+function todayInputValue(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export function SessionCreateDialog({
+  open,
+  onOpenChange,
+  onSubmit,
+  studentOptions = [],
+  referralOptions = [],
+  defaultStudentId,
+  defaultReferralId,
+}: Props) {
   const {
     register, handleSubmit, setValue, watch, control, reset,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { duration: 45, notifyParent: false },
+    defaultValues: {
+      duration: 45,
+      notifyParent: false,
+      sessionDate: todayInputValue(),
+      confidentialityLevel: 'standard',
+    },
   });
 
   const notifyParent = watch('notifyParent');
+  const selectedStudentId = watch('studentId') ?? '';
+  const selectedReferralId = watch('referralId') ?? '';
+  const selectedSessionType = watch('sessionType') ?? '';
+  const selectedConfidentiality = watch('confidentialityLevel') ?? '';
 
   useEffect(() => {
-    if (open) reset({ duration: 45, notifyParent: false });
-  }, [open, reset]);
+    if (open) {
+      reset({
+        duration: 45,
+        notifyParent: false,
+        sessionDate: todayInputValue(),
+        confidentialityLevel: 'standard',
+        studentId: defaultStudentId ?? '',
+        referralId: defaultReferralId ?? '',
+      });
+    }
+  }, [defaultReferralId, defaultStudentId, open, reset]);
 
   const handleFormSubmit = async (data: FormData) => {
     try {
-      await onSubmit(data as CreateSessionPayload);
+      await onSubmit({
+        ...data,
+        referralId: data.referralId || undefined,
+        parentNotificationMessage: data.parentNotificationMessage || null,
+      } as CreateSessionPayload);
       toast.success('Session logged successfully');
       onOpenChange(false);
     } catch (err: unknown) {
@@ -89,13 +127,59 @@ export function SessionCreateDialog({ open, onOpenChange, onSubmit }: Props) {
           <form id="session-create-form" onSubmit={handleSubmit(handleFormSubmit)} className="space-y-3">
             <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
               <div className="space-y-1">
-                <Label htmlFor="studentId">Student ID <span className="text-destructive">*</span></Label>
-                <Input id="studentId" {...register('studentId')} placeholder="Student ID" />
+                <Label>Student <span className="text-destructive">*</span></Label>
+                <Select
+                  value={selectedStudentId}
+                  onValueChange={(val) => {
+                    if (!val) return;
+                    setValue('studentId', val, { shouldValidate: true });
+                    const linkedReferral = referralOptions.find((referral) => referral.id === selectedReferralId);
+                    if (linkedReferral && linkedReferral.studentId !== val) {
+                      setValue('referralId', '');
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-full"><SelectValue placeholder="Select student" /></SelectTrigger>
+                  <SelectContent>
+                    {studentOptions.length === 0 ? (
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">No active cases available</div>
+                    ) : (
+                      studentOptions.map((student) => (
+                        <SelectItem key={student.id} value={student.id}>
+                          <span className="font-medium">{student.label}</span>
+                          {student.detail && <span className="ml-1 text-xs text-muted-foreground">{student.detail}</span>}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
                 {errors.studentId && <p className="text-xs text-destructive">{errors.studentId.message}</p>}
               </div>
               <div className="space-y-1">
-                <Label htmlFor="referralId">Referral ID (optional)</Label>
-                <Input id="referralId" {...register('referralId')} placeholder="Linked referral ID" />
+                <Label>Linked Referral (optional)</Label>
+                <Select
+                  value={selectedReferralId}
+                  onValueChange={(val) => {
+                    if (!val) return;
+                    setValue('referralId', val);
+                    const referral = referralOptions.find((item) => item.id === val);
+                    if (referral) setValue('studentId', referral.studentId, { shouldValidate: true });
+                  }}
+                >
+                  <SelectTrigger className="w-full"><SelectValue placeholder="Link a referral" /></SelectTrigger>
+                  <SelectContent>
+                    {referralOptions
+                      .filter((referral) => !selectedStudentId || referral.studentId === selectedStudentId)
+                      .map((referral) => (
+                        <SelectItem key={referral.id} value={referral.id}>
+                          {referral.label}
+                        </SelectItem>
+                      ))}
+                    {referralOptions.length === 0 && (
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">No open referrals</div>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -115,7 +199,10 @@ export function SessionCreateDialog({ open, onOpenChange, onSubmit }: Props) {
             <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
               <div className="space-y-1">
                 <Label>Session Type <span className="text-destructive">*</span></Label>
-                <Select onValueChange={(val: unknown) => setValue('sessionType', val as PastoralSessionType)}>
+                <Select
+                  value={selectedSessionType}
+                  onValueChange={(val) => { if (val) setValue('sessionType', val as PastoralSessionType, { shouldValidate: true }); }}
+                >
                   <SelectTrigger className="w-full"><SelectValue placeholder="Select type" /></SelectTrigger>
                   <SelectContent>
                     {SESSION_TYPES.map((t) => (
@@ -127,13 +214,16 @@ export function SessionCreateDialog({ open, onOpenChange, onSubmit }: Props) {
               </div>
               <div className="space-y-1">
                 <Label>Confidentiality <span className="text-destructive">*</span></Label>
-                <Select onValueChange={(val: unknown) => setValue('confidentialityLevel', val as ConfidentialityLevel)}>
+                <Select
+                  value={selectedConfidentiality}
+                  onValueChange={(val) => { if (val) setValue('confidentialityLevel', val as ConfidentialityLevel, { shouldValidate: true }); }}
+                >
                   <SelectTrigger className="w-full"><SelectValue placeholder="Select level" /></SelectTrigger>
                   <SelectContent>
                     {CONFIDENTIALITY.map((c) => (
                       <SelectItem key={c.value} value={c.value}>
                         <span className="font-medium">{c.label}</span>
-                        <span className="ml-1 text-xs text-muted-foreground">— {c.description}</span>
+                        <span className="ml-1 text-xs text-muted-foreground">- {c.description}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
