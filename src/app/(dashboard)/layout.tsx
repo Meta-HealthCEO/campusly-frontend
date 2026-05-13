@@ -76,6 +76,8 @@ function isStandaloneTeacherPathAllowed(pathname: string): boolean {
     '/teacher/assignments',
     '/teacher/curriculum/import',
     '/teacher/settings',
+    '/my/billing',
+    '/subscription',
   ];
 
   return allowedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));

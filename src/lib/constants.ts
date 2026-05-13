@@ -536,6 +536,7 @@ export const STANDALONE_TEACHER_NAV: NavItem[] = [
   { label: 'Question Bank', href: ROUTES.TEACHER_CURRICULUM_QUESTIONS, icon: FileQuestion },
   { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
   { label: 'Digitise Paper', href: '/teacher/curriculum/import', icon: ScanLine, badge: 'AI' },
+  { label: 'Billing', href: '/my/billing', icon: CreditCard },
   { label: 'Settings', href: '/teacher/settings', icon: Settings },
 ];
 
