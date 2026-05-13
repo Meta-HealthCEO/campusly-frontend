@@ -13,6 +13,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
+import { resolveId } from '@/lib/api-helpers';
 import type { Student } from '@/types';
 
 const INCIDENT_TYPES = [
@@ -36,6 +37,14 @@ const disciplineFormSchema = z.object({
 });
 
 type DisciplineFormValues = z.infer<typeof disciplineFormSchema>;
+
+function getStudentName(student: Student): string {
+  const rawStudent = student as Omit<Student, 'userId'> & { userId?: string | { firstName?: string; lastName?: string } };
+  const populatedUser = typeof rawStudent.userId === 'object' ? rawStudent.userId : undefined;
+  const firstName = student.user?.firstName ?? populatedUser?.firstName ?? student.firstName ?? '';
+  const lastName = student.user?.lastName ?? populatedUser?.lastName ?? student.lastName ?? '';
+  return `${firstName} ${lastName}`.trim() || student.admissionNumber || 'Unnamed student';
+}
 
 interface DisciplineFormProps {
   open: boolean;
@@ -66,11 +75,15 @@ export function DisciplineForm({ open, onOpenChange, students, onSubmit }: Disci
             <Select onValueChange={(val: unknown) => setValue('studentId', val as string)}>
               <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
               <SelectContent>
-                {students.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.user?.firstName ?? s.firstName} {s.user?.lastName ?? s.lastName}
-                  </SelectItem>
-                ))}
+                {students.map((s) => {
+                  const id = resolveId(s);
+                  if (!id) return null;
+                  return (
+                    <SelectItem key={id} value={id}>
+                      {getStudentName(s)}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             {errors.studentId && <p className="text-xs text-destructive">{errors.studentId.message}</p>}

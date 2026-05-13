@@ -3,36 +3,48 @@
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import type { ReportCardMark } from '@/hooks/useReports';
+import type { ReportCardMark, ReportCardSubjectSummary } from '@/hooks/useReports';
 
 interface ReportCardTableProps {
   marks: ReportCardMark[];
   term: number;
   academicYear: number;
+  subjectSummaries?: ReportCardSubjectSummary[];
 }
 
 interface GroupedSubject {
+  subjectId: string;
   subjectName: string;
   subjectCode: string;
   marks: ReportCardMark[];
   average: number;
 }
 
-function groupBySubject(marks: ReportCardMark[]): GroupedSubject[] {
+function groupBySubject(
+  marks: ReportCardMark[],
+  subjectSummaries: ReportCardSubjectSummary[] = [],
+): GroupedSubject[] {
   const map = new Map<string, GroupedSubject>();
+  const summaryBySubject = new Map(subjectSummaries.map((summary) => [summary.subjectId, summary]));
 
   for (const m of marks) {
-    const subjectId = m.assessmentId?.subjectId?._id ?? 'unknown';
+    const subjectId = m.assessmentId?.subjectId?._id ?? m.assessmentId?.subjectId?.id ?? 'unknown';
     const subjectName = m.assessmentId?.subjectId?.name ?? 'Unknown Subject';
     const subjectCode = m.assessmentId?.subjectId?.code ?? '';
 
     if (!map.has(subjectId)) {
-      map.set(subjectId, { subjectName, subjectCode, marks: [], average: 0 });
+      map.set(subjectId, { subjectId, subjectName, subjectCode, marks: [], average: 0 });
     }
     map.get(subjectId)!.marks.push(m);
   }
 
   for (const group of map.values()) {
+    const summary = summaryBySubject.get(group.subjectId);
+    if (summary) {
+      group.average = summary.weightedPercentage;
+      continue;
+    }
+
     const total = group.marks.reduce((sum, m) => sum + m.percentage, 0);
     group.average = group.marks.length > 0 ? Math.round((total / group.marks.length) * 100) / 100 : 0;
   }
@@ -47,8 +59,8 @@ function getPercentageColor(pct: number): string {
   return 'text-destructive dark:text-destructive';
 }
 
-export function ReportCardTable({ marks, term, academicYear }: ReportCardTableProps) {
-  const groups = groupBySubject(marks);
+export function ReportCardTable({ marks, term, academicYear, subjectSummaries }: ReportCardTableProps) {
+  const groups = groupBySubject(marks, subjectSummaries);
 
   if (groups.length === 0) {
     return (
@@ -61,7 +73,7 @@ export function ReportCardTable({ marks, term, academicYear }: ReportCardTablePr
   return (
     <div className="space-y-6 print:space-y-4">
       {groups.map((group) => (
-        <div key={group.subjectCode} className="space-y-2">
+        <div key={group.subjectId} className="space-y-2">
           <div className="flex items-baseline justify-between">
             <h4 className="text-sm font-semibold">
               {group.subjectName} ({group.subjectCode})
@@ -87,7 +99,7 @@ export function ReportCardTable({ marks, term, academicYear }: ReportCardTablePr
                     <TableCell className="font-medium">{m.assessmentId?.name ?? '-'}</TableCell>
                     <TableCell className="capitalize">{m.assessmentId?.type ?? '-'}</TableCell>
                     <TableCell className="text-right">
-                      {m.mark}/{m.assessmentId?.totalMarks ?? '-'}
+                      {m.mark}/{m.total ?? m.assessmentId?.totalMarks ?? '-'}
                     </TableCell>
                     <TableCell className={`text-right font-medium ${getPercentageColor(m.percentage)}`}>
                       {m.percentage}%

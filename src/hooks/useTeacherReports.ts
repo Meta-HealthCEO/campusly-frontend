@@ -1,87 +1,109 @@
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import apiClient from '@/lib/api-client';
-import { unwrapList } from '@/lib/api-helpers';
+import { useMemo, useState } from 'react';
+import { resolveField, resolveId } from '@/lib/api-helpers';
+import type { SchoolClass, Student } from '@/types';
+import { useTeacherClasses } from './useTeacherClasses';
 
 interface ClassOption {
   id: string;
   name: string;
+  studentCount: number;
 }
 
 interface StudentOption {
   id: string;
   name: string;
   admissionNumber: string;
+  classId: string;
+}
+
+function getClassLabel(classInfo: SchoolClass): string {
+  const gradeName =
+    resolveField<string>(classInfo.gradeId, 'name') ??
+    resolveField<string>(classInfo.grade, 'name') ??
+    classInfo.gradeName ??
+    '';
+  return [gradeName, classInfo.name].filter(Boolean).join(' ') || 'Class';
+}
+
+function getStudentName(student: Student): string {
+  const fallbackUser = typeof (student.userId as unknown) === 'object' && student.userId !== null
+    ? (student.userId as unknown as Record<string, unknown>)
+    : undefined;
+  const populatedUser = student.user ?? fallbackUser;
+  const firstName = student.firstName ?? resolveField<string>(populatedUser, 'firstName') ?? '';
+  const lastName = student.lastName ?? resolveField<string>(populatedUser, 'lastName') ?? '';
+  return `${firstName} ${lastName}`.trim() || student.admissionNumber || 'Unknown student';
 }
 
 export function useTeacherReportData() {
-  const [classes, setClasses] = useState<ClassOption[]>([]);
-  const [students, setStudents] = useState<StudentOption[]>([]);
-  const [selectedClass, setSelectedClass] = useState('');
-  const [loadingStudents, setLoadingStudents] = useState(false);
+  const { entries, loading } = useTeacherClasses();
+  const [selectedClassOverride, setSelectedClass] = useState('');
 
-  useEffect(() => {
-    async function fetchClasses() {
-      try {
-        const response = await apiClient.get('/academic/classes');
-        const arr = unwrapList<Record<string, unknown>>(response);
-        setClasses(
-          arr.map((c) => ({
-            id: (c.id as string) ?? '',
-            name: (c.name as string) ?? 'Unknown',
-          })),
-        );
-      } catch (err: unknown) {
-        console.error('Failed to load classes', err);
-        toast.error('Could not load classes. Please refresh.');
+  const classes = useMemo<ClassOption[]>(() => {
+    const byClass = new Map<string, { classInfo: SchoolClass; studentIds: Set<string> }>();
+
+    for (const entry of entries) {
+      const classId = resolveId(entry.class);
+      if (!classId) continue;
+
+      if (!byClass.has(classId)) {
+        byClass.set(classId, { classInfo: entry.class, studentIds: new Set<string>() });
+      }
+
+      const bucket = byClass.get(classId)!;
+      for (const student of entry.students) {
+        const studentId = resolveId(student);
+        if (studentId) bucket.studentIds.add(studentId);
       }
     }
-    fetchClasses();
-  }, []);
 
-  useEffect(() => {
-    if (!selectedClass) {
-      setStudents([]);
-      return;
+    return [...byClass.entries()]
+      .map(([id, value]) => ({
+        id,
+        name: getClassLabel(value.classInfo),
+        studentCount: value.studentIds.size,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [entries]);
+
+  const selectedClass = useMemo(() => {
+    if (classes.length === 0) return '';
+    if (selectedClassOverride && classes.some((classInfo) => classInfo.id === selectedClassOverride)) {
+      return selectedClassOverride;
     }
-    async function fetchStudents() {
-      setLoadingStudents(true);
-      try {
-        const response = await apiClient.get('/students', {
-          params: { classId: selectedClass },
+    return classes[0].id;
+  }, [classes, selectedClassOverride]);
+
+  const students = useMemo<StudentOption[]>(() => {
+    if (!selectedClass) return [];
+
+    const byStudent = new Map<string, StudentOption>();
+    for (const entry of entries) {
+      const classId = resolveId(entry.class);
+      if (classId !== selectedClass) continue;
+
+      for (const student of entry.students) {
+        const id = resolveId(student);
+        if (!id || byStudent.has(id)) continue;
+        byStudent.set(id, {
+          id,
+          classId,
+          name: getStudentName(student),
+          admissionNumber: student.admissionNumber ?? '',
         });
-        const arr = unwrapList<Record<string, unknown>>(response);
-        setStudents(
-          arr.map((s) => {
-            const userId = s.userId as Record<string, unknown> | undefined;
-            const firstName = (userId?.firstName as string) ?? '';
-            const lastName = (userId?.lastName as string) ?? '';
-            return {
-              id: (s.id as string) ?? '',
-              name:
-                `${firstName} ${lastName}`.trim() ||
-                (s.admissionNumber as string) ||
-                'Unknown',
-              admissionNumber: (s.admissionNumber as string) ?? '',
-            };
-          }),
-        );
-      } catch (err: unknown) {
-        console.error('Failed to load students', err);
-        toast.error('Could not load students. Please refresh.');
-      } finally {
-        setLoadingStudents(false);
       }
     }
-    fetchStudents();
-  }, [selectedClass]);
+
+    return [...byStudent.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [entries, selectedClass]);
 
   return {
     classes,
     students,
     selectedClass,
     setSelectedClass,
-    loadingStudents,
+    loadingStudents: loading,
+    loadingClasses: loading,
   };
 }
 

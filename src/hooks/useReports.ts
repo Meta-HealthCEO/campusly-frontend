@@ -36,6 +36,7 @@ export interface AcademicPerformanceEntry {
 
 interface PopulatedSubject {
   _id: string;
+  id?: string;
   name: string;
   code: string;
 }
@@ -56,15 +57,41 @@ export interface ReportCardMark {
   studentId: string;
   assessmentId: PopulatedAssessment;
   mark: number;
+  total?: number;
   percentage: number;
   comment?: string;
 }
 
+export interface ReportCardStudent {
+  id: string;
+  name: string;
+  admissionNumber: string;
+  gradeName: string;
+  className: string;
+}
+
+export interface ReportCardSubjectSummary {
+  subjectId: string;
+  subjectName: string;
+  subjectCode: string;
+  mark: number;
+  total: number;
+  averagePercentage: number;
+  weightedPercentage: number;
+  assessmentCount: number;
+}
+
 export interface ReportCardData {
   studentId: string;
+  student?: ReportCardStudent;
   term: number;
   academicYear: number;
   marks: ReportCardMark[];
+  summary?: {
+    subjectSummaries: ReportCardSubjectSummary[];
+    overallAverage: number;
+    totalAssessments: number;
+  };
 }
 
 interface PopulatedStudent {

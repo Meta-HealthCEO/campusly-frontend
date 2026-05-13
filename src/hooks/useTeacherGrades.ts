@@ -186,7 +186,7 @@ export function useTeacherGrades() {
 
       setMarkEntries(
         classStudents.map((s) => {
-          const id = (s.id as string) ?? '';
+          const id = (s.id as string) ?? (s._id as string) ?? '';
           // A student's name may live on either `user` (populated) or
           // `userId` (populated under a different key) or directly on the
           // student root. `resolveField` walks these safely.
@@ -390,7 +390,7 @@ export function useTeacherGrades() {
         const mark = (m.mark as number) ?? 0;
         const total = (m.total as number) ?? 0;
         return {
-          id: (m.id as string) ?? '',
+          id: (m.id as string) ?? (m._id as string) ?? '',
           assessmentName: resolveField<string>(assessment, 'name') ?? '',
           subjectName: resolveField<string>(subject, 'name') ?? '',
           mark,

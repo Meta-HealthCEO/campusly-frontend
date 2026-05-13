@@ -25,7 +25,7 @@ export function ClassSelector({ value, onChange }: ClassSelectorProps) {
   return (
     <div className="space-y-1">
       <label className="text-xs font-medium text-muted-foreground">Class</label>
-      <Select value={value || undefined} onValueChange={(v: unknown) => onChange(v as string)}>
+      <Select value={value || ''} onValueChange={(v: unknown) => onChange(v as string)}>
         <SelectTrigger className="w-44">
           <SelectValue placeholder="All classes" />
         </SelectTrigger>

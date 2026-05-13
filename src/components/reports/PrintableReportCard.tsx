@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import type { ReportCardMark } from '@/hooks/useReports';
+import type { ReportCardMark, ReportCardSubjectSummary } from '@/hooks/useReports';
 
 interface StudentInfo {
   name: string;
@@ -19,6 +19,8 @@ interface PrintableReportCardProps {
   academicYear: number;
   student?: StudentInfo;
   schoolName?: string;
+  subjectSummaries?: ReportCardSubjectSummary[];
+  overallAverage?: number;
 }
 
 interface SubjectRow {
@@ -65,12 +67,26 @@ export function PrintableReportCard({
   academicYear,
   student,
   schoolName,
+  subjectSummaries = [],
+  overallAverage,
 }: PrintableReportCardProps) {
   const subjects: SubjectRow[] = useMemo(() => {
+    if (subjectSummaries.length > 0) {
+      return subjectSummaries.map((summary) => ({
+        subjectName: summary.subjectName,
+        subjectCode: summary.subjectCode,
+        mark: summary.mark,
+        total: summary.total,
+        percentage: summary.weightedPercentage,
+        symbol: getGradeSymbol(summary.weightedPercentage),
+        teacherComment: '-',
+      }));
+    }
+
     const map = new Map<string, { name: string; code: string; totalMark: number; totalPossible: number; comments: string[] }>();
 
     for (const m of marks) {
-      const subId = m.assessmentId?.subjectId?._id ?? 'unknown';
+      const subId = m.assessmentId?.subjectId?._id ?? m.assessmentId?.subjectId?.id ?? 'unknown';
       const subName = m.assessmentId?.subjectId?.name ?? 'Unknown Subject';
       const subCode = m.assessmentId?.subjectId?.code ?? '';
 
@@ -79,7 +95,7 @@ export function PrintableReportCard({
       }
       const entry = map.get(subId)!;
       entry.totalMark += m.mark;
-      entry.totalPossible += m.assessmentId?.totalMarks ?? 0;
+      entry.totalPossible += m.total ?? m.assessmentId?.totalMarks ?? 0;
       if (m.comment) entry.comments.push(m.comment);
     }
 
@@ -99,12 +115,13 @@ export function PrintableReportCard({
         };
       })
       .sort((a, b) => a.subjectName.localeCompare(b.subjectName));
-  }, [marks]);
+  }, [marks, subjectSummaries]);
 
   const overallAvg = useMemo(() => {
+    if (typeof overallAverage === 'number') return overallAverage;
     if (subjects.length === 0) return 0;
     return Math.round(subjects.reduce((s, sub) => s + sub.percentage, 0) / subjects.length * 100) / 100;
-  }, [subjects]);
+  }, [overallAverage, subjects]);
 
   if (subjects.length === 0) {
     return (
@@ -115,12 +132,12 @@ export function PrintableReportCard({
   }
 
   return (
-    <div className="print:text-black print:bg-white">
+    <div className="print-area print:text-black print:bg-white">
       {/* School header */}
       <div className="text-center mb-6 print:mb-4">
         <h1 className="text-xl font-bold print:text-2xl">{schoolName ?? 'School Name'}</h1>
         <h2 className="text-base font-semibold mt-1">
-          Student Report Card — Term {term}, {academicYear}
+          Student Report Card - Term {term}, {academicYear}
         </h2>
       </div>
 
@@ -149,7 +166,7 @@ export function PrintableReportCard({
           </TableHeader>
           <TableBody>
             {subjects.map((sub) => (
-              <TableRow key={sub.subjectCode}>
+              <TableRow key={`${sub.subjectCode}-${sub.subjectName}`}>
                 <TableCell className="font-medium">
                   {sub.subjectName}
                   <span className="text-muted-foreground ml-1 text-xs">({sub.subjectCode})</span>

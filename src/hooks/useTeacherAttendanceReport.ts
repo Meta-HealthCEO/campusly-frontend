@@ -117,15 +117,10 @@ export function useTeacherAttendanceReport() {
       setLoadingAbsentees(true);
       try {
         const res = await apiClient.get('/attendance/chronic-absentees', {
-          params: { threshold: thresh },
+          params: { threshold: thresh, classId: homeClass.id },
         });
-        const raw = unwrapResponse(res);
-        const all = Array.isArray(raw) ? (raw as ChronicAbsentee[]) : [];
-        // Filter to teacher's class only
-        const filtered = all.filter(
-          (a) => a.className === homeClass.name,
-        );
-        setChronicAbsentees(filtered);
+        const raw = unwrapResponse<ChronicAbsentee[]>(res);
+        setChronicAbsentees(Array.isArray(raw) ? raw : []);
       } catch (err: unknown) {
         console.error('Failed to load chronic absentees', err);
         setChronicAbsentees([]);

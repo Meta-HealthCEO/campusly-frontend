@@ -31,7 +31,7 @@ export function TermAcademicYearFilter({
     <div className="flex flex-wrap items-end gap-3">
       <div className="space-y-1">
         <label className="text-xs font-medium text-muted-foreground">Term</label>
-        <Select value={term || undefined} onValueChange={(v: unknown) => onTermChange(v as string)}>
+        <Select value={term || ''} onValueChange={(v: unknown) => onTermChange(v as string)}>
           <SelectTrigger className="w-32">
             <SelectValue placeholder="All terms" />
           </SelectTrigger>

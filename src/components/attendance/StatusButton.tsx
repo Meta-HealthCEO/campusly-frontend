@@ -43,6 +43,7 @@ export function StatusButton({ status, current, onClick }: StatusButtonProps) {
         active ? activeClass : 'border-border text-muted-foreground hover:bg-muted',
       ].join(' ')}
       aria-pressed={active}
+      aria-label={`Mark ${label.toLowerCase()}`}
     >
       {icon}
       <span className="hidden sm:inline">{label}</span>

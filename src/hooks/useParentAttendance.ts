@@ -61,7 +61,7 @@ export function useParentAttendance(): ParentAttendanceResult {
           const absent = records.filter((r: Attendance) => r.status === 'absent').length;
           const late = records.filter((r: Attendance) => r.status === 'late').length;
           const excused = records.filter((r: Attendance) => r.status === 'excused').length;
-          const rate = total > 0 ? Math.round((present / total) * 100) : 0;
+          const rate = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
 
           const userId = child.userId as { firstName?: string; lastName?: string } | string | undefined;
           const populatedUser = typeof userId === 'object' && userId !== null ? userId : undefined;

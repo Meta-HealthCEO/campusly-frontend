@@ -3,7 +3,7 @@ import apiClient from '@/lib/api-client';
 import { unwrapList } from '@/lib/api-helpers';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/useAuthStore';
-import type { Student } from '@/types';
+import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 
 interface DisciplineRecord {
   _id: string;
@@ -36,38 +36,27 @@ interface DisciplineFormData {
 
 export function useTeacherDiscipline() {
   const { user } = useAuthStore();
+  const { students: teachingLoadStudents, loading: studentsLoading } = useTeacherClasses();
   // Hoist to a primitive so React Compiler can reason about callback
   // dependencies without flagging the optional-chain expression.
   const schoolId = user?.schoolId ?? '';
   const [records, setRecords] = useState<DisciplineRecord[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchRecords = useCallback(async () => {
     try {
-      const res = await apiClient.get('/attendance/discipline', {
-        params: { schoolId },
-      });
+      const res = await apiClient.get('/attendance/discipline');
       const arr = unwrapList<DisciplineRecord>(res);
       setRecords(arr);
     } catch (err: unknown) {
-      console.error('Failed to load discipline records', err);
+      console.warn('Failed to load discipline records', err);
       toast.error('Could not load discipline records. Please refresh.');
     }
-  }, [schoolId]);
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
-      const [, studentsRes] = await Promise.allSettled([
-        fetchRecords(),
-        apiClient.get('/students'),
-      ]);
-      if (studentsRes.status === 'fulfilled') {
-        setStudents(unwrapList<Student>(studentsRes.value));
-      } else {
-        console.error('Failed to load students', studentsRes.reason);
-        toast.error('Could not load students. Please refresh.');
-      }
+      await fetchRecords();
       setLoading(false);
     }
     fetchData();
@@ -78,7 +67,7 @@ export function useTeacherDiscipline() {
       try {
         await apiClient.post('/attendance/discipline', {
           ...data,
-          schoolId,
+          ...(schoolId ? { schoolId } : {}),
         });
         toast.success('Discipline record created');
         await fetchRecords();
@@ -106,7 +95,13 @@ export function useTeacherDiscipline() {
     [fetchRecords],
   );
 
-  return { records, students, loading, createRecord, updateRecord };
+  return {
+    records,
+    students: teachingLoadStudents,
+    loading: loading || studentsLoading,
+    createRecord,
+    updateRecord,
+  };
 }
 
 export type { DisciplineRecord, DisciplineFormData };

@@ -33,7 +33,6 @@ export function StudentRow({
   onNoteChange,
 }: StudentRowProps) {
   const name = getStudentDisplayName(student);
-  // Expand automatically if there's already a note
   const [noteOpen, setNoteOpen] = useState<boolean>(Boolean(note));
   const hasNote = Boolean(note && note.trim().length > 0);
   const hasHistory = (editHistory?.length ?? 0) > 0;
@@ -61,11 +60,11 @@ export function StudentRow({
                 <PopoverContent className="w-64 text-xs space-y-2" side="bottom" align="start">
                   <p className="font-medium">Edit history ({editHistory.length})</p>
                   <div className="space-y-1">
-                    {editHistory.map((h, i) => (
-                      <div key={i} className="flex items-start justify-between gap-2">
-                        <span className="capitalize">{h.prevStatus} → {status}</span>
+                    {editHistory.map((history, index) => (
+                      <div key={`${history.at}-${index}`} className="flex items-start justify-between gap-2">
+                        <span className="capitalize">Changed from {history.prevStatus}</span>
                         <span className="text-muted-foreground shrink-0">
-                          {new Date(h.at).toLocaleString()}
+                          {new Date(history.at).toLocaleString()}
                         </span>
                       </div>
                     ))}
@@ -85,7 +84,7 @@ export function StudentRow({
           <StatusButton status="excused" current={status} onClick={() => onUpdate(student.id, 'excused')} />
           <button
             type="button"
-            onClick={() => setNoteOpen((v) => !v)}
+            onClick={() => setNoteOpen((value) => !value)}
             aria-pressed={noteOpen}
             aria-label={noteOpen ? 'Hide note' : 'Add note'}
             title={noteOpen ? 'Hide note' : 'Add note'}
@@ -108,7 +107,7 @@ export function StudentRow({
           type="text"
           placeholder="Add a note (optional)..."
           value={note ?? ''}
-          onChange={(e) => onNoteChange(student.id, e.target.value)}
+          onChange={(event) => onNoteChange(student.id, event.target.value)}
           className="text-xs h-8"
         />
       )}

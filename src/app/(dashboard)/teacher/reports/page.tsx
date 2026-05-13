@@ -72,7 +72,7 @@ export default function TeacherReportsPage() {
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">Class</label>
               <Select
-                value={selectedClass || undefined}
+                value={selectedClass || ''}
                 disabled={loadingClasses || classes.length === 0}
                 onValueChange={(v: unknown) => {
                   setSelectedClass(v as string);
@@ -97,7 +97,7 @@ export default function TeacherReportsPage() {
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">Learner</label>
               <Select
-                value={effectiveSelectedStudent || undefined}
+                value={effectiveSelectedStudent || ''}
                 disabled={!selectedClass || loadingStudents || students.length === 0}
                 onValueChange={(v: unknown) => {
                   setSelectedStudent(v as string);
@@ -120,7 +120,7 @@ export default function TeacherReportsPage() {
 
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">Term</label>
-              <Select value={term || undefined} onValueChange={(v: unknown) => setTerm(v as string)}>
+              <Select value={term || ''} onValueChange={(v: unknown) => setTerm(v as string)}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Term" />
                 </SelectTrigger>
