@@ -3,14 +3,15 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { RotateCcw, Send, ListOrdered, Save, AlertTriangle } from 'lucide-react';
+import { RotateCcw, Send, ListOrdered, Save, AlertTriangle, Download, Images } from 'lucide-react';
 import type { PaperMarking, MarkingQuestion } from '@/hooks/useTeacherMarking';
+import { useTeacherMarking } from '@/hooks/useTeacherMarking';
 import { useTeacherPapers } from '@/hooks/useTeacherPapers';
 import { IssueResultDialog } from './IssueResultDialog';
-
-const IMAGE_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4500/api').replace(/\/api\/?$/, '') + '/uploads';
+import { MarkingPagesLightbox } from './MarkingPagesLightbox';
+import { MarkingQuestionCard } from './MarkingQuestionCard';
+import apiClient from '@/lib/api-client';
 
 interface MarkingResultsProps {
   marking: PaperMarking;
@@ -22,12 +23,6 @@ interface MarkingResultsProps {
   /** Hide "Mark next student" / "View all results" buttons — useful in
    *  contexts that already return to a roster (per-paper workspace). */
   hideSecondaryActions?: boolean;
-}
-
-function scoreBadgeVariant(awarded: number, max: number) {
-  if (awarded === max) return 'default' as const;
-  if (awarded > 0) return 'secondary' as const;
-  return 'destructive' as const;
 }
 
 export function MarkingResults({
@@ -43,6 +38,9 @@ export function MarkingResults({
   const [dirty, setDirty] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxStart, setLightboxStart] = useState(0);
+  const { downloadMarkingPdf } = useTeacherMarking();
 
   // Re-sync local question state when the marking changes (e.g. opening a
   // different marking from the History tab). Without this, the local state
@@ -90,16 +88,6 @@ export function MarkingResults({
     [adjustedTotal, marking.maxMarks],
   );
 
-  const handleAdjust = useCallback((index: number, marks: number) => {
-    setQuestions((prev) => {
-      const updated = [...prev];
-      const q = updated[index];
-      updated[index] = { ...q, marksAwarded: Math.min(Math.max(0, marks), q.maxMarks) };
-      return updated;
-    });
-    setDirty(true);
-  }, []);
-
   const handleSave = useCallback(async () => {
     await onUpdateMarks(questions);
     setDirty(false);
@@ -143,22 +131,32 @@ export function MarkingResults({
 
       {/* Image strip */}
       {marking.images && marking.images.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto py-2">
-          {marking.images.map((img) => {
-            const url = `${IMAGE_BASE}/markings/${marking.id}/${img.filename}`;
+        <div className="flex items-center gap-2 flex-wrap">
+          {marking.images.slice(0, 3).map((img, i) => {
+            const base = (apiClient.defaults.baseURL ?? '').replace(/\/$/, '');
+            const url = `${base}/ai-tools/markings/${marking.id}/image/${encodeURIComponent(img.filename)}`;
             return (
-              <a
+              <button
                 key={img.filename}
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 border rounded overflow-hidden hover:border-primary"
+                type="button"
+                onClick={() => { setLightboxStart(i); setLightboxOpen(true); }}
+                className="relative w-20 h-24 border rounded overflow-hidden hover:ring-2 hover:ring-primary"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt={`Page ${img.pageNumber}`} className="h-32 w-auto object-cover" />
-              </a>
+                <img src={url} alt={`Page ${img.pageNumber}`} className="w-full h-full object-cover" />
+              </button>
             );
           })}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => { setLightboxStart(0); setLightboxOpen(true); }}
+            className="gap-2"
+          >
+            <Images className="h-4 w-4" />
+            View all {marking.images.length} pages
+          </Button>
         </div>
       )}
 
@@ -181,49 +179,20 @@ export function MarkingResults({
 
       {/* Per-question breakdown */}
       <div className="space-y-3">
-        {questions.map((q, idx) => (
-          <Card key={idx}>
-            <CardContent className="p-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex-1 space-y-2 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm">Q{q.questionNumber}</span>
-                    <Badge variant={scoreBadgeVariant(q.marksAwarded, q.maxMarks)}>
-                      {q.marksAwarded}/{q.maxMarks}
-                    </Badge>
-                  </div>
-                  <div className="space-y-1 text-sm">
-                    <p>
-                      <span className="font-medium">Student: </span>
-                      <span className="line-clamp-2">{q.studentAnswer}</span>
-                    </p>
-                    <p>
-                      <span className="font-medium">Correct: </span>
-                      <span className="text-muted-foreground line-clamp-2">{q.correctAnswer}</span>
-                    </p>
-                    <p className="text-muted-foreground text-xs">{q.feedback}</p>
-                    {q.rationale && (
-                      <details className="text-xs text-muted-foreground mt-1">
-                        <summary className="cursor-pointer hover:text-foreground">AI rationale</summary>
-                        <p className="whitespace-pre-wrap mt-1 pl-2 border-l-2 border-muted">{q.rationale}</p>
-                      </details>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 sm:flex-col sm:items-end shrink-0">
-                  <span className="text-xs text-muted-foreground">Marks:</span>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={q.maxMarks}
-                    value={q.marksAwarded}
-                    onChange={(e) => handleAdjust(idx, Number(e.target.value))}
-                    className="w-16 h-8 text-center text-sm"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {questions.map((q, i) => (
+          <MarkingQuestionCard
+            key={i}
+            question={q}
+            index={i}
+            editable
+            rationaleLabel="AI Rationale"
+            onChange={(marksAwarded) => {
+              const next = [...questions];
+              next[i] = { ...next[i], marksAwarded };
+              setQuestions(next);
+              setDirty(true);
+            }}
+          />
         ))}
       </div>
 
@@ -235,13 +204,25 @@ export function MarkingResults({
             Save adjustments
           </Button>
         )}
+        {marking.images && marking.images.length > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => downloadMarkingPdf(marking.id, marking.studentName, '')}
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Download PDF
+          </Button>
+        )}
         <Button
-          variant={marking.status === 'published' || downrankAccept ? 'outline' : 'default'}
+          type="button"
           onClick={() => setPublishOpen(true)}
-          disabled={isLoading || marking.status === 'published' || publishing}
+          disabled={dirty || isLoading || publishing}
+          className="gap-2"
         >
-          <Send className="mr-2 h-4 w-4" />
-          Publish to gradebook
+          <Send className="h-4 w-4" />
+          {marking.issuedToStudent ? 'Re-issue' : 'Issue Result'}
         </Button>
         {!hideSecondaryActions && (
           <>
@@ -256,6 +237,12 @@ export function MarkingResults({
           </>
         )}
       </div>
+
+      {marking.issuedToStudent && marking.issuedAt && (
+        <p className="text-xs text-muted-foreground">
+          Issued {new Date(marking.issuedAt).toLocaleDateString()}
+        </p>
+      )}
 
       <IssueResultDialog
         open={publishOpen}
@@ -273,6 +260,14 @@ export function MarkingResults({
           await onPublish(assessmentId, comment);
           setPublishing(false);
         }}
+      />
+
+      <MarkingPagesLightbox
+        open={lightboxOpen}
+        onOpenChange={setLightboxOpen}
+        markingId={marking.id}
+        images={marking.images ?? []}
+        startIndex={lightboxStart}
       />
     </div>
   );
