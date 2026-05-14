@@ -11,7 +11,6 @@ import {
   ExternalLink, GraduationCap, Library,
 } from 'lucide-react';
 import type { StudentLessonMaterial } from '@/types';
-import { LessonResourceReader } from './LessonResourceReader';
 import { QuizPlayer } from '@/components/learning/QuizPlayer';
 
 const KIND_ICON: Record<StudentLessonMaterial['kind'], typeof FileText> = {
@@ -45,7 +44,6 @@ export function LessonMaterialCard({
   material: StudentLessonMaterial;
   lessonId: string;
 }) {
-  const [readerOpen, setReaderOpen] = useState(false);
   const [playerOpen, setPlayerOpen] = useState(false);
   const Icon = KIND_ICON[material.kind] ?? FileText;
   const label = KIND_LABEL[material.kind] ?? material.kind;
@@ -85,10 +83,14 @@ export function LessonMaterialCard({
             )}
             <div className="flex flex-wrap gap-2 pt-1">
               {isReadable && material.contentResource && (
-                <Button size="sm" onClick={() => setReaderOpen(true)}>Open</Button>
+                <Link href={`/student/lessons/${lessonId}/materials/${material.id}`}>
+                  <Button size="sm">Open</Button>
+                </Link>
               )}
               {isWorksheet && material.contentResource && hasContentBlocks && (
-                <Button size="sm" onClick={() => setReaderOpen(true)}>Open</Button>
+                <Link href={`/student/lessons/${lessonId}/materials/${material.id}`}>
+                  <Button size="sm">Open</Button>
+                </Link>
               )}
               {isWorksheet && material.contentResource?.url && !hasContentBlocks && (
                 <a href={material.contentResource.url} target="_blank" rel="noopener noreferrer">
@@ -116,8 +118,6 @@ export function LessonMaterialCard({
           </div>
         </CardContent>
       </Card>
-
-      <LessonResourceReader open={readerOpen} onOpenChange={setReaderOpen} material={material} />
 
       {isQuiz && material.quiz && (
         <Dialog open={playerOpen} onOpenChange={setPlayerOpen}>
