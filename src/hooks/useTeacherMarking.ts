@@ -41,6 +41,9 @@ interface PaperMarking {
   batchId?: string | null;
   images?: PaperMarkingImage[];
   imageCount?: number;
+  issuedToStudent?: boolean;
+  issuedAt?: string;
+  issuedBy?: string;
 }
 
 export interface MarkingPaperOption {
@@ -195,26 +198,24 @@ export function useTeacherMarking() {
     }
   }, []);
 
-  const publishMarking = useCallback(async (
+  const issueMarking = useCallback(async (
     id: string,
     assessmentId: string,
     studentId?: string,
     comment?: string,
   ): Promise<PaperMarking | null> => {
     try {
-      const res = await apiClient.post(`/ai-tools/markings/${id}/publish`, {
-        assessmentId,
-        studentId,
-        comment,
-      });
+      const body: Record<string, unknown> = { studentId, comment };
+      if (assessmentId) body.assessmentId = assessmentId;
+      const res = await apiClient.post(`/ai-tools/markings/${id}/issue`, body);
       const updated = unwrapResponse<PaperMarking>(res);
       setCurrentMarking(updated);
       setMarkings((prev) => prev.map((m) => (m.id === id ? updated : m)));
-      toast.success('Marks published to gradebook');
+      toast.success('Marking issued');
       return updated;
     } catch (err: unknown) {
-      console.error('Failed to publish marking', err);
-      toast.error('Failed to publish marks.');
+      console.error('Failed to issue marking', err);
+      toast.error(extractErrorMessage(err, 'Failed to issue marking.'));
       return null;
     }
   }, []);
@@ -248,6 +249,25 @@ export function useTeacherMarking() {
     }
   }, []);
 
+  const downloadMarkingPdf = useCallback(async (id: string, studentName: string, paperTitle: string): Promise<void> => {
+    try {
+      const res = await apiClient.get(`/ai-tools/markings/${id}/pdf`, { responseType: 'blob' });
+      const blob = new Blob([res.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${slug(studentName)}-${slug(paperTitle)}-marked.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      console.error('Failed to download marking PDF', err);
+      toast.error(extractErrorMessage(err, 'Failed to download PDF.'));
+    }
+  }, []);
+
   return {
     loading,
     markings,
@@ -260,7 +280,8 @@ export function useTeacherMarking() {
     getMarkings,
     getMarking,
     updateMarking,
-    publishMarking,
+    issueMarking,
+    downloadMarkingPdf,
     fetchPapers,
     setCurrentMarking,
   };
