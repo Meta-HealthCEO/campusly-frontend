@@ -37,16 +37,19 @@ function resolveNodeLabel(
 function resolveResourceLabel(
   res: ChapterResourceItem['resourceId'],
 ): string {
+  if (!res) return '(deleted resource)';
   return typeof res === 'object' ? res.title : res;
 }
 
 function resolveResourceType(
   res: ChapterResourceItem['resourceId'],
 ): string | null {
+  if (!res) return null;
   return typeof res === 'object' ? res.type : null;
 }
 
 function resolveResourceId(res: ChapterResourceItem['resourceId']): string {
+  if (!res) return '';
   return typeof res === 'object' ? res.id : res;
 }
 
