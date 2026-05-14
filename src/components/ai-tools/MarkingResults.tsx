@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { RotateCcw, Send, ListOrdered, Save, AlertTriangle } from 'lucide-react';
 import type { PaperMarking, MarkingQuestion } from '@/hooks/useTeacherMarking';
 import { useTeacherPapers } from '@/hooks/useTeacherPapers';
-import { PublishToGradebookDialog } from './PublishToGradebookDialog';
+import { IssueResultDialog } from './IssueResultDialog';
 
 const IMAGE_BASE = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4500/api').replace(/\/api\/?$/, '') + '/uploads';
 
@@ -19,6 +19,9 @@ interface MarkingResultsProps {
   onMarkNext: () => void;
   onViewAll: () => void;
   isLoading: boolean;
+  /** Hide "Mark next student" / "View all results" buttons — useful in
+   *  contexts that already return to a roster (per-paper workspace). */
+  hideSecondaryActions?: boolean;
 }
 
 function scoreBadgeVariant(awarded: number, max: number) {
@@ -34,6 +37,7 @@ export function MarkingResults({
   onMarkNext,
   onViewAll,
   isLoading,
+  hideSecondaryActions = false,
 }: MarkingResultsProps) {
   const [questions, setQuestions] = useState<MarkingQuestion[]>(marking.questions);
   const [dirty, setDirty] = useState(false);
@@ -239,24 +243,31 @@ export function MarkingResults({
           <Send className="mr-2 h-4 w-4" />
           Publish to gradebook
         </Button>
-        <Button variant="outline" onClick={onMarkNext}>
-          <RotateCcw className="mr-2 h-4 w-4" />
-          Mark next student
-        </Button>
-        <Button variant="outline" onClick={onViewAll}>
-          <ListOrdered className="mr-2 h-4 w-4" />
-          View all results
-        </Button>
+        {!hideSecondaryActions && (
+          <>
+            <Button variant="outline" onClick={onMarkNext}>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Mark next student
+            </Button>
+            <Button variant="outline" onClick={onViewAll}>
+              <ListOrdered className="mr-2 h-4 w-4" />
+              View all results
+            </Button>
+          </>
+        )}
       </div>
 
-      <PublishToGradebookDialog
+      <IssueResultDialog
         open={publishOpen}
         onOpenChange={setPublishOpen}
-        title="Publish to Gradebook"
-        description={`Publishing marks for ${marking.studentName}`}
+        title="Issue result to student"
+        description="This will publish the mark to the gradebook and share the marking review with the student."
         submitting={publishing}
         classId={marking.classId ?? undefined}
         subjectId={paperSubjectId}
+        // Assessment-bank papers support backend auto-create — generated
+        // papers do not, so the picker stays mandatory for those.
+        allowAutoCreate={marking.paperType === 'assessment'}
         onConfirm={async (assessmentId, comment) => {
           setPublishing(true);
           await onPublish(assessmentId, comment);

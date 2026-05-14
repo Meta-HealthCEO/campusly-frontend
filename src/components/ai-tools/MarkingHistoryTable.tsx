@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Eye, Send, ClipboardList } from 'lucide-react';
 import type { PaperMarking } from '@/hooks/useTeacherMarking';
-import { PublishToGradebookDialog } from './PublishToGradebookDialog';
+import { IssueResultDialog } from './IssueResultDialog';
 
 interface MarkingHistoryTableProps {
   markings: PaperMarking[];
@@ -121,11 +121,11 @@ export function MarkingHistoryTable({
         </CardContent>
       </Card>
 
-      <PublishToGradebookDialog
+      <IssueResultDialog
         open={pendingId !== null}
         onOpenChange={(open) => { if (!open) setPendingId(null); }}
-        title="Publish to Gradebook"
-        description={pendingMarking ? `Publishing marks for ${pendingMarking.studentName}` : undefined}
+        title="Issue result to student"
+        description={pendingMarking ? `This will publish the mark to the gradebook and share the marking review with the student.` : undefined}
         submitting={publishing}
         classId={pendingMarking?.classId ?? undefined}
         onConfirm={async (assessmentId, comment) => {

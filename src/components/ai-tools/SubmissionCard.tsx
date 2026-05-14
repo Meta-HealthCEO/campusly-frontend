@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ChevronDown, ChevronUp, Check, Send, RotateCcw } from 'lucide-react';
 import { GradingJobStatusBadge } from './GradingJobStatusBadge';
-import { PublishToGradebookDialog } from './PublishToGradebookDialog';
+import { IssueResultDialog } from './IssueResultDialog';
 import { CriteriaEditor } from './CriteriaEditor';
 import type { CriteriaEdit } from './CriteriaEditor';
 import type { GradingJob } from './types';
@@ -258,11 +258,11 @@ export function SubmissionCard({ job, onReview, onPublish, onRetry }: Submission
         </div>
       )}
 
-      <PublishToGradebookDialog
+      <IssueResultDialog
         open={publishOpen}
         onOpenChange={setPublishOpen}
-        title="Publish to Gradebook"
-        description={`Publishing grade for ${getStudentName(job)}`}
+        title="Issue result to student"
+        description="This will publish the mark to the gradebook and share the marking review with the student."
         submitting={publishing}
         onConfirm={async (assessmentId, comment) => {
           setPublishing(true);
