@@ -173,13 +173,13 @@ function ChapterRow({
               chapter.resources
                 .slice()
                 .sort((a: ChapterResourceItem, b: ChapterResourceItem) => a.order - b.order)
-                .map((res: ChapterResourceItem) => {
+                .map((res: ChapterResourceItem, i: number) => {
                   const rid = resolveResourceId(res.resourceId);
                   const label = resolveResourceLabel(res.resourceId);
                   const rType = resolveResourceType(res.resourceId);
                   return (
                     <div
-                      key={rid}
+                      key={`${res.order}-${i}`}
                       className="flex items-center gap-2 text-sm"
                     >
                       <a
