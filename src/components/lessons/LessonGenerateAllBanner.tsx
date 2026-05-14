@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Loader2, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import type { LessonMaterial } from '@/types/lesson';
 
 interface GenerateAllResult {
@@ -98,8 +99,8 @@ export function LessonGenerateAllBanner({
               {placeholderCount} {noun} waiting
             </p>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Generate them all at once. Reading, quiz, homework and paper
-              placeholders need manual setup and will be skipped.
+              Generate them all at once. Reading placeholders need manual
+              setup and will be skipped.
             </p>
           </div>
         </div>
@@ -110,19 +111,30 @@ export function LessonGenerateAllBanner({
           disabled={busy}
           className="w-full sm:w-auto"
         >
-          {busy ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating... (1-2 min)
-            </>
-          ) : (
-            <>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Generate all
-            </>
-          )}
+          <Sparkles className="mr-2 h-4 w-4" />
+          Generate all
         </Button>
       </div>
+
+      <Dialog open={busy} onOpenChange={() => { /* uncloseable while busy */ }}>
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-md flex flex-col items-center text-center gap-4 py-8"
+        >
+          <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </span>
+          <div>
+            <p className="text-base font-semibold">Generating your lesson</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Filling in {placeholderCount} {noun}. This usually takes 1-2 minutes.
+            </p>
+            <p className="text-xs text-muted-foreground mt-3">
+              Don't navigate away — we'll close this when it's done.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {lastResult && lastResult.failed.length > 0 && (
         <div className="mt-3 border-t border-primary/20 pt-3">

@@ -96,6 +96,9 @@ export default function LessonWorkspacePage() {
     if (targetPhase === sourcePhase) {
       const phaseEntry = lesson.phases.find((p) => p.phase === sourcePhase);
       const currentIdx = phaseEntry?.materialIds.indexOf(activeId) ?? -1;
+      if (currentIdx >= 0 && targetIndex > currentIdx) {
+        targetIndex -= 1;
+      }
       if (currentIdx === targetIndex) return;
     }
 
@@ -108,6 +111,11 @@ export default function LessonWorkspacePage() {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           {/* Main workspace column */}
           <div className="space-y-6 min-w-0">
+            <LessonGenerateAllBanner
+              materials={lesson.materials}
+              generateAllPlaceholders={lessonHook.generateAllPlaceholders}
+            />
+
             <LessonHeader
               lesson={lesson}
               updateLesson={lessonHook.updateLesson}
@@ -116,11 +124,6 @@ export default function LessonWorkspacePage() {
               unassignClass={lessonHook.unassignClass}
               updateAssignment={lessonHook.updateAssignment}
               onOpenActions={() => setActionsOpen(true)}
-            />
-
-            <LessonGenerateAllBanner
-              materials={lesson.materials}
-              generateAllPlaceholders={lessonHook.generateAllPlaceholders}
             />
 
             <main className="space-y-8">
@@ -137,7 +140,6 @@ export default function LessonWorkspacePage() {
             </main>
 
             <MaterialDrawer
-              lessonId={lessonId}
               materials={lesson.materials}
               lessonHasAssignedClass={(lesson.assignedClasses?.length ?? 0) > 0}
               addMaterial={lessonHook.addMaterial}
