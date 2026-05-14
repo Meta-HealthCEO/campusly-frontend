@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RotateCcw, Send, ListOrdered, Save, AlertTriangle, Download, Images } from 'lucide-react';
@@ -95,7 +95,6 @@ export function MarkingResults({
 
   const pctVariant = adjustedPct >= 50 ? 'default' : 'destructive';
   const statusVariant = marking.status === 'published' ? 'default' : 'secondary';
-  const downrankAccept = marking.paperMismatch && marking.status === 'needs_review';
 
   return (
     <div className="space-y-4">
