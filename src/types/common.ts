@@ -41,7 +41,7 @@ export interface User {
   isReceptionist?: boolean;
   isStandaloneTeacher?: boolean;
   isStandaloneCoach?: boolean;
-  mustChangePassword: boolean;
+  mustChangePassword?: boolean;
   createdAt: string;
   updatedAt: string;
 }
