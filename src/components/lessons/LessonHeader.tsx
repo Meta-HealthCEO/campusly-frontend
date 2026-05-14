@@ -6,21 +6,18 @@ import { ArrowLeft, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { LessonStatusMenu } from '@/components/lessons/outline/LessonStatusMenu';
 import { LessonObjectivesEditor } from '@/components/lessons/outline/LessonObjectivesEditor';
 import { LessonPhaseNav } from '@/components/lessons/outline/LessonPhaseNav';
 import { LessonAssignedClasses } from '@/components/lessons/LessonAssignedClasses';
 import type {
   Lesson,
   LessonPhase,
-  LessonStatus,
   UpdateAssignmentPayload,
 } from '@/types/lesson';
 
 interface Props {
   lesson: Lesson;
   updateLesson: (patch: Partial<Lesson>) => Promise<Lesson>;
-  patchStatus: (status: LessonStatus) => Promise<Lesson>;
   assignClass: (classId: string, scheduledDate: string) => Promise<Lesson>;
   unassignClass: (classId: string) => Promise<Lesson>;
   updateAssignment: (classId: string, patch: UpdateAssignmentPayload) => Promise<Lesson>;
@@ -75,7 +72,6 @@ function resolveGradeName(lesson: Lesson): string {
 export function LessonHeader({
   lesson,
   updateLesson,
-  patchStatus,
   assignClass,
   unassignClass,
   updateAssignment,
@@ -135,7 +131,7 @@ export function LessonHeader({
         All lessons
       </Link>
 
-      {/* Row 1 — Title (left) + Status + Export actions (right) */}
+      {/* Row 1 — Title (left) + Export actions (right) */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           {editingTitle ? (
@@ -163,7 +159,6 @@ export function LessonHeader({
               {lesson.title}
             </button>
           )}
-          <LessonStatusMenu status={lesson.status} onChange={patchStatus} />
         </div>
         <div className="shrink-0">
           <Button
@@ -211,17 +206,21 @@ export function LessonHeader({
       {/* Row 5 — Phase nav (horizontal scroll-to anchors) */}
       <LessonPhaseNav counts={phaseCounts} />
 
-      {/* Optional — Reflection (only when taught) */}
-      {lesson.status === 'taught' && (
+      {/* Optional — Reflection (post-teaching notes) */}
+      <details className="text-sm">
+        <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
+          Reflection
+          {lesson.reflectionNotes ? ' (saved)' : ''}
+        </summary>
         <Textarea
           value={reflectionDraft}
           onChange={(e) => setReflectionDraft(e.target.value)}
           onBlur={() => void saveReflection()}
-          placeholder="Reflection: what worked? What would you change?"
+          placeholder="What worked? What would you change next time?"
           rows={3}
-          className="text-sm"
+          className="text-sm mt-2"
         />
-      )}
+      </details>
     </header>
   );
 }
