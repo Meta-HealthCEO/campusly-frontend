@@ -18,6 +18,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { useLessonWorkspaceStore } from '@/stores/useLessonWorkspaceStore';
 import { useQuizzesPicker } from '@/hooks/useLessonResourcePickers';
+import { useAuthStore } from '@/stores/useAuthStore';
 import type { QuizMaterial } from '@/types/lesson';
 
 interface Props {
@@ -25,18 +26,25 @@ interface Props {
   existing?: QuizMaterial;
 }
 
+function refId(ref: QuizMaterial['quizId'] | undefined): string {
+  if (!ref) return '';
+  if (typeof ref === 'string') return ref;
+  return ref._id ?? ref.id ?? '';
+}
+
 export function QuizDrawer({ onSubmit, existing }: Props) {
   const closeDrawer = useLessonWorkspaceStore((s) => s.closeDrawer);
   const { items, loading } = useQuizzesPicker();
+  const isStandalone = useAuthStore((s) => s.permissions.isStandaloneTeacher);
 
-  const [quizId, setQuizId] = useState<string>(existing?.quizId ?? '');
+  const [quizId, setQuizId] = useState<string>(refId(existing?.quizId));
   const [title, setTitle] = useState<string>(existing?.title ?? '');
   const [teacherNotes, setTeacherNotes] = useState<string>(existing?.teacherNotes ?? '');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!existing) return;
-    setQuizId(existing.quizId);
+    setQuizId(refId(existing.quizId));
     setTitle(existing.title);
     setTeacherNotes(existing.teacherNotes ?? '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -74,6 +82,16 @@ export function QuizDrawer({ onSubmit, existing }: Props) {
   if (loading) return <LoadingSpinner />;
 
   if (items.length === 0) {
+    if (isStandalone) {
+      return (
+        <EmptyState
+          icon={ListChecks}
+          title="Quizzes aren't available on your plan"
+          description="The Quiz material kind belongs to the multi-school Learning module. Use Practice Questions for inline AI questions, or a Test Paper for a full structured test."
+          action={<Button onClick={closeDrawer}>Close</Button>}
+        />
+      );
+    }
     return (
       <EmptyState
         icon={ListChecks}
