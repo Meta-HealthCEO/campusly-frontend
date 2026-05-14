@@ -114,6 +114,7 @@ export default function LessonWorkspacePage() {
             <LessonGenerateAllBanner
               materials={lesson.materials}
               generateAllPlaceholders={lessonHook.generateAllPlaceholders}
+              lessonHasAssignedClass={(lesson.assignedClasses?.length ?? 0) > 0}
             />
 
             <LessonHeader

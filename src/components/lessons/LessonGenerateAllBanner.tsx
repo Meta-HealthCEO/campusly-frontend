@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Loader2, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import type { LessonMaterial } from '@/types/lesson';
+import type { LessonMaterial, LessonMaterialKind } from '@/types/lesson';
 
 interface GenerateAllResult {
   total: number;
@@ -16,6 +16,30 @@ interface GenerateAllResult {
 interface Props {
   materials: LessonMaterial[];
   generateAllPlaceholders: () => Promise<GenerateAllResult>;
+  /** Lesson must be assigned to at least one class — homework auto-generation
+   *  needs an audience, so without a class it falls into the manual bucket. */
+  lessonHasAssignedClass: boolean;
+}
+
+const ALWAYS_MANUAL_KINDS: ReadonlySet<LessonMaterialKind> = new Set([
+  'reading',
+  'quiz',
+]);
+
+/** Reasons a specific placeholder can't be auto-generated. Mirrors the
+ *  backend's buildPayloadForPlaceholder skips so the count matches reality. */
+function manualReason(
+  material: LessonMaterial,
+  lessonHasAssignedClass: boolean,
+): string | null {
+  if (ALWAYS_MANUAL_KINDS.has(material.kind)) {
+    if (material.kind === 'reading') return 'needs a textbook reference';
+    if (material.kind === 'quiz') return 'needs an existing quiz';
+  }
+  if (material.kind === 'homework' && !lessonHasAssignedClass) {
+    return 'needs an assigned class';
+  }
+  return null;
 }
 
 /**
@@ -50,13 +74,25 @@ function isPlaceholder(material: LessonMaterial): boolean {
 export function LessonGenerateAllBanner({
   materials,
   generateAllPlaceholders,
+  lessonHasAssignedClass,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [lastResult, setLastResult] = useState<GenerateAllResult | null>(null);
   const [showFailures, setShowFailures] = useState(false);
 
-  const placeholderCount = materials.filter(isPlaceholder).length;
-  if (placeholderCount === 0) return null;
+  const { autoItems, manualItems } = useMemo(() => {
+    const placeholders = materials.filter(isPlaceholder);
+    const auto: LessonMaterial[] = [];
+    const manual: Array<{ material: LessonMaterial; reason: string }> = [];
+    for (const m of placeholders) {
+      const reason = manualReason(m, lessonHasAssignedClass);
+      if (reason) manual.push({ material: m, reason });
+      else auto.push(m);
+    }
+    return { autoItems: auto, manualItems: manual };
+  }, [materials, lessonHasAssignedClass]);
+
+  if (autoItems.length === 0 && manualItems.length === 0) return null;
 
   const run = async () => {
     setBusy(true);
@@ -85,34 +121,63 @@ export function LessonGenerateAllBanner({
     }
   };
 
-  const noun = placeholderCount === 1 ? 'placeholder material' : 'placeholder materials';
+  const autoNoun = autoItems.length === 1 ? 'material' : 'materials';
 
   return (
     <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 shadow-sm">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-4 min-w-0">
           <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
             <Sparkles className="h-5 w-5" />
           </span>
-          <div className="min-w-0">
+          <div className="min-w-0 space-y-1.5">
             <p className="text-base font-semibold tracking-tight">
-              {placeholderCount} {noun} waiting
+              {autoItems.length > 0
+                ? `${autoItems.length} ${autoNoun} ready to auto-generate`
+                : 'Nothing to auto-generate'}
+              {manualItems.length > 0 && (
+                <span className="text-muted-foreground font-normal">
+                  {' '}· {manualItems.length} need{manualItems.length === 1 ? 's' : ''} manual setup
+                </span>
+              )}
             </p>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Generate them all at once. Reading placeholders need manual
-              setup and will be skipped.
-            </p>
+            {autoItems.length > 0 && (
+              <ul className="text-xs text-muted-foreground space-y-0.5">
+                {autoItems.map((m) => (
+                  <li key={m._id} className="truncate">
+                    <span className="text-emerald-700">●</span> {m.title}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {manualItems.length > 0 && (
+              <ul className="text-xs text-muted-foreground space-y-0.5 pt-1">
+                {manualItems.map(({ material, reason }) => (
+                  <li key={material._id} className="truncate">
+                    <span className="text-amber-700">●</span> {material.title}
+                    {' '}<span className="italic">— {reason}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
         <Button
           type="button"
           size="default"
           onClick={() => void run()}
-          disabled={busy}
-          className="w-full sm:w-auto"
+          disabled={busy || autoItems.length === 0}
+          className="w-full sm:w-auto shrink-0"
+          title={
+            autoItems.length === 0
+              ? 'All remaining placeholders need manual setup'
+              : undefined
+          }
         >
           <Sparkles className="mr-2 h-4 w-4" />
-          Generate all
+          {autoItems.length === 0
+            ? 'Nothing to generate'
+            : `Generate ${autoItems.length}`}
         </Button>
       </div>
 
@@ -127,7 +192,7 @@ export function LessonGenerateAllBanner({
           <div>
             <p className="text-base font-semibold">Generating your lesson</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Filling in {placeholderCount} {noun}. This usually takes 1-2 minutes.
+              Filling in {autoItems.length} {autoNoun}. This usually takes 1-2 minutes.
             </p>
             <p className="text-xs text-muted-foreground mt-3">
               Don't navigate away — we'll close this when it's done.

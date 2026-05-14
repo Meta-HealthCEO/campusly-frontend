@@ -137,7 +137,11 @@ export function LessonMaterialCard({
     <Card
       ref={setNodeRef}
       style={style}
-      className="p-4 hover:border-primary/30 transition-colors"
+      className={
+        isPlaceholder
+          ? 'p-4 border-amber-500/40 bg-amber-500/5 hover:border-amber-500/60 transition-colors'
+          : 'p-4 hover:border-primary/30 transition-colors'
+      }
     >
       <div className="flex gap-2 items-start">
       <button
@@ -185,9 +189,13 @@ export function LessonMaterialCard({
           </Badge>
           <Badge
             variant={isPlaceholder ? 'secondary' : 'default'}
-            className="text-xs"
+            className={
+              isPlaceholder
+                ? 'text-xs bg-amber-500/15 text-amber-700 border-amber-500/30'
+                : 'text-xs'
+            }
           >
-            {isPlaceholder ? 'Placeholder' : 'Generated'}
+            {isPlaceholder ? 'Needs generating' : 'Generated'}
           </Badge>
         </div>
         {material.teacherNotes && (
@@ -216,9 +224,13 @@ export function LessonMaterialCard({
         <button
           type="button"
           onClick={() => onOpenDrawer(material.kind, material._id)}
-          className="text-primary hover:underline"
+          className={
+            isPlaceholder
+              ? 'inline-flex items-center gap-1 rounded-md bg-amber-500/20 px-2 py-1 text-amber-800 font-medium hover:bg-amber-500/30'
+              : 'text-primary hover:underline'
+          }
         >
-          {isPlaceholder ? 'Generate' : 'Edit'}
+          {isPlaceholder ? 'Generate now' : 'Edit'}
         </button>
         <button
           type="button"
