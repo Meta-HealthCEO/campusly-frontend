@@ -69,7 +69,6 @@ function isStandaloneTeacherPathAllowed(pathname: string): boolean {
     '/teacher/curriculum/mark-papers',
     '/teacher/lesson-plans',
     '/teacher/lessons',
-    '/teacher/learning',
     '/teacher/quick-make',
     '/teacher/papers',
     '/teacher/grades',
