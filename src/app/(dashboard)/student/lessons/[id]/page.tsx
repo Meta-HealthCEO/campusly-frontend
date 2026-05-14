@@ -2,7 +2,7 @@
 
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Calendar, Clock } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -10,6 +10,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { LessonMaterialCard } from '@/components/student/LessonMaterialCard';
 import { AskAITutorCTA } from '@/components/student/AskAITutorCTA';
 import { useStudentLesson } from '@/hooks/useStudentLesson';
+import { useStudentLessonExport } from '@/hooks/useStudentLessonExport';
 
 export default function StudentLessonDetailPage({
   params,
@@ -19,6 +20,7 @@ export default function StudentLessonDetailPage({
   const { id } = use(params);
   const router = useRouter();
   const { lesson, loading } = useStudentLesson(id);
+  const { download, downloading } = useStudentLessonExport();
 
   if (loading) return <LoadingSpinner />;
 
@@ -54,6 +56,18 @@ export default function StudentLessonDetailPage({
           <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
             <Clock className="h-3 w-3" /> {lesson.durationMinutes} min
           </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={downloading}
+            onClick={() =>
+              void download(lesson.id, `${lesson.title || 'lesson'}-student.pdf`)
+            }
+          >
+            <Download className="mr-1.5 h-3.5 w-3.5" />
+            {downloading ? 'Preparing…' : 'Download pack'}
+          </Button>
         </div>
       </PageHeader>
 
