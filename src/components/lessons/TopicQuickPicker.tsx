@@ -74,6 +74,20 @@ export function TopicQuickPicker({
     });
   }, [recent, subjectId, gradeId]);
 
+  // Sort grades descending — most teachers in this product teach senior
+  // grades (10-12), so showing Grade 12 first cuts the scroll. 'Grade R'
+  // (reception, pre-grade-1) sorts last; anything non-numeric falls back
+  // to lexical order at the end.
+  const sortedGrades = useMemo(() => {
+    const gradeNumber = (title: string): number => {
+      const match = title.match(/(\d+)/);
+      if (match) return Number(match[1]);
+      if (/grade\s*r/i.test(title)) return 0;
+      return -1;
+    };
+    return [...grades].sort((a, b) => gradeNumber(b.title) - gradeNumber(a.title));
+  }, [grades]);
+
   const subjectName = subjects.find((s) => s.id === subjectId)?.title;
   const gradeName = grades.find((g) => g.id === gradeId)?.title;
   const contextReady = !!subjectId && !!gradeId;
@@ -98,7 +112,7 @@ export function TopicQuickPicker({
                   No grades found in the CAPS framework.
                 </div>
               )}
-              {grades.map((g) => (
+              {sortedGrades.map((g) => (
                 <SelectItem key={g.id} value={g.id}>{g.title}</SelectItem>
               ))}
             </SelectContent>
