@@ -6,8 +6,17 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ExerciseQuestionsList } from '@/components/homework/ExerciseQuestionsList';
 import { BlockRenderer } from '@/components/content/renderers/BlockRenderer';
 import { useLessonMaterialPreview } from '@/hooks/useLessonMaterialPreview';
+import apiClient from '@/lib/api-client';
+import { unwrapResponse } from '@/lib/api-helpers';
 import type { LessonMaterial } from '@/types/lesson';
 import type { ContentBlockItem, AttemptResult, BlockInteractionState } from '@/types';
+
+interface ApiGradeResult {
+  correct: boolean;
+  score: number;
+  maxScore: number;
+  feedback: string;
+}
 
 interface Props {
   material: LessonMaterial;
@@ -81,47 +90,6 @@ function defaultInteraction(blockId: string): BlockInteractionState {
   };
 }
 
-/**
- * Best-effort local correctness check for quiz/true_false blocks in the
- * teacher preview. The content is JSON; we look for an option with
- * `isCorrect: true` (structured format) or a `correctIndex` (legacy seed
- * format) and compare against the teacher's response. Returns null when
- * we can't determine — caller renders the question as "answered" without
- * a correct/incorrect verdict.
- */
-function judgeQuizResponse(block: ContentBlockItem, response: string): boolean | null {
-  try {
-    const parsed = JSON.parse(block.content) as Record<string, unknown>;
-    if (Array.isArray(parsed.options) && parsed.options.length > 0) {
-      const first = parsed.options[0];
-      // Structured: options is array of { label, text, isCorrect }
-      if (typeof first === 'object' && first !== null) {
-        for (const opt of parsed.options as Array<Record<string, unknown>>) {
-          if (opt.isCorrect === true) {
-            return opt.label === response || opt.text === response;
-          }
-        }
-        return null;
-      }
-      // Legacy: options is string[], correctIndex points at one
-      if (typeof first === 'string' && typeof parsed.correctIndex === 'number') {
-        const correctText = (parsed.options as string[])[parsed.correctIndex];
-        return correctText === response;
-      }
-    }
-    // True/False — explicit correct field
-    if (parsed.type === 'true_false' && typeof parsed.correctAnswer === 'string') {
-      return parsed.correctAnswer.toLowerCase() === response.toLowerCase();
-    }
-    // Short answer: too many valid phrasings to judge with string equality.
-    // Return null so the preview marks the question as answered without
-    // claiming the teacher's response is right or wrong.
-  } catch {
-    /* fallthrough */
-  }
-  return null;
-}
-
 function ContentBlocksList({ blocks }: { blocks: unknown[] }) {
   const [interactions, setInteractions] = useState<Map<string, BlockInteractionState>>(
     () => new Map(),
@@ -129,18 +97,38 @@ function ContentBlocksList({ blocks }: { blocks: unknown[] }) {
 
   const handleAttempt = useCallback(
     async (blockId: string, response: string): Promise<AttemptResult> => {
-      // Find the original block to judge correctness against. We re-walk
-      // the blocks array each call — cheap, only fires on click.
       const raw = (blocks as ContentBlockItem[]).find((b, i) => {
         const id = (typeof b.blockId === 'string' && b.blockId) || `preview-${i}`;
         return id === blockId;
       });
-      const correct = raw ? judgeQuizResponse(raw, response) : null;
+
+      let correct: boolean | null = null;
+      let score = 0;
+      let maxScore = 1;
+
+      if (raw) {
+        try {
+          const res = await apiClient.post('/content-library/grade-attempt', {
+            blockContent: raw.content,
+            blockType: raw.type,
+            response,
+          });
+          const data = unwrapResponse<ApiGradeResult>(res);
+          correct = data.correct;
+          score = data.score;
+          maxScore = data.maxScore;
+        } catch {
+          // Network or auth error — leave correctness unknown. The QuizBlock
+          // renders a neutral "Answer recorded" state when correct is null.
+          correct = null;
+        }
+      }
+
       const result: AttemptResult = {
         id: `preview-${blockId}`,
         correct: correct === true,
-        score: correct === true ? 1 : 0,
-        maxScore: 1,
+        score,
+        maxScore,
         attemptNumber: 1,
       };
       setInteractions((prev) => {
@@ -149,8 +137,8 @@ function ContentBlocksList({ blocks }: { blocks: unknown[] }) {
           blockId,
           answered: true,
           correct,
-          score: result.score,
-          maxScore: result.maxScore,
+          score,
+          maxScore,
           showExplanation: true,
           hintsRevealed: 0,
           attemptResult: result,
