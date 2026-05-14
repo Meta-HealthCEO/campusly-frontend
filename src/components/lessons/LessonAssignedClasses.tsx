@@ -42,8 +42,12 @@ function readClassId(rel: LessonAssignment['classId']): string {
   return typeof rel === 'string' ? rel : rel._id;
 }
 
-function readClassName(rel: LessonAssignment['classId']): string {
-  return typeof rel === 'string' ? rel : rel.name;
+function readClassName(
+  rel: LessonAssignment['classId'],
+  fallbackLookup: Map<string, string>,
+): string {
+  if (typeof rel === 'string') return fallbackLookup.get(rel) ?? rel;
+  return rel.name ?? fallbackLookup.get(rel._id) ?? rel._id;
 }
 
 function formatScheduled(value: string): string {
@@ -78,6 +82,13 @@ export function LessonAssignedClasses({
   const availableClasses = useMemo(
     () => classes.filter((c) => !assignedIds.has(c.id)),
     [classes, assignedIds],
+  );
+  // Lookup map used to resolve a class name when the assignment ref came
+  // back unpopulated (just an ObjectId string) — happens right after
+  // assigning a new class and before the next full lesson re-fetch.
+  const classNameById = useMemo(
+    () => new Map(classes.map((c) => [c.id, c.name])),
+    [classes],
   );
 
   const canSubmitNew =
@@ -120,6 +131,7 @@ export function LessonAssignedClasses({
               <li key={cid}>
                 <AssignmentChip
                   assignment={a}
+                  classNameById={classNameById}
                   onUpdate={onUpdate}
                   onUnassign={onUnassign}
                 />
@@ -184,13 +196,14 @@ export function LessonAssignedClasses({
 
 interface ChipProps {
   assignment: LessonAssignment;
+  classNameById: Map<string, string>;
   onUpdate: (classId: string, patch: UpdateAssignmentPayload) => Promise<unknown>;
   onUnassign: (classId: string) => Promise<unknown>;
 }
 
-function AssignmentChip({ assignment, onUpdate, onUnassign }: ChipProps) {
+function AssignmentChip({ assignment, classNameById, onUpdate, onUnassign }: ChipProps) {
   const cid = readClassId(assignment.classId);
-  const className = readClassName(assignment.classId);
+  const className = readClassName(assignment.classId, classNameById);
   const [open, setOpen] = useState(false);
   const [dateDraft, setDateDraft] = useState(toLocalDateInput(assignment.scheduledDate));
   const [statusDraft, setStatusDraft] = useState<LessonAssignment['status']>(assignment.status);
