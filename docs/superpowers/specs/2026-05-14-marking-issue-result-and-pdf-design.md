@@ -41,7 +41,7 @@ The current AI-marking flow has three gaps:
 ## Architecture Overview
 
 - New visibility fact on `PaperMarking`: `issuedToStudent`, `issuedAt`, `issuedBy`. Independent of the existing `status` field (which tracks gradebook publish state).
-- Backend endpoint `POST /api/ai-tools/markings/:id/issue` (renamed from `/publish`) is the single atomic mutation: upserts the gradebook `Mark`, sets `issuedToStudent=true`, fires an in-app notification.
+- Backend endpoint `POST /api/ai-tools/markings/:id/issue` (renamed from `/publish`) is the single atomic mutation: upserts the gradebook `Mark`, sets `issuedToStudent=true`, fires an in-app notification on the first issue only (silent on re-issue).
 - Backend endpoint `GET /api/ai-tools/markings/:id/pdf` stitches the stored page images into a PDF on demand via the existing `src/common/pdf/createDocument()` helper.
 - Student-facing read endpoints under `/api/ai-tools/students/me/markings` enforce ownership via `req.user.id` → `Student` lookup (same pattern as documented in `CLAUDE.md`).
 - The teacher review UI and the student review UI share a new `MarkingQuestionCard` component (editable for teacher, read-only for student) and a new `MarkingPagesLightbox` component.
@@ -73,8 +73,8 @@ All under `/api/ai-tools`. All teacher endpoints `authenticate` + `requireModule
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | `POST` | `/markings/:id/issue` | Teacher | Renames `/publish`. Atomically: upserts gradebook `Mark` via existing `publishMarkToGradebook()` (idempotent — re-issuing with a different `assessmentId` updates the target), sets `issuedToStudent=true`, `issuedAt=now` (only on first issue; subsequent calls leave `issuedAt` unchanged), `issuedBy=req.user.id`. Fires `marking_result_issued` notification **only on first issue** (when `issuedToStudent` was false before this call). Re-issuing is silent. |
-| `GET` | `/markings/:id/pdf` | Teacher OR owning student | Streams `application/pdf` stitched from `images[]` ordered by `pageNumber`. `Content-Disposition: inline; filename="<student-slug>-<paper-slug>-marked.pdf"`. |
-| `GET` | `/markings/:id/image/:filename` | Teacher OR owning student | Auth-gated image bytes. **All marking image access goes through this route** — the existing static `/uploads/markings/...` serving is removed (or path-excluded) so teachers and students hit the same gated path. Validates `filename` matches an entry in `marking.images[]` before streaming from disk. Sets cache headers (private, short max-age) for browser caching of repeat lightbox navigation. |
+| `GET` | `/markings/:id/pdf` | Teacher OR owning student (student requires `issuedToStudent=true`) | Streams `application/pdf` stitched from `images[]` ordered by `pageNumber`. `Content-Disposition: inline; filename="<student-slug>-<paper-slug>-marked.pdf"`. |
+| `GET` | `/markings/:id/image/:filename` | Teacher OR owning student (student requires `issuedToStudent=true`) | Auth-gated image bytes. **All marking image access goes through this route** — the existing static `/uploads/markings/...` serving is removed (or path-excluded) so teachers and students hit the same gated path. Validates `filename` matches an entry in `marking.images[]` before streaming from disk. Sets cache headers (private, short max-age) for browser caching of repeat lightbox navigation. |
 | `GET` | `/students/me/markings` | Student | List of issued markings for the current student. Supports `?paperId=` filter for the `student/tests/[paperId]` lookup. Returns `{ id, paperId, paperTitle, subjectName, percentage, totalMarks, maxMarks, issuedAt }[]`. |
 | `GET` | `/students/me/markings/:id` | Student | Full marking detail — questions (answer, correct answer, marks awarded, max marks, feedback, rationale), images, issuedAt. Excludes teacher-only metadata (audit trail, batch info). |
 
@@ -84,7 +84,7 @@ All under `/api/ai-tools`. All teacher endpoints `authenticate` + `requireModule
 
 - Rename the existing publish handler to `issueMarking`.
 - Body: `{ assessmentId?: string, comment?: string }` (unchanged from current publish).
-- Behavior: same gradebook publish (upserts `Mark` via `publishMarkToGradebook()`). Then sets `issuedToStudent=true` and `issuedBy=req.user.id` unconditionally; sets `issuedAt=now` only if the previous value of `issuedToStudent` was false. Fires the notification only if the previous value was false (first issue).
+- Behavior: same gradebook publish (upserts `Mark` via `publishMarkToGradebook()`); preserves existing write of `PaperMarking.status='published'`. Then sets `issuedToStudent=true` and `issuedBy=req.user.id` unconditionally; sets `issuedAt=now` only if the previous value of `issuedToStudent` was false. Fires the notification only if the previous value was false (first issue).
 - Returns the updated marking.
 
 ### Student ownership resolver
@@ -192,12 +192,12 @@ Loading state: spinner while resolving which view to render.
   - `getMarking(id)` → `GET /ai-tools/students/me/markings/:id`.
   - `downloadMarkingPdf(id)` → `GET /ai-tools/markings/:id/pdf` (same endpoint as teacher; backend gates auth).
 
-### Tests list badge
+### Tests list — status + CTA
 
-`src/app/(dashboard)/student/tests/page.tsx`:
+`src/app/(dashboard)/student/tests/page.tsx` reads from `useStudentAssignedPapers` ([src/hooks/useStudentTests.ts](src/hooks/useStudentTests.ts)). Two changes:
 
-- The existing status badge already supports a `marked` state. Update the underlying hook (whichever fetches the list) to set status to `marked` when an issued marking exists for that paper-student.
-- No new badge state needed.
+- **Status mapping.** The hook (or its backing endpoint) should set `status='graded'` only when the corresponding `PaperMarking` has `issuedToStudent=true`. Today's behaviour appears to flip to `graded`/`published` based on gradebook state alone, which leaks information about marking-in-progress; tighten to require issued.
+- **CTA enable.** [src/app/(dashboard)/student/tests/page.tsx:28-30](src/app/(dashboard)/student/tests/page.tsx#L28-L30) currently sets `ctaDisabled: true` for both `graded` and `published` states — the student cannot click into a marked test. Change these two cases to `ctaDisabled: false` with `ctaLabel: 'View result'`. The `[paperId]` route handles routing to the review view (per the three-state resolution above).
 
 ## Auth & Multi-tenancy Notes
 
