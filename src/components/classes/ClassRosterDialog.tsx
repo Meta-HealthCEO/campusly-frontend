@@ -12,13 +12,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Search, Plus, Mail, Users, Download, Trash2, Pencil } from 'lucide-react';
+import { Search, Plus, Mail, Users, Download, Trash2, Pencil, KeyRound } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import { getStudentDisplayName, isPortalStudent } from '@/lib/student-helpers';
 import { resolveId } from '@/lib/api-helpers';
 import type { TeacherClassEntry } from '@/hooks/useTeacherClasses';
 import type { Student } from '@/types';
 import { StudentProfileDialog } from '@/components/students/StudentProfileDialog';
+import { RegenerateCredentialsDialog } from './RegenerateCredentialsDialog';
+
+interface RegenerateTarget {
+  id: string;
+  name: string;
+  email: string;
+}
 
 interface ClassRosterDialogProps {
   entry: TeacherClassEntry | null;
@@ -27,7 +34,21 @@ interface ClassRosterDialogProps {
   onInvite: (student: Student) => void;
   invitingId: string | null;
   onAddStudents: () => void;
+  onAssignExisting?: () => void;
   onRemoveStudent?: (studentId: string) => void;
+}
+
+function getGradeName(entry: TeacherClassEntry): string {
+  const runtimeGradeId = (entry.class as { gradeId?: unknown }).gradeId;
+  const gradeFromId = typeof runtimeGradeId === 'object' && runtimeGradeId !== null
+    ? runtimeGradeId as { name?: string }
+    : null;
+
+  return entry.class.grade?.name ?? entry.class.gradeName ?? gradeFromId?.name ?? '';
+}
+
+function getClassDisplayName(entry: TeacherClassEntry): string {
+  return `${getGradeName(entry)} ${entry.class.name}`.trim();
 }
 
 export function ClassRosterDialog({
@@ -37,16 +58,16 @@ export function ClassRosterDialog({
   onInvite,
   invitingId,
   onAddStudents,
+  onAssignExisting,
   onRemoveStudent,
 }: ClassRosterDialogProps) {
   const [studentSearch, setStudentSearch] = useState('');
   const [profileStudentId, setProfileStudentId] = useState<string | null>(null);
+  const [regenStudent, setRegenStudent] = useState<RegenerateTarget | null>(null);
 
   const classId = entry ? resolveId(entry.class) || null : null;
   const studentCount = entry?.students.length ?? 0;
-  const className = entry
-    ? `${entry.class.grade?.name ?? ''} ${entry.class.name}`.trim()
-    : '';
+  const className = entry ? getClassDisplayName(entry) : '';
   const isTeachingGroup = copyMode === 'teachingGroup';
   const learnerLabel = isTeachingGroup ? 'Learner' : 'Student';
   const learnerLabelPlural = isTeachingGroup ? 'Learners' : 'Students';
@@ -109,7 +130,8 @@ export function ClassRosterDialog({
           {classId && entry && (
             <ClassroomCodeCard
               classId={classId}
-              className={`${entry.class.grade?.name ?? ''} ${entry.class.name}`.trim()}
+              className={className}
+              copyMode={copyMode}
             />
           )}
 
@@ -137,6 +159,11 @@ export function ClassRosterDialog({
             <Button size="sm" variant="outline" onClick={onAddStudents} className="gap-1 shrink-0">
               <Plus className="h-4 w-4" /> Add {learnerLabelPlural}
             </Button>
+            {onAssignExisting && (
+              <Button size="sm" variant="outline" onClick={onAssignExisting} className="gap-1 shrink-0">
+                <Users className="h-4 w-4" /> Assign Existing
+              </Button>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -149,7 +176,14 @@ export function ClassRosterDialog({
                     ? 'That is fine for print/PDF workflows. Add learners later when you want online submissions.'
                     : 'Add students to this class to get started'
                 }
-                action={<Button onClick={onAddStudents} size="sm">Add {learnerLabelPlural}</Button>}
+                action={(
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Button onClick={onAddStudents} size="sm">Add {learnerLabelPlural}</Button>
+                    {onAssignExisting && (
+                      <Button onClick={onAssignExisting} size="sm" variant="outline">Assign Existing</Button>
+                    )}
+                  </div>
+                )}
               />
             ) : filteredStudents.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">
@@ -193,6 +227,22 @@ export function ClassRosterDialog({
                         <Mail className="h-4 w-4" />
                       </Button>
                     )}
+                    {portal && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setRegenStudent({
+                          id: student.id,
+                          name: getStudentDisplayName(student).full,
+                          email: student.user?.email ?? '',
+                        })}
+                        aria-label="Regenerate credentials"
+                        title="Regenerate credentials"
+                        className="shrink-0"
+                      >
+                        <KeyRound className="h-4 w-4" />
+                      </Button>
+                    )}
                     {onRemoveStudent && (
                       <Button
                         variant="ghost"
@@ -216,6 +266,15 @@ export function ClassRosterDialog({
         studentId={profileStudentId}
         onClose={() => setProfileStudentId(null)}
       />
+      {regenStudent && (
+        <RegenerateCredentialsDialog
+          open={Boolean(regenStudent)}
+          onOpenChange={(o) => { if (!o) setRegenStudent(null); }}
+          studentId={regenStudent.id}
+          studentName={regenStudent.name}
+          studentEmail={regenStudent.email}
+        />
+      )}
     </Dialog>
   );
 }
