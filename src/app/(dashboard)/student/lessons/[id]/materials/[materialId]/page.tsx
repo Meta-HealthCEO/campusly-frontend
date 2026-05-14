@@ -65,7 +65,7 @@ export default function StudentLessonMaterialPage({
   const label = KIND_LABEL[material.kind] ?? material.kind;
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-4xl mx-auto">
       <Button
         variant="ghost"
         size="sm"

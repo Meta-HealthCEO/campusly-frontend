@@ -36,7 +36,7 @@ export default function StudentLessonDetailPage({
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-4xl mx-auto">
       <Button variant="ghost" size="sm" onClick={() => router.push('/student/lessons')}>
         <ArrowLeft className="mr-1 h-4 w-4" /> Back to lessons
       </Button>
