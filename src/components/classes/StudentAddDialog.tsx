@@ -16,13 +16,15 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PersonalEditTab } from '@/components/students/profile-tabs/PersonalEditTab';
 import { extractErrorMessage } from '@/lib/api-helpers';
+import { getStudentDisplayName } from '@/lib/student-helpers';
 import type { StudentProfileFormData } from '@/hooks/useStudentEditor';
-import type { AddStudentResult, StudentPortalCredentials } from '@/hooks/useTeacherClasses';
+import type { AddStudentResult } from '@/hooks/useTeacherClasses';
+import { StudentCredentialsPanel } from './StudentCredentialsPanel';
 
 interface PendingStudent {
   firstName: string;
   lastName: string;
-  admissionNumber: string;
+  admissionNumber?: string;
 }
 
 export type AddStudentPayload = Partial<StudentProfileFormData>;
@@ -79,7 +81,7 @@ export function StudentAddDialog({
   const [activeTab, setActiveTab] = useState<StudentAddTab>('manual');
   const [submitting, setSubmitting] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0, errors: [] as string[] });
-  const [credentialBatch, setCredentialBatch] = useState<StudentPortalCredentials[]>([]);
+  const [credentialBatch, setCredentialBatch] = useState<AddStudentResult[]>([]);
 
   const resetForm = () => {
     setForm(EMPTY_FORM);
@@ -106,7 +108,7 @@ export function StudentAddDialog({
       const result = await onAddStudent(payload);
       toast.success(`${payload.firstName} ${payload.lastName} added`);
       if (result?.credentials) {
-        setCredentialBatch([result.credentials]);
+        setCredentialBatch([result]);
         return;
       }
       if (closeOnSuccess) {
@@ -136,16 +138,16 @@ export function StudentAddDialog({
 
     for (let i = 0; i < lines.length; i++) {
       const parts = lines[i].split(',').map((p) => p.trim());
-      if (parts.length < 3) {
-        parseErrors.push(`Line ${i + 1}: expected 3 fields (firstName,lastName,admissionNumber), got ${parts.length}`);
+      if (parts.length < 2 || parts.length > 3) {
+        parseErrors.push(`Line ${i + 1}: expected 2 or 3 fields (firstName,lastName,optionalAdmissionNumber), got ${parts.length}`);
         continue;
       }
       const [firstName, lastName, admissionNumber] = parts;
-      if (!firstName || !lastName || !admissionNumber) {
-        parseErrors.push(`Line ${i + 1}: all fields must be non-empty`);
+      if (!firstName || !lastName) {
+        parseErrors.push(`Line ${i + 1}: first name and last name are required`);
         continue;
       }
-      parsed.push({ firstName, lastName, admissionNumber });
+      parsed.push({ firstName, lastName, ...(admissionNumber ? { admissionNumber } : {}) });
     }
 
     setCsvErrors(parseErrors);
@@ -158,12 +160,12 @@ export function StudentAddDialog({
     setSubmitting(true);
     setProgress({ current: 0, total: parsed.length, errors: [] });
     const importErrors: string[] = [];
-    const importedCredentials: StudentPortalCredentials[] = [];
+    const importedResults: AddStudentResult[] = [];
     try {
       for (let i = 0; i < parsed.length; i++) {
         try {
           const result = await onAddStudent(parsed[i]);
-          if (result?.credentials) importedCredentials.push(result.credentials);
+          if (result?.credentials) importedResults.push(result);
         } catch (err: unknown) {
           importErrors.push(`${parsed[i].firstName} ${parsed[i].lastName}: ${extractErrorMessage(err, 'Failed to add student')}`);
         }
@@ -175,8 +177,8 @@ export function StudentAddDialog({
         : `${parsed.length} student(s) added from CSV`;
       if (succeeded > 0) toast.success(msg);
       else toast.error('All students failed to import');
-      if (importedCredentials.length > 0) {
-        setCredentialBatch(importedCredentials);
+      if (importedResults.length > 0) {
+        setCredentialBatch(importedResults);
         setActiveTab('manual');
       } else {
         resetForm();
@@ -194,12 +196,15 @@ export function StudentAddDialog({
   const hasCredentials = credentialBatch.length > 0;
   const loginUrl = typeof window === 'undefined' ? '/login' : `${window.location.origin}/login`;
   const credentialText = hasCredentials
-    ? credentialBatch.map((credentials, index) => [
-      `Campusly student portal login ${credentialBatch.length > 1 ? index + 1 : ''}`.trim(),
-      `Email: ${credentials.loginEmail}`,
-      `Temporary password: ${credentials.tempPassword}`,
-      `Login: ${loginUrl}`,
-    ].join('\n')).join('\n\n')
+    ? credentialBatch.map(({ credentials }, index) => {
+        if (!credentials) return '';
+        return [
+          `Campusly student portal login ${credentialBatch.length > 1 ? index + 1 : ''}`.trim(),
+          `Email: ${credentials.loginEmail}`,
+          `Temporary password: ${credentials.tempPassword}`,
+          `Login: ${loginUrl}`,
+        ].join('\n');
+      }).filter(Boolean).join('\n\n')
     : '';
 
   const copyCredentials = async () => {
@@ -244,24 +249,19 @@ export function StudentAddDialog({
                   </p>
                 </div>
                 <div className="max-h-64 space-y-3 overflow-y-auto pr-1">
-                  {credentialBatch.map((credentials) => (
-                    <div key={`${credentials.loginEmail}-${credentials.tempPassword}`} className="rounded-md bg-background p-3">
-                      <div className="grid gap-3 text-sm sm:grid-cols-2">
-                        <div>
-                          <p className="text-xs text-muted-foreground">Login email</p>
-                          <p className="font-medium break-all">{credentials.loginEmail}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Temporary password</p>
-                          <p className="font-medium">{credentials.tempPassword}</p>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-xs text-muted-foreground">
-                        <p>{credentials.emailSent ? 'Email sent to the login address.' : 'Email was not sent. Use the details above manually.'}</p>
-                        <p>{credentials.whatsappSent ? 'WhatsApp sent.' : credentials.whatsappSkippedReason}</p>
-                      </div>
-                    </div>
-                  ))}
+                  {credentialBatch.map(({ student, credentials }) => {
+                    if (!credentials) return null;
+                    return (
+                      <StudentCredentialsPanel
+                        key={`${student.id}-${credentials.loginEmail}`}
+                        credentials={credentials}
+                        deliveryMode="email"
+                        studentId={student.id}
+                        studentName={getStudentDisplayName(student).full}
+                        onPrintSlip={undefined /* wired in D2 */}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             ) : (
@@ -281,11 +281,11 @@ export function StudentAddDialog({
           <TabsContent value="csv" className="min-h-0 space-y-4 overflow-visible py-0">
             <div className="space-y-2">
               <Label>
-                Paste CSV (one student per line: firstName,lastName,admissionNumber)
+                Paste CSV (one learner per line: firstName,lastName,optionalAdmissionNumber)
               </Label>
               <Textarea
                 rows={6}
-                placeholder={`John,Doe,ADM001\nJane,Smith,ADM002`}
+                placeholder={`John,Doe\nJane,Smith,ADM002`}
                 value={csvText}
                 onChange={(e) => { setCsvText(e.target.value); setCsvErrors([]); }}
               />
