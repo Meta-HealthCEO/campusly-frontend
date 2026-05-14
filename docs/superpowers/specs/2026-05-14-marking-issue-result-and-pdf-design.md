@@ -35,7 +35,7 @@ The current AI-marking flow has three gaps:
 | PDF | "Download PDF" button, server-generated from stored images via PDFKit |
 | Student review scope | Marks + feedback + lightbox of marked pages + rationale (labelled "Rationale", not "AI Rationale") |
 | Notification | In-app only + status badge on the tests list |
-| Revoke | No unissue button. Edits propagate. |
+| Revoke | No unissue button. Re-issuing is allowed (e.g. to fix wrong assessmentId) but does not re-notify. Edits propagate silently. |
 | Legacy `/publish` route | Renamed cleanly to `/issue`, no alias (no production users yet) |
 
 ## Architecture Overview
@@ -53,9 +53,15 @@ The current AI-marking flow has three gaps:
 `src/modules/AITools/model-marking.ts` — add three fields:
 
 ```ts
-issuedToStudent: { type: Boolean, default: false, index: true },
+issuedToStudent: { type: Boolean, default: false },
 issuedAt: { type: Date },
 issuedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+```
+
+Add a compound index for the hot student query:
+
+```ts
+PaperMarkingSchema.index({ studentId: 1, issuedToStudent: 1 });
 ```
 
 The TypeScript interface for `PaperMarking` must be updated to match (see "Known Pitfalls — Mongoose Schema Must Match TypeScript Interface" in `CLAUDE.md`).
@@ -66,9 +72,9 @@ All under `/api/ai-tools`. All teacher endpoints `authenticate` + `requireModule
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| `POST` | `/markings/:id/issue` | Teacher | Renames `/publish`. Atomically: upserts gradebook `Mark` via existing `publishMarkToGradebook()`, sets `issuedToStudent=true`, `issuedAt=now`, `issuedBy=req.user.id`, fires `marking_result_issued` notification. Idempotent — calling again on an already-issued marking succeeds and re-fires notification only if the body explicitly opts in (default off). |
+| `POST` | `/markings/:id/issue` | Teacher | Renames `/publish`. Atomically: upserts gradebook `Mark` via existing `publishMarkToGradebook()` (idempotent — re-issuing with a different `assessmentId` updates the target), sets `issuedToStudent=true`, `issuedAt=now` (only on first issue; subsequent calls leave `issuedAt` unchanged), `issuedBy=req.user.id`. Fires `marking_result_issued` notification **only on first issue** (when `issuedToStudent` was false before this call). Re-issuing is silent. |
 | `GET` | `/markings/:id/pdf` | Teacher OR owning student | Streams `application/pdf` stitched from `images[]` ordered by `pageNumber`. `Content-Disposition: inline; filename="<student-slug>-<paper-slug>-marked.pdf"`. |
-| `GET` | `/markings/:id/image/:filename` | Teacher OR owning student | Auth-gated image bytes. Today `/uploads/markings/...` is statically served; this route exists so the student can access their own page images without opening up the static directory. Validates that `filename` matches an entry in `marking.images[]`. |
+| `GET` | `/markings/:id/image/:filename` | Teacher OR owning student | Auth-gated image bytes. **All marking image access goes through this route** — the existing static `/uploads/markings/...` serving is removed (or path-excluded) so teachers and students hit the same gated path. Validates `filename` matches an entry in `marking.images[]` before streaming from disk. Sets cache headers (private, short max-age) for browser caching of repeat lightbox navigation. |
 | `GET` | `/students/me/markings` | Student | List of issued markings for the current student. Supports `?paperId=` filter for the `student/tests/[paperId]` lookup. Returns `{ id, paperId, paperTitle, subjectName, percentage, totalMarks, maxMarks, issuedAt }[]`. |
 | `GET` | `/students/me/markings/:id` | Student | Full marking detail — questions (answer, correct answer, marks awarded, max marks, feedback, rationale), images, issuedAt. Excludes teacher-only metadata (audit trail, batch info). |
 
@@ -78,7 +84,7 @@ All under `/api/ai-tools`. All teacher endpoints `authenticate` + `requireModule
 
 - Rename the existing publish handler to `issueMarking`.
 - Body: `{ assessmentId?: string, comment?: string }` (unchanged from current publish).
-- Behavior: same gradebook publish (creates `Mark` via `publishMarkToGradebook()`), but additionally sets the three new `issued*` fields on the `PaperMarking` and fires the notification.
+- Behavior: same gradebook publish (upserts `Mark` via `publishMarkToGradebook()`). Then sets `issuedToStudent=true` and `issuedBy=req.user.id` unconditionally; sets `issuedAt=now` only if the previous value of `issuedToStudent` was false. Fires the notification only if the previous value was false (first issue).
 - Returns the updated marking.
 
 ### Student ownership resolver
@@ -113,7 +119,7 @@ If the notification system supports Socket.IO push, the student gets a real-time
 `src/modules/AITools/service-marking-pdf.ts` (new):
 
 - Reuses `src/common/pdf/createDocument()` (A4, buffered pages, existing footer logic via `finalise(doc)`).
-- Header on page 1: paper title, student name, score (`<mark>/<max>` + percentage), issued date.
+- Header on page 1: paper title, student name, score (`<mark>/<max>` + percentage), marked date (`marking.updatedAt`, not `issuedAt` — the PDF is downloadable during review before issue).
 - Subsequent pages: one image per page, fit-to-page (`doc.image(absPath, { fit: [pageWidth, pageHeight], align: 'center', valign: 'center' })`).
 - Reads images from `uploads/markings/<markingId>/<filename>` (absolute path resolved from the same base used by `service-marking-images.ts`).
 - Skips missing files with a warning log (does not 500).
@@ -127,11 +133,11 @@ Edge case: marking from `/mark-paper-text` (digital answers, no images) — retu
 ### Files modified
 
 - `src/components/ai-tools/MarkingResults.tsx`
-  - Replace the inline thumbnail strip (`<a target="_blank">` links) with a compact preview row showing up to 3 thumbnails and a "View all N pages" button.
+  - Replace the inline thumbnail strip (`<a target="_blank">` links) with a compact preview row showing up to 3 thumbnails and a "View all N pages" button. Thumbnail `src` switches from the legacy `/uploads/markings/<id>/<filename>` static URL to the new gated `/api/ai-tools/markings/<id>/image/<filename>` route (axios baseURL handles the `/api` prefix).
   - Clicking any thumbnail opens `MarkingPagesLightbox`.
   - Add a "Download PDF" button next to the issue button (hidden when `images.length === 0`).
   - Rename "Publish to Gradebook" button → **"Issue Result"**.
-  - When `marking.issuedToStudent === true`, replace the "Issue Result" button with disabled text: `Issued <relative-date>`. Edits to marks still save and propagate to the student silently.
+  - When `marking.issuedToStudent === true`, change the button label to **"Re-issue"** (still enabled, opens the same dialog). Display a caption below: `Issued <relative-date>`. Re-issuing upserts the Mark (possibly to a different assessmentId) and updates marks for the student silently — no new notification fires.
   - Extract per-question card rendering into `MarkingQuestionCard` (shared with student review).
 
 - `src/components/ai-tools/PublishToGradebookDialog.tsx`
@@ -164,10 +170,13 @@ Edge case: marking from `/mark-paper-text` (digital answers, no images) — retu
 
 `src/app/(dashboard)/student/tests/[paperId]/page.tsx`:
 
-- On load, call `useStudentMarking(paperId).getMarkingByPaper(paperId)`.
-- If a marking is returned (i.e. `issuedToStudent === true` for the current student) → render `<StudentMarkingReview marking={...} />`.
-- Otherwise → existing test-taking UI (unchanged).
-- Loading state: spinner while resolving which view to render.
+On load, resolve three states in order:
+
+1. **Issued** — `useStudentMarking().getMarkingByPaper(paperId)` returns a marking with `issuedToStudent === true` → render `<StudentMarkingReview marking={...} />`.
+2. **Submitted, awaiting result** — student has a submission on this paper but no issued marking → render a placeholder card: "Submitted on `<date>` — awaiting result." (Reuses the existing submission check the page already performs.)
+3. **Not yet taken** — neither of the above → existing test-taking UI (unchanged).
+
+Loading state: spinner while resolving which view to render.
 
 ### Files created
 
@@ -177,7 +186,6 @@ Edge case: marking from `/mark-paper-text` (digital answers, no images) — retu
   - "Download PDF" button → `useStudentMarking().downloadMarkingPdf(id)` (hidden when no images).
   - Per-question list using `<MarkingQuestionCard editable={false} rationaleLabel="Rationale" />`.
   - No edit affordances. No issue/publish/edit-mark buttons.
-  - Empty state: if marking has no questions (text-only edge case), show explanatory empty state.
 
 - `src/hooks/useStudentMarking.ts`
   - `getMarkingByPaper(paperId)` → `GET /ai-tools/students/me/markings?paperId=<id>`, returns the first (and only) issued marking for that paper or `null`.
@@ -198,7 +206,8 @@ Per `CLAUDE.md` known pitfalls — these must be observed:
 - Every `PaperMarking.findOne` / `findOneAndUpdate` includes `schoolId` from `req.user.schoolId`.
 - All queries include `isDeleted: false`.
 - `req.user.id` is the `User._id`, not `Student._id` — the student ownership resolver handles the conversion.
-- Student endpoints check that the resolved `studentId` equals `marking.studentId` before returning data. Otherwise 404 (not 403 — don't leak existence).
+- Student endpoints check both that the resolved `studentId` equals `marking.studentId` AND that `marking.issuedToStudent === true` before returning data. Otherwise 404 (not 403 — don't leak existence of unissued markings).
+- The `/markings/:id/pdf` and `/markings/:id/image/:filename` routes accept both teacher and student callers; the auth branch decides which scope to enforce. Students hitting an unissued marking get 404.
 
 ## Testing Approach
 
