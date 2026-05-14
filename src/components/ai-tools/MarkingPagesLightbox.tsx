@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import apiClient from '@/lib/api-client';
+import { getMarkingImageUrl } from '@/lib/api-helpers';
 
 interface LightboxImage {
   filename: string;
@@ -19,10 +19,6 @@ interface MarkingPagesLightboxProps {
   startIndex?: number;
 }
 
-function buildImageUrl(markingId: string, filename: string): string {
-  const base = (apiClient.defaults.baseURL ?? '').replace(/\/$/, '');
-  return `${base}/ai-tools/markings/${markingId}/image/${encodeURIComponent(filename)}`;
-}
 
 export function MarkingPagesLightbox({
   open,
@@ -87,7 +83,7 @@ export function MarkingPagesLightbox({
             <ChevronLeft className="h-8 w-8" />
           </Button>
           <img
-            src={buildImageUrl(markingId, current.filename)}
+            src={getMarkingImageUrl(markingId, current.filename)}
             alt={`Page ${current.pageNumber}`}
             className="max-h-[80vh] max-w-[85vw] object-contain"
           />

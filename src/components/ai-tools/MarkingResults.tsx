@@ -11,7 +11,7 @@ import { useTeacherPapers } from '@/hooks/useTeacherPapers';
 import { IssueResultDialog } from './IssueResultDialog';
 import { MarkingPagesLightbox } from './MarkingPagesLightbox';
 import { MarkingQuestionCard } from './MarkingQuestionCard';
-import apiClient from '@/lib/api-client';
+import { getMarkingImageUrl } from '@/lib/api-helpers';
 
 interface MarkingResultsProps {
   marking: PaperMarking;
@@ -53,6 +53,7 @@ export function MarkingResults({
   const { getPaperById } = useTeacherPapers();
   const [paperVersion, setPaperVersion] = useState<number | null>(null);
   const [paperSubjectId, setPaperSubjectId] = useState<string | undefined>(undefined);
+  const [paperTitle, setPaperTitle] = useState<string>('');
 
   useEffect(() => {
     if (marking.paperType !== 'assessment') return;
@@ -60,6 +61,7 @@ export function MarkingResults({
     void getPaperById(marking.paperId).then((p) => {
       if (cancelled) return;
       setPaperVersion(p?.version ?? null);
+      setPaperTitle(p?.title ?? '');
       // subjectId may come back as a populated { _id, name } or a plain string.
       const rawSubject = (p as { subjectId?: unknown } | null)?.subjectId;
       if (typeof rawSubject === 'string') {
@@ -132,8 +134,7 @@ export function MarkingResults({
       {marking.images && marking.images.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
           {marking.images.slice(0, 3).map((img, i) => {
-            const base = (apiClient.defaults.baseURL ?? '').replace(/\/$/, '');
-            const url = `${base}/ai-tools/markings/${marking.id}/image/${encodeURIComponent(img.filename)}`;
+            const url = getMarkingImageUrl(marking.id, img.filename);
             return (
               <button
                 key={img.filename}
@@ -207,7 +208,7 @@ export function MarkingResults({
           <Button
             type="button"
             variant="outline"
-            onClick={() => downloadMarkingPdf(marking.id, marking.studentName, '')}
+            onClick={() => downloadMarkingPdf(marking.id, marking.studentName, paperTitle || marking.studentName)}
             className="gap-2"
           >
             <Download className="h-4 w-4" />

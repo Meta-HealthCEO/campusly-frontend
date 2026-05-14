@@ -84,6 +84,15 @@ export function resolveId(val: PopulatedId): string {
   return val.id ?? val._id ?? '';
 }
 
+/**
+ * Build a URL for a marking page image without importing apiClient.
+ * Safe to call from components.
+ */
+export function getMarkingImageUrl(markingId: string, filename: string): string {
+  const base = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4500/api').replace(/\/$/, '');
+  return `${base}/ai-tools/markings/${markingId}/image/${encodeURIComponent(filename)}`;
+}
+
 /** Narrow helper for extracting a named field from a populated sub-document. */
 export function resolveField<T extends string | number | boolean>(
   val: unknown,
