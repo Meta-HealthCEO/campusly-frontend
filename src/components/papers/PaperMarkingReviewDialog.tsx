@@ -20,7 +20,7 @@ export function PaperMarkingReviewDialog({
   open, onOpenChange, markingId, onChanged,
 }: Props) {
   const {
-    loading, getMarking, updateMarking, publishMarking,
+    loading, getMarking, updateMarking, issueMarking,
   } = useTeacherMarking();
   const [marking, setMarking] = useState<PaperMarking | null>(null);
   const activeMarking = open && marking?.id === markingId ? marking : null;
@@ -44,7 +44,7 @@ export function PaperMarkingReviewDialog({
 
   const handlePublish = async (assessmentId: string, comment?: string) => {
     if (!activeMarking) return;
-    const updated = await publishMarking(
+    const updated = await issueMarking(
       activeMarking.id,
       assessmentId,
       activeMarking.studentId,
@@ -77,6 +77,7 @@ export function PaperMarkingReviewDialog({
               onMarkNext={() => onOpenChange(false)}
               onViewAll={() => onOpenChange(false)}
               isLoading={loading}
+              hideSecondaryActions
             />
           )}
         </div>

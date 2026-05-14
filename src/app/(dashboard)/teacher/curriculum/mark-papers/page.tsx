@@ -33,7 +33,7 @@ export default function MarkPapersPage() {
   const {
     loading, papers, papersLoading, papersError, currentMarking, markings,
     fetchPapers, markPaper, markPaperFromText, getMarkings, getMarking,
-    updateMarking, publishMarking, setCurrentMarking,
+    updateMarking, issueMarking, setCurrentMarking,
   } = useTeacherMarking();
   const { students, loading: classesLoading } = useTeacherClasses();
 
@@ -113,8 +113,8 @@ export default function MarkPapersPage() {
 
   const handlePublish = useCallback(async (assessmentId: string, comment?: string) => {
     if (!currentMarking) return;
-    await publishMarking(currentMarking.id, assessmentId, currentMarking.studentId, comment);
-  }, [currentMarking, publishMarking]);
+    await issueMarking(currentMarking.id, assessmentId, currentMarking.studentId, comment);
+  }, [currentMarking, issueMarking]);
 
   // After saving / publishing one student, allow marking the next.
   const handleMarkNext = useCallback(() => {
@@ -141,9 +141,9 @@ export default function MarkPapersPage() {
     comment?: string,
   ) => {
     const marking = markings.find((m) => m.id === id);
-    await publishMarking(id, assessmentId, marking?.studentId, comment);
+    await issueMarking(id, assessmentId, marking?.studentId, comment);
     await getMarkings(selectedPaper?.id);
-  }, [publishMarking, selectedPaper, getMarkings, markings]);
+  }, [issueMarking, selectedPaper, getMarkings, markings]);
 
   if (!user?.schoolId) {
     return (
