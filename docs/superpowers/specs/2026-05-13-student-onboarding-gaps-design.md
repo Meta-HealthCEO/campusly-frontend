@@ -39,6 +39,8 @@ The current `StudentAddDialog` silently creates students without working credent
 [ Email invite ] [ Printable slip ]
 ```
 
+The toggle **defaults to "Email invite"** so existing teacher muscle memory continues to work.
+
 **Email-invite mode** (current flow, hardened):
 - Email field becomes **required** at form + backend.
 - Backend creates User with the supplied email + temp password.
@@ -46,12 +48,26 @@ The current `StudentAddDialog` silently creates students without working credent
 - Credentials panel shows status: "Email sent to `<email>`" or "Email failed — copy credentials manually".
 
 **Printable-slip mode** (new):
-- Email field becomes optional and labelled "Parent email (optional)".
+- Email field becomes **optional** (no relabel — the form's existing email field is for the student, parent/guardian contacts live elsewhere in `PersonalEditTab`).
 - Backend creates User with a **synthetic login email** generated server-side:
   - Format: `firstname.lastname.NNNN@students.campusly.local` (NNNN = admission number)
   - Sanitisation: lowercase, replace non-`[a-z0-9]` with `-`, collapse repeats, fall back to admission-only if sanitised name is empty.
 - No email sent.
-- Credentials panel shows synthetic login email + temp password + **"Download printable slip"** button → `/teacher/students/[id]/credentials/print` (printable HTML page with school logo, student name, login URL, login email, temp password, "change on first login" note).
+- Credentials panel shows synthetic login email + temp password + **"Download printable slip"** button — see "Slip rendering data flow" below.
+
+### Slip rendering data flow
+
+The cleartext temp password exists for exactly one network round-trip (the create or regenerate response). It is bcrypt-hashed the moment it's stored, so the print page cannot fetch it from the backend.
+
+**Resolution: client-side rendering via `sessionStorage`.**
+
+1. After a successful create/regenerate response, the dialog writes `{ studentId, loginEmail, tempPassword, studentName, schoolName, loginUrl }` to `sessionStorage` under key `campusly.slip.<studentId>`.
+2. The "Download printable slip" button opens `/teacher/students/[id]/credentials/print` in a new tab (`target="_blank"`).
+3. The print page reads from `sessionStorage` using its `id` param. If the entry is missing or older than 10 minutes (use a timestamp field), the page renders a "Slip expired — regenerate credentials to print again" error.
+4. The print page invokes `window.print()` once on mount (with a Print button as fallback). After printing/closing, the `sessionStorage` entry is cleared by the dialog when it closes.
+5. No backend slip endpoint needed.
+
+Trade-off: a hard refresh on the print page after the dialog closes loses the password (because the dialog clears `sessionStorage` on close). Acceptable Phase 1 — if the teacher loses it before printing, they regenerate. Phase 2 could swap to a server-rendered slip endpoint if needed.
 
 ### Backend changes
 
@@ -65,7 +81,7 @@ The current `StudentAddDialog` silently creates students without working credent
 
 - Toggle + conditional email field in `StudentAddDialog`.
 - New printable page route + minimal print stylesheet (`@media print`).
-- Bulk CSV import: default delivery-method selector at the top of the dialog; CSV rows can override with a `deliveryMethod` column.
+- Bulk CSV import is **out of scope** for Phase 1 — the existing CSV path stays untouched and continues using the email-invite default. If the existing CSV flow currently allows blank emails (silent failure), require email for now or surface an explicit "CSV mode is email-only" warning. Slip-mode bulk import is a Phase 2 enhancement.
 
 ---
 
@@ -140,6 +156,13 @@ Result: the student literally cannot navigate to any student page until they cha
 - Submit → `POST /auth/change-password` → on success refresh `useAuthStore.user` (or call `/auth/me`) → navigate to `/student` (or the user's role-appropriate root)
 - Error: form-level error + toast
 
+**Route-group caveat:** the `(auth)` route group's layout (and/or any wrapping `AuthGuard`) typically redirects authenticated users to their role root — that pattern keeps logged-in users from seeing the login page. The change-password page is the exception: it's an **authenticated route inside `(auth)`**, so the redirect must NOT apply. Two acceptable implementations:
+
+1. Add a path-specific bypass in `(auth)/layout.tsx` (skip the "already-authenticated → role root" redirect when `pathname === '/auth/change-password'`).
+2. Move the file out of `(auth)` to `src/app/auth/change-password/page.tsx` (no layout group, no inherited redirect).
+
+Option 1 keeps the route under `/auth/change-password` cleanly; option 2 is simpler to reason about. Either is fine — implementer picks based on what existing layout does.
+
 ### Edge cases
 
 - **Login with `mustChangePassword: true`**: login succeeds (JWT + user returned), router lands on role root → student layout → gate intercepts → change-password page.
@@ -197,12 +220,13 @@ Body: (empty)
 `StudentService.regenerateCredentials(studentId, schoolId, callerUser)`:
 
 1. Load Student with `schoolId` + `isDeleted: false`.
-2. Load linked User. If no `userId` → return 400 "Student has no portal account — use the invite flow instead".
-3. Generate fresh temp password (same `Campus-{random hex}` pattern).
-4. Hash, write to User. Set `mustChangePassword: true`.
-5. If User email is a real address (not a `@students.campusly.local` synthetic): re-send via `EmailService.sendStudentPortalCredentials()`.
-6. If User email is synthetic (slip mode): skip email; teacher will reprint.
-7. Return same `credentials` shape as create/invite.
+2. **Authorisation**: if the caller is a teacher (not school_admin/principal/super_admin), verify they own the student's class via `AcademicService.teacherCanAccessClass(callerUser, student.classId)`. This is the same check `POST /api/students` uses to scope teacher creation rights. Standalone teachers go through the same path.
+3. Load linked User. If no `userId` → return 400 "Student has no portal account — use the invite flow instead".
+4. Generate fresh temp password (same `Campus-{random hex}` pattern).
+5. Hash, write to User. Set `mustChangePassword: true`.
+6. If User email is a real address (not a `@students.campusly.local` synthetic): re-send via `EmailService.sendStudentPortalCredentials()`.
+7. If User email is synthetic (slip mode): skip email; teacher will reprint using the same `sessionStorage` → print-page flow defined in Section 1.
+8. Return same `credentials` shape as create/invite.
 
 Previous temp password is invalidated by the bcrypt overwrite — no extra cleanup needed.
 
@@ -225,7 +249,7 @@ Body:  This will invalidate <FirstName>'s current password and generate
 [Cancel] [Regenerate]
 ```
 
-On confirm → `POST /students/{id}/regenerate-credentials` → display new credentials in the shared `StudentCredentialsPanel`.
+On confirm → `POST /students/{id}/regenerate-credentials` → display new credentials in the shared `StudentCredentialsPanel`. The panel writes the new credentials to `sessionStorage` (per Section 1's slip flow) so the "Download printable slip" button works identically to the create flow.
 
 ### Shared component extraction
 
@@ -282,10 +306,12 @@ Three call sites with identical UX — extraction prevents drift.
 2. **Concurrent regenerate**: last write wins; both teachers see the new password in their respective return values. Bcrypt overwrite is document-atomic.
 3. **`mustChangePassword` on existing users**: schema default handles it. No migration needed.
 4. **Gate scope**: wraps student layout only for Phase 1. Trivial to extend to admin/teacher/parent layouts if they ever get temp passwords.
-5. **Teacher regenerates after student already logged in**: student forced through gate again on next route change.
+5. **Teacher regenerates after student already logged in**: student forced through gate again on next route change. The student's existing JWT remains valid until expiry — they're authenticated but blocked at the gate. No JWT revocation in Phase 1 (would require token versioning — out of scope).
 6. **Slip mode → email mode conversion**: out of Phase 1 scope. Existing invite endpoint already handles this if the teacher wants.
 7. **Direct-URL bypass with valid JWT**: client-side gate doesn't block API calls. Phase 1 acceptable — short window before forced change. Phase 2 could add backend middleware.
 8. **Login when `mustChangePassword: true`**: login succeeds, JWT issued, frontend gate intercepts on first route.
+9. **Slip print page refresh**: hard-refresh after the dialog closes loses the temp password (sessionStorage was cleared on dialog close). The print page renders a "Slip expired — regenerate credentials to print again" message. Teacher uses regenerate flow to get a new printable.
+10. **Two teachers regenerate for the same student near-simultaneously**: each gets a unique password back in their response; only the last write wins server-side. Both teachers think they have the current password, but only one actually does. Surface in the credentials panel: "Generated at HH:MM:SS — if another teacher regenerated after this, your copy is stale." (Display-only — no server coordination.)
 
 ---
 
@@ -303,9 +329,10 @@ Three call sites with identical UX — extraction prevents drift.
 ## Success criteria
 
 - A teacher adds a student in **email mode** with a real email: User created with temp password, real email delivered, `mustChangePassword: true`, credentials panel shows email-sent status.
-- A teacher adds a student in **slip mode** without an email: User created with synthetic login email, temp password generated, NO email sent, credentials panel shows the credentials + a "Download printable slip" button that produces a printable HTML page.
+- A teacher adds a student in **slip mode** without an email: User created with synthetic login email, temp password generated, NO email sent, credentials panel shows the credentials + a "Download printable slip" button that opens a printable HTML page sourced from `sessionStorage`.
 - The student logs in with their temp password: redirected to `/auth/change-password` and cannot leave that page until they set a new password. After change, normal access to `/student/*`.
-- Teacher in the class roster clicks "Regenerate credentials" on an existing student: temp password regenerated, displayed once, old password invalidated, email re-sent (if email mode) or new slip available (if slip mode), student forced through change-password gate on next login.
+- Teacher in the class roster clicks "Regenerate credentials" on an existing student: temp password regenerated, displayed once, old password invalidated, email re-sent (if email mode) or new slip available via `sessionStorage` (if slip mode), student forced through change-password gate on next login.
+- A teacher (including a standalone teacher) cannot regenerate credentials for a student in a class they don't own — the endpoint returns 403.
 - WhatsApp status text no longer appears anywhere in the credentials UX.
 - No silent-failure paths remain: every student created via `POST /api/students` has a usable login.
 - All new backend code is `schoolId`-scoped, all new frontend files under 350 lines, zero `any` types, design tokens used throughout.
