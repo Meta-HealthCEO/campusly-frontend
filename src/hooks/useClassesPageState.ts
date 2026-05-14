@@ -90,7 +90,7 @@ export function useClassesPageState() {
     ? `${entries.length} ${entries.length === 1 ? 'teaching group' : 'teaching groups'} - ${allStudents.length} ${allStudents.length === 1 ? 'learner' : 'learners'} added`
     : `${entries.length} ${entries.length === 1 ? 'class' : 'classes'} - ${allStudents.length} ${allStudents.length === 1 ? 'student' : 'students'}`;
 
-  const handleCreateClass = useCallback(async (data: { name: string; gradeId: string; capacity: number; subjectId?: string; isHomeroom?: boolean }) => {
+  const handleCreateClass = useCallback(async (data: { name: string; gradeId: string; capacity: number; subjectId?: string | null; isHomeroom?: boolean }) => {
     setCreateLoading(true);
     try {
       await createClass({ ...data, schoolId: user!.schoolId, teacherId: user!.id });
@@ -130,13 +130,26 @@ export function useClassesPageState() {
     if (!classId || !gradeId) throw new Error(isStandaloneTeacher ? 'No teaching group selected' : 'No class selected');
     setAddStudentLoading(true);
     try {
-      return await addStudent({ ...data, classId, gradeId, schoolId: user!.schoolId });
+      const email = typeof data.email === 'string' ? data.email.trim() : '';
+      // Dialog passes deliveryMethod explicitly (D2). Fall back to the
+      // email-presence heuristic for any callers that haven't been updated.
+      const explicitMethod = data.deliveryMethod;
+      const deliveryMethod: 'email' | 'slip' = explicitMethod === 'email' || explicitMethod === 'slip'
+        ? explicitMethod
+        : email ? 'email' : 'slip';
+      return await addStudent({
+        ...data,
+        classId,
+        gradeId,
+        schoolId: user!.schoolId,
+        deliveryMethod,
+      });
     } catch (err: unknown) {
       throw err;
     } finally { setAddStudentLoading(false); }
   }, [selectedEntry, addStudent, isStandaloneTeacher, user]);
 
-  const handleEditClass = useCallback(async (data: { name: string; gradeId: string; capacity: number; subjectId?: string; isHomeroom?: boolean }) => {
+  const handleEditClass = useCallback(async (data: { name: string; gradeId: string; capacity: number; subjectId?: string | null; isHomeroom?: boolean }) => {
     if (!editEntry) return;
     setEditLoading(true);
     try {

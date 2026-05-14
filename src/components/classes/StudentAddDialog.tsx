@@ -9,17 +9,19 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PersonalEditTab } from '@/components/students/profile-tabs/PersonalEditTab';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { getStudentDisplayName } from '@/lib/student-helpers';
+import { writeSlip, clearSlip } from '@/lib/student-slip-storage';
+import { useSchoolStore } from '@/stores/useSchoolStore';
 import type { StudentProfileFormData } from '@/hooks/useStudentEditor';
 import type { AddStudentResult } from '@/hooks/useTeacherClasses';
-import { StudentCredentialsPanel } from './StudentCredentialsPanel';
+import { StudentDeliveryModeToggle, type DeliveryMode } from './StudentDeliveryModeToggle';
+import { StudentAddCredentialsResults } from './StudentAddCredentialsResults';
+import { StudentCsvImportTab } from './StudentCsvImportTab';
 
 interface PendingStudent {
   firstName: string;
@@ -27,7 +29,9 @@ interface PendingStudent {
   admissionNumber?: string;
 }
 
-export type AddStudentPayload = Partial<StudentProfileFormData>;
+export type AddStudentPayload = Partial<StudentProfileFormData> & {
+  deliveryMethod?: DeliveryMode;
+};
 type StudentAddTab = 'manual' | 'csv';
 
 interface StudentAddDialogProps {
@@ -43,7 +47,7 @@ const EMPTY_FORM: Partial<StudentProfileFormData> = {
   admissionNumber: '',
 };
 
-function normaliseStudentPayload(form: Partial<StudentProfileFormData>): AddStudentPayload {
+function normaliseStudentPayload(form: Partial<StudentProfileFormData>): Partial<StudentProfileFormData> {
   const payload: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(form)) {
@@ -67,7 +71,7 @@ function normaliseStudentPayload(form: Partial<StudentProfileFormData>): AddStud
     }
   }
 
-  return payload as AddStudentPayload;
+  return payload as Partial<StudentProfileFormData>;
 }
 
 export function StudentAddDialog({
@@ -76,24 +80,52 @@ export function StudentAddDialog({
   onAddStudent,
   isLoading,
 }: StudentAddDialogProps) {
+  const school = useSchoolStore((s) => s.school);
   const [form, setForm] = useState<Partial<StudentProfileFormData>>(EMPTY_FORM);
   const [csvText, setCsvText] = useState('');
   const [activeTab, setActiveTab] = useState<StudentAddTab>('manual');
+  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('email');
   const [submitting, setSubmitting] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0, errors: [] as string[] });
   const [credentialBatch, setCredentialBatch] = useState<AddStudentResult[]>([]);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [csvErrors, setCsvErrors] = useState<string[]>([]);
 
   const resetForm = () => {
     setForm(EMPTY_FORM);
     setCsvText('');
     setActiveTab('manual');
+    setDeliveryMode('email');
+    setEmailError(null);
     setCsvErrors([]);
     setProgress({ current: 0, total: 0, errors: [] });
     setCredentialBatch([]);
   };
 
+  const clearGeneratedSlips = () => {
+    for (const { student } of credentialBatch) {
+      clearSlip(student.id);
+    }
+  };
+
+  const persistSlipFor = (result: AddStudentResult) => {
+    if (!result.credentials) return;
+    const { full } = getStudentDisplayName(result.student);
+    writeSlip({
+      studentId: result.student.id,
+      studentName: full,
+      loginEmail: result.credentials.loginEmail,
+      tempPassword: result.credentials.tempPassword,
+      schoolName: school?.name ?? 'Your school',
+      loginUrl: typeof window === 'undefined'
+        ? '/auth/login'
+        : `${window.location.origin}/auth/login`,
+    });
+  };
+
   function handleChange(patch: Partial<StudentProfileFormData>) {
     setForm((prev) => ({ ...prev, ...patch }));
+    if (patch.email !== undefined && emailError) setEmailError(null);
   }
 
   const submitOne = async (closeOnSuccess: boolean) => {
@@ -103,11 +135,18 @@ export function StudentAddDialog({
       toast.error('First name and last name are required');
       return;
     }
+    if (deliveryMode === 'email' && !payload.email?.toString().trim()) {
+      setEmailError('Email is required for email-invite mode');
+      toast.error('Email is required when delivery mode is email');
+      return;
+    }
+    setEmailError(null);
     setSubmitting(true);
     try {
-      const result = await onAddStudent(payload);
+      const result = await onAddStudent({ ...payload, deliveryMethod: deliveryMode });
       toast.success(`${payload.firstName} ${payload.lastName} added`);
       if (result?.credentials) {
+        if (deliveryMode === 'slip') persistSlipFor(result);
         setCredentialBatch([result]);
         return;
       }
@@ -115,7 +154,6 @@ export function StudentAddDialog({
         resetForm();
         onOpenChange(false);
       } else {
-        // Keep dialog open for adding the next student. Reset only the form.
         setForm(EMPTY_FORM);
       }
     } catch (err: unknown) {
@@ -124,8 +162,6 @@ export function StudentAddDialog({
       setSubmitting(false);
     }
   };
-
-  const [csvErrors, setCsvErrors] = useState<string[]>([]);
 
   const submitCsv = async () => {
     const lines = csvText.split('\n').filter((l) => l.trim());
@@ -164,7 +200,8 @@ export function StudentAddDialog({
     try {
       for (let i = 0; i < parsed.length; i++) {
         try {
-          const result = await onAddStudent(parsed[i]);
+          // Bulk CSV is Phase-1 email-default per spec.
+          const result = await onAddStudent({ ...parsed[i], deliveryMethod: 'email' });
           if (result?.credentials) importedResults.push(result);
         } catch (err: unknown) {
           importErrors.push(`${parsed[i].firstName} ${parsed[i].lastName}: ${extractErrorMessage(err, 'Failed to add student')}`);
@@ -217,14 +254,16 @@ export function StudentAddDialog({
     }
   };
 
+  const handleDialogOpenChange = (next: boolean) => {
+    if (!next) {
+      clearGeneratedSlips();
+      resetForm();
+    }
+    onOpenChange(next);
+  };
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        if (!o) resetForm();
-        onOpenChange(o);
-      }}
-    >
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col gap-3 overflow-visible sm:max-w-5xl">
         <DialogHeader className="pr-8">
           <DialogTitle>Add Students</DialogTitle>
@@ -241,79 +280,38 @@ export function StudentAddDialog({
 
           <TabsContent value="manual" className="min-h-0 overflow-visible py-0">
             {hasCredentials ? (
-              <div className="space-y-4 rounded-lg border bg-muted/30 p-4">
-                <div>
-                  <h3 className="text-sm font-semibold">Student portal login details</h3>
-                  <p className="text-xs text-muted-foreground">
-                    Share these details with the student or parent. Passwords are shown once here.
-                  </p>
-                </div>
-                <div className="max-h-64 space-y-3 overflow-y-auto pr-1">
-                  {credentialBatch.map(({ student, credentials }) => {
-                    if (!credentials) return null;
-                    return (
-                      <StudentCredentialsPanel
-                        key={`${student.id}-${credentials.loginEmail}`}
-                        credentials={credentials}
-                        deliveryMode="email"
-                        studentId={student.id}
-                        studentName={getStudentDisplayName(student).full}
-                        onPrintSlip={undefined /* wired in D2 */}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
+              <StudentAddCredentialsResults batch={credentialBatch} deliveryMode={deliveryMode} />
             ) : (
               <>
-            <p className="mb-2 text-xs text-muted-foreground">
-              First and last name are required. Admission number is generated automatically if blank. Everything else can be filled later from the student&apos;s profile.
-            </p>
-            <PersonalEditTab
-              form={form}
-              onChange={handleChange}
-              className="gap-3 lg:grid-cols-3 [&_[data-slot=input]]:h-9 [&_[data-slot=phone-input-shell]]:h-9 [&_[data-slot=select-trigger]]:h-9"
-            />
+                <div className="mb-3">
+                  <StudentDeliveryModeToggle value={deliveryMode} onChange={setDeliveryMode} />
+                </div>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  First and last name are required. Admission number is generated automatically if blank.
+                  {deliveryMode === 'email'
+                    ? ' Email is required for the email-invite flow.'
+                    : ' Email is optional; a synthetic login will be generated.'}
+                  {' '}Everything else can be filled later from the student&apos;s profile.
+                </p>
+                <PersonalEditTab
+                  form={form}
+                  onChange={handleChange}
+                  className="gap-3 lg:grid-cols-3 [&_[data-slot=input]]:h-9 [&_[data-slot=phone-input-shell]]:h-9 [&_[data-slot=select-trigger]]:h-9"
+                />
+                {emailError && (
+                  <p className="mt-2 text-xs text-destructive">{emailError}</p>
+                )}
               </>
             )}
           </TabsContent>
 
           <TabsContent value="csv" className="min-h-0 space-y-4 overflow-visible py-0">
-            <div className="space-y-2">
-              <Label>
-                Paste CSV (one learner per line: firstName,lastName,optionalAdmissionNumber)
-              </Label>
-              <Textarea
-                rows={6}
-                placeholder={`John,Doe\nJane,Smith,ADM002`}
-                value={csvText}
-                onChange={(e) => { setCsvText(e.target.value); setCsvErrors([]); }}
-              />
-              {csvErrors.length > 0 && (
-                <ul className="mt-2 space-y-1 text-xs text-destructive">
-                  {csvErrors.map((err, i) => (
-                    <li key={i}>{err}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            {progress.total > 0 && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Adding students...</span>
-                  <span>{progress.current}/{progress.total}</span>
-                </div>
-                <div className="h-2 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full bg-primary rounded-full transition-all"
-                    style={{ width: `${(progress.current / progress.total) * 100}%` }}
-                  />
-                </div>
-                {progress.errors.length > 0 && (
-                  <p className="text-xs text-destructive">{progress.errors.length} failed</p>
-                )}
-              </div>
-            )}
+            <StudentCsvImportTab
+              csvText={csvText}
+              onCsvTextChange={(value) => { setCsvText(value); setCsvErrors([]); }}
+              csvErrors={csvErrors}
+              progress={progress}
+            />
           </TabsContent>
         </Tabs>
         <DialogFooter className="mt-1 gap-2 sm:gap-2">
@@ -325,6 +323,7 @@ export function StudentAddDialog({
               <Button
                 variant="outline"
                 onClick={() => {
+                  clearGeneratedSlips();
                   setCredentialBatch([]);
                   setForm(EMPTY_FORM);
                 }}
@@ -333,6 +332,7 @@ export function StudentAddDialog({
               </Button>
               <Button
                 onClick={() => {
+                  clearGeneratedSlips();
                   resetForm();
                   onOpenChange(false);
                 }}
