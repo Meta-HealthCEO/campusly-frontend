@@ -113,10 +113,9 @@ function judgeQuizResponse(block: ContentBlockItem, response: string): boolean |
     if (parsed.type === 'true_false' && typeof parsed.correctAnswer === 'string') {
       return parsed.correctAnswer.toLowerCase() === response.toLowerCase();
     }
-    // Short answer — case-insensitive trim compare to correctAnswer if present
-    if (typeof parsed.correctAnswer === 'string') {
-      return parsed.correctAnswer.trim().toLowerCase() === response.trim().toLowerCase();
-    }
+    // Short answer: too many valid phrasings to judge with string equality.
+    // Return null so the preview marks the question as answered without
+    // claiming the teacher's response is right or wrong.
   } catch {
     /* fallthrough */
   }

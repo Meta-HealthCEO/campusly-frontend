@@ -216,13 +216,31 @@ export function QuizBlock({ block, onSubmit, interaction }: QuizBlockProps) {
 
       {/* Result */}
       {answered && interaction.attemptResult && (
-        <div className={`rounded-lg p-3 text-sm ${interaction.correct ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+        <div
+          className={`rounded-lg p-3 text-sm ${
+            interaction.correct === true
+              ? 'bg-primary/10 text-primary'
+              : interaction.correct === false
+                ? 'bg-destructive/10 text-destructive'
+                : 'bg-muted text-foreground'
+          }`}
+        >
           <div className="flex items-center gap-2 font-medium">
-            {interaction.correct ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
-            {interaction.correct ? 'Correct!' : 'Incorrect'}
-            <span className="ml-auto text-xs">
-              Score: {interaction.attemptResult.score}/{interaction.attemptResult.maxScore}
-            </span>
+            {interaction.correct === true ? (
+              <CheckCircle2 className="size-4" />
+            ) : interaction.correct === false ? (
+              <XCircle className="size-4" />
+            ) : null}
+            {interaction.correct === true
+              ? 'Correct!'
+              : interaction.correct === false
+                ? 'Incorrect'
+                : 'Answer recorded'}
+            {interaction.correct !== null && (
+              <span className="ml-auto text-xs">
+                Score: {interaction.attemptResult.score}/{interaction.attemptResult.maxScore}
+              </span>
+            )}
           </div>
           {(quiz.explanation || block.explanation) && (
             <div className="mt-2 text-xs opacity-80">
