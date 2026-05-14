@@ -529,6 +529,7 @@ export const STANDALONE_TEACHER_NAV: NavItem[] = [
   { label: 'Home', href: ROUTES.TEACHER_DASHBOARD, icon: Home },
   { label: 'Teaching Groups', href: ROUTES.TEACHER_CLASSES, icon: Users },
   { label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen, badge: 'AI' },
+  { label: 'Learning', href: '/teacher/learning', icon: GraduationCap },
   { label: 'Textbooks', href: '/teacher/curriculum/textbooks', icon: BookMarked },
   { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
   { label: 'Assignments', href: '/teacher/assignments', icon: ScrollText, badge: 'AI' },
