@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
-import { LessonStatusPill } from './LessonStatusPill';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import type { Lesson, LessonAssignment } from '@/types/lesson';
 import { MoreHorizontal, ExternalLink, Trash2, Copy } from 'lucide-react';
@@ -124,11 +123,6 @@ export function LessonListTable({ items, onDelete, onClone }: Props) {
           {row.original.materials?.length ?? 0}
         </span>
       ),
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => <LessonStatusPill status={row.original.status} />,
     },
     {
       id: 'actions',

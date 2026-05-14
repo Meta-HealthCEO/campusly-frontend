@@ -8,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { LessonStatus } from '@/types/lesson';
 import type { LessonsFilters } from '@/hooks/useLessons';
 import type { AcademicLookupItem } from '@/hooks/useAcademicLookups';
 import { Search } from 'lucide-react';
@@ -20,19 +19,12 @@ interface Props {
   subjects: AcademicLookupItem[];
 }
 
-const STATUS_OPTIONS: Array<{ value: LessonStatus; label: string }> = [
-  { value: 'draft', label: 'Draft' },
-  { value: 'ready', label: 'Ready' },
-  { value: 'taught', label: 'Taught' },
-];
-
 export function LessonListFilters({ filters, onChange, classes, subjects }: Props) {
   const update = (patch: Partial<LessonsFilters>) =>
     onChange({ ...filters, ...patch, page: 1 });
 
   const classValue = filters.classId ?? 'all';
   const subjectValue = filters.subjectId ?? 'all';
-  const statusValue = filters.status ?? 'all';
 
   return (
     <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
@@ -84,24 +76,6 @@ export function LessonListFilters({ filters, onChange, classes, subjects }: Prop
         </SelectContent>
       </Select>
 
-      <Select
-        value={statusValue}
-        onValueChange={(v: unknown) =>
-          update({ status: v === 'all' ? undefined : (v as LessonStatus) })
-        }
-      >
-        <SelectTrigger className="w-full sm:w-40">
-          <SelectValue placeholder="Any status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Any status</SelectItem>
-          {STATUS_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
     </div>
   );
 }
