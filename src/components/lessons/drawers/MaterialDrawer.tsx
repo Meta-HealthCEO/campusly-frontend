@@ -1,6 +1,9 @@
 'use client';
 
+import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import { useLessonWorkspaceStore } from '@/stores/useLessonWorkspaceStore';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { MaterialDrawerShell } from '../MaterialDrawerShell';
 import { MaterialTypePicker } from '../MaterialTypePicker';
 import { ReadingDrawer } from './ReadingDrawer';
@@ -15,7 +18,6 @@ import { PaperDrawer } from './PaperDrawer';
 import type { LessonMaterial } from '@/types/lesson';
 
 interface Props {
-  lessonId: string;
   materials: LessonMaterial[];
   /** Whether the lesson has at least one class assignment. Homework
    *  drawers (AI / Create) need this to gate inline creation. */
@@ -25,7 +27,6 @@ interface Props {
 }
 
 export function MaterialDrawer({
-  lessonId: _lessonId,
   materials,
   lessonHasAssignedClass,
   addMaterial,
@@ -34,15 +35,28 @@ export function MaterialDrawer({
   const drawer = useLessonWorkspaceStore((s) => s.drawer);
   const setKind = useLessonWorkspaceStore((s) => s.setKind);
   const closeDrawer = useLessonWorkspaceStore((s) => s.closeDrawer);
+  const [generating, setGenerating] = useState<string | null>(null);
 
   const submit = async (payload: Record<string, unknown>) => {
     if (!drawer.phase) return;
-    if (drawer.materialId) {
-      await regenerateMaterial(drawer.materialId, { ...payload, phase: drawer.phase });
-    } else {
-      await addMaterial({ ...payload, phase: drawer.phase });
-    }
+    const isRegenerate = !!drawer.materialId;
+    const label = typeof payload.title === 'string' && payload.title.trim()
+      ? payload.title.trim()
+      : 'material';
+    // Close drawer first, show a busy modal during the AI call so the
+    // teacher gets visible "something's happening" feedback (drawers
+    // were just showing 'Saving...' on the submit button).
     closeDrawer();
+    setGenerating(isRegenerate ? `Regenerating ${label}` : `Generating ${label}`);
+    try {
+      if (isRegenerate && drawer.materialId) {
+        await regenerateMaterial(drawer.materialId, { ...payload, phase: drawer.phase });
+      } else {
+        await addMaterial({ ...payload, phase: drawer.phase });
+      }
+    } finally {
+      setGenerating(null);
+    }
   };
 
   const existing = drawer.materialId
@@ -50,7 +64,7 @@ export function MaterialDrawer({
     : undefined;
 
   const title = drawer.kind
-    ? `${existing ? 'Edit' : 'Add'} ${drawer.kind.replace('_', ' ')}`
+    ? `${existing ? 'Regenerate' : 'Add'} ${drawer.kind.replace('_', ' ')}`
     : 'Add material';
 
   return (
@@ -111,6 +125,26 @@ export function MaterialDrawer({
           existing={existing?.kind === 'paper' ? existing : undefined}
         />
       )}
+
+      <Dialog open={!!generating} onOpenChange={() => { /* uncloseable while busy */ }}>
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-md flex flex-col items-center text-center gap-4 py-8"
+        >
+          <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </span>
+          <div>
+            <p className="text-base font-semibold">{generating}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              The AI is composing your material. This usually takes 30-60 seconds.
+            </p>
+            <p className="text-xs text-muted-foreground mt-3">
+              Don't navigate away — we'll close this when it's done.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </MaterialDrawerShell>
   );
 }
