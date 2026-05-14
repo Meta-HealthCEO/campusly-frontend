@@ -25,9 +25,9 @@ function statusInfo(status: SubmissionStatus): StatusInfo {
     case 'submitted':
       return { label: 'Submitted', variant: 'outline', ctaLabel: 'Submitted', ctaDisabled: true };
     case 'graded':
-      return { label: 'Marked', variant: 'default', ctaLabel: 'Marked', ctaDisabled: true };
+      return { label: 'Marked', variant: 'default', ctaLabel: 'View result', ctaDisabled: false };
     case 'published':
-      return { label: 'On gradebook', variant: 'default', ctaLabel: 'On gradebook', ctaDisabled: true };
+      return { label: 'On gradebook', variant: 'default', ctaLabel: 'View result', ctaDisabled: false };
     default:
       return { label: 'Available', variant: 'secondary', ctaLabel: 'Start test', ctaDisabled: false };
   }
