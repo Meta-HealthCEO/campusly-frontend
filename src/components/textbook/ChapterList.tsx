@@ -25,6 +25,8 @@ interface ChapterListProps {
   onReorder: (chapterIds: string[]) => void;
   onAddResource: (chapterId: string) => void;
   onRemoveResource: (chapterId: string, resourceId: string) => void;
+  /** Hide write affordances. For national textbooks viewed by non-super-admins. */
+  readOnly?: boolean;
 }
 
 function resolveNodeLabel(
@@ -65,6 +67,7 @@ function ChapterRow({
   onMoveDown,
   onAddResource,
   onRemoveResource,
+  readOnly = false,
 }: {
   chapter: ChapterItem;
   index: number;
@@ -75,6 +78,7 @@ function ChapterRow({
   onMoveDown: () => void;
   onAddResource: () => void;
   onRemoveResource: (resourceId: string) => void;
+  readOnly?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const nodeLabel = resolveNodeLabel(chapter.curriculumNodeId);
@@ -106,46 +110,48 @@ function ChapterRow({
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-1 shrink-0">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7"
-              disabled={index === 0}
-              onClick={onMoveUp}
-              aria-label="Move up"
-            >
-              <ChevronUp className="h-4 w-4" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7"
-              disabled={index === total - 1}
-              onClick={onMoveDown}
-              aria-label="Move down"
-            >
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7"
-              onClick={onEdit}
-              aria-label="Edit chapter"
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7 text-destructive"
-              onClick={onRemove}
-              aria-label="Remove chapter"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
+          {!readOnly && (
+            <div className="flex items-center gap-1 shrink-0">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                disabled={index === 0}
+                onClick={onMoveUp}
+                aria-label="Move up"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                disabled={index === total - 1}
+                onClick={onMoveDown}
+                aria-label="Move down"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                onClick={onEdit}
+                aria-label="Edit chapter"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 text-destructive"
+                onClick={onRemove}
+                aria-label="Remove chapter"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Meta line */}
@@ -189,28 +195,32 @@ function ChapterRow({
                         className="truncate flex-1 hover:text-primary hover:underline cursor-pointer"
                       >{label}</a>
                       {rType && <Badge variant="outline" className="text-xs">{rType}</Badge>}
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-6 w-6 text-destructive shrink-0"
-                        onClick={() => onRemoveResource(rid)}
-                        aria-label="Remove resource"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
+                      {!readOnly && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 text-destructive shrink-0"
+                          onClick={() => onRemoveResource(rid)}
+                          aria-label="Remove resource"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                   );
                 })
             )}
 
-            <Button
-              size="sm"
-              variant="outline"
-              className="mt-1"
-              onClick={onAddResource}
-            >
-              <Plus className="h-3.5 w-3.5 mr-1" /> Add Resource
-            </Button>
+            {!readOnly && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-1"
+                onClick={onAddResource}
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" /> Add Resource
+              </Button>
+            )}
           </div>
         )}
       </CardContent>
@@ -228,6 +238,7 @@ export function ChapterList({
   onReorder,
   onAddResource,
   onRemoveResource,
+  readOnly = false,
 }: ChapterListProps) {
   const sorted = (chapters ?? []).slice().sort((a: ChapterItem, b: ChapterItem) => a.order - b.order);
 
@@ -247,11 +258,13 @@ export function ChapterList({
           title="No chapters"
           description="Add your first chapter to get started."
         />
-        <div className="flex justify-center">
-          <Button onClick={onAddChapter}>
-            <Plus className="h-4 w-4 mr-1" /> Add Chapter
-          </Button>
-        </div>
+        {!readOnly && (
+          <div className="flex justify-center">
+            <Button onClick={onAddChapter}>
+              <Plus className="h-4 w-4 mr-1" /> Add Chapter
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
@@ -270,12 +283,15 @@ export function ChapterList({
           onMoveDown={() => move(idx, 1)}
           onAddResource={() => onAddResource(chapter.id)}
           onRemoveResource={(rid: string) => onRemoveResource(chapter.id, rid)}
+          readOnly={readOnly}
         />
       ))}
 
-      <Button variant="outline" className="w-full" onClick={onAddChapter}>
-        <Plus className="h-4 w-4 mr-1" /> Add Chapter
-      </Button>
+      {!readOnly && (
+        <Button variant="outline" className="w-full" onClick={onAddChapter}>
+          <Plus className="h-4 w-4 mr-1" /> Add Chapter
+        </Button>
+      )}
     </div>
   );
 }

@@ -12,6 +12,9 @@ interface TextbookDetailHeaderProps {
   onEdit: () => void;
   onPublish: () => void;
   onArchive: () => void;
+  /** Hide write affordances (edit, publish, archive). For national textbooks
+   *  viewed by non-super-admins. */
+  readOnly?: boolean;
 }
 
 const STATUS_VARIANT: Record<TextbookStatus, 'secondary' | 'default' | 'outline'> = {
@@ -30,6 +33,7 @@ export function TextbookDetailHeader({
   onEdit,
   onPublish,
   onArchive,
+  readOnly = false,
 }: TextbookDetailHeaderProps) {
   const subjectLabel = resolveLabel(textbook.subjectId);
   const gradeLabel = resolveLabel(textbook.gradeId);
@@ -65,18 +69,22 @@ export function TextbookDetailHeader({
             <Eye className="h-4 w-4 mr-1" /> Read Textbook
           </Button>
         </Link>
-        <Button variant="outline" size="sm" onClick={onEdit}>
-          <Pencil className="h-4 w-4 mr-1" /> Edit Metadata
-        </Button>
-        {textbook.status === 'draft' && (
-          <Button size="sm" onClick={onPublish}>
-            <Globe className="h-4 w-4 mr-1" /> Publish
-          </Button>
-        )}
-        {textbook.status === 'published' && (
-          <Button variant="outline" size="sm" onClick={onArchive}>
-            <Archive className="h-4 w-4 mr-1" /> Archive
-          </Button>
+        {!readOnly && (
+          <>
+            <Button variant="outline" size="sm" onClick={onEdit}>
+              <Pencil className="h-4 w-4 mr-1" /> Edit Metadata
+            </Button>
+            {textbook.status === 'draft' && (
+              <Button size="sm" onClick={onPublish}>
+                <Globe className="h-4 w-4 mr-1" /> Publish
+              </Button>
+            )}
+            {textbook.status === 'published' && (
+              <Button variant="outline" size="sm" onClick={onArchive}>
+                <Archive className="h-4 w-4 mr-1" /> Archive
+              </Button>
+            )}
+          </>
         )}
       </div>
     </div>

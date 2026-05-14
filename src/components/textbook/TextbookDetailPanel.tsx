@@ -9,6 +9,7 @@ import {
   TextbookFormDialog,
 } from '@/components/textbook';
 import { useTextbooks } from '@/hooks/useTextbooks';
+import { useAuthStore } from '@/stores/useAuthStore';
 import type {
   TextbookItem,
   CreateTextbookPayload,
@@ -54,9 +55,15 @@ export function TextbookDetailPanel({
     createTextbook,
   } = useTextbooks();
 
+  const user = useAuthStore((s) => s.user);
+
   const [selected, setSelected] = useState<TextbookItem>(textbook);
   const [formOpen, setFormOpen] = useState(false);
   const [editingTextbook, setEditingTextbook] = useState<TextbookItem | null>(null);
+
+  // National textbooks (schoolId: null) are system content — only super_admins
+  // may modify them. Everyone else gets a read-only view (no edit/add/remove).
+  const readOnly = selected.schoolId == null && user?.role !== 'super_admin';
   const [chapterFormOpen, setChapterFormOpen] = useState(false);
   const [editingChapter, setEditingChapter] = useState<ChapterItem | null>(null);
   const [resourcePickerOpen, setResourcePickerOpen] = useState(false);
@@ -129,7 +136,8 @@ export function TextbookDetailPanel({
         onBack={onBack}
         onEdit={() => { setEditingTextbook(selected); setFormOpen(true); }}
         onPublish={handlePublish}
-        onArchive={async () => { await updateTextbook(selected.id, {}); await refresh(); }}
+        onArchive={async () => { await updateTextbook(selected.id, { status: 'archived' }); await refresh(); }}
+        readOnly={readOnly}
       />
 
       <ChapterList
@@ -140,6 +148,7 @@ export function TextbookDetailPanel({
         onReorder={handleReorder}
         onAddResource={(chId: string) => { setTargetChapterId(chId); setResourcePickerOpen(true); }}
         onRemoveResource={async (chId: string, rId: string) => { await removeResourceFromChapter(selected.id, chId, rId); await refresh(); }}
+        readOnly={readOnly}
       />
 
       <ChapterFormDialog
