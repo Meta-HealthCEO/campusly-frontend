@@ -1,14 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ExerciseQuestionsList } from '@/components/homework/ExerciseQuestionsList';
 import { BlockRenderer } from '@/components/content/renderers/BlockRenderer';
-import apiClient from '@/lib/api-client';
-import { unwrapResponse } from '@/lib/api-helpers';
+import { useLessonMaterialPreview } from '@/hooks/useLessonMaterialPreview';
 import type { LessonMaterial } from '@/types/lesson';
-import type { QuestionItem } from '@/types/question-bank';
 import type { ContentBlockItem, AttemptResult, BlockInteractionState } from '@/types';
 
 interface Props {
@@ -40,84 +38,7 @@ function extractTitle(ref: unknown): string | null {
 }
 
 export function MaterialContentInline({ material, enabled }: Props) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [questions, setQuestions] = useState<QuestionItem[]>([]);
-  const [resourceBlocks, setResourceBlocks] = useState<unknown[]>([]);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    if (!enabled || loaded) return;
-    setError(null);
-
-    const load = async () => {
-      try {
-        setBusy(true);
-
-        if (
-          material.kind === 'worksheet'
-          || material.kind === 'activity'
-          || material.kind === 'study_notes'
-          || material.kind === 'worked_example'
-        ) {
-          const id = extractId(material.contentResourceId);
-          if (!id) { setLoaded(true); return; }
-          const res = await apiClient.get(`/content-library/resources/${id}`);
-          const data = unwrapResponse<{ blocks?: unknown[] }>(res);
-          setResourceBlocks(data.blocks ?? []);
-          setLoaded(true);
-          return;
-        }
-
-        if (material.kind === 'practice_questions') {
-          const qs = (material.questionIds ?? [])
-            .map((q) => (typeof q === 'object' ? (q as QuestionItem) : null))
-            .filter((q): q is QuestionItem => !!q);
-          if (qs.length > 0) { setQuestions(qs); setLoaded(true); return; }
-          const ids = (material.questionIds ?? [])
-            .map((q) => extractId(q))
-            .filter((s): s is string => !!s);
-          if (ids.length === 0) { setLoaded(true); return; }
-          const res = await apiClient.get('/question-bank/questions', { params: { ids: ids.join(',') } });
-          const data = unwrapResponse<{ items?: QuestionItem[] }>(res);
-          setQuestions(data.items ?? []);
-          setLoaded(true);
-          return;
-        }
-
-        if (material.kind === 'homework') {
-          const id = extractId(material.homeworkId);
-          if (!id) { setLoaded(true); return; }
-          const res = await apiClient.get(`/homework/${id}`);
-          const data = unwrapResponse<{
-            type?: string;
-            exerciseQuestions?: QuestionItem[];
-            exerciseQuestionIds?: QuestionItem[];
-          }>(res);
-          setQuestions(data.exerciseQuestions ?? data.exerciseQuestionIds ?? []);
-          setLoaded(true);
-          return;
-        }
-
-        if (material.kind === 'reading') {
-          const qs = (material.comprehensionQuestionIds ?? [])
-            .map((q) => (typeof q === 'object' ? (q as QuestionItem) : null))
-            .filter((q): q is QuestionItem => !!q);
-          setQuestions(qs);
-          setLoaded(true);
-          return;
-        }
-
-        setLoaded(true);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Failed to load content';
-        setError(msg);
-      } finally {
-        setBusy(false);
-      }
-    };
-    void load();
-  }, [enabled, loaded, material]);
+  const { busy, error, questions, resourceBlocks } = useLessonMaterialPreview(material, enabled);
 
   if (!enabled) return null;
   if (busy) return <div className="py-2"><LoadingSpinner /></div>;
@@ -146,17 +67,7 @@ export function MaterialContentInline({ material, enabled }: Props) {
   );
 }
 
-// Read-only preview: BlockRenderer expects an `onAttempt` for interactive
-// blocks (quiz/fill_blank/match/ordering). For teacher preview we never
-// submit attempts — return a stable no-op so the renderer is happy.
-const NOOP_ATTEMPT_RESULT: AttemptResult = {
-  id: 'preview',
-  correct: false,
-  score: 0,
-  maxScore: 0,
-  attemptNumber: 0,
-};
-
+// Default state for a block before any teacher interaction.
 function defaultInteraction(blockId: string): BlockInteractionState {
   return {
     blockId,
@@ -170,11 +81,88 @@ function defaultInteraction(blockId: string): BlockInteractionState {
   };
 }
 
-async function noopAttempt(): Promise<AttemptResult> {
-  return NOOP_ATTEMPT_RESULT;
+/**
+ * Best-effort local correctness check for quiz/true_false blocks in the
+ * teacher preview. The content is JSON; we look for an option with
+ * `isCorrect: true` (structured format) or a `correctIndex` (legacy seed
+ * format) and compare against the teacher's response. Returns null when
+ * we can't determine — caller renders the question as "answered" without
+ * a correct/incorrect verdict.
+ */
+function judgeQuizResponse(block: ContentBlockItem, response: string): boolean | null {
+  try {
+    const parsed = JSON.parse(block.content) as Record<string, unknown>;
+    if (Array.isArray(parsed.options) && parsed.options.length > 0) {
+      const first = parsed.options[0];
+      // Structured: options is array of { label, text, isCorrect }
+      if (typeof first === 'object' && first !== null) {
+        for (const opt of parsed.options as Array<Record<string, unknown>>) {
+          if (opt.isCorrect === true) {
+            return opt.label === response || opt.text === response;
+          }
+        }
+        return null;
+      }
+      // Legacy: options is string[], correctIndex points at one
+      if (typeof first === 'string' && typeof parsed.correctIndex === 'number') {
+        const correctText = (parsed.options as string[])[parsed.correctIndex];
+        return correctText === response;
+      }
+    }
+    // True/False — explicit correct field
+    if (parsed.type === 'true_false' && typeof parsed.correctAnswer === 'string') {
+      return parsed.correctAnswer.toLowerCase() === response.toLowerCase();
+    }
+    // Short answer — case-insensitive trim compare to correctAnswer if present
+    if (typeof parsed.correctAnswer === 'string') {
+      return parsed.correctAnswer.trim().toLowerCase() === response.trim().toLowerCase();
+    }
+  } catch {
+    /* fallthrough */
+  }
+  return null;
 }
 
 function ContentBlocksList({ blocks }: { blocks: unknown[] }) {
+  const [interactions, setInteractions] = useState<Map<string, BlockInteractionState>>(
+    () => new Map(),
+  );
+
+  const handleAttempt = useCallback(
+    async (blockId: string, response: string): Promise<AttemptResult> => {
+      // Find the original block to judge correctness against. We re-walk
+      // the blocks array each call — cheap, only fires on click.
+      const raw = (blocks as ContentBlockItem[]).find((b, i) => {
+        const id = (typeof b.blockId === 'string' && b.blockId) || `preview-${i}`;
+        return id === blockId;
+      });
+      const correct = raw ? judgeQuizResponse(raw, response) : null;
+      const result: AttemptResult = {
+        id: `preview-${blockId}`,
+        correct: correct === true,
+        score: correct === true ? 1 : 0,
+        maxScore: 1,
+        attemptNumber: 1,
+      };
+      setInteractions((prev) => {
+        const next = new Map(prev);
+        next.set(blockId, {
+          blockId,
+          answered: true,
+          correct,
+          score: result.score,
+          maxScore: result.maxScore,
+          showExplanation: true,
+          hintsRevealed: 0,
+          attemptResult: result,
+        });
+        return next;
+      });
+      return result;
+    },
+    [blocks],
+  );
+
   if (blocks.length === 0) {
     return <p className="text-xs text-muted-foreground">No content blocks.</p>;
   }
@@ -184,14 +172,14 @@ function ContentBlocksList({ blocks }: { blocks: unknown[] }) {
         const block = raw as ContentBlockItem;
         const blockId =
           (typeof block.blockId === 'string' && block.blockId) || `preview-${i}`;
-        // BlockRenderer reads block.blockId; ensure it's set even if seed data lacks it
         const safeBlock: ContentBlockItem = { ...block, blockId };
+        const interaction = interactions.get(blockId) ?? defaultInteraction(blockId);
         return (
           <BlockRenderer
             key={blockId}
             block={safeBlock}
-            onAttempt={noopAttempt}
-            interaction={defaultInteraction(blockId)}
+            onAttempt={handleAttempt}
+            interaction={interaction}
           />
         );
       })}
