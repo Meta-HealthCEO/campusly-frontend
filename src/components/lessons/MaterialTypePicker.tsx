@@ -6,7 +6,6 @@ import {
   Activity,
   NotebookPen,
   Lightbulb,
-  ListChecks,
   ListPlus,
   Briefcase,
   FileBarChart2,
@@ -20,13 +19,16 @@ interface Tile {
   desc: string;
 }
 
+// 'quiz' is intentionally omitted — Practice Questions covers ungraded
+// inline checks; Homework / Paper cover graded ones. The Quiz model still
+// exists for backwards compatibility with already-saved lesson materials,
+// but is no longer offered as a new choice.
 const TILES: Tile[] = [
   { kind: 'reading',            label: 'Reading',            icon: BookOpen,        desc: 'Textbook section + optional comprehension Qs' },
   { kind: 'worksheet',          label: 'Worksheet',          icon: FileText,        desc: 'Practice problems' },
   { kind: 'activity',           label: 'Activity',           icon: Activity,        desc: 'Hands-on or group activity' },
   { kind: 'study_notes',        label: 'Notes',              icon: NotebookPen,     desc: 'Concept exposition or recap' },
   { kind: 'worked_example',     label: 'Worked Example',     icon: Lightbulb,       desc: 'Step-by-step model solution' },
-  { kind: 'quiz',               label: 'Quiz',               icon: ListChecks,      desc: 'Link an existing quiz' },
   { kind: 'practice_questions', label: 'Practice Questions', icon: ListPlus,        desc: 'Bank-generated questions' },
   { kind: 'homework',           label: 'Homework',           icon: Briefcase,       desc: 'Create or link a homework' },
   { kind: 'paper',              label: 'Paper',              icon: FileBarChart2,   desc: 'Test or exam paper' },
