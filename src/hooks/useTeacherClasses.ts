@@ -36,7 +36,7 @@ interface CreateClassPayload {
   capacity: number;
   schoolId: string;
   teacherId: string;
-  subjectId?: string;
+  subjectId?: string | null;
   isHomeroom?: boolean;
 }
 
@@ -45,6 +45,9 @@ interface AddStudentPayload {
   gradeId: string;
   classId: string;
   schoolId: string;
+  // Delivery method for the generated portal credentials. Required by the
+  // backend Zod schema, so required at the TS level too.
+  deliveryMethod: 'email' | 'slip';
   // Profile fields - firstName/lastName/admissionNumber are required at the
   // dialog level but typed as optional here so the spread-merge in the page
   // handler doesn't have to assert them. The backend will reject if missing.
@@ -60,8 +63,6 @@ export interface StudentPortalCredentials {
   loginEmail: string;
   tempPassword: string;
   emailSent: boolean;
-  whatsappSent: boolean;
-  whatsappSkippedReason?: string;
 }
 
 export interface AddStudentResult {
