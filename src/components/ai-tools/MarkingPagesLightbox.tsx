@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { getMarkingImageUrl } from '@/lib/api-helpers';
+import { AuthenticatedImage } from '@/components/shared/AuthenticatedImage';
 
 interface LightboxImage {
   filename: string;
@@ -82,8 +82,8 @@ export function MarkingPagesLightbox({
           >
             <ChevronLeft className="h-8 w-8" />
           </Button>
-          <img
-            src={getMarkingImageUrl(markingId, current.filename)}
+          <AuthenticatedImage
+            path={`/ai-tools/markings/${markingId}/image/${encodeURIComponent(current.filename)}`}
             alt={`Page ${current.pageNumber}`}
             className="max-h-[80vh] max-w-[85vw] object-contain"
           />

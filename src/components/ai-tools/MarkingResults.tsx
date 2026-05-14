@@ -11,7 +11,7 @@ import { useTeacherPapers } from '@/hooks/useTeacherPapers';
 import { IssueResultDialog } from './IssueResultDialog';
 import { MarkingPagesLightbox } from './MarkingPagesLightbox';
 import { MarkingQuestionCard } from './MarkingQuestionCard';
-import { getMarkingImageUrl } from '@/lib/api-helpers';
+import { AuthenticatedImage } from '@/components/shared/AuthenticatedImage';
 
 interface MarkingResultsProps {
   marking: PaperMarking;
@@ -133,20 +133,20 @@ export function MarkingResults({
       {/* Image strip */}
       {marking.images && marking.images.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
-          {marking.images.slice(0, 3).map((img, i) => {
-            const url = getMarkingImageUrl(marking.id, img.filename);
-            return (
-              <button
-                key={img.filename}
-                type="button"
-                onClick={() => { setLightboxStart(i); setLightboxOpen(true); }}
-                className="relative w-20 h-24 border rounded overflow-hidden hover:ring-2 hover:ring-primary"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt={`Page ${img.pageNumber}`} className="w-full h-full object-cover" />
-              </button>
-            );
-          })}
+          {marking.images.slice(0, 3).map((img, i) => (
+            <button
+              key={img.filename}
+              type="button"
+              onClick={() => { setLightboxStart(i); setLightboxOpen(true); }}
+              className="relative w-20 h-24 border rounded overflow-hidden hover:ring-2 hover:ring-primary"
+            >
+              <AuthenticatedImage
+                path={`/ai-tools/markings/${marking.id}/image/${encodeURIComponent(img.filename)}`}
+                alt={`Page ${img.pageNumber}`}
+                className="w-full h-full object-cover"
+              />
+            </button>
+          ))}
           <Button
             type="button"
             variant="outline"
