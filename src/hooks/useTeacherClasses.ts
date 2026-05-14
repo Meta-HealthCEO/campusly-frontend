@@ -70,6 +70,10 @@ export interface AddStudentResult {
   credentials?: StudentPortalCredentials;
 }
 
+export interface RegenerateCredentialsResult {
+  credentials: StudentPortalCredentials;
+}
+
 export function useTeacherClasses() {
   const [entries, setEntries] = useState<TeacherClassEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -192,6 +196,11 @@ export function useTeacherClasses() {
     return unwrapResponse<StudentPortalCredentials>(res);
   }, []);
 
+  const regenerateCredentials = useCallback(async (studentId: string): Promise<RegenerateCredentialsResult> => {
+    const res = await apiClient.post(`/students/${studentId}/regenerate-credentials`, {});
+    return unwrapResponse<RegenerateCredentialsResult>(res);
+  }, []);
+
   const reassignStudent = useCallback(async (studentId: string, classId: string) => {
     await apiClient.put(`/students/${studentId}`, { classId });
     refetch();
@@ -210,6 +219,7 @@ export function useTeacherClasses() {
     addStudent,
     removeStudent,
     inviteStudent,
+    regenerateCredentials,
     reassignStudent,
   };
 }
