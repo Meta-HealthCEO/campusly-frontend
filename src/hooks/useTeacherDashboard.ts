@@ -79,7 +79,7 @@ export function useTeacherDashboard(): DashboardData {
 
       if (homeworkRes.status === 'fulfilled') {
         const homework = unwrapList<Homework>(homeworkRes.value).filter(
-          (h) => h.teacherId === user.id,
+          (h) => resolveMaybeId(h.teacherId) === user.id,
         );
         for (const h of homework) {
           if (!h.dueDate) continue;
@@ -134,7 +134,7 @@ export function useTeacherDashboard(): DashboardData {
       const gradingAll: GradingItem[] = [];
       if (homeworkRes.status === 'fulfilled') {
         const homework = unwrapList<Homework>(homeworkRes.value).filter(
-          (h) => h.teacherId === user.id,
+          (h) => resolveMaybeId(h.teacherId) === user.id,
         );
         // N+1 fetch acceptable for MVP — matches current pattern.
         const submissionResults = await Promise.allSettled(
@@ -143,14 +143,18 @@ export function useTeacherDashboard(): DashboardData {
         homework.forEach((h, idx) => {
           const sub = submissionResults[idx];
           if (sub.status !== 'fulfilled') return;
-          const subs = unwrapList<Record<string, unknown>>(sub.value);
-          const submittedSubs = subs.filter((s) => s.status === 'submitted');
-          if (submittedSubs.length === 0) return;
-          const graded = submittedSubs.filter(
-            (s) => s.grade !== undefined && s.grade !== null,
+          const subs = unwrapList<{
+            mark?: number | null;
+            gradingStatus?: string;
+            submittedAt?: string;
+            createdAt?: string;
+          }>(sub.value);
+          if (subs.length === 0) return;
+          const graded = subs.filter(
+            (s) => s.mark !== undefined && s.mark !== null,
           ).length;
-          if (graded >= submittedSubs.length) return; // fully graded
-          const oldest = submittedSubs
+          if (graded >= subs.length) return; // fully graded
+          const oldest = subs
             .map((s) => new Date(String(s.submittedAt ?? s.createdAt ?? '')).getTime())
             .filter((t) => !Number.isNaN(t))
             .sort((a, b) => a - b)[0];
@@ -159,7 +163,7 @@ export function useTeacherDashboard(): DashboardData {
             id: h._id,
             title: h.title,
             subject: subjectNameOf(h.subjectId),
-            totalSubmissions: submittedSubs.length,
+            totalSubmissions: subs.length,
             gradedCount: graded,
             oldestSubmittedAt: oldest ? new Date(oldest).toISOString() : '',
           });
