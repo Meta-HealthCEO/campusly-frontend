@@ -26,13 +26,19 @@ The current teacher home page renders a stat strip, a quick-actions card, a time
 - Reshape of [`src/hooks/useTeacherDashboard.ts`](src/hooks/useTeacherDashboard.ts) to provide the three new zone datasets.
 - Three new presentational components (one per zone) plus a Getting Started checklist component and an AI hero component.
 
+**Backend changes — strictly limited:**
+
+- Extend `GET /auth/onboarding-status` to return one additional boolean: `hasFirstContent` (true if the teacher has at least one lesson, paper, or homework). No other backend changes.
+- Papers in the grading queue requires a teacher-scoped "papers awaiting marking" endpoint that does not exist today; this is **deferred** to a follow-up. Grading zone is homework-only for MVP.
+
 **Out of scope:**
 
 - Student home page (`/student`) — explicitly deferred.
 - Re-adding timetable, attendance, and announcements for school teachers. School teachers see the same new layout; school-specific surfaces remain accessible via their own modules in the sidebar but are not re-added to the home page.
-- Any backend route or schema changes. The new hook composes existing endpoints.
+- All backend changes other than the one `hasFirstContent` extension above.
 - `AnnouncementBanner`, attendance, timetable, and "join your school" surfaces are removed from the home page but left in place elsewhere in the app.
 - Visual / brand redesign. We're rethinking content and priorities, not aesthetics. Use existing design tokens, `Card`, `Button`, `StatCard`, and Tailwind utilities.
+- Dedicated "view all today / view all grading / view all drafts" routes. The zones are home-page glances only; overflow surfaces via a muted "+N more" indicator.
 
 ## Design
 
@@ -42,7 +48,7 @@ Top-to-bottom, in order:
 
 1. **Greeting strip** — name + date. No refresh button (the page refetches on tab focus). No banners directly here — onboarding banners are folded into the Getting Started card below.
 2. **AI Quick-Make hero** — three large tiles: *Make a lesson · Make a paper · Set homework*.
-3. **Getting Started card** — visible while any of three onboarding steps is incomplete. Auto-dismisses when all three are done.
+3. **Getting Started card** — visible while any of four onboarding steps is incomplete. Auto-dismisses when all four are done.
 4. **Three zones** — Today, Grading, Drafts. Visible only when at least one zone has ≥1 item. A brand-new teacher with no content sees no zones at all.
 
 This is a two-layer page: creation (hero) → work (zones). The Getting Started card sits between them while needed.
@@ -63,15 +69,22 @@ The hero stays the same size for all users. No "shrink after first visit" patter
 
 ### 2. Getting Started checklist
 
-Single `Card` rendered between the AI hero and the zones whenever **any** of the three steps below is incomplete. Auto-dismisses (does not render) once all three are checked.
+Single `Card` rendered between the AI hero and the zones whenever **any** of the four steps below is incomplete. Auto-dismisses (does not render) once all four are checked.
 
 | # | Step | Completion check | Action |
 |---|------|------------------|--------|
 | 1 | Set your teaching scope | `useTeachingScope().isEmpty === false` | Link to `/teacher/settings` |
-| 2 | Make your first lesson, paper, or homework | At least one lesson, paper, or homework exists for this teacher | No link — copy directs the user to the AI hero tiles above |
-| 3 | Invite a student | At least one student has joined the teacher's class | Inline copy-to-clipboard for the teacher's class code |
+| 2 | Create your first class | `onboardingStatus.hasClass` | Link to `/teacher/classes` (or the existing "new class" flow) |
+| 3 | Make your first lesson, paper, or homework | `onboardingStatus.hasFirstContent` (new backend field) | No link — copy directs the user to the AI hero tiles above |
+| 4 | Invite a student | `onboardingStatus.hasStudent` | Inline copy-to-clipboard for the teacher's class code (requires step 2 to be done first; until then, this step shows but is not actionable) |
 
-Each step shows checked / unchecked state and a short helper line under the title. Steps remain visible (with their checked state) until **all three** are done — so a partially-onboarded teacher can still see what's left.
+Order matches the natural setup flow: scope → class → content → student.
+
+**Visual state of each row:**
+- Unchecked: empty circle icon, label in normal foreground colour, sub-label under it.
+- Checked: filled check icon (primary colour), label in `text-muted-foreground`, no strikethrough.
+
+`hasFramework` is ignored — for a standalone teacher's auto-created personal school, the framework is seeded on signup.
 
 The checklist replaces all three existing onboarding banners (`isIndependent`, `showScopeBanner`, `isSetupIncomplete`). The "Operating independently? Join your school" banner is **removed entirely**, not folded in — it's noise for a standalone-first product.
 
@@ -79,11 +92,14 @@ The checklist replaces all three existing onboarding banners (`isIndependent`, `
 
 Each zone is a single `Card` with this structure:
 
-- **Header:** total count + zone title + "View all" link in the right
+- **Header:** total count + zone title (no "View all" link)
 - **Body:** up to 3 items, formatted per zone (below)
+- **Footer:** muted, non-clickable "+N more" text when `total > 3`. Omitted otherwise.
 - **Empty state:** short copy, occasionally a low-key pointer
 
 The card grid is `grid-cols-1 lg:grid-cols-3`, stacked on mobile and tablet.
+
+There are no dedicated "view all" routes for these zones. The zones are home-page glances; discoverability of the full list is via the sidebar's existing modules (Homework, Papers, Lessons).
 
 #### Today
 
@@ -92,7 +108,7 @@ Items with today's date attached:
 - Tests / papers scheduled for today
 - Lessons with `scheduledDate` today (if scheduling has been used)
 
-Sort chronologically (earliest first). Row format: type icon · title (truncate) · subject · time-of-day.
+Sort chronologically (earliest first). Row format: type icon · title (truncate) · subject · time-of-day. If the item has no time component (e.g. a lesson with only a `scheduledDate`), omit the time — the zone title "Today" carries the date context.
 
 Empty state: *"Nothing due today. A good day to make something new ✨"*
 
@@ -100,13 +116,15 @@ Tap a row: navigate to the item's existing detail view (`/teacher/homework/:id`,
 
 #### Grading
 
-Combined queue of **homework submissions + paper submissions** waiting for the teacher to mark. The existing `pendingHomework` array on `useTeacherDashboard` covers homework; the hook is extended to also include papers with ungraded submissions.
+Queue of **homework submissions** waiting for the teacher to mark — extending the existing `pendingHomework` shape. Papers are **deferred** from this zone for MVP because no teacher-scoped "papers awaiting marking" endpoint exists today and adding one is out of scope.
 
 Sort by oldest unsubmitted-marking first (so the most-overdue grading floats up). Row format: title (truncate) · subject · `X/Y graded` outline badge.
 
+The hook should also resolve a real subject name for each homework item (the current implementation has a TODO leaving `subjectName` as `''`). Fetch subjects once at the top and map by `subjectId`.
+
 Empty state: *"All caught up. 🎉"* — no CTA.
 
-Tap a row: navigate to the grading view (`/teacher/homework/:id`, `/teacher/papers/:id`).
+Tap a row: navigate to the homework grading view (`/teacher/homework/:id`).
 
 #### Drafts
 
@@ -120,7 +138,8 @@ Tap a row: navigate to the editor (`/teacher/lessons/:id`, `/teacher/papers/:id`
 
 #### Cross-cutting rules
 
-- Always at most 3 items per zone. "View all" link in the footer when total > 3.
+- Always at most 3 items per zone. No "View all" link.
+- When `total > 3`, render a muted, non-clickable footer line: *"+N more"* (e.g. `+5 more`).
 - Header count is the total, not the visible count: `Grading (5)` even when only 3 are shown.
 - Single-line truncation on every title (`truncate`).
 - Use design tokens — no `text-red-*` or hard-coded colours for badges.
@@ -128,21 +147,21 @@ Tap a row: navigate to the editor (`/teacher/lessons/:id`, `/teacher/papers/:id`
 
 ### 4. First-run / empty state
 
-Day 0 (brand-new teacher, no scope set, no content, no students):
+Day 0 (brand-new teacher, no scope set, no class, no content, no students):
 
 ```
-Greeting → AI hero → Getting Started card (0 of 3)
+Greeting → AI hero → Getting Started card (0 of 4)
 ```
 
 No zones rendered.
 
-Mid-state (scope set, one lesson made, no students):
+Mid-state (scope set, class created, one lesson drafted, no students):
 
 ```
-Greeting → AI hero → Getting Started card (2 of 3) → Drafts zone (the lesson)
+Greeting → AI hero → Getting Started card (3 of 4) → Drafts zone (the lesson)
 ```
 
-Steady state (all three onboarding steps done):
+Steady state (all four onboarding steps done):
 
 ```
 Greeting → AI hero → Today / Grading / Drafts zones
@@ -157,11 +176,11 @@ The zones collectively appear once **any one** zone has content. Each zone indiv
 | Refresh button in PageHeader | Cut | Refetch on tab focus is sufficient; no real-time collaboration |
 | "Operating independently?" banner (`isIndependent`) | Cut | Standalone is the product, not the fallback |
 | "Set up your teaching scope" banner | Folded into Getting Started step 1 |
-| "Complete your teacher setup" banner | Folded into Getting Started step 2/3 |
+| "Complete your teacher setup" banner (`!hasClass`) | Folded into Getting Started step 2 |
 | 4-card stat strip | Cut | Counts now live in zone headers (`Grading (5)`) |
 | Quick Actions card | Cut | AI hero replaces it |
 | "Today's Classes" timetable card | Cut | No timetable for standalone teachers |
-| "Pending Grading" card | Restructured into Grading zone (now also covers papers) |
+| "Pending Grading" card | Restructured into Grading zone (homework only; papers deferred) |
 | `AnnouncementBanner` | Cut | No school broadcasting in standalone mode |
 | Attendance Alerts card (`absentToday`) | Cut | No attendance for standalone teachers |
 
@@ -181,11 +200,11 @@ After:
 
 ```ts
 {
-  today: TodayItem[];
+  today: TodayItem[];        // capped at 3
   todayTotal: number;
-  grading: GradingItem[];
+  grading: GradingItem[];    // capped at 3
   gradingTotal: number;
-  drafts: DraftItem[];
+  drafts: DraftItem[];       // capped at 3
   draftsTotal: number;
   loading: boolean;
 }
@@ -200,10 +219,10 @@ type TodayItem =
   | { kind: 'lesson';   id: string; title: string; subject: string; scheduledDate: string; };
 
 type GradingItem = {
-  kind: 'homework' | 'paper';
+  kind: 'homework';   // papers deferred — MVP is homework only
   id: string;
   title: string;
-  subject: string;
+  subject: string;    // resolved name, not empty string
   totalSubmissions: number;
   gradedCount: number;
   oldestSubmittedAt: string;
@@ -217,15 +236,17 @@ type DraftItem = {
 };
 ```
 
-The hook composes existing endpoints — no backend changes required:
+Data sources (composes existing endpoints; no new backend routes):
 
 - **Today** — query homework, papers, lessons for the current teacher filtered to today's date (local timezone — use the codebase's existing local-date helper to avoid the UTC-shift bug noted in CLAUDE.md).
-- **Grading** — query homework with ungraded submissions (already covered) + papers with ungraded submissions (extend).
-- **Drafts** — query lessons, papers, homework where `isPublished === false` (or equivalent unpublished flag — confirm during implementation).
+- **Grading** — homework with ungraded submissions (the existing N+1 pattern in the current hook can stay for MVP; resolve subject names by fetching subjects once and mapping by `subjectId`).
+- **Drafts** — lessons, papers, homework where the unpublished flag is set. Exact flag name per model is to be confirmed during implementation; the writing-plans step verifies and lists them.
 
-Each query returns at most 3 items for display + total count for the header. Use the existing `apiClient` patterns and unwrap with `unwrapList()` from [`api-helpers.ts`](src/lib/api-helpers.ts).
+For each zone, return at most 3 items for display plus a total count for the header. Use the existing `apiClient` patterns and unwrap with `unwrapList()` from [`api-helpers.ts`](src/lib/api-helpers.ts).
 
-`useOnboardingStatus` and `useTeachingScope` stay as-is — they drive the Getting Started checklist.
+**Refetch on tab focus:** add a `document.visibilitychange` listener in the hook that refetches when the document becomes visible. Debounce so the hook refetches at most once every 30 seconds.
+
+`useTeachingScope` stays as-is. `useOnboardingStatus` keeps its current shape but its TypeScript interface gains one field, `hasFirstContent: boolean`, populated from the extended `GET /auth/onboarding-status` response.
 
 ## Component breakdown
 
@@ -241,13 +262,15 @@ New files (or extracted from `teacher/page.tsx`):
 
 ## Acceptance criteria
 
-- A brand-new standalone teacher sees the greeting, AI hero, and Getting Started card (0/3) — and nothing else.
-- After setting teaching scope and creating one lesson, the Getting Started card shows 2/3 and the Drafts zone appears with the new lesson.
+- A brand-new standalone teacher sees the greeting, AI hero, and Getting Started card (0/4) — and nothing else.
+- After setting teaching scope, creating a class, and creating one lesson, the Getting Started card shows 3/4 and the Drafts zone appears with the new lesson.
 - After a student joins, the Getting Started card disappears entirely.
-- All zones cap at 3 items with working "View all" links; header counts reflect totals.
+- All zones cap at 3 items; when total > 3, a muted "+N more" footer appears. Header counts reflect totals.
 - The page contains zero references to attendance, timetable, announcements, or "join your school".
 - The page is under 350 lines (project rule) — extract zones to components.
 - No `apiClient` imports in the page or zone components (project rule — API calls go through `useTeacherDashboard`).
 - No `text-red-*` or hard-coded reds (project rule — use `text-destructive`).
 - Mobile-first responsive: hero stacks vertically below `sm:`, zones stack below `lg:`.
 - School teachers see the same new layout (no fallback branch). Their existing access to the timetable and attendance modules from the sidebar is preserved.
+- Backend: `GET /auth/onboarding-status` returns a new boolean `hasFirstContent`, true when the teacher has at least one lesson, paper, or homework.
+- The home page refetches its data when the browser tab regains focus (debounced to once per 30 seconds).
