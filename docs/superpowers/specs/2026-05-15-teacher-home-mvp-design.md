@@ -128,13 +128,13 @@ Tap a row: navigate to the homework grading view (`/teacher/homework/:id`).
 
 #### Drafts
 
-The teacher's **in-progress, unpublished** lessons, papers, and homework — pure drafts only. Published items don't appear here (they're not actionable).
+The teacher's **unpublished lessons** — `Lesson` documents where `publishedAt` is `null`. Lessons are the only entity with a real draft state in the data model today; `Homework.status` is `'assigned' | 'closed'` (no draft) and `GeneratedPaper.status` is `'generating' | 'ready' | 'edited'` (no draft). So this zone is lesson-only in MVP. The zone title stays "Drafts" because the row icon makes the entity type self-evident.
 
-Sort by `updatedAt` descending (resume the thing you just left). Row format: type icon · title (truncate) · *Edited 2h ago* (relative time).
+Sort by `updatedAt` descending (resume the thing you just left). Row format: lesson icon · title (truncate) · *Edited 2h ago* (relative time).
 
-Empty state: *"No drafts. Start something above."* — explicit pointer back to the AI hero.
+Empty state: *"No drafts. Start a lesson above."* — explicit pointer back to the AI hero.
 
-Tap a row: navigate to the editor (`/teacher/lessons/:id`, `/teacher/papers/:id`, `/teacher/homework/:id`).
+Tap a row: navigate to the lesson editor (`/teacher/lessons/:id`).
 
 #### Cross-cutting rules
 
@@ -229,7 +229,7 @@ type GradingItem = {
 };
 
 type DraftItem = {
-  kind: 'lesson' | 'paper' | 'homework';
+  kind: 'lesson';   // MVP: only lessons have a draft state in the model
   id: string;
   title: string;
   updatedAt: string;
@@ -240,7 +240,7 @@ Data sources (composes existing endpoints; no new backend routes):
 
 - **Today** — query homework, papers, lessons for the current teacher filtered to today's date (local timezone — use the codebase's existing local-date helper to avoid the UTC-shift bug noted in CLAUDE.md).
 - **Grading** — homework with ungraded submissions (the existing N+1 pattern in the current hook can stay for MVP; resolve subject names by fetching subjects once and mapping by `subjectId`).
-- **Drafts** — lessons, papers, homework where the unpublished flag is set. Exact flag name per model is to be confirmed during implementation; the writing-plans step verifies and lists them.
+- **Drafts** — `Lesson` documents where `publishedAt` is `null`. Lesson-only because the other two entities (Homework, GeneratedPaper) lack a draft concept in the data model.
 
 For each zone, return at most 3 items for display plus a total count for the header. Use the existing `apiClient` patterns and unwrap with `unwrapList()` from [`api-helpers.ts`](src/lib/api-helpers.ts).
 
