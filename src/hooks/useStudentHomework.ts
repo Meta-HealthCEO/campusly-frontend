@@ -53,15 +53,15 @@ interface GroupedHomework {
 // ─── Internal helpers ───────────────────────────────────────────────────────
 
 function readSubjectName(raw: unknown): { id: string; name: string } {
-  if (typeof raw === 'string') return { id: raw, name: 'Subject' };
+  if (typeof raw === 'string') return { id: raw, name: '' };
   if (raw && typeof raw === 'object') {
     const obj = raw as { _id?: string; id?: string; name?: string };
     return {
       id: obj._id ?? obj.id ?? '',
-      name: typeof obj.name === 'string' && obj.name.length > 0 ? obj.name : 'Subject',
+      name: typeof obj.name === 'string' && obj.name.length > 0 ? obj.name : '',
     };
   }
-  return { id: '', name: 'Subject' };
+  return { id: '', name: '' };
 }
 
 function buildItem(
