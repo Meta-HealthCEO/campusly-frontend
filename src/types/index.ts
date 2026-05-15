@@ -75,3 +75,4 @@ export * from './assessment-structure';
 export * from './teacher-settings';
 export * from './lesson-student';
 export * from './subscription';
+export * from './teacher-home';
