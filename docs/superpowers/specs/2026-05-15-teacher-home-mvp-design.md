@@ -76,7 +76,7 @@ Single `Card` rendered between the AI hero and the zones whenever **any** of the
 | 1 | Set your teaching scope | `useTeachingScope().isEmpty === false` | Link to `/teacher/settings` |
 | 2 | Create your first class | `onboardingStatus.hasClass` | Link to `/teacher/classes` (or the existing "new class" flow) |
 | 3 | Make your first lesson, paper, or homework | `onboardingStatus.hasFirstContent` (new backend field) | No link — copy directs the user to the AI hero tiles above |
-| 4 | Invite a student | `onboardingStatus.hasStudent` | Inline copy-to-clipboard for the teacher's class code (requires step 2 to be done first; until then, this step shows but is not actionable) |
+| 4 | Invite a student | `onboardingStatus.hasStudent` | Inline copy-to-clipboard for the teacher's join code (sourced from `useSchoolStore.school.joinCode` — the personal school's join code doubles as the class code for standalone teachers). Action button only renders once step 2 is done. |
 
 Order matches the natural setup flow: scope → class → content → student.
 
@@ -103,9 +103,8 @@ There are no dedicated "view all" routes for these zones. The zones are home-pag
 
 #### Today
 
-Items with today's date attached:
-- Homework with `dueAt` today
-- Tests / papers scheduled for today
+Items with today's date attached. **Papers are excluded** — the `GeneratedPaper` model has no scheduled-for-date field today (only `createdAt`/`updatedAt`/`status`). Until the model gains one, this zone covers homework and lessons:
+- Homework with `dueDate` today
 - Lessons with `scheduledDate` today (if scheduling has been used)
 
 Sort chronologically (earliest first). Row format: type icon · title (truncate) · subject · time-of-day. If the item has no time component (e.g. a lesson with only a `scheduledDate`), omit the time — the zone title "Today" carries the date context.
@@ -214,9 +213,9 @@ Where:
 
 ```ts
 type TodayItem =
-  | { kind: 'homework'; id: string; title: string; subject: string; dueAt: string; }
-  | { kind: 'paper';    id: string; title: string; subject: string; scheduledAt: string; }
+  | { kind: 'homework'; id: string; title: string; subject: string; dueDate: string; }
   | { kind: 'lesson';   id: string; title: string; subject: string; scheduledDate: string; };
+// Papers excluded — model has no scheduled-for-date field today.
 
 type GradingItem = {
   kind: 'homework';   // papers deferred — MVP is homework only
@@ -238,7 +237,7 @@ type DraftItem = {
 
 Data sources (composes existing endpoints; no new backend routes):
 
-- **Today** — query homework, papers, lessons for the current teacher filtered to today's date (local timezone — use the codebase's existing local-date helper to avoid the UTC-shift bug noted in CLAUDE.md).
+- **Today** — query homework and lessons for the current teacher filtered to today's date (local timezone — use the existing `toISODate` helper in [`src/lib/utils.ts`](src/lib/utils.ts) to avoid the UTC-shift bug noted in CLAUDE.md). Papers are excluded — no scheduled-for-date field exists on the model.
 - **Grading** — homework with ungraded submissions (the existing N+1 pattern in the current hook can stay for MVP; resolve subject names by fetching subjects once and mapping by `subjectId`).
 - **Drafts** — `Lesson` documents where `publishedAt` is `null`. Lesson-only because the other two entities (Homework, GeneratedPaper) lack a draft concept in the data model.
 
