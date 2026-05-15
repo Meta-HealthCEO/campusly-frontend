@@ -7,6 +7,7 @@ interface OnboardingStatus {
   hasClass: boolean;
   hasStudent: boolean;
   hasFramework: boolean;
+  hasFirstContent: boolean;
   dismissed: boolean;
 }
 
@@ -14,6 +15,7 @@ const DEFAULT_STATUS: OnboardingStatus = {
   hasClass: false,
   hasStudent: false,
   hasFramework: false,
+  hasFirstContent: false,
   dismissed: false,
 };
 
@@ -50,6 +52,7 @@ export function useOnboardingStatus() {
           hasClass: Boolean(data?.hasClass),
           hasStudent: Boolean(data?.hasStudent),
           hasFramework: Boolean(data?.hasFramework),
+          hasFirstContent: Boolean(data?.hasFirstContent),
           dismissed: Boolean(data?.dismissed),
         });
       } catch (err: unknown) {
