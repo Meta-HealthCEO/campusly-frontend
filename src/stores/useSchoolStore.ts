@@ -14,6 +14,7 @@ export function mapSchool(raw: Record<string, unknown>): SchoolDocument {
     principal: raw.principal as string | undefined,
     emisNumber: raw.emisNumber as string | undefined,
     type: raw.type as SchoolDocument['type'],
+    joinCode: raw.joinCode as string | undefined,
     isActive: (raw.isActive ?? true) as boolean,
     isDeleted: (raw.isDeleted ?? false) as boolean,
     createdAt: raw.createdAt as string,

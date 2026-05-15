@@ -1,210 +1,66 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { StatCard } from '@/components/shared/StatCard';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { DashboardSkeleton } from '@/components/shared/skeletons';
-import {
-  ClipboardList, AlertTriangle, Users, Calendar,
-  CheckSquare, PenLine, BarChart3, School, RefreshCw,
-  FileText, BookOpen, Settings,
-} from 'lucide-react';
-import { AnnouncementBanner } from '@/components/announcements/AnnouncementBanner';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useSchoolStore } from '@/stores/useSchoolStore';
 import { useTeacherDashboard } from '@/hooks/useTeacherDashboard';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 import { useTeachingScope } from '@/hooks/useTeachingScope';
-import Link from 'next/link';
+import { AIQuickMakeHero } from '@/components/teacher-home/AIQuickMakeHero';
+import { GettingStartedCard } from '@/components/teacher-home/GettingStartedCard';
+import { TodayZone } from '@/components/teacher-home/TodayZone';
+import { GradingZone } from '@/components/teacher-home/GradingZone';
+import { DraftsZone } from '@/components/teacher-home/DraftsZone';
 
-export default function TeacherDashboard() {
-  const { user, permissions } = useAuthStore();
-  const {
-    timetable, pendingHomework, absentToday,
-    classCount, ungradedCount, loading, refreshing, refresh,
-  } = useTeacherDashboard();
-  const { status: onboardingStatus, loading: onboardingLoading } = useOnboardingStatus();
+export default function TeacherHomePage() {
+  const user = useAuthStore((s) => s.user);
+  const school = useSchoolStore((s) => s.school);
+  const dashboard = useTeacherDashboard();
+  const { status: onboarding, loading: onboardingLoading } = useOnboardingStatus();
   const { isEmpty: scopeEmpty, loading: scopeLoading } = useTeachingScope();
 
-  if (loading) return <DashboardSkeleton />;
+  if (dashboard.loading) return <DashboardSkeleton />;
 
   const firstName = user?.firstName ?? 'Teacher';
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const dateLabel = new Date().toLocaleDateString('en-ZA', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
 
-  const isStandaloneTeacher = user?.isStandaloneTeacher === true;
-  const isIndependent = isStandaloneTeacher || (permissions.isSchoolPrincipal && user?.role === 'teacher');
-  const isSetupIncomplete = isStandaloneTeacher && !onboardingLoading && !onboardingStatus.hasClass;
-  const showScopeBanner = isStandaloneTeacher && !scopeLoading && scopeEmpty;
+  const scopeSet = !scopeLoading && !scopeEmpty;
+  const checklistReady = !onboardingLoading;
+  const showChecklist =
+    checklistReady &&
+    !(scopeSet && onboarding.hasClass && onboarding.hasFirstContent && onboarding.hasStudent);
+
+  const anyZoneHasContent =
+    dashboard.todayTotal > 0 || dashboard.gradingTotal > 0 || dashboard.draftsTotal > 0;
 
   return (
     <div className="space-y-6">
-      <PageHeader title={`Good morning, ${firstName}!`} description="Here is your teaching dashboard for today">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={refresh}
-          disabled={refreshing}
-          aria-label="Refresh dashboard"
-        >
-          <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </PageHeader>
+      <PageHeader title={`Hi ${firstName}`} description={dateLabel} />
 
-      {isIndependent && (
-        <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <School className="h-5 w-5 shrink-0 text-primary" />
-            <div>
-              <p className="text-sm font-medium">Operating independently?</p>
-              <p className="text-xs text-muted-foreground">Join your school on Campusly to collaborate with colleagues.</p>
-            </div>
-          </div>
-          <Link href="/teacher/settings/join-school">
-            <Button size="sm" variant="outline" className="w-full sm:w-auto shrink-0">
-              Join Your School
-            </Button>
-          </Link>
+      <AIQuickMakeHero />
+
+      {showChecklist ? (
+        <GettingStartedCard
+          scopeSet={scopeSet}
+          hasClass={onboarding.hasClass}
+          hasFirstContent={onboarding.hasFirstContent}
+          hasStudent={onboarding.hasStudent}
+          classCode={school?.joinCode ?? null}
+        />
+      ) : null}
+
+      {anyZoneHasContent ? (
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+          <TodayZone items={dashboard.today} total={dashboard.todayTotal} />
+          <GradingZone items={dashboard.grading} total={dashboard.gradingTotal} />
+          <DraftsZone items={dashboard.drafts} total={dashboard.draftsTotal} />
         </div>
-      )}
-
-      {showScopeBanner && (
-        <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <Settings className="h-5 w-5 shrink-0 text-primary" />
-            <div>
-              <p className="text-sm font-medium">Set up your teaching scope</p>
-              <p className="text-xs text-muted-foreground">
-                Pick the grades and subjects you teach so the rest of Campusly is tailored to you.
-              </p>
-            </div>
-          </div>
-          <Link href="/teacher/settings">
-            <Button size="sm" variant="outline" className="w-full sm:w-auto shrink-0">
-              Open settings
-            </Button>
-          </Link>
-        </div>
-      )}
-
-      {isSetupIncomplete && (
-        <div className="flex flex-col gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-medium">Complete your teacher setup</p>
-            <p className="text-xs text-muted-foreground">
-              Add your grades, subjects, and first teaching group so the AI tools can organise your work.
-            </p>
-          </div>
-          <Link href="/teacher/onboarding">
-            <Button size="sm" className="w-full sm:w-auto">
-              Complete Setup
-            </Button>
-          </Link>
-        </div>
-      )}
-
-      <div className={`grid gap-4 sm:grid-cols-2 ${isStandaloneTeacher ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
-        <StatCard title={isStandaloneTeacher ? "Today's Groups" : "Today's Classes"} value={String(timetable.length)} icon={Calendar} description={`${today} schedule`} />
-        <StatCard title="To Grade" value={String(ungradedCount)} icon={ClipboardList} description="Pending submissions" />
-        {!isStandaloneTeacher && (
-          <StatCard title="Absent Today" value={String(absentToday.length)} icon={AlertTriangle} description="Students absent" />
-        )}
-        <StatCard title={isStandaloneTeacher ? 'Teaching Groups' : 'My Classes'} value={String(classCount)} icon={Users} description={isStandaloneTeacher ? 'Organising folders' : 'Assigned classes'} />
-      </div>
-
-      <Card>
-        <CardHeader><CardTitle className="text-lg">Quick Actions</CardTitle></CardHeader>
-        <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {isStandaloneTeacher ? (
-              <>
-                <Link href="/teacher/lessons/new"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><BookOpen className="h-6 w-6 text-primary" /><span>New Lesson</span></Button></Link>
-                <Link href="/teacher/papers/new"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><FileText className="h-6 w-6 text-primary" /><span>New Test Paper</span></Button></Link>
-              </>
-            ) : (
-              <>
-                <Link href="/teacher/attendance"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><CheckSquare className="h-6 w-6 text-primary" /><span>Take Attendance</span></Button></Link>
-                <Link href="/teacher/homework"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><PenLine className="h-6 w-6 text-primary" /><span>Create Homework</span></Button></Link>
-                <Link href="/teacher/grades"><Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2"><BarChart3 className="h-6 w-6 text-primary" /><span>View Gradebook</span></Button></Link>
-              </>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader><CardTitle className="text-lg">{isStandaloneTeacher ? 'Teaching Groups' : 'Today&apos;s Classes'}</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            {timetable.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                {isStandaloneTeacher ? 'No timetable needed for teacher-only mode.' : 'No classes scheduled for today.'}
-              </p>
-            ) : (
-              timetable.map((slot) => (
-                <div key={slot.id} className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">P{slot.period}</div>
-                    <div>
-                      <p className="text-sm font-medium">{slot.subject?.name ?? 'Subject'}</p>
-                      <p className="text-xs text-muted-foreground">{slot.room}</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-muted-foreground">{slot.startTime} - {slot.endTime}</span>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg">Pending Grading</CardTitle>
-            <Link href="/teacher/homework" className="text-sm text-primary hover:underline">View all</Link>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {pendingHomework.length === 0 ? (
-              <p className="text-sm text-muted-foreground">All homework has been graded. Great work!</p>
-            ) : (
-              pendingHomework.map((hw) => (
-                <Link key={hw.id} href={`/teacher/homework/${hw.id}`} className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">{hw.title}</p>
-                    <p className="text-xs text-muted-foreground">{hw.subjectName}</p>
-                  </div>
-                  <Badge variant="outline">{hw.gradedCount}/{hw.totalSubmissions} graded</Badge>
-                </Link>
-              ))
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <AnnouncementBanner limit={3} />
-
-      {!isStandaloneTeacher && absentToday.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />Attendance Alerts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {absentToday.map((record) => (
-                <div key={record.id} className="flex items-center justify-between rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-600" />
-                    <span className="text-sm">{record.studentName}</span>
-                  </div>
-                  <Badge variant="destructive">Absent</Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      ) : null}
     </div>
   );
 }

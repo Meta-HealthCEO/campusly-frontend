@@ -75,26 +75,6 @@ export interface SchoolSettings {
 
 export type EnrollmentStatus = 'active' | 'transferred' | 'graduated' | 'expelled' | 'withdrawn';
 
-export interface EmergencyContact {
-  name: string;
-  relationship: string;
-  phone: string;
-}
-
-export interface MedicalAidInfo {
-  provider: string;
-  memberNumber: string;
-  mainMember: string;
-}
-
-export interface MedicalProfile {
-  allergies: string[];
-  conditions: string[];
-  bloodType?: string;
-  emergencyContacts: EmergencyContact[];
-  medicalAidInfo?: MedicalAidInfo;
-}
-
 export interface Student {
   id: string;
   _id?: string;
@@ -114,7 +94,6 @@ export interface Student {
   parents?: Parent[];
   enrollmentDate?: string;
   enrollmentStatus: EnrollmentStatus;
-  medicalProfile: MedicalProfile;
   previousSchool?: string;
   homeLanguage?: string;
   additionalLanguages?: string[];
@@ -258,6 +237,8 @@ export interface SchoolDocument {
   principal?: string;
   emisNumber?: string;
   type?: SchoolType;
+  /** Unique class/join code used by teachers and students to join this school. */
+  joinCode?: string;
   isActive: boolean;
   isDeleted: boolean;
   createdAt: string;
