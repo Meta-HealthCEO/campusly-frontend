@@ -409,6 +409,7 @@ export const STUDENT_NAV: NavItem[] = [
   { label: 'Profile',   href: '/student/profile',        icon: User },
 
   // Phase 2 (module-gated)
+  { label: 'My Classes',    href: ROUTES.STUDENT_CLASSES,       icon: Users,    module: 'academic' },
   { label: 'Timetable',     href: ROUTES.STUDENT_TIMETABLE,     icon: Clock,    module: 'academic' },
   { label: 'Grades',        href: ROUTES.STUDENT_GRADES,        icon: BarChart3, module: 'academic' },
   { label: 'Wallet',        href: ROUTES.STUDENT_WALLET,        icon: Wallet,   module: 'wallet' },
