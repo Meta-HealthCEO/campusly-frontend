@@ -136,6 +136,7 @@ export const ROUTES = {
 
   // Student
   STUDENT_DASHBOARD: '/student',
+  STUDENT_CLASSES: '/student/classes',
   STUDENT_HOMEWORK: '/student/homework',
   STUDENT_TIMETABLE: '/student/timetable',
   STUDENT_GRADES: '/student/grades',
