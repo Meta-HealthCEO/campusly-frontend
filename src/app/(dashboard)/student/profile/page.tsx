@@ -1,60 +1,322 @@
 'use client';
 
 import Link from 'next/link';
+import {
+  BookOpen, ClipboardList, FileText, AlertTriangle, KeyRound, LogOut,
+  Mail, Hash, Calendar, Building2, GraduationCap, Users, Clock,
+  Sparkles, ChevronRight,
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { StatCard } from '@/components/shared/StatCard';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useSchoolStore } from '@/stores/useSchoolStore';
+import { useAuth } from '@/hooks/useAuth';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
+import { useStudentDashboard } from '@/hooks/useStudentDashboard';
+import { useStudentClasses } from '@/hooks/useStudentClasses';
+import { getInitials } from '@/lib/utils';
 
 export default function StudentProfilePage() {
   const { user, isLoading } = useAuthStore();
+  const school = useSchoolStore((state) => state.school);
   const { student, loading: studentLoading } = useCurrentStudent();
+  const { dashboard } = useStudentDashboard();
+  const { homeroom } = useStudentClasses();
+  const { logout } = useAuth();
 
   if (isLoading || studentLoading || !user) return <LoadingSpinner />;
 
-  const className = student?.class?.name ?? '-';
+  const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Student';
+  const initials = getInitials(user.firstName, user.lastName);
 
-  // Teacher first/last names live on teacher.user, not directly on the teacher.
-  const teacherUser = student?.class?.teacher?.user;
-  const teacherName = teacherUser?.firstName
-    ? `${teacherUser.firstName} ${teacherUser.lastName ?? ''}`.trim()
+  const className = homeroom?.name ?? student?.class?.name ?? '—';
+  const gradeName = homeroom?.grade.name ?? student?.grade?.name ?? '—';
+  const teacherName = homeroom
+    ? `${homeroom.teacher.firstName} ${homeroom.teacher.lastName}`.trim()
+    : null;
+  const classroomCode = homeroom?.classroomCode ?? null;
+  const schoolName = school?.name ?? '—';
+
+  const enrolledAt = student?.enrollmentDate ? new Date(student.enrollmentDate) : null;
+  const memberSince = enrolledAt
+    ? enrolledAt.toLocaleDateString('en-ZA', { month: 'short', year: 'numeric' })
+    : '—';
+  const daysEnrolled = enrolledAt
+    ? Math.max(1, Math.floor((Date.now() - enrolledAt.getTime()) / 86_400_000))
     : null;
 
-  return (
-    <div className="space-y-6 max-w-2xl">
-      <PageHeader title="Profile" description="Your account details." />
+  const counts = dashboard?.counts;
+  const recentLesson = dashboard?.recentLesson ?? null;
+  const nextHomework = dashboard?.nextHomework ?? null;
+  const nextTest = dashboard?.nextTest ?? null;
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Account</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <div>
-            <span className="text-muted-foreground">Name:</span>{' '}
-            {user.firstName} {user.lastName}
+  return (
+    <div className="space-y-6">
+      <PageHeader title="Profile" description="Your identity, your week at a glance." />
+
+      {/* ── Hero ─────────────────────────────────────────────────── */}
+      <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-background">
+        <CardContent className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:gap-6 sm:p-8">
+          <div className="relative shrink-0">
+            <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-primary/40 via-primary/20 to-transparent blur-md" aria-hidden />
+            <Avatar className="relative h-24 w-24 ring-2 ring-primary/30 ring-offset-2 ring-offset-background sm:h-28 sm:w-28">
+              {student?.photoUrl && <AvatarImage src={student.photoUrl} alt={fullName} />}
+              <AvatarFallback className="bg-primary/15 text-2xl font-semibold text-primary sm:text-3xl">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
           </div>
-          <div>
-            <span className="text-muted-foreground">Email:</span> {user.email}
+
+          <div className="min-w-0 flex-1 space-y-2">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl truncate">
+              {fullName}
+            </h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="secondary" className="gap-1">
+                <GraduationCap className="h-3.5 w-3.5" />
+                {gradeName}
+              </Badge>
+              <Badge variant="outline" className="gap-1">
+                <Users className="h-3.5 w-3.5" />
+                {className}
+              </Badge>
+              <Badge variant="outline" className="gap-1 max-w-[180px]">
+                <Building2 className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{schoolName}</span>
+              </Badge>
+            </div>
+            {daysEnrolled !== null && (
+              <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Sparkles className="h-3 w-3" />
+                Member since {memberSince} · {daysEnrolled} days at school
+              </p>
+            )}
           </div>
-          <div>
-            <span className="text-muted-foreground">Class:</span> {className}
-          </div>
-          {teacherName && (
-            <div>
-              <span className="text-muted-foreground">Teacher:</span> {teacherName}
+
+          {student?.admissionNumber && (
+            <div className="hidden sm:block self-stretch border-l border-primary/15 pl-6">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Admission no.
+              </p>
+              <p className="font-mono text-sm font-semibold">{student.admissionNumber}</p>
             </div>
           )}
-          <div className="pt-2">
-            <Link href="/forgot-password">
-              <Button variant="outline" size="sm">
-                Change password
-              </Button>
-            </Link>
-          </div>
         </CardContent>
       </Card>
+
+      {/* ── Quick stats ──────────────────────────────────────────── */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Lessons this week"
+          value={counts ? String(counts.lessonsThisWeek) : '—'}
+          icon={BookOpen}
+        />
+        <StatCard
+          title="Homework due"
+          value={counts ? String(counts.homeworkDueThisWeek) : '—'}
+          icon={ClipboardList}
+        />
+        <StatCard
+          title="Tests scheduled"
+          value={counts ? String(counts.testsScheduled) : '—'}
+          icon={FileText}
+        />
+        <StatCard
+          title="Overdue"
+          value={counts ? String(counts.homeworkOverdue) : '—'}
+          icon={AlertTriangle}
+        />
+      </div>
+
+      {/* ── Up next + Class ──────────────────────────────────────── */}
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Up next</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            <UpNextRow
+              icon={<BookOpen className="h-4 w-4 text-primary" />}
+              label="Recent lesson"
+              title={recentLesson?.title ?? 'No lessons yet'}
+              subtitle={recentLesson?.subject}
+              href={recentLesson ? `/student/lessons/${recentLesson.id}` : undefined}
+            />
+            <UpNextRow
+              icon={<ClipboardList className="h-4 w-4 text-primary" />}
+              label="Next homework"
+              title={nextHomework?.title ?? 'All caught up'}
+              subtitle={
+                nextHomework?.dueAt
+                  ? `Due ${new Date(nextHomework.dueAt).toLocaleDateString()}`
+                  : nextHomework?.subject
+              }
+              href={nextHomework ? `/student/homework/${nextHomework.id}` : undefined}
+            />
+            <UpNextRow
+              icon={<FileText className="h-4 w-4 text-primary" />}
+              label="Next test"
+              title={nextTest?.title ?? 'No tests scheduled'}
+              subtitle={
+                nextTest?.dueAt
+                  ? `Due ${new Date(nextTest.dueAt).toLocaleDateString()}`
+                  : nextTest?.subject
+              }
+              href={nextTest ? `/student/tests/${nextTest.paperId}` : undefined}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">My class</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {homeroom ? (
+              <>
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Class</p>
+                  <p className="text-lg font-semibold">{homeroom.name}</p>
+                  <p className="text-sm text-muted-foreground">{homeroom.grade.name}</p>
+                </div>
+                {teacherName && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Class teacher</p>
+                    <p className="text-sm font-medium">{teacherName}</p>
+                  </div>
+                )}
+                {classroomCode && (
+                  <div className="flex items-center justify-between gap-3 rounded-md bg-muted/50 px-3 py-2">
+                    <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                      <Hash className="h-3.5 w-3.5" />
+                      Class code
+                    </span>
+                    <span className="font-mono text-sm tracking-wider">{classroomCode}</span>
+                  </div>
+                )}
+                <Link href="/student/classes" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                  View all classes
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                You haven&apos;t joined a class yet. Use the join card on your dashboard.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Account + Security ───────────────────────────────────── */}
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Account</CardTitle>
+          </CardHeader>
+          <CardContent className="divide-y">
+            <DetailRow
+              icon={<Mail className="h-4 w-4 text-muted-foreground" />}
+              label="Email"
+              value={user.email}
+            />
+            {student?.admissionNumber && (
+              <DetailRow
+                icon={<Hash className="h-4 w-4 text-muted-foreground" />}
+                label="Admission no."
+                value={<span className="font-mono">{student.admissionNumber}</span>}
+              />
+            )}
+            <DetailRow
+              icon={<Calendar className="h-4 w-4 text-muted-foreground" />}
+              label="Member since"
+              value={memberSince}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Security</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Manage your password and session here.
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Link href="/forgot-password" className="w-full sm:w-auto">
+                <Button variant="outline" size="sm" className="w-full">
+                  <KeyRound className="mr-2 h-4 w-4" />
+                  Reset password
+                </Button>
+              </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={logout}
+                className="text-destructive hover:text-destructive w-full sm:w-auto"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign out
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
+}
+
+interface DetailRowProps {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+}
+
+function DetailRow({ icon, label, value }: DetailRowProps) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-3">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        {icon}
+        <span>{label}</span>
+      </div>
+      <div className="text-sm font-medium text-right truncate max-w-[60%]">
+        {value}
+      </div>
+    </div>
+  );
+}
+
+interface UpNextRowProps {
+  icon: React.ReactNode;
+  label: string;
+  title: string;
+  subtitle?: string;
+  href?: string;
+}
+
+function UpNextRow({ icon, label, title, subtitle, href }: UpNextRowProps) {
+  const body = (
+    <div className="flex items-center gap-3 rounded-md px-3 py-3 transition-colors hover:bg-muted/60 -mx-3">
+      <div className="rounded-md bg-primary/10 p-2 shrink-0">{icon}</div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+        <p className="text-sm font-medium truncate">{title}</p>
+        {subtitle && (
+          <p className="text-xs text-muted-foreground inline-flex items-center gap-1 truncate">
+            <Clock className="h-3 w-3 shrink-0" />
+            <span className="truncate">{subtitle}</span>
+          </p>
+        )}
+      </div>
+      {href && <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
+    </div>
+  );
+
+  return href ? <Link href={href}>{body}</Link> : body;
 }
