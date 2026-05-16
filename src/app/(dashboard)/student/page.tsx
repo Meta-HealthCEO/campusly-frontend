@@ -8,9 +8,10 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { StatCard } from '@/components/shared/StatCard';
 import { useStudentDashboard } from '@/hooks/useStudentDashboard';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
+import { JoinClassCard } from '@/components/student/JoinClassCard';
 
 export default function StudentDashboard() {
-  const { dashboard, loading } = useStudentDashboard();
+  const { dashboard, loading, refresh } = useStudentDashboard();
   const { student } = useCurrentStudent();
   if (loading || !dashboard) return <LoadingSpinner />;
 
@@ -27,6 +28,8 @@ export default function StudentDashboard() {
           month: 'long',
         })}
       />
+
+      <JoinClassCard onJoined={refresh} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
