@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Crown, Edit3, Flame, Loader2, Sparkles, X } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+  Crown, Edit3, Flame, Loader2, Sparkles, X, ExternalLink, Wand2,
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -36,9 +38,13 @@ const Avatar = dynamic(
   },
 );
 
-// Ready Player Me subdomain. `demo` works out of the box for testing.
-// Set up your own at https://studio.readyplayer.me and replace.
-const RPM_SUBDOMAIN = 'demo';
+// Ready Player Me subdomain. The legacy `demo.readyplayer.me` shared sandbox
+// was retired by RPM — every workspace now needs its own subdomain. Provision
+// one (free) at https://studio.readyplayer.me and set:
+//   NEXT_PUBLIC_RPM_SUBDOMAIN=yourname
+// in `.env.local`. When unset, the page shows a setup screen instead of a
+// broken iframe.
+const RPM_SUBDOMAIN = process.env.NEXT_PUBLIC_RPM_SUBDOMAIN ?? '';
 const STORAGE_KEY_PREFIX = 'campusly:rpm-avatar:';
 
 interface ExportedEvent {
@@ -83,6 +89,57 @@ export default function AuraStudioPage() {
         <Card>
           <CardContent className="flex h-96 items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Setup required — no RPM subdomain configured.
+  if (!RPM_SUBDOMAIN) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Aura Studio" description="One-time setup needed before the magic." />
+        <Card className="border-amber-300/50 bg-amber-50/40 dark:bg-amber-950/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Wand2 className="h-4 w-4 text-amber-600" />
+              Connect a Ready Player Me workspace
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm">
+            <p className="text-muted-foreground">
+              The shared <code className="rounded bg-muted px-1.5 py-0.5 font-mono">demo.readyplayer.me</code>{' '}
+              sandbox was retired. Every project now needs its own subdomain — free, takes ~2 minutes.
+            </p>
+            <ol className="space-y-3 list-decimal pl-5">
+              <li>
+                Open{' '}
+                <a
+                  href="https://studio.readyplayer.me"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-medium text-primary underline"
+                >
+                  studio.readyplayer.me
+                  <ExternalLink className="h-3 w-3" />
+                </a>{' '}
+                and sign up for a free workspace.
+              </li>
+              <li>
+                Pick a subdomain (e.g. <code className="rounded bg-muted px-1.5 py-0.5 font-mono">campusly</code>).
+                Your avatar creator lives at <code className="rounded bg-muted px-1.5 py-0.5 font-mono">campusly.readyplayer.me</code>.
+              </li>
+              <li>
+                Add this to <code className="rounded bg-muted px-1.5 py-0.5 font-mono">.env.local</code> at the project root and restart the dev server:
+                <pre className="mt-2 rounded bg-muted p-3 font-mono text-xs">
+                  NEXT_PUBLIC_RPM_SUBDOMAIN=campusly
+                </pre>
+              </li>
+            </ol>
+            <p className="text-xs text-muted-foreground">
+              Tip: the workspace dashboard lets you upload custom outfits, restrict mature content, and brand the creator with your school&apos;s colours.
+            </p>
           </CardContent>
         </Card>
       </div>
