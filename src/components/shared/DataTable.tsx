@@ -70,15 +70,17 @@ export function DataTable<TData, TValue>({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
-                    {header.isPlaceholder ? null : (
+                    {header.isPlaceholder ? null : header.column.getCanSort() ? (
                       <button
                         type="button"
-                        className={header.column.getCanSort() ? 'flex cursor-pointer select-none items-center gap-1 focus-visible:ring-2 focus-visible:ring-ring rounded px-1' : ''}
+                        className="flex cursor-pointer select-none items-center gap-1 rounded px-1 focus-visible:ring-2 focus-visible:ring-ring"
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.getCanSort() && <ArrowUpDown className="h-3 w-3" />}
+                        <ArrowUpDown className="h-3 w-3" />
                       </button>
+                    ) : (
+                      flexRender(header.column.columnDef.header, header.getContext())
                     )}
                   </TableHead>
                 ))}
