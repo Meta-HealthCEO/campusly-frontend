@@ -20,8 +20,6 @@ export default function TeacherHomePage() {
   const { status: onboarding, loading: onboardingLoading } = useOnboardingStatus();
   const { isEmpty: scopeEmpty, loading: scopeLoading } = useTeachingScope();
 
-  if (dashboard.loading) return <DashboardSkeleton />;
-
   const firstName = user?.firstName ?? 'Teacher';
   const dateLabel = new Date().toLocaleDateString('en-ZA', {
     weekday: 'long',
@@ -30,8 +28,10 @@ export default function TeacherHomePage() {
   });
 
   const scopeSet = !scopeLoading && !scopeEmpty;
-  const checklistReady = !onboardingLoading;
+  const checklistReady = !onboardingLoading && !scopeLoading;
+  const isStandaloneTeacher = user?.isStandaloneTeacher === true;
   const showChecklist =
+    isStandaloneTeacher &&
     checklistReady &&
     !(scopeSet && onboarding.hasClass && onboarding.hasFirstContent && onboarding.hasStudent);
 
@@ -54,7 +54,9 @@ export default function TeacherHomePage() {
         />
       ) : null}
 
-      {anyZoneHasContent ? (
+      {dashboard.loading ? (
+        <DashboardSkeleton />
+      ) : anyZoneHasContent ? (
         <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
           <TodayZone items={dashboard.today} total={dashboard.todayTotal} />
           <GradingZone items={dashboard.grading} total={dashboard.gradingTotal} />

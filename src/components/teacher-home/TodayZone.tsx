@@ -53,7 +53,9 @@ export function TodayZone({ items, total }: TodayZoneProps) {
                 <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{item.title}</p>
-                  <p className="truncate text-xs text-muted-foreground">{item.subject}</p>
+                  {item.subject ? (
+                    <p className="truncate text-xs text-muted-foreground">{item.subject}</p>
+                  ) : null}
                 </div>
                 {time ? (
                   <span className="shrink-0 text-xs text-muted-foreground">{time}</span>
