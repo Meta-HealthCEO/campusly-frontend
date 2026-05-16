@@ -12,44 +12,33 @@ import { CardGridSkeleton } from '@/components/shared/skeletons';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { ClassFormDialog } from '@/components/classes/ClassFormDialog';
 import { StudentAddDialog } from '@/components/classes/StudentAddDialog';
-import { AssignStudentDialog } from '@/components/classes/AssignStudentDialog';
-import { ClassRosterDialog } from '@/components/classes/ClassRosterDialog';
-import { InviteStudentDialog } from '@/components/classes/InviteStudentDialog';
-import { ClassCard } from '@/components/classes/ClassCard';
+import { TeacherClassesTable } from '@/components/classes/TeacherClassesTable';
 import { BookOpen, Plus, Search } from 'lucide-react';
 import { resolveId } from '@/lib/api-helpers';
-import { useClassesPageState, entryKey } from '@/hooks/useClassesPageState';
+import { useClassesPageState } from '@/hooks/useClassesPageState';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { TeacherClassEntry } from '@/hooks/useTeacherClasses';
-import type { Student } from '@/types';
 
 export default function TeacherClassesPage() {
   const user = useAuthStore((state) => state.user);
   const isStandaloneTeacher = user?.isStandaloneTeacher === true;
   const entityLabel = isStandaloneTeacher ? 'Teaching Group' : 'Class';
   const entityLabelPlural = isStandaloneTeacher ? 'Teaching Groups' : 'Classes';
-  const learnerLabel = isStandaloneTeacher ? 'learners' : 'students';
   const {
-    entries, allStudents, loading, grades, description,
-    selectedEntry, distinctSubjects, filteredEntries,
+    entries, loading, grades, description,
+    distinctSubjects, filteredEntries,
     showCreateDialog, setShowCreateDialog,
     createLoading,
-    setSelectedKey,
     showAddStudent, setShowAddStudent,
     addStudentLoading,
     deleteTarget, setDeleteTarget,
-    invitingId,
-    inviteTarget, setInviteTarget,
-    showAssignStudent, setShowAssignStudent,
     editEntry, setEditEntry,
     editLoading,
     search, setSearch,
-    setSort,
     setFilterGrade,
     setFilterSubject,
     handleCreateClass, handleDelete, handleAddStudent,
-    handleEditClass, handleRemoveStudent, handleInviteSubmit,
-    handleAssignStudent,
+    handleEditClass,
   } = useClassesPageState();
 
   // Tracks which entry the AddStudentDialog should target. Set when the user
@@ -100,17 +89,6 @@ export default function TeacherClassesPage() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`Search ${entityLabelPlural.toLowerCase()}...`} className="pl-9" />
           </div>
-          <Select onValueChange={(val: unknown) => setSort(val as string)} defaultValue="name-asc">
-            <SelectTrigger className="w-full sm:w-40">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="name-asc">Name A-Z</SelectItem>
-              <SelectItem value="name-desc">Name Z-A</SelectItem>
-              <SelectItem value="students-desc">Most {learnerLabel}</SelectItem>
-              <SelectItem value="students-asc">Least {learnerLabel}</SelectItem>
-            </SelectContent>
-          </Select>
           <Select onValueChange={(val: unknown) => setFilterGrade(val as string)} defaultValue="all">
             <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="All grades" />
@@ -153,31 +131,14 @@ export default function TeacherClassesPage() {
       ) : filteredEntries.length === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">No classes match &quot;{search}&quot;</p>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredEntries.filter((e) => e.class && typeof e.class === 'object').map((entry) => (
-            <ClassCard
-              key={entryKey(entry)}
-              entry={entry}
-              entryKey={entryKey(entry)}
-              copyMode={isStandaloneTeacher ? 'teachingGroup' : 'class'}
-              onViewRoster={() => setSelectedKey(entryKey(entry))}
-              onAddStudents={() => openAddStudent(entry)}
-              onEdit={() => setEditEntry(entry)}
-              onDelete={() => setDeleteTarget(resolveId(entry.class))}
-            />
-          ))}
-        </div>
+        <TeacherClassesTable
+          entries={filteredEntries.filter((e) => e.class && typeof e.class === 'object')}
+          mode={isStandaloneTeacher ? 'teachingGroup' : 'class'}
+          onAddStudents={openAddStudent}
+          onEdit={setEditEntry}
+          onDelete={(entry) => setDeleteTarget(resolveId(entry.class))}
+        />
       )}
-
-      <ClassRosterDialog entry={selectedEntry} onClose={() => setSelectedKey(null)}
-        copyMode={isStandaloneTeacher ? 'teachingGroup' : 'class'}
-        onInvite={(student: Student) => setInviteTarget(student)} invitingId={invitingId}
-        onAddStudents={() => { if (selectedEntry) openAddStudent(selectedEntry); }}
-        onRemoveStudent={handleRemoveStudent}
-      />
-
-      <InviteStudentDialog student={inviteTarget} onClose={() => setInviteTarget(null)}
-        onInvite={handleInviteSubmit} isLoading={invitingId === inviteTarget?.id} />
 
       <ClassFormDialog open={showCreateDialog} onOpenChange={setShowCreateDialog}
         copyMode={isStandaloneTeacher ? 'teachingGroup' : 'class'}
@@ -207,11 +168,6 @@ export default function TeacherClassesPage() {
         onAddStudent={(data) => handleAddStudent(data, addTargetEntry)}
         isLoading={addStudentLoading}
       />
-
-      <AssignStudentDialog open={showAssignStudent} onOpenChange={setShowAssignStudent}
-        classId={resolveId(selectedEntry?.class)}
-        currentStudentIds={selectedEntry?.students.map((s: Student) => s.id) ?? []} allStudents={allStudents}
-        onAssign={handleAssignStudent} />
 
       <ConfirmDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
         title={`Delete ${entityLabel}`} description={`Are you sure you want to delete this ${entityLabel.toLowerCase()}? This action cannot be undone.`}
