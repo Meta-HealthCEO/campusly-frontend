@@ -102,7 +102,7 @@ export function TeacherClassesTable({
     },
     {
       id: 'actions',
-      header: '',
+      header: () => <div className="text-right">Actions</div>,
       enableSorting: false,
       cell: ({ row }) => {
         const entry = row.original;
