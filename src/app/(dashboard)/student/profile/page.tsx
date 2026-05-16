@@ -2,9 +2,8 @@
 
 import Link from 'next/link';
 import {
-  BookOpen, ClipboardList, FileText, AlertTriangle, KeyRound, LogOut,
-  Mail, Hash, Calendar, Building2, GraduationCap, Users, Clock,
-  Sparkles, ChevronRight,
+  KeyRound, LogOut, Mail, Hash, Calendar, Building2, GraduationCap, Users,
+  Sparkles, ChevronRight, Cake, Languages, School,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,12 +11,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { StatCard } from '@/components/shared/StatCard';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSchoolStore } from '@/stores/useSchoolStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
-import { useStudentDashboard } from '@/hooks/useStudentDashboard';
 import { useStudentClasses } from '@/hooks/useStudentClasses';
 import { getInitials } from '@/lib/utils';
 
@@ -25,7 +22,6 @@ export default function StudentProfilePage() {
   const { user, isLoading } = useAuthStore();
   const school = useSchoolStore((state) => state.school);
   const { student, loading: studentLoading } = useCurrentStudent();
-  const { dashboard } = useStudentDashboard();
   const { homeroom } = useStudentClasses();
   const { logout } = useAuth();
 
@@ -46,18 +42,22 @@ export default function StudentProfilePage() {
   const memberSince = enrolledAt
     ? enrolledAt.toLocaleDateString('en-ZA', { month: 'short', year: 'numeric' })
     : '—';
-  const daysEnrolled = enrolledAt
-    ? Math.max(1, Math.floor((Date.now() - enrolledAt.getTime()) / 86_400_000))
-    : null;
 
-  const counts = dashboard?.counts;
-  const recentLesson = dashboard?.recentLesson ?? null;
-  const nextHomework = dashboard?.nextHomework ?? null;
-  const nextTest = dashboard?.nextTest ?? null;
+  const dob = student?.dateOfBirth ? new Date(student.dateOfBirth) : null;
+  const dobLabel = dob
+    ? dob.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+  const languages: string[] = [
+    ...(student?.homeLanguage ? [student.homeLanguage] : []),
+    ...(student?.additionalLanguages ?? []),
+  ];
+  const previousSchool = student?.previousSchool ?? null;
+
+  const hasAbout = Boolean(dobLabel || languages.length > 0 || previousSchool);
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Profile" description="Your identity, your week at a glance." />
+      <PageHeader title="Profile" description="Who you are at school." />
 
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-background">
@@ -90,10 +90,10 @@ export default function StudentProfilePage() {
                 <span className="truncate">{schoolName}</span>
               </Badge>
             </div>
-            {daysEnrolled !== null && (
+            {enrolledAt && (
               <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Sparkles className="h-3 w-3" />
-                Member since {memberSince} · {daysEnrolled} days at school
+                Member since {memberSince}
               </p>
             )}
           </div>
@@ -109,66 +109,42 @@ export default function StudentProfilePage() {
         </CardContent>
       </Card>
 
-      {/* ── Quick stats ──────────────────────────────────────────── */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Lessons this week"
-          value={counts ? String(counts.lessonsThisWeek) : '—'}
-          icon={BookOpen}
-        />
-        <StatCard
-          title="Homework due"
-          value={counts ? String(counts.homeworkDueThisWeek) : '—'}
-          icon={ClipboardList}
-        />
-        <StatCard
-          title="Tests scheduled"
-          value={counts ? String(counts.testsScheduled) : '—'}
-          icon={FileText}
-        />
-        <StatCard
-          title="Overdue"
-          value={counts ? String(counts.homeworkOverdue) : '—'}
-          icon={AlertTriangle}
-        />
-      </div>
-
-      {/* ── Up next + Class ──────────────────────────────────────── */}
+      {/* ── About + Class ────────────────────────────────────────── */}
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Up next</CardTitle>
+            <CardTitle className="text-base">About</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-1">
-            <UpNextRow
-              icon={<BookOpen className="h-4 w-4 text-primary" />}
-              label="Recent lesson"
-              title={recentLesson?.title ?? 'No lessons yet'}
-              subtitle={recentLesson?.subject}
-              href={recentLesson ? `/student/lessons/${recentLesson.id}` : undefined}
-            />
-            <UpNextRow
-              icon={<ClipboardList className="h-4 w-4 text-primary" />}
-              label="Next homework"
-              title={nextHomework?.title ?? 'All caught up'}
-              subtitle={
-                nextHomework?.dueAt
-                  ? `Due ${new Date(nextHomework.dueAt).toLocaleDateString()}`
-                  : nextHomework?.subject
-              }
-              href={nextHomework ? `/student/homework/${nextHomework.id}` : undefined}
-            />
-            <UpNextRow
-              icon={<FileText className="h-4 w-4 text-primary" />}
-              label="Next test"
-              title={nextTest?.title ?? 'No tests scheduled'}
-              subtitle={
-                nextTest?.dueAt
-                  ? `Due ${new Date(nextTest.dueAt).toLocaleDateString()}`
-                  : nextTest?.subject
-              }
-              href={nextTest ? `/student/tests/${nextTest.paperId}` : undefined}
-            />
+          <CardContent className="space-y-3">
+            {hasAbout ? (
+              <div className="divide-y">
+                {dobLabel && (
+                  <DetailRow
+                    icon={<Cake className="h-4 w-4 text-muted-foreground" />}
+                    label="Date of birth"
+                    value={dobLabel}
+                  />
+                )}
+                {languages.length > 0 && (
+                  <DetailRow
+                    icon={<Languages className="h-4 w-4 text-muted-foreground" />}
+                    label={languages.length > 1 ? 'Languages' : 'Language'}
+                    value={languages.join(', ')}
+                  />
+                )}
+                {previousSchool && (
+                  <DetailRow
+                    icon={<School className="h-4 w-4 text-muted-foreground" />}
+                    label="Previous school"
+                    value={previousSchool}
+                  />
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No personal details on file. Speak to your school administrator to add them.
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -290,33 +266,4 @@ function DetailRow({ icon, label, value }: DetailRowProps) {
       </div>
     </div>
   );
-}
-
-interface UpNextRowProps {
-  icon: React.ReactNode;
-  label: string;
-  title: string;
-  subtitle?: string;
-  href?: string;
-}
-
-function UpNextRow({ icon, label, title, subtitle, href }: UpNextRowProps) {
-  const body = (
-    <div className="flex items-center gap-3 rounded-md px-3 py-3 transition-colors hover:bg-muted/60 -mx-3">
-      <div className="rounded-md bg-primary/10 p-2 shrink-0">{icon}</div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
-        <p className="text-sm font-medium truncate">{title}</p>
-        {subtitle && (
-          <p className="text-xs text-muted-foreground inline-flex items-center gap-1 truncate">
-            <Clock className="h-3 w-3 shrink-0" />
-            <span className="truncate">{subtitle}</span>
-          </p>
-        )}
-      </div>
-      {href && <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
-    </div>
-  );
-
-  return href ? <Link href={href}>{body}</Link> : body;
 }
