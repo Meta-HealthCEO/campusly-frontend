@@ -5,7 +5,19 @@ import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import type { TeacherClassEntry } from '@/hooks/useTeacherClasses';
 import { useGrades } from '@/hooks/useAcademics';
 import { useAuthStore } from '@/stores/useAuthStore';
-import type { Student } from '@/types';
+import type { PopulatedId } from '@/types';
+
+/**
+ * `entry.class.gradeId` is typed `string` but the backend often populates it
+ * as `{ _id, name, level }`. Combined with the populated `entry.class.grade`
+ * fallback, this returns whichever id is available — always a string.
+ */
+function gradeIdOf(entry: TeacherClassEntry): string {
+  return (
+    resolveId(entry.class.gradeId as unknown as PopulatedId) ||
+    resolveId(entry.class.grade as unknown as PopulatedId)
+  );
+}
 
 function entryKey(entry: TeacherClassEntry): string {
   const clsId = resolveId(entry.class) || Math.random().toString(36).slice(2);
@@ -19,30 +31,21 @@ export function useClassesPageState() {
   const user = useAuthStore((s) => s.user);
   const {
     entries, students: allStudents, loading, createClass, updateClass,
-    deleteClass, addStudent, removeStudent, inviteStudent, reassignStudent,
+    deleteClass, addStudent,
   } = useTeacherClasses();
   const { grades } = useGrades();
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
-  const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [showAddStudent, setShowAddStudent] = useState(false);
   const [addStudentLoading, setAddStudentLoading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const [invitingId, setInvitingId] = useState<string | null>(null);
-  const [inviteTarget, setInviteTarget] = useState<Student | null>(null);
-  const [showAssignStudent, setShowAssignStudent] = useState(false);
   const [editEntry, setEditEntry] = useState<TeacherClassEntry | null>(null);
   const [editLoading, setEditLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('name-asc');
   const [filterGrade, setFilterGrade] = useState('all');
   const [filterSubject, setFilterSubject] = useState('all');
-
-  const selectedEntry = useMemo(
-    () => (selectedKey ? entries.find((e: TeacherClassEntry) => entryKey(e) === selectedKey) ?? null : null),
-    [selectedKey, entries],
-  );
 
   const distinctSubjects = useMemo(() => {
     const map = new Map<string, string>();
@@ -63,10 +66,7 @@ export function useClassesPageState() {
       );
     }
     if (filterGrade !== 'all') {
-      result = result.filter((e: TeacherClassEntry) => {
-        const gradeId = resolveId(e.class.grade) || e.class.gradeId;
-        return gradeId === filterGrade;
-      });
+      result = result.filter((e: TeacherClassEntry) => gradeIdOf(e) === filterGrade);
     }
     if (filterSubject !== 'all') {
       if (filterSubject === 'homeroom') {
@@ -118,7 +118,7 @@ export function useClassesPageState() {
 
   const handleAddStudent = useCallback(async (
     data: Record<string, unknown>,
-    targetEntry: TeacherClassEntry | null = selectedEntry,
+    targetEntry: TeacherClassEntry | null,
   ) => {
     if (!targetEntry) return;
     const classId = resolveId(targetEntry.class);
@@ -144,10 +144,8 @@ export function useClassesPageState() {
         schoolId: user!.schoolId,
         deliveryMethod,
       });
-    } catch (err: unknown) {
-      throw err;
     } finally { setAddStudentLoading(false); }
-  }, [selectedEntry, addStudent, isStandaloneTeacher, user]);
+  }, [addStudent, isStandaloneTeacher, user]);
 
   const handleEditClass = useCallback(async (data: { name: string; gradeId: string; capacity: number; subjectId?: string | null; isHomeroom?: boolean }) => {
     if (!editEntry) return;
@@ -162,51 +160,16 @@ export function useClassesPageState() {
     } finally { setEditLoading(false); }
   }, [editEntry, updateClass, isStandaloneTeacher, user]);
 
-  const handleRemoveStudent = useCallback(async (studentId: string) => {
-    try {
-      await removeStudent(studentId);
-      toast.success('Student removed');
-    } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to remove student'));
-    }
-  }, [removeStudent]);
-
-  const handleInviteSubmit = useCallback(async (studentId: string, email: string) => {
-    setInvitingId(studentId);
-    try {
-      const result = await inviteStudent(studentId, email);
-      const channel = result.emailSent ? 'Email sent.' : 'Email could not be sent; use the temporary password manually.';
-      toast.success(`Portal credentials ready. ${channel} Temporary password: ${result.tempPassword}`);
-      return result;
-    } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to invite student'));
-    } finally { setInvitingId(null); }
-  }, [inviteStudent]);
-
-  const handleAssignStudent = useCallback(async (studentId: string, classId: string) => {
-    try {
-      await reassignStudent(studentId, classId);
-      toast.success(isStandaloneTeacher ? 'Learner assigned' : 'Student assigned');
-      setShowAssignStudent(false);
-    } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, isStandaloneTeacher ? 'Failed to assign learner' : 'Failed to assign student'));
-    }
-  }, [isStandaloneTeacher, reassignStudent]);
-
   return {
     // Data
     entries, allStudents, loading, grades, description,
-    selectedEntry, distinctSubjects, filteredEntries,
+    distinctSubjects, filteredEntries,
     // UI state
     showCreateDialog, setShowCreateDialog,
     createLoading,
-    selectedKey, setSelectedKey,
     showAddStudent, setShowAddStudent,
     addStudentLoading,
     deleteTarget, setDeleteTarget,
-    invitingId,
-    inviteTarget, setInviteTarget,
-    showAssignStudent, setShowAssignStudent,
     editEntry, setEditEntry,
     editLoading,
     search, setSearch,
@@ -215,8 +178,7 @@ export function useClassesPageState() {
     filterSubject, setFilterSubject,
     // Handlers
     handleCreateClass, handleDelete, handleAddStudent,
-    handleEditClass, handleRemoveStudent, handleInviteSubmit,
-    handleAssignStudent,
+    handleEditClass,
     // Helpers
     entryKey,
   };
