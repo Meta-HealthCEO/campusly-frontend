@@ -63,7 +63,9 @@ export function getRoleProfilePath(role: string): string | null {
 
 /**
  * Path to the role's settings page, or null if that role has no settings
- * page yet.
+ * page yet. Students do NOT have a separate settings page — preferences
+ * + security are merged into `/student/profile`, so this returns null for
+ * the student role and the user menu hides the Settings item for them.
  */
 export function getRoleSettingsPath(role: string): string | null {
   const paths: Record<string, string> = {
@@ -71,7 +73,6 @@ export function getRoleSettingsPath(role: string): string | null {
     school_admin: '/admin/settings',
     teacher: '/teacher/settings',
     parent: '/parent/settings',
-    student: '/student/settings',
   };
   return paths[role] ?? null;
 }

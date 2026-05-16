@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useTheme } from 'next-themes';
 import {
   KeyRound, LogOut, Mail, Hash, Calendar, Building2, GraduationCap, Users,
   Sparkles, ChevronRight, Cake, Languages, School,
+  Sun, Moon, Monitor,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,6 +26,7 @@ export default function StudentProfilePage() {
   const { student, loading: studentLoading } = useCurrentStudent();
   const { homeroom } = useStudentClasses();
   const { logout } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   if (isLoading || studentLoading || !user) return <LoadingSpinner />;
 
@@ -189,8 +192,39 @@ export default function StudentProfilePage() {
         </Card>
       </div>
 
-      {/* ── Account + Security ───────────────────────────────────── */}
+      {/* ── Preferences + Account ────────────────────────────────── */}
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Appearance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Pick how the app looks. System follows your device setting.
+            </p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <ThemeOption
+                icon={<Sun className="h-4 w-4" />}
+                label="Light"
+                active={theme === 'light'}
+                onClick={() => setTheme('light')}
+              />
+              <ThemeOption
+                icon={<Moon className="h-4 w-4" />}
+                label="Dark"
+                active={theme === 'dark'}
+                onClick={() => setTheme('dark')}
+              />
+              <ThemeOption
+                icon={<Monitor className="h-4 w-4" />}
+                label="System"
+                active={theme === 'system' || theme === undefined}
+                onClick={() => setTheme('system')}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Account</CardTitle>
@@ -215,35 +249,36 @@ export default function StudentProfilePage() {
             />
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Security</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Manage your password and session here.
-            </p>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Link href="/forgot-password" className="w-full sm:w-auto">
-                <Button variant="outline" size="sm" className="w-full">
-                  <KeyRound className="mr-2 h-4 w-4" />
-                  Reset password
-                </Button>
-              </Link>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={logout}
-                className="text-destructive hover:text-destructive w-full sm:w-auto"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign out
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
+
+      {/* ── Security ─────────────────────────────────────────────── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Security</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Manage your password and session here.
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Link href="/forgot-password" className="w-full sm:w-auto">
+              <Button variant="outline" size="sm" className="w-full">
+                <KeyRound className="mr-2 h-4 w-4" />
+                Reset password
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={logout}
+              className="text-destructive hover:text-destructive w-full sm:w-auto"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign out
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -265,5 +300,30 @@ function DetailRow({ icon, label, value }: DetailRowProps) {
         {value}
       </div>
     </div>
+  );
+}
+
+interface ThemeOptionProps {
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}
+
+function ThemeOption({ icon, label, active, onClick }: ThemeOptionProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
+        active
+          ? 'border-primary bg-primary/10 text-primary font-medium'
+          : 'border-input text-muted-foreground hover:bg-muted hover:text-foreground'
+      }`}
+      aria-pressed={active}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
   );
 }
