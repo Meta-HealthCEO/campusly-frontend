@@ -48,3 +48,30 @@ export function getRoleLabel(role: UserRole): string {
   };
   return labels[role];
 }
+
+/**
+ * Path to the role's profile page, or null if that role has no dedicated
+ * profile page (in which case the user menu should hide the Profile item
+ * and rely on Settings — which usually contains the profile info).
+ */
+export function getRoleProfilePath(role: string): string | null {
+  const paths: Record<string, string> = {
+    student: '/student/profile',
+  };
+  return paths[role] ?? null;
+}
+
+/**
+ * Path to the role's settings page, or null if that role has no settings
+ * page yet.
+ */
+export function getRoleSettingsPath(role: string): string | null {
+  const paths: Record<string, string> = {
+    admin: '/admin/settings',
+    school_admin: '/admin/settings',
+    teacher: '/teacher/settings',
+    parent: '/parent/settings',
+    student: '/student/settings',
+  };
+  return paths[role] ?? null;
+}

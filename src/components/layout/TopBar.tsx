@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { Menu, LogOut, User, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -10,14 +11,17 @@ import { useUIStore } from '@/stores/useUIStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useAuth } from '@/hooks/useAuth';
 import { getInitials } from '@/lib/utils';
-import { getRoleLabel } from '@/lib/auth';
+import { getRoleLabel, getRoleProfilePath, getRoleSettingsPath } from '@/lib/auth';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
 export function TopBar() {
+  const router = useRouter();
   const { toggleSidebar } = useUIStore();
   const { user } = useAuthStore();
   const { logout } = useAuth();
+  const profilePath = user ? getRoleProfilePath(user.role) : null;
+  const settingsPath = user ? getRoleSettingsPath(user.role) : null;
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-card px-4 lg:px-6">
@@ -56,9 +60,17 @@ export function TopBar() {
             }
           />
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem><User className="mr-2 h-4 w-4" /> Profile</DropdownMenuItem>
-            <DropdownMenuItem><Settings className="mr-2 h-4 w-4" /> Settings</DropdownMenuItem>
-            <DropdownMenuSeparator />
+            {profilePath && (
+              <DropdownMenuItem onClick={() => router.push(profilePath)}>
+                <User className="mr-2 h-4 w-4" /> Profile
+              </DropdownMenuItem>
+            )}
+            {settingsPath && (
+              <DropdownMenuItem onClick={() => router.push(settingsPath)}>
+                <Settings className="mr-2 h-4 w-4" /> Settings
+              </DropdownMenuItem>
+            )}
+            {(profilePath || settingsPath) && <DropdownMenuSeparator />}
             <DropdownMenuItem onClick={logout} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" /> Sign out
             </DropdownMenuItem>
