@@ -73,15 +73,18 @@ export function GettingStartedCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">
-          Getting started <span className="text-sm font-normal text-muted-foreground">({doneCount} of {steps.length})</span>
+        <CardTitle className="text-base font-medium">
+          Getting started
+          <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-muted px-1.5 text-xs font-medium text-muted-foreground">
+            {doneCount}/{steps.length}
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {steps.map((step) => (
           <div
             key={step.title}
-            className="flex items-start justify-between gap-3 rounded-md border p-3"
+            className="flex items-start justify-between gap-3 rounded-md border border-border/40 bg-card p-3 transition-colors hover:bg-muted/30"
           >
             <div className="flex items-start gap-3">
               {step.done ? (
