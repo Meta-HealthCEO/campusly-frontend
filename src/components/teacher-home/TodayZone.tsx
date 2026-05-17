@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ClipboardList, BookOpen } from 'lucide-react';
+import { ClipboardList, BookOpen, CalendarCheck } from 'lucide-react';
 import type { TodayItem } from '@/types';
 
 interface TodayZoneProps {
@@ -22,50 +22,62 @@ function itemTime(item: TodayItem): string {
   const iso = item.kind === 'homework' ? item.dueDate : item.scheduledDate;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
-  // Only show time if hours or minutes are non-zero (date-only sources have 00:00).
   if (d.getHours() === 0 && d.getMinutes() === 0) return '';
   return d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
 }
 
 export function TodayZone({ items, total }: TodayZoneProps) {
+  const overflow = total - items.length;
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">
-          Today <span className="text-sm font-normal text-muted-foreground">({total})</span>
+        <CardTitle className="text-base font-medium">
+          Today
+          <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-muted px-1.5 text-xs font-medium text-muted-foreground">
+            {total}
+          </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent>
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Nothing due today. A good day to make something new ✨
-          </p>
+          <div className="flex flex-col items-center justify-center gap-3 py-8">
+            <CalendarCheck className="size-8 text-muted-foreground/60" />
+            <p className="text-sm text-muted-foreground text-center">
+              Nothing due today. A good day to make something new ✨
+            </p>
+          </div>
         ) : (
-          items.map((item) => {
-            const Icon = ICON_BY_KIND[item.kind];
-            const time = itemTime(item);
-            return (
-              <Link
-                key={`${item.kind}-${item.id}`}
-                href={`${HREF_PREFIX_BY_KIND[item.kind]}/${item.id}`}
-                className="flex items-center gap-3 rounded-md border p-2.5 transition-colors hover:bg-muted/50"
-              >
-                <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{item.title}</p>
-                  {item.subject ? (
-                    <p className="truncate text-xs text-muted-foreground">{item.subject}</p>
+          <div className="divide-y divide-border/40">
+            {items.map((item) => {
+              const Icon = ICON_BY_KIND[item.kind];
+              const time = itemTime(item);
+              return (
+                <Link
+                  key={`${item.kind}-${item.id}`}
+                  href={`${HREF_PREFIX_BY_KIND[item.kind]}/${item.id}`}
+                  className="flex items-center gap-3 border-l-2 border-l-transparent p-3 pl-3 transition-colors duration-100 ease-out hover:border-l-foreground/20 hover:bg-muted/40"
+                >
+                  <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{item.title}</p>
+                    {item.subject ? (
+                      <p className="truncate text-xs text-muted-foreground">{item.subject}</p>
+                    ) : null}
+                  </div>
+                  {time ? (
+                    <span className="shrink-0 text-xs text-muted-foreground">{time}</span>
                   ) : null}
-                </div>
-                {time ? (
-                  <span className="shrink-0 text-xs text-muted-foreground">{time}</span>
-                ) : null}
-              </Link>
-            );
-          })
+                </Link>
+              );
+            })}
+          </div>
         )}
-        {total > items.length ? (
-          <p className="pt-1 text-xs text-muted-foreground">+{total - items.length} more</p>
+        {overflow > 0 ? (
+          <div className="flex justify-end pt-3">
+            <span className="inline-flex h-5 items-center rounded-full bg-muted/60 px-2 text-xs text-muted-foreground">
+              + {overflow} more
+            </span>
+          </div>
         ) : null}
       </CardContent>
     </Card>
