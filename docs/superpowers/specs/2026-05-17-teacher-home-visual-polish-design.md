@@ -36,7 +36,7 @@ The original [`2026-05-15-teacher-home-mvp-design.md`](docs/superpowers/specs/20
 - Greeting: time-aware salutation, larger headline.
 - Zone cards: header chip for counts, divided rows (no per-row border), softer hover state, tablet grid.
 - Empty states: faded Lucide icon + existing copy, vertical centering.
-- First-load animation: staggered fade + slide-in over ~440ms total. `prefers-reduced-motion` respected.
+- First-load animation: staggered fade + slide-in over ~640ms total (last element settles at ~640ms; first content visible at 0ms). `prefers-reduced-motion` respected.
 
 **Out of scope:**
 
@@ -54,7 +54,15 @@ The original [`2026-05-15-teacher-home-mvp-design.md`](docs/superpowers/specs/20
 
 The page-level affordances that everything else inherits.
 
-- **Background:** the dashboard layout shell currently sets `bg-muted/30`. Override on the teacher home only — set the `teacher/page.tsx` root wrapper to `bg-background` and apply a very faint top-edge fade (`bg-gradient-to-b from-neutral-50 to-background`, ~200px tall, only on light mode; dark mode keeps `bg-background`). The fade is a single CSS gradient on a fixed-height wrapper at the top — no JS.
+- **Background:** the dashboard layout shell currently sets `bg-muted/30` on the layout's `<main>`. Override on the teacher home only — apply the fade directly to the `teacher/page.tsx` root wrapper as a non-repeating gradient sized to 200px:
+
+  ```tsx
+  <div className="bg-background bg-gradient-to-b from-muted/40 to-background bg-no-repeat bg-[length:100%_200px] dark:from-background space-y-8">
+    {/* page content */}
+  </div>
+  ```
+
+  Light mode: the gradient fades from `muted/40` (a design token, faint warm-grey) down to `background` over the first 200px, then the rest of the page is flat `background`. Dark mode: `dark:from-background` collapses the gradient to flat (no atmosphere — dark backgrounds already feel atmospheric on their own). No JS, no fixed-height wrapper above content, no pseudo-element.
 - **Typography scale lift:**
   - Greeting headline: `text-2xl font-bold` → `text-3xl font-semibold tracking-tight text-foreground`.
   - Card titles (zone headers, Getting Started): `text-lg` → `text-base font-medium`.
@@ -102,6 +110,19 @@ Sunday, 17 May
 - **Date line:** `<p className="text-sm text-muted-foreground mt-1">{dateLabel}</p>`. Format unchanged — `Sunday, 17 May` via `toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'long' })`.
 - **Right side:** empty. No avatar, no widget, no settings link. The greeting is a left-aligned wordmark.
 - **Replacing PageHeader:** the current code uses the shared `PageHeader` component. On the teacher home, replace it with an inline `<header>` block carrying the larger typography directly. PageHeader stays as-is for the rest of the app.
+
+  Concrete JSX to drop into `teacher/page.tsx` where `<PageHeader …>` currently sits:
+
+  ```tsx
+  <header>
+    <h1 className="text-3xl font-semibold tracking-tight">
+      {salutation}{firstName}
+    </h1>
+    <p className="mt-1 text-sm text-muted-foreground">{dateLabel}</p>
+  </header>
+  ```
+
+  Where `salutation` is computed from the local hour (`Good morning, ` / `Good afternoon, ` / `Good evening, `) and `dateLabel` is the same `toLocaleDateString('en-ZA', …)` call already in the file. `firstName` from `useAuthStore().user.firstName` with `'Teacher'` fallback.
 
 ### 4. Zone cards (Today / Grading / Drafts)
 
