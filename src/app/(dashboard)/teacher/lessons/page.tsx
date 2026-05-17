@@ -14,7 +14,7 @@ import { useAllCurriculumSubjects } from '@/hooks/useAllCurriculumSubjects';
 import { LessonListFilters } from '@/components/lessons/LessonListFilters';
 import { LessonListTable } from '@/components/lessons/LessonListTable';
 import { LessonCalendar } from '@/components/lessons/LessonCalendar';
-import { currentMonthKey, monthBounds } from '@/components/shared/MonthFilter';
+import { currentYearMonth, getMonthBounds } from '@/components/shared/MonthFilter';
 import { CalendarRange, BookOpen, Plus } from 'lucide-react';
 
 type LessonsView = 'list' | 'calendar';
@@ -25,14 +25,20 @@ export default function LessonsPage() {
   const routeDateTo = searchParams.get('dateTo') ?? undefined;
   const hasRouteDates = Boolean(routeDateFrom || routeDateTo);
 
-  // Default to current month unless the URL has explicit date filters.
-  const [month, setMonth] = useState<string>(() =>
-    hasRouteDates ? 'all' : currentMonthKey(),
-  );
+  // Default to current year + month unless the URL has explicit date filters.
+  const initialYearMonth = useMemo(() => {
+    if (hasRouteDates) {
+      return { year: String(new Date().getFullYear()), month: 'all' };
+    }
+    return currentYearMonth();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [year, setYear] = useState<string>(initialYearMonth.year);
+  const [month, setMonth] = useState<string>(initialYearMonth.month);
 
   const initialDateFilters = useMemo(() => {
     if (hasRouteDates) return { dateFrom: routeDateFrom, dateTo: routeDateTo };
-    return monthBounds(currentMonthKey()) ?? {};
+    return getMonthBounds(initialYearMonth.year, initialYearMonth.month) ?? {};
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -54,10 +60,10 @@ export default function LessonsPage() {
     }));
   }, [hasRouteDates, routeDateFrom, routeDateTo, setFilters]);
 
-  const handleMonthChange = (next: string) => {
-    setMonth(next);
-    const bounds =
-      next === 'all' ? { dateFrom: undefined, dateTo: undefined } : (monthBounds(next) ?? {});
+  const handleMonthFilterChange = (nextYear: string, nextMonth: string) => {
+    setYear(nextYear);
+    setMonth(nextMonth);
+    const bounds = getMonthBounds(nextYear, nextMonth) ?? {};
     setFilters((current) => ({ ...current, ...bounds, page: 1 }));
   };
 
@@ -102,8 +108,9 @@ export default function LessonsPage() {
         onChange={setFilters}
         classes={classes}
         subjects={subjects}
+        year={year}
         month={month}
-        onMonthChange={handleMonthChange}
+        onMonthFilterChange={handleMonthFilterChange}
       />
 
       <Tabs

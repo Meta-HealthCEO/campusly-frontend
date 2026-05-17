@@ -18,13 +18,14 @@ interface Props {
   onChange: (filters: LessonsFilters) => void;
   classes: AcademicLookupItem[];
   subjects: AcademicLookupItem[];
-  /** `'YYYY-MM'` for a specific month, `'all'` for no month filter. */
+  year: string;
+  /** `'01'`–`'12'` for a specific month, `'all'` for the whole year. */
   month: string;
-  onMonthChange: (month: string) => void;
+  onMonthFilterChange: (year: string, month: string) => void;
 }
 
 export function LessonListFilters({
-  filters, onChange, classes, subjects, month, onMonthChange,
+  filters, onChange, classes, subjects, year, month, onMonthFilterChange,
 }: Props) {
   const update = (patch: Partial<LessonsFilters>) =>
     onChange({ ...filters, ...patch, page: 1 });
@@ -82,7 +83,7 @@ export function LessonListFilters({
         </SelectContent>
       </Select>
 
-      <MonthFilter value={month} onChange={onMonthChange} />
+      <MonthFilter year={year} month={month} onChange={onMonthFilterChange} />
     </div>
   );
 }
