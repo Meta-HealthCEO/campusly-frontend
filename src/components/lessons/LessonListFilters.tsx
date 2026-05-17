@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { MonthFilter } from '@/components/shared/MonthFilter';
 import type { LessonsFilters } from '@/hooks/useLessons';
 import type { AcademicLookupItem } from '@/hooks/useAcademicLookups';
 import { Search } from 'lucide-react';
@@ -17,9 +18,14 @@ interface Props {
   onChange: (filters: LessonsFilters) => void;
   classes: AcademicLookupItem[];
   subjects: AcademicLookupItem[];
+  /** `'YYYY-MM'` for a specific month, `'all'` for no month filter. */
+  month: string;
+  onMonthChange: (month: string) => void;
 }
 
-export function LessonListFilters({ filters, onChange, classes, subjects }: Props) {
+export function LessonListFilters({
+  filters, onChange, classes, subjects, month, onMonthChange,
+}: Props) {
   const update = (patch: Partial<LessonsFilters>) =>
     onChange({ ...filters, ...patch, page: 1 });
 
@@ -76,6 +82,7 @@ export function LessonListFilters({ filters, onChange, classes, subjects }: Prop
         </SelectContent>
       </Select>
 
+      <MonthFilter value={month} onChange={onMonthChange} />
     </div>
   );
 }

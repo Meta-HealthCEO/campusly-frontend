@@ -10,12 +10,14 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LessonCard } from '@/components/student/LessonCard';
+import { MonthFilter, currentMonthKey, monthBounds } from '@/components/shared/MonthFilter';
 import { useStudentLessons } from '@/hooks/useStudentLessons';
 import type { StudentLessonListFilters } from '@/types';
 
 export default function StudentLessonsPage() {
   const [filters, setFilters] = useState<StudentLessonListFilters>({});
   const [searchInput, setSearchInput] = useState('');
+  const [month, setMonth] = useState<string>(() => currentMonthKey());
   const { lessons, loading, refresh } = useStudentLessons();
   const { lessons: lessonSubjectSource, refresh: refreshLessonSubjectSource } = useStudentLessons();
   const subjectOptions = useMemo(() => {
@@ -28,6 +30,21 @@ export default function StudentLessonsPage() {
     return Array.from(byId, ([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [lessonSubjectSource]);
+
+  // Filter lessons client-side by the selected month, comparing against
+  // `scheduledDate`. The backend list is small (a student's lessons), so
+  // no need to add server-side date params for this.
+  const visibleLessons = useMemo(() => {
+    if (month === 'all') return lessons;
+    const bounds = monthBounds(month);
+    if (!bounds) return lessons;
+    const from = new Date(`${bounds.dateFrom}T00:00:00`).getTime();
+    const to = new Date(`${bounds.dateTo}T23:59:59.999`).getTime();
+    return lessons.filter((l) => {
+      const t = new Date(l.scheduledDate).getTime();
+      return !Number.isNaN(t) && t >= from && t <= to;
+    });
+  }, [lessons, month]);
 
   useEffect(() => { void refresh(filters); }, [filters, refresh]);
   useEffect(() => { void refreshLessonSubjectSource({}); }, [refreshLessonSubjectSource]);
@@ -93,19 +110,24 @@ export default function StudentLessonsPage() {
             <SelectItem value="planned">Upcoming</SelectItem>
           </SelectContent>
         </Select>
+        <MonthFilter value={month} onChange={setMonth} />
       </div>
 
       {loading ? (
         <LoadingSpinner />
-      ) : lessons.length === 0 ? (
+      ) : visibleLessons.length === 0 ? (
         <EmptyState
           icon={BookOpen}
-          title="No lessons yet"
-          description="Your teacher hasn't shared any lessons with you yet."
+          title={lessons.length === 0 ? 'No lessons yet' : 'No lessons this month'}
+          description={
+            lessons.length === 0
+              ? "Your teacher hasn't shared any lessons with you yet."
+              : 'Try a different month or clear the month filter.'
+          }
         />
       ) : (
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {lessons.map((l) => (
+          {visibleLessons.map((l) => (
             <LessonCard key={l.id} lesson={l} />
           ))}
         </div>

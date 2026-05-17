@@ -14,6 +14,7 @@ import { useAllCurriculumSubjects } from '@/hooks/useAllCurriculumSubjects';
 import { LessonListFilters } from '@/components/lessons/LessonListFilters';
 import { LessonListTable } from '@/components/lessons/LessonListTable';
 import { LessonCalendar } from '@/components/lessons/LessonCalendar';
+import { currentMonthKey, monthBounds } from '@/components/shared/MonthFilter';
 import { CalendarRange, BookOpen, Plus } from 'lucide-react';
 
 type LessonsView = 'list' | 'calendar';
@@ -22,23 +23,43 @@ export default function LessonsPage() {
   const searchParams = useSearchParams();
   const routeDateFrom = searchParams.get('dateFrom') ?? undefined;
   const routeDateTo = searchParams.get('dateTo') ?? undefined;
-  const routeDateFilters = useMemo(() => ({
-    dateFrom: routeDateFrom,
-    dateTo: routeDateTo,
-  }), [routeDateFrom, routeDateTo]);
-  const { items, loading, filters, setFilters, deleteLesson, cloneLesson } = useLessons(routeDateFilters);
+  const hasRouteDates = Boolean(routeDateFrom || routeDateTo);
+
+  // Default to current month unless the URL has explicit date filters.
+  const [month, setMonth] = useState<string>(() =>
+    hasRouteDates ? 'all' : currentMonthKey(),
+  );
+
+  const initialDateFilters = useMemo(() => {
+    if (hasRouteDates) return { dateFrom: routeDateFrom, dateTo: routeDateTo };
+    return monthBounds(currentMonthKey()) ?? {};
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const { items, loading, filters, setFilters, deleteLesson, cloneLesson } =
+    useLessons(initialDateFilters);
   const { classes, subjects: academicSubjects } = useAcademicLookups();
   const { subjects: capsSubjects } = useAllCurriculumSubjects();
   const [view, setView] = useState<LessonsView>('list');
 
+  // If the URL gets explicit dates after mount, sync them in and clear the month UI.
   useEffect(() => {
-    if (!routeDateFilters.dateFrom && !routeDateFilters.dateTo) return;
+    if (!hasRouteDates) return;
+    setMonth('all');
     setFilters((current) => ({
       ...current,
-      ...routeDateFilters,
+      dateFrom: routeDateFrom,
+      dateTo: routeDateTo,
       page: 1,
     }));
-  }, [routeDateFilters, setFilters]);
+  }, [hasRouteDates, routeDateFrom, routeDateTo, setFilters]);
+
+  const handleMonthChange = (next: string) => {
+    setMonth(next);
+    const bounds =
+      next === 'all' ? { dateFrom: undefined, dateTo: undefined } : (monthBounds(next) ?? {});
+    setFilters((current) => ({ ...current, ...bounds, page: 1 }));
+  };
 
   // Merge academic + CAPS subjects, deduped by lowercase name. The backend
   // filter accepts either ID flavour (academic Subject _id OR CurriculumNode
@@ -81,6 +102,8 @@ export default function LessonsPage() {
         onChange={setFilters}
         classes={classes}
         subjects={subjects}
+        month={month}
+        onMonthChange={handleMonthChange}
       />
 
       <Tabs
