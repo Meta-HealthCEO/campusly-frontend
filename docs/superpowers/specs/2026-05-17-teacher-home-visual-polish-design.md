@@ -57,7 +57,7 @@ The page-level affordances that everything else inherits.
 - **Background:** the dashboard layout shell currently sets `bg-muted/30` on the layout's `<main>`. Override on the teacher home only — apply the fade directly to the `teacher/page.tsx` root wrapper as a non-repeating gradient sized to 200px:
 
   ```tsx
-  <div className="bg-background bg-gradient-to-b from-muted/40 to-background bg-no-repeat bg-[length:100%_200px] dark:from-background space-y-8">
+  <div className="bg-background bg-linear-to-b from-muted/40 to-background bg-no-repeat bg-size-[100%_200px] dark:from-background space-y-8">
     {/* page content */}
   </div>
   ```
