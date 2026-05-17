@@ -47,32 +47,42 @@ export default function TeacherHomePage() {
 
   return (
     <div className="space-y-8 bg-background bg-linear-to-b from-muted/40 to-background bg-no-repeat bg-size-[100%_200px] dark:from-background">
-      <header>
+      <header className="motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300">
         <h1 className="text-3xl font-semibold tracking-tight">
           {salutation}{firstName}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">{dateLabel}</p>
       </header>
 
-      <AIQuickMakeHero />
+      <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-300 motion-safe:delay-[80ms]">
+        <AIQuickMakeHero />
+      </div>
 
       {showChecklist ? (
-        <GettingStartedCard
-          scopeSet={scopeSet}
-          hasClass={onboarding.hasClass}
-          hasFirstContent={onboarding.hasFirstContent}
-          hasStudent={onboarding.hasStudent}
-          classCode={school?.joinCode ?? null}
-        />
+        <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-300 motion-safe:delay-[160ms]">
+          <GettingStartedCard
+            scopeSet={scopeSet}
+            hasClass={onboarding.hasClass}
+            hasFirstContent={onboarding.hasFirstContent}
+            hasStudent={onboarding.hasStudent}
+            classCode={school?.joinCode ?? null}
+          />
+        </div>
       ) : null}
 
       {dashboard.loading ? (
         <DashboardSkeleton />
       ) : anyZoneHasContent ? (
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          <TodayZone items={dashboard.today} total={dashboard.todayTotal} />
-          <GradingZone items={dashboard.grading} total={dashboard.gradingTotal} />
-          <DraftsZone items={dashboard.drafts} total={dashboard.draftsTotal} />
+          <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1.5 motion-safe:duration-300 motion-safe:delay-[240ms]">
+            <TodayZone items={dashboard.today} total={dashboard.todayTotal} />
+          </div>
+          <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1.5 motion-safe:duration-300 motion-safe:delay-[290ms]">
+            <GradingZone items={dashboard.grading} total={dashboard.gradingTotal} />
+          </div>
+          <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1.5 motion-safe:duration-300 motion-safe:delay-[340ms]">
+            <DraftsZone items={dashboard.drafts} total={dashboard.draftsTotal} />
+          </div>
         </div>
       ) : null}
     </div>
