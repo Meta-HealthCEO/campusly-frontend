@@ -29,7 +29,32 @@ interface RawAttendanceRecord {
   editHistory?: AttendanceEditHistoryEntry[];
 }
 
-const today = toISODate(new Date());
+export interface TeacherClassOption {
+  id: string;
+  label: string;       // "Grade 11A · Mathematics" or "Grade 11A · Homeroom"
+  isHomeroom: boolean;
+  students: Student[];
+}
+
+interface TeachingLoadResponse {
+  homeroom: { class: SchoolClass; subject?: { name?: string } | null; students: Student[] } | null;
+  subjectClasses: { class: SchoolClass; subject: { name?: string } | null; students: Student[] }[];
+}
+
+function buildOption(entry: { class: SchoolClass; subject?: { name?: string } | null; students: Student[] }, isHomeroom: boolean): TeacherClassOption {
+  const cls = entry.class;
+  const gradeName = cls.grade?.name ?? cls.gradeName ?? '';
+  const subjectName = entry.subject?.name ?? (isHomeroom ? 'Homeroom' : '');
+  const label = [gradeName ? `${gradeName} ${cls.name}` : cls.name, subjectName]
+    .filter(Boolean)
+    .join(' · ');
+  return {
+    id: resolveId(cls),
+    label,
+    isHomeroom,
+    students: entry.students,
+  };
+}
 
 function recordsToAttendanceMap(records: RawAttendanceRecord[]): Map<string, AttendanceEntry> {
   const map = new Map<string, AttendanceEntry>();
@@ -51,12 +76,19 @@ function defaultPresentMap(students: Student[]): Map<string, AttendanceEntry> {
   return map;
 }
 
-export function useTeacherAttendance() {
+interface UseTeacherAttendanceOptions {
+  classId?: string;            // explicit class to load (e.g. from URL)
+  initialDate?: string;        // YYYY-MM-DD, defaults to today
+  initialPeriod?: number;      // defaults to 1
+}
+
+export function useTeacherAttendance(options: UseTeacherAttendanceOptions = {}) {
   const { user } = useAuthStore();
-  const [homeClass, setHomeClass] = useState<SchoolClass | null>(null);
+  const [classes, setClasses] = useState<TeacherClassOption[]>([]);
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(options.classId ?? null);
   const [students, setStudents] = useState<Student[]>([]);
-  const [selectedDate, setSelectedDate] = useState(today);
-  const [period, setPeriodState] = useState<number>(1);
+  const [selectedDate, setSelectedDate] = useState(options.initialDate ?? toISODate(new Date()));
+  const [period, setPeriodState] = useState<number>(options.initialPeriod ?? 1);
   const [allRecords, setAllRecords] = useState<RawAttendanceRecord[]>([]);
   const [attendance, setAttendance] = useState<Map<string, AttendanceEntry>>(new Map());
   const [existingLoaded, setExistingLoaded] = useState(false);
@@ -65,12 +97,12 @@ export function useTeacherAttendance() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const selectedClass = classes.find((c) => c.id === selectedClassId) ?? null;
+
   const loadExistingAttendance = useCallback(
-    async (classId: string, date: string, homeStudents: Student[]) => {
+    async (classId: string, date: string, classStudents: Student[]) => {
       try {
-        const res = await apiClient.get(`/attendance/class/${classId}`, {
-          params: { date },
-        });
+        const res = await apiClient.get(`/attendance/class/${classId}`, { params: { date } });
         const records = unwrapList<RawAttendanceRecord>(res);
         const filtered = records.filter((record) => (record.period ?? 1) === period);
 
@@ -83,19 +115,20 @@ export function useTeacherAttendance() {
           return;
         }
 
-        setAttendance(defaultPresentMap(homeStudents));
+        setAttendance(defaultPresentMap(classStudents));
         setExistingLoaded(false);
       } catch {
         toast.error('Could not load previous attendance. Refresh before saving.');
         setAllRecords([]);
         setLoadError(true);
-        setAttendance(defaultPresentMap(homeStudents));
+        setAttendance(defaultPresentMap(classStudents));
         setExistingLoaded(false);
       }
     },
     [period],
   );
 
+  // Initial load: fetch the teacher's classes, resolve the selected class, load attendance.
   useEffect(() => {
     if (!user?.id) return;
     let cancelled = false;
@@ -105,19 +138,26 @@ export function useTeacherAttendance() {
       try {
         const res = await apiClient.get('/academic/teacher/me/teaching-load');
         if (cancelled) return;
-        const data = unwrapResponse<{
-          homeroom: { class: SchoolClass; students: Student[] } | null;
-          subjectClasses: unknown[];
-        }>(res);
+        const data = unwrapResponse<TeachingLoadResponse>(res);
 
-        const mine = data.homeroom?.class ?? null;
-        const homeStudents = data.homeroom?.students ?? [];
-        setHomeClass(mine);
+        const opts: TeacherClassOption[] = [];
+        if (data.homeroom) opts.push(buildOption(data.homeroom, true));
+        for (const sc of data.subjectClasses) opts.push(buildOption(sc, false));
+        // Homeroom is pinned first by construction; sort the rest alphabetically.
+        const homeroom = opts.filter((o) => o.isHomeroom);
+        const rest = opts.filter((o) => !o.isHomeroom).sort((a, b) => a.label.localeCompare(b.label));
+        const sorted = [...homeroom, ...rest];
+        setClasses(sorted);
 
-        if (!mine) return;
+        const resolvedId = (options.classId && sorted.some((c) => c.id === options.classId))
+          ? options.classId
+          : (sorted[0]?.id ?? null);
+        setSelectedClassId(resolvedId);
 
-        setStudents(homeStudents);
-        await loadExistingAttendance(mine.id, today, homeStudents);
+        if (!resolvedId) return;
+        const target = sorted.find((c) => c.id === resolvedId)!;
+        setStudents(target.students);
+        await loadExistingAttendance(resolvedId, selectedDate, target.students);
       } catch (err: unknown) {
         if (cancelled) return;
         console.error('Failed to load attendance data', err);
@@ -129,18 +169,32 @@ export function useTeacherAttendance() {
 
     init();
     return () => { cancelled = true; };
-  }, [user?.id, loadExistingAttendance]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  const changeClass = useCallback(
+    async (nextClassId: string) => {
+      const target = classes.find((c) => c.id === nextClassId);
+      if (!target) return;
+      setSelectedClassId(nextClassId);
+      setStudents(target.students);
+      setSaved(false);
+      setExistingLoaded(false);
+      await loadExistingAttendance(nextClassId, selectedDate, target.students);
+    },
+    [classes, selectedDate, loadExistingAttendance],
+  );
 
   const changeDate = useCallback(
     async (date: string) => {
       setSelectedDate(date);
       setSaved(false);
       setExistingLoaded(false);
-      if (homeClass) {
-        await loadExistingAttendance(homeClass.id, date, students);
+      if (selectedClass) {
+        await loadExistingAttendance(selectedClass.id, date, students);
       }
     },
-    [homeClass, students, loadExistingAttendance],
+    [selectedClass, students, loadExistingAttendance],
   );
 
   const setPeriod = useCallback(
@@ -148,13 +202,11 @@ export function useTeacherAttendance() {
       setPeriodState(nextPeriod);
       setSaved(false);
       const filtered = allRecords.filter((record) => (record.period ?? 1) === nextPeriod);
-
       if (filtered.length > 0) {
         setAttendance(recordsToAttendanceMap(filtered));
         setExistingLoaded(true);
         return;
       }
-
       setAttendance(defaultPresentMap(students));
       setExistingLoaded(false);
     },
@@ -189,14 +241,14 @@ export function useTeacherAttendance() {
     setSaved(false);
   }, []);
 
-  const markAllPresent = useCallback(() => {
+  const markAll = useCallback((status: AttendanceStatus) => {
     setAttendance((prev) => {
       const next = new Map(prev);
       students.forEach((student) => {
         const existing = next.get(student.id);
         next.set(student.id, {
-          status: 'present',
-          note: existing?.note,
+          status,
+          note: existing?.note,        // preserve notes
           editHistory: existing?.editHistory,
         });
       });
@@ -206,24 +258,12 @@ export function useTeacherAttendance() {
   }, [students]);
 
   const saveAttendance = useCallback(async () => {
-    if (!user?.schoolId) {
-      toast.error('School information not available');
-      return;
-    }
-    if (!homeClass) {
-      toast.error('No home class assigned');
-      return;
-    }
-    if (students.length === 0) {
-      toast.error('No students to mark attendance for');
-      return;
-    }
-    if (selectedDate > today) {
-      toast.error('Cannot record attendance for a future date');
-      return;
-    }
+    if (!user?.schoolId) { toast.error('School information not available'); return; }
+    if (!selectedClass) { toast.error('No class selected'); return; }
+    if (students.length === 0) { toast.error('No students to mark attendance for'); return; }
+    if (selectedDate > toISODate(new Date())) { toast.error('Cannot record attendance for a future date'); return; }
     if (loadError) {
-      toast.error('Attendance could not be verified. Refresh before saving to avoid overwriting records.');
+      toast.error('Attendance could not be verified. Refresh before saving.');
       return;
     }
 
@@ -240,12 +280,11 @@ export function useTeacherAttendance() {
     setSaving(true);
     try {
       await apiClient.post('/attendance/bulk', {
-        classId: homeClass.id,
-        date: `${selectedDate}T00:00:00.000Z`,
+        classId: selectedClass.id,
+        date: selectedDate, // plain YYYY-MM-DD; backend accepts both formats since Task 1
         period,
         records,
       });
-
       setAllRecords((prev) => [
         ...prev.filter((record) => (record.period ?? 1) !== period),
         ...records.map((record) => ({
@@ -258,21 +297,19 @@ export function useTeacherAttendance() {
       setLoadError(false);
       setSaved(true);
       setExistingLoaded(true);
-      toast.success(
-        isUpdate
-          ? `Attendance updated for ${selectedDate}`
-          : `Attendance saved for ${selectedDate}`,
-      );
+      toast.success(isUpdate
+        ? `Attendance updated for ${selectedDate}`
+        : `Attendance saved for ${selectedDate}`);
     } catch (err: unknown) {
-      const msg = extractErrorMessage(err, '');
-      toast.error(msg || 'Failed to save attendance. Please try again.');
+      toast.error(extractErrorMessage(err, 'Failed to save attendance. Please try again.'));
     } finally {
       setSaving(false);
     }
-  }, [user?.schoolId, homeClass, students, selectedDate, period, attendance, existingLoaded, loadError]);
+  }, [user?.schoolId, selectedClass, students, selectedDate, period, attendance, existingLoaded, loadError]);
 
   return {
-    homeClass,
+    classes,
+    selectedClass,
     students,
     selectedDate,
     period,
@@ -282,11 +319,12 @@ export function useTeacherAttendance() {
     saving,
     saved,
     loading,
+    changeClass,
     changeDate,
     setPeriod,
     updateStatus,
     updateNote,
-    markAllPresent,
+    markAll,
     saveAttendance,
   };
 }
