@@ -66,9 +66,11 @@ export function AttendanceTodayTab(props: AttendanceTodayTabProps) {
   }, [students, search]);
 
   const stepDate = (delta: number) => {
-    const d = new Date(selectedDate);
-    d.setDate(d.getDate() + delta);
-    const next = toISODate(d);
+    const [y, m, d] = selectedDate.split('-').map(Number);
+    if (!y || !m || !d) return;
+    const local = new Date(y, m - 1, d);   // local-time midnight of selectedDate
+    local.setDate(local.getDate() + delta);
+    const next = toISODate(local);
     if (next > todayISO) return; // can't step into the future
     void onChangeDate(next);
   };

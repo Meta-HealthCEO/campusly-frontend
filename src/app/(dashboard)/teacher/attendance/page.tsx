@@ -145,6 +145,7 @@ export default function TeacherAttendancePage() {
             classId={hook.selectedClass?.id ?? null}
             period={hook.period}
             students={hook.students}
+            onSetPeriod={hook.setPeriod}
             onRangeChange={handleHistoryRange}
           />
         </TabsContent>

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { AttendanceDayEditDialog } from '@/components/attendance/AttendanceDayEditDialog';
 import { useAttendanceHistory, type HistoryStatus } from '@/hooks/useAttendanceHistory';
@@ -15,6 +16,7 @@ interface AttendanceHistoryTabProps {
   classId: string | null;
   period: number;
   students: Student[];
+  onSetPeriod: (period: number) => void;
   onRefreshParent?: () => void;                     // if the parent wants to refresh after edit
   onRangeChange?: (dateFrom: string, dateTo: string) => void;  // so the page can scope PDF export to the visible grid
 }
@@ -61,7 +63,7 @@ function buildMonthRange(reference: Date): { dateFrom: string; dateTo: string; d
   return { dateFrom: toISODate(first), dateTo: toISODate(last), dates };
 }
 
-export function AttendanceHistoryTab({ classId, period, students, onRefreshParent, onRangeChange }: AttendanceHistoryTabProps) {
+export function AttendanceHistoryTab({ classId, period, students, onSetPeriod, onRefreshParent, onRangeChange }: AttendanceHistoryTabProps) {
   const [view, setView] = useState<GridView>('week');
   const [reference, setReference] = useState<Date>(new Date());
   const [editingDate, setEditingDate] = useState<string | null>(null);
@@ -159,6 +161,14 @@ export function AttendanceHistoryTab({ classId, period, students, onRefreshParen
             <ChevronRight className="h-4 w-4" />
           </Button>
           <Button variant="outline" size="sm" onClick={handleToday}>Today</Button>
+          <Select value={String(period)} onValueChange={(v: unknown) => onSetPeriod(Number(v as string))}>
+            <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((p) => (
+                <SelectItem key={p} value={String(p)}>Period {p}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <span className="ml-2 text-sm text-muted-foreground">
             {range.dateFrom} → {range.dateTo}
           </span>
