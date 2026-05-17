@@ -20,7 +20,9 @@ export type ApiRecord = Record<string, any>;
 
 /** Unwrap a single-object response from the backend envelope. */
 export function unwrapResponse<T = ApiRecord>(response: { data: { data?: unknown } }): T {
-  const raw = response.data.data ?? response.data;
+  const raw = Object.prototype.hasOwnProperty.call(response.data, 'data')
+    ? response.data.data
+    : response.data;
   return raw as T;
 }
 

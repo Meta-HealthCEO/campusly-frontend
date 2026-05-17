@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -51,10 +51,20 @@ export function CourseBuilderLessonEditor({
           </div>
         </div>
 
-        <LessonTitleField lesson={lesson} onUpdate={onUpdate} readOnly={readOnly} />
+        <LessonTitleField
+          key={`title-${lesson.id}-${lesson.title}`}
+          lesson={lesson}
+          onUpdate={onUpdate}
+          readOnly={readOnly}
+        />
         <LessonSourceDisplay lesson={lesson} />
         {lesson.type === 'quiz' && (
-          <QuizGatingFields lesson={lesson} onUpdate={onUpdate} readOnly={readOnly} />
+          <QuizGatingFields
+            key={`quiz-${lesson.id}-${lesson.passMarkPercent}-${lesson.maxAttempts ?? 'unlimited'}`}
+            lesson={lesson}
+            onUpdate={onUpdate}
+            readOnly={readOnly}
+          />
         )}
         <RequiredToAdvanceField lesson={lesson} onUpdate={onUpdate} readOnly={readOnly} />
       </CardContent>
@@ -74,10 +84,6 @@ function LessonTitleField({
   readOnly: boolean;
 }) {
   const [localTitle, setLocalTitle] = useState(lesson.title);
-
-  useEffect(() => {
-    setLocalTitle(lesson.title);
-  }, [lesson.id, lesson.title]);
 
   const handleBlur = async () => {
     const trimmed = localTitle.trim();
@@ -110,7 +116,7 @@ function LessonSourceDisplay({ lesson }: { lesson: CourseLesson }) {
     content: 'Content Library resource',
     chapter: 'Textbook chapter',
     homework: 'Homework assignment',
-    quiz: 'Quiz from Question Bank',
+    quiz: 'Saved quiz questions',
   };
 
   return (
@@ -148,11 +154,6 @@ function QuizGatingFields({
   const [maxAttempts, setMaxAttempts] = useState(
     lesson.maxAttempts === null ? '' : String(lesson.maxAttempts),
   );
-
-  useEffect(() => {
-    setPassMark(String(lesson.passMarkPercent));
-    setMaxAttempts(lesson.maxAttempts === null ? '' : String(lesson.maxAttempts));
-  }, [lesson.id, lesson.passMarkPercent, lesson.maxAttempts]);
 
   const savePassMark = async () => {
     const n = Number(passMark);

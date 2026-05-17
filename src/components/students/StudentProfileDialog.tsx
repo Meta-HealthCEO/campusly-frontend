@@ -15,7 +15,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useStudentEditor } from '@/hooks/useStudentEditor';
 import type { StudentProfileFormData } from '@/hooks/useStudentEditor';
 import { PersonalEditTab } from './profile-tabs/PersonalEditTab';
-import { MedicalEditTab } from './profile-tabs/MedicalEditTab';
 import { EnrolmentEditTab } from './profile-tabs/EnrolmentEditTab';
 
 interface StudentProfileDialogProps {
@@ -32,9 +31,22 @@ function toDateInputValue(iso?: string): string {
   return `${y}-${m}-${day}`;
 }
 
+function getPopulatedUser(student: import('@/types').Student): {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+} {
+  if (student.user) return student.user;
+  const userId = student.userId as unknown;
+  if (typeof userId === 'object' && userId !== null) {
+    return userId as { firstName?: string; lastName?: string; email?: string; phone?: string };
+  }
+  return {};
+}
+
 function buildInitialForm(student: import('@/types').Student): Partial<StudentProfileFormData> {
-  const u = student.user ?? { firstName: '', lastName: '', email: '', phone: undefined };
-  const mp = student.medicalProfile;
+  const u = getPopulatedUser(student);
   return {
     firstName: u.firstName ?? '',
     lastName: u.lastName ?? '',
@@ -51,15 +63,6 @@ function buildInitialForm(student: import('@/types').Student): Partial<StudentPr
     transportRequired: student.transportRequired ?? false,
     afterCareRequired: student.afterCareRequired ?? false,
     enrollmentStatus: student.enrollmentStatus ?? 'active',
-    medicalProfile: mp
-      ? {
-          allergies: mp.allergies ?? [],
-          conditions: mp.conditions ?? [],
-          bloodType: mp.bloodType ?? '',
-          emergencyContacts: mp.emergencyContacts ?? [],
-          medicalAidInfo: mp.medicalAidInfo,
-        }
-      : { allergies: [], conditions: [], bloodType: '', emergencyContacts: [] },
   };
 }
 
@@ -77,6 +80,8 @@ export function StudentProfileDialog({ studentId, onClose }: StudentProfileDialo
   function handleChange(patch: Partial<StudentProfileFormData>) {
     setForm((prev) => ({ ...prev, ...patch }));
   }
+
+  const displayUser = student ? getPopulatedUser(student) : {};
 
   async function handleSave() {
     setSaving(true);
@@ -100,7 +105,7 @@ export function StudentProfileDialog({ studentId, onClose }: StudentProfileDialo
         <DialogHeader>
           <DialogTitle>
             {student
-              ? `Edit Profile — ${student.user?.firstName ?? ''} ${student.user?.lastName ?? ''}`.trim()
+              ? `Edit Profile - ${displayUser.firstName ?? ''} ${displayUser.lastName ?? ''}`.trim()
               : 'Edit Student Profile'}
           </DialogTitle>
         </DialogHeader>
@@ -114,14 +119,10 @@ export function StudentProfileDialog({ studentId, onClose }: StudentProfileDialo
             <Tabs defaultValue="personal">
               <TabsList className="flex-wrap mb-4">
                 <TabsTrigger value="personal">Personal</TabsTrigger>
-                <TabsTrigger value="medical">Medical</TabsTrigger>
                 <TabsTrigger value="enrolment">Enrolment</TabsTrigger>
               </TabsList>
               <TabsContent value="personal">
                 <PersonalEditTab form={form} onChange={handleChange} />
-              </TabsContent>
-              <TabsContent value="medical">
-                <MedicalEditTab form={form} onChange={handleChange} />
               </TabsContent>
               <TabsContent value="enrolment">
                 <EnrolmentEditTab form={form} student={student} onChange={handleChange} />

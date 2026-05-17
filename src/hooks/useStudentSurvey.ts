@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
+import { normalizeWellbeingSurvey } from '@/lib/wellbeing-helpers';
 import { toast } from 'sonner';
 import type { WellbeingSurvey, SubmitSurveyResponsePayload } from '@/types';
 
@@ -15,8 +16,8 @@ export function useStudentSurvey() {
     try {
       setLoading(true);
       const response = await apiClient.get('/wellbeing/surveys/active');
-      const data = unwrapResponse<WellbeingSurvey | null>(response);
-      setActiveSurvey(data);
+      const data = unwrapResponse<unknown>(response);
+      setActiveSurvey(normalizeWellbeingSurvey(data));
     } catch (err: unknown) {
       console.error('Failed to fetch active survey', err);
     } finally {

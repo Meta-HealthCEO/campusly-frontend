@@ -170,7 +170,7 @@ export default function PaperDetailPage({
         <TabsList>
           <TabsTrigger value="paper">Paper</TabsTrigger>
           <TabsTrigger value="memo">Memo</TabsTrigger>
-          <TabsTrigger value="assignments">Assignments</TabsTrigger>
+          <TabsTrigger value="assignments">Assign</TabsTrigger>
           <TabsTrigger value="marking">Marking</TabsTrigger>
         </TabsList>
         <TabsContent value="paper">

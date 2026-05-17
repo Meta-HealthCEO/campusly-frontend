@@ -260,7 +260,7 @@ export default function TeacherQuestionsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Question Bank"
+        title="Saved Questions"
         description="Curated questions you've committed from past papers. Generate a new paper to add more, then bookmark the keepers."
       >
         <Button variant="outline" onClick={() => setUploadOpen(true)}>

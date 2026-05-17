@@ -30,14 +30,6 @@ export function useParentAcademics(): ParentAcademicsResult {
 
     async function fetchData() {
       try {
-        // Fetch homework (shared across children)
-        let allHomework: Homework[] = [];
-        try {
-          const hwRes = await apiClient.get('/homework');
-          allHomework = unwrapList<Homework>(hwRes);
-        } catch { /* no homework */ }
-
-        // Fetch marks per child
         const results: ChildAcademicData[] = [];
         for (const child of children) {
           let marks: StudentGrade[] = [];
@@ -46,9 +38,11 @@ export function useParentAcademics(): ParentAcademicsResult {
             marks = unwrapList<StudentGrade>(mRes);
           } catch { /* no marks */ }
 
-          const childHomework = child.classId
-            ? allHomework.filter((hw) => hw.classId === child.classId)
-            : allHomework;
+          let childHomework: Homework[] = [];
+          try {
+            const hwRes = await apiClient.get(`/homework/parent/${child.id}`);
+            childHomework = unwrapList<Homework>(hwRes);
+          } catch { /* no homework */ }
 
           const userId = child.userId as { firstName?: string; lastName?: string } | string | undefined;
           const populatedUser = typeof userId === 'object' && userId !== null ? userId : undefined;

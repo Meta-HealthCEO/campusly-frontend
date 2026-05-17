@@ -53,7 +53,7 @@ export function PapersNewWizard() {
   // session — used to decide if we should prefill from subject defaults when
   // a subject resolves later.
   const [mixTouched, setMixTouched] = useState(false);
-  // Opt-in: pull from the teacher's curated Question Bank vs. generate
+  // Opt-in: pull from the teacher's saved questions vs. generate
   // every question fresh. Default OFF — fresh generations don't risk
   // recycling questions the teacher hasn't committed to the bank yet.
   const [useExistingBank, setUseExistingBank] = useState(false);

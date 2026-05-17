@@ -4,8 +4,8 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { unwrapResponse } from '@/lib/api-helpers';
 
 export type ModuleKey =
-  | 'academic' | 'communication' | 'library' | 'wallet' | 'tuck_shop'
-  | 'achiever' | 'sports' | 'incident_wellbeing' | 'careers'
+  | 'academic' | 'communication' | 'library' | 'wallet' | 'tuckshop'
+  | 'homework' | 'ai_tools' | 'achiever' | 'sport' | 'incident_wellbeing' | 'careers'
   | 'portfolio';
 
 interface SchoolModulesPayload {

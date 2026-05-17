@@ -43,6 +43,12 @@ export interface AssignmentClassPush {
   assignedAt: string;
 }
 
+export interface AssignmentAssessmentLink {
+  _id: string;
+  classId: string;
+  assessmentId: string;
+}
+
 // ─── Populated refs ─────────────────────────────────────────────────────────
 
 export interface PopulatedSubject {
@@ -78,7 +84,7 @@ export interface Assignment {
   brief: string;
   subjectId: string | PopulatedSubject;
   gradeId: string | PopulatedGrade;
-  curriculumNodeId?: string | PopulatedCurriculumNode | null;
+  topicIds: Array<string | PopulatedCurriculumNode>;
   totalMarks: number;
   rubric: RubricCriterion[];
   submissionFormat: AssignmentSubmissionFormat;
@@ -88,6 +94,7 @@ export interface Assignment {
   latePenaltyPercent?: number;
   gradebookAutoPublish: boolean;
   assessmentId?: string | null;
+  assessmentLinks?: AssignmentAssessmentLink[];
   version: number;
   isDeleted: boolean;
   createdAt: string;
@@ -101,7 +108,7 @@ export interface CreateAssignmentInput {
   brief: string;
   subjectId: string;
   gradeId: string;
-  curriculumNodeId?: string;
+  topicIds: string[];
   totalMarks: number;
   rubric: RubricCriterionInput[];
   submissionFormat: AssignmentSubmissionFormat;
@@ -133,7 +140,7 @@ export interface CreateClassPushInput {
 export interface GenerateAssignmentRequest {
   subjectId: string;
   gradeId: string;
-  curriculumNodeId?: string;
+  topicIds: string[];
   totalMarks: number;
   lengthHint?: AssignmentLengthHint;
   criterionCount: number;

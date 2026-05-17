@@ -84,12 +84,6 @@ export function useTeacherHomeworkDetail(homeworkId: string) {
           const backendStatus =
             raw.status === 'assigned' ? 'assigned' : raw.status;
 
-          // Resolve resource if populated
-          const resourceObj =
-            typeof raw.resourceId === 'object' && raw.resourceId !== null
-              ? (raw.resourceId as Record<string, unknown>)
-              : null;
-
           // Populated arrays / refs from backend service.getById
           const exerciseQs = Array.isArray(raw.exerciseQuestionIds)
             ? (raw.exerciseQuestionIds as unknown[]).filter(
@@ -109,9 +103,9 @@ export function useTeacherHomeworkDetail(homeworkId: string) {
               : null;
 
           setHomework({
-            id: (raw.id as string) ?? '',
+            id: (raw.id as string) ?? (raw._id as string) ?? '',
             title: raw.title as string,
-            description: raw.description as string,
+            description: typeof raw.description === 'string' ? raw.description : '',
             subjectName: (subjectObj?.name as string) ?? '',
             className: (classObj?.name as string) ?? '',
             dueDate: raw.dueDate as string,
@@ -119,11 +113,11 @@ export function useTeacherHomeworkDetail(homeworkId: string) {
             status: backendStatus as string,
             attachments: (raw.attachments as string[]) ?? [],
             createdAt: (raw.createdAt as string) ?? '',
-            resourceId: resourceObj
-              ? ((resourceObj._id as string) ?? (resourceObj.id as string))
-              : (typeof raw.resourceId === 'string' ? raw.resourceId as string : undefined),
-            resourceType: (resourceObj?.type as string) ?? undefined,
-            resourceTitle: (resourceObj?.title as string) ?? undefined,
+            resourceId: contentObj
+              ? ((contentObj._id as string) ?? (contentObj.id as string))
+              : (typeof raw.contentResourceId === 'string' ? raw.contentResourceId as string : undefined),
+            resourceType: (contentObj?.type as string) ?? undefined,
+            resourceTitle: (contentObj?.title as string) ?? undefined,
             version: (raw.version as number) ?? 1,
             type: (raw.type as 'quiz' | 'reading' | 'exercise') ?? 'quiz',
             exerciseQuestions: exerciseQs.map((q) => ({

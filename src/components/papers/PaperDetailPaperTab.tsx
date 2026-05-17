@@ -115,7 +115,7 @@ export function PaperDetailPaperTab({ paper, onChanged }: Props) {
               No questions in this section yet.
               {paper.aiGenerated
                 ? ''
-                : ' Add questions from the Question Bank (empty until Module 4).'}
+                : ' Add custom questions or generate them with AI.'}
             </p>
           )}
 

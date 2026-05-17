@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,13 +16,8 @@ export default function StudentVideoPlayerPage() {
   const router = useRouter();
   const videoId = typeof params.id === 'string' ? params.id : '';
 
-  const { videos, loading, fetchVideos } = useVideoLibrary();
+  const { videos, loading } = useVideoLibrary();
   const { progress, saveProgress } = useVideoPlayer();
-
-  useEffect(() => {
-    fetchVideos();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const video = useMemo(
     () => videos.find((v) => v.id === videoId) ?? null,

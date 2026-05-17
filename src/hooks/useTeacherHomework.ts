@@ -109,7 +109,6 @@ export function useTeacherHomework() {
         const payload = {
           ...data,
           totalMarks: Number(data.totalMarks),
-          schoolId: user?.schoolId,
           dueDate: new Date(data.dueDate).toISOString(),
         };
         const response = await apiClient.post('/homework', payload);
@@ -129,7 +128,7 @@ export function useTeacherHomework() {
         return false;
       }
     },
-    [user?.schoolId],
+    [],
   );
 
   const deleteHomework = useCallback(

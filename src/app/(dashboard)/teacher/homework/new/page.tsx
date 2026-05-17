@@ -10,7 +10,6 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { WizardFooter } from '@/components/shared/WizardFooter';
 import { useTeacherHomeworkWizardStore } from '@/stores/useTeacherHomeworkWizardStore';
 import { useTeacherHomeworkMutations } from '@/hooks/useTeacherHomework';
-import { useAuthStore } from '@/stores/useAuthStore';
 import { HomeworkWizardStep1, isHomeworkStep1Ready } from '@/components/homework/HomeworkWizardStep1';
 import { HomeworkWizardStep2, isHomeworkStep2Ready } from '@/components/homework/HomeworkWizardStep2';
 import { HomeworkWizardStep3 } from '@/components/homework/HomeworkWizardStep3';
@@ -19,7 +18,6 @@ export default function TeacherHomeworkNewPage() {
   const router = useRouter();
   const state = useTeacherHomeworkWizardStore();
   const { createHomework, loading } = useTeacherHomeworkMutations();
-  const { user } = useAuthStore();
   const [submitting, setSubmitting] = useState(false);
 
   const handleCancel = () => {
@@ -28,7 +26,7 @@ export default function TeacherHomeworkNewPage() {
   };
 
   const handleSubmit = async (): Promise<void> => {
-    if (submitting || !user?.schoolId) return;
+    if (submitting) return;
     if (!state.type) {
       toast.error('Choose a homework type first');
       return;
@@ -38,7 +36,6 @@ export default function TeacherHomeworkNewPage() {
       title: state.title,
       subjectId: state.subjectId,
       classId: state.classId,
-      schoolId: user.schoolId,
       dueDate: new Date(state.dueDate).toISOString(),
       totalMarks: state.totalMarks,
       latePolicy: state.latePolicy,

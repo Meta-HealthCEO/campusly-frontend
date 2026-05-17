@@ -88,7 +88,7 @@ export function PaperDetailMarkingTab({ paper }: Props) {
       <EmptyState
         icon={Inbox}
         title="No classes assigned yet"
-        description="Assign this paper to a class on the Assignments tab — student rosters will appear here for marking."
+        description="Assign this paper to a class on the Assign tab — student rosters will appear here for marking."
       />
     );
   }

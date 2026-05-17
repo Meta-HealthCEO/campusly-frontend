@@ -14,10 +14,43 @@
 import type { Student } from './common';
 import type { Subject } from './academic';
 import type { ContentBlockItem, ResourceType, ResourceStatus } from './content-library';
+import type { QuestionType } from './question-bank';
 
 // ─── Typed Homework (Module 1) ──────────────────────────────────────────────
 
 export type HomeworkType = 'quiz' | 'reading' | 'exercise';
+
+export interface StudentHomeworkQuestionOption {
+  label: string;
+  text: string;
+}
+
+export interface StudentHomeworkQuestion {
+  _id: string;
+  id: string;
+  type: QuestionType;
+  stem: string;
+  media: Array<{ mediaType: string; url: string }>;
+  diagram: unknown | null;
+  options: StudentHomeworkQuestionOption[];
+  marks: number;
+}
+
+export interface StudentHomeworkQuizQuestion {
+  questionText: string;
+  questionType: 'mcq' | 'true_false' | 'short_answer' | 'matching';
+  options: Array<{ text: string }>;
+  points: number;
+}
+
+export interface StudentHomeworkQuiz {
+  _id: string;
+  id: string;
+  title: string;
+  questions: StudentHomeworkQuizQuestion[];
+  totalPoints: number;
+  shuffleQuestions?: boolean;
+}
 
 /** Shared base for every typed Homework document. */
 interface HomeworkBase {
@@ -45,17 +78,20 @@ interface HomeworkBase {
 export interface QuizHomework extends HomeworkBase {
   type: 'quiz';
   quizId: string;
+  quiz?: StudentHomeworkQuiz | null;
 }
 
 export interface ReadingHomework extends HomeworkBase {
   type: 'reading';
   contentResourceId: string;
   pageRange?: string | null;
+  comprehensionQuestions?: StudentHomeworkQuestion[];
 }
 
 export interface ExerciseHomework extends HomeworkBase {
   type: 'exercise';
   exerciseQuestionIds: string[];
+  exerciseQuestions?: StudentHomeworkQuestion[];
 }
 
 /** Discriminated union of all Homework variants. */
@@ -262,4 +298,3 @@ export type SubmitHomeworkPayload =
   | SubmitQuizPayload
   | SubmitExercisePayload
   | SubmitReadingPayload;
-

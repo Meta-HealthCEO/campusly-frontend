@@ -34,6 +34,11 @@ export function useTrainingSessions(params: ListParams = {}) {
 
   const fetchSessions = useCallback(async () => {
     if (!schoolId) return;
+    if (user?.role === 'parent' && !params.studentId) {
+      setSessions([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await apiClient.get('/sports/training/sessions', { params });
@@ -44,7 +49,7 @@ export function useTrainingSessions(params: ListParams = {}) {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schoolId, paramKey]);
+  }, [schoolId, paramKey, user?.role]);
 
   useEffect(() => { fetchSessions(); }, [fetchSessions]);
 

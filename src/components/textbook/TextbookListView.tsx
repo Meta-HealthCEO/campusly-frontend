@@ -9,6 +9,7 @@ import type { TextbookItem, TextbookStatus } from '@/types';
 
 interface TextbookListViewProps {
   textbooks: TextbookItem[];
+  onSelectTextbook?: (id: string) => void | Promise<void>;
 }
 
 function resolveLabel(field: string | { id: string; name: string }): string {
@@ -26,7 +27,7 @@ const STATUS_VARIANT: Record<TextbookStatus, 'secondary' | 'default' | 'outline'
   archived: 'outline',
 };
 
-export function TextbookListView({ textbooks }: TextbookListViewProps) {
+export function TextbookListView({ textbooks, onSelectTextbook }: TextbookListViewProps) {
   const router = useRouter();
 
   const sorted = useMemo(
@@ -66,7 +67,13 @@ export function TextbookListView({ textbooks }: TextbookListViewProps) {
           {sorted.map((tb) => (
             <tr
               key={tb.id}
-              onClick={() => router.push(`/teacher/curriculum/textbooks/${tb.id}`)}
+              onClick={() => {
+                if (onSelectTextbook) {
+                  void onSelectTextbook(tb.id);
+                } else {
+                  router.push(`/teacher/curriculum/textbooks/${tb.id}`);
+                }
+              }}
               className="border-b cursor-pointer transition-colors hover:bg-muted/30"
             >
               <td className="px-4 py-2.5 font-medium truncate max-w-[250px]">{tb.title}</td>

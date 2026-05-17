@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, FileText, Trash2, Eye, Users } from 'lucide-react';
+import { Plus, FileText, Trash2, Eye, Users, ScanLine } from 'lucide-react';
 import { useTeacherPapers } from '@/hooks/useTeacherPapers';
 import type { Paper, PaperStatus } from '@/types/papers';
 import { Button } from '@/components/ui/button';
@@ -136,14 +136,22 @@ export default function TeacherPapersPage() {
     <div className="space-y-6">
       <PageHeader
         title="Test Papers"
-        description="Generate, edit, and assign CAPS-aligned papers. Assigned papers can be taken digitally or printed for the class."
+        description="Generate, convert, edit, assign, mark, and print CAPS-aligned papers."
       >
-        <Link href="/teacher/papers/new" className="inline-block">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Generate Paper
-          </Button>
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/teacher/curriculum/import" className="inline-block">
+            <Button variant="outline">
+              <ScanLine className="mr-2 h-4 w-4" />
+              Convert Existing Paper
+            </Button>
+          </Link>
+          <Link href="/teacher/papers/new" className="inline-block">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Generate Paper
+            </Button>
+          </Link>
+        </div>
       </PageHeader>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">

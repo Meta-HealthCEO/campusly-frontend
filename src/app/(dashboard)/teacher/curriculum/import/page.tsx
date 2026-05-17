@@ -78,11 +78,11 @@ export default function ImportPaperPage() {
   return (
     <div className="space-y-6 pb-24">
       <PageHeader
-        title="Digitise Paper"
-        description="Upload a PDF or image of an existing worksheet, study notes, or paper — we'll turn it into a structured digital paper."
+        title="Convert Existing Paper"
+        description="Upload a PDF or image of an existing worksheet, study notes, or paper and turn it into an editable digital paper."
       >
         <Link href="/teacher/curriculum/import/jobs" className={cn(buttonVariants({ variant: 'outline' }))}>
-          My digitised papers
+          Converted papers
         </Link>
       </PageHeader>
 

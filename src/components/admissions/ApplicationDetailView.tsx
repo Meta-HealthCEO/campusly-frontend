@@ -94,13 +94,11 @@ export function ApplicationDetailView({ application: app, onScheduleInterview, o
           </CardContent>
         </Card>
 
-        {(app.medicalConditions || app.allergies || app.specialNeeds) && (
+        {app.specialNeeds && (
           <Card>
-            <CardHeader><CardTitle className="text-base">Medical / Special Needs</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Special Needs</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
-              {app.medicalConditions && <Row label="Conditions" value={app.medicalConditions} />}
-              {app.allergies && <Row label="Allergies" value={app.allergies} />}
-              {app.specialNeeds && <Row label="Special Needs" value={app.specialNeeds} />}
+              <Row label="Special Needs" value={app.specialNeeds} />
             </CardContent>
           </Card>
         )}

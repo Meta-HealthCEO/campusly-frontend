@@ -72,7 +72,7 @@ export default function QuestionBankPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Question Bank"
+        title="Saved Questions"
         description="Manage and reuse questions across assessments"
       >
         <Button onClick={handleAdd}>

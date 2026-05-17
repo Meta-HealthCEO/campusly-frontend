@@ -152,7 +152,7 @@ export function PaperDetailAssignmentsTab({ paper }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Current assignments</CardTitle>
+          <CardTitle className="text-base">Assigned teaching groups</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (

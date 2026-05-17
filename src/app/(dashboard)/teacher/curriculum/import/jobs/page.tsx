@@ -18,13 +18,13 @@ export default function ImportJobsPage() {
           <ChevronLeft className="h-5 w-5" />
         </Link>
         <div className="flex-1 min-w-0">
-          <PageHeader title="My Digitised Papers" description="Every paper you've converted from PDF or image into a digital paper." />
+          <PageHeader title="Converted Papers" description="Every paper you have converted from PDF or image into an editable digital paper." />
         </div>
         <Link
           href="/teacher/curriculum/import"
           className={cn(buttonVariants({ variant: 'default' }))}
         >
-          <Plus className="mr-1 h-4 w-4" /> Digitise new paper
+          <Plus className="mr-1 h-4 w-4" /> Convert new paper
         </Link>
       </div>
       <JobListTable />

@@ -31,8 +31,6 @@ export interface FormData {
   city: string;
   province: string;
   postalCode: string;
-  medicalConditions: string;
-  allergies: string;
   specialNeeds: string;
   additionalNotes: string;
 }
@@ -189,16 +187,6 @@ export function AddressMedicalStep({ form, onChange }: StepProps) {
         </div>
       </div>
       <div className="space-y-4 mt-4">
-        <div className="space-y-2">
-          <Label htmlFor="medicalConditions">Medical Conditions</Label>
-          <Textarea id="medicalConditions" value={form.medicalConditions} rows={2}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange('medicalConditions', e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="allergies">Allergies</Label>
-          <Textarea id="allergies" value={form.allergies} rows={2}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange('allergies', e.target.value)} />
-        </div>
         <div className="space-y-2">
           <Label htmlFor="specialNeeds">Special Needs</Label>
           <Textarea id="specialNeeds" value={form.specialNeeds} rows={2}

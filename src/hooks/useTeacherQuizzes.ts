@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapList } from '@/lib/api-helpers';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 export interface QuizSummary {
   _id: string;
@@ -19,13 +20,19 @@ export function useTeacherQuizzes(filters?: {
   quizzes: QuizSummary[];
   loading: boolean;
 } {
+  const { user } = useAuthStore();
   const [quizzes, setQuizzes] = useState<QuizSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const params: Record<string, string> = {};
+    if (!user?.id) {
+      return;
+    }
+
+    const params: Record<string, string> = { status: 'published' };
     if (filters?.subjectId) params.subjectId = filters.subjectId;
     if (filters?.classId) params.classId = filters.classId;
+    params.teacherId = user.id;
 
     const controller = new AbortController();
     apiClient
@@ -38,7 +45,7 @@ export function useTeacherQuizzes(filters?: {
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [filters?.subjectId, filters?.classId]);
+  }, [filters?.subjectId, filters?.classId, user?.id]);
 
-  return { quizzes, loading };
+  return { quizzes: user?.id ? quizzes : [], loading: user?.id ? loading : false };
 }

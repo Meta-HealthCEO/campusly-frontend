@@ -16,15 +16,16 @@ export function useParentHomeworkChild(
   const [homework, setHomework] = useState<Homework | null>(null);
   const [submission, setSubmission] = useState<StructuredHomeworkSubmission | null>(null);
   const [loading, setLoading] = useState(true);
+  const hasTarget = !!homeworkId && !!studentId;
 
   useEffect(() => {
-    if (!homeworkId || !studentId) {
-      setLoading(false);
-      return;
-    }
+    if (!hasTarget) return;
     const controller = new AbortController();
     Promise.all([
-      apiClient.get(`/homework/${homeworkId}`, { signal: controller.signal }),
+      apiClient.get(`/homework/${homeworkId}`, {
+        params: { studentId },
+        signal: controller.signal,
+      }),
       apiClient.get(`/homework/student/${studentId}/submissions`, { signal: controller.signal }),
     ])
       .then(([hwRes, subRes]) => {
@@ -39,7 +40,11 @@ export function useParentHomeworkChild(
       })
       .finally(() => setLoading(false));
     return () => controller.abort();
-  }, [homeworkId, studentId]);
+  }, [hasTarget, homeworkId, studentId]);
 
-  return { homework, submission, loading };
+  return {
+    homework: hasTarget ? homework : null,
+    submission: hasTarget ? submission : null,
+    loading: hasTarget ? loading : false,
+  };
 }

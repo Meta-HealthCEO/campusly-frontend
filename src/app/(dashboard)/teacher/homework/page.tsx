@@ -13,10 +13,10 @@ import {
   HomeworkListFilters,
   type HomeworkListFilterState,
 } from '@/components/homework/HomeworkListFilters';
-import { HomeworkListRow } from '@/components/homework/HomeworkListRow';
+import { HomeworkListTable } from '@/components/homework/HomeworkListTable';
 
 export default function TeacherHomeworkListPage() {
-  const { teacherHomework, loading, error } = useTeacherHomework();
+  const { teacherHomework, submissionCounts, loading, error } = useTeacherHomework();
 
   const { classes } = useTeacherClasses();
 
@@ -90,11 +90,11 @@ export default function TeacherHomeworkListPage() {
       )}
 
       {!loading && !error && filtered.length > 0 && (
-        <div className="space-y-2">
-          {filtered.map((hw) => (
-            <HomeworkListRow key={hw._id} homework={hw} />
-          ))}
-        </div>
+        <HomeworkListTable
+          items={filtered}
+          classes={classes}
+          submissionCounts={submissionCounts}
+        />
       )}
 
     </div>

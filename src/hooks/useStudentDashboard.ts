@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import type { StudentDashboardDto } from '@/types';
@@ -6,11 +6,15 @@ import type { StudentDashboardDto } from '@/types';
 interface UseStudentDashboardResult {
   dashboard: StudentDashboardDto | null;
   loading: boolean;
+  refresh: () => void;
 }
 
 export function useStudentDashboard(): UseStudentDashboardResult {
   const [dashboard, setDashboard] = useState<StudentDashboardDto | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -27,7 +31,7 @@ export function useStudentDashboard(): UseStudentDashboardResult {
     }
     void load();
     return () => { cancelled = true; };
-  }, []);
+  }, [refreshKey]);
 
-  return { dashboard, loading };
+  return { dashboard, loading, refresh };
 }

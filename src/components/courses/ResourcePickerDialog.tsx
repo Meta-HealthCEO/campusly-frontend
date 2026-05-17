@@ -53,7 +53,7 @@ const KIND_CONFIG: Record<
 
 /**
  * Fuzzy-search dialog for adding a lesson to a course module. Searches
- * ContentLibrary, Textbook chapters, Homework, and Question Bank in
+ * ContentLibrary, Textbook chapters, Homework, and saved questions in
  * parallel. For single-source picks (content / chapter / homework), the
  * teacher clicks a result and the lesson is added immediately. For quiz
  * questions, the teacher selects one or more questions and then clicks

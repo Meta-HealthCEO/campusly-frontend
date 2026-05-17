@@ -33,7 +33,7 @@ const TYPE_OPTIONS: Array<{
   {
     value: 'exercise',
     label: 'Exercise',
-    description: 'Pick questions from the Question Bank',
+    description: 'Build a focused practice set',
     icon: Target,
   },
 ];

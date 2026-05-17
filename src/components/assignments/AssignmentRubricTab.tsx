@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pencil, Save, X, Plus, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,15 +27,14 @@ export function AssignmentRubricTab({ assignment, onChanged }: Props) {
   );
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (!editing) {
-      setDraft(assignment.rubric.map((c) => ({
-        name: c.name,
-        description: c.description,
-        maxMarks: c.maxMarks,
-      })));
-    }
-  }, [editing, assignment.rubric]);
+  const startEditing = () => {
+    setDraft(assignment.rubric.map((c) => ({
+      name: c.name,
+      description: c.description,
+      maxMarks: c.maxMarks,
+    })));
+    setEditing(true);
+  };
 
   const sum = draft.reduce((s, c) => s + c.maxMarks, 0);
   const validSum = sum === assignment.totalMarks;
@@ -66,7 +65,7 @@ export function AssignmentRubricTab({ assignment, onChanged }: Props) {
               </Badge>
             )}
             {!editing ? (
-              <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              <Button variant="outline" size="sm" onClick={startEditing}>
                 <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
               </Button>
             ) : (

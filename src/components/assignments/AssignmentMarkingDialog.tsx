@@ -73,9 +73,10 @@ export function AssignmentMarkingDialog({
   useEffect(() => {
     if (!open || !submissionId) return;
     let cancelled = false;
-    setLoading(true);
-    setSubmission(null);
-    void getSubmission(submissionId).then((s) => {
+    void (async () => {
+      setLoading(true);
+      setSubmission(null);
+      const s = await getSubmission(submissionId);
       if (cancelled) return;
       setSubmission(s);
       if (s) {
@@ -83,7 +84,7 @@ export function AssignmentMarkingDialog({
         setFeedback(s.teacherFeedback ?? '');
       }
       setLoading(false);
-    });
+    })();
     return () => { cancelled = true; };
   }, [open, submissionId, getSubmission, assignment.rubric]);
 
@@ -93,7 +94,7 @@ export function AssignmentMarkingDialog({
     ? Math.round((totalAwarded / totalAvailable) * 100)
     : 0;
 
-  const validCriterionMarks = draft.every((m, idx) => {
+  const validCriterionMarks = draft.length === assignment.rubric.length && draft.every((m, idx) => {
     const criterion = assignment.rubric[idx];
     if (!criterion) return false;
     return m.awarded >= 0 && m.awarded <= criterion.maxMarks;
@@ -271,7 +272,7 @@ export function AssignmentMarkingDialog({
             onClick={() => void submit(false)}
             disabled={!submission || saving || !validCriterionMarks}
           >
-            <Save className="mr-2 h-4 w-4" /> Save (don't publish)
+            <Save className="mr-2 h-4 w-4" /> Save (don&apos;t publish)
           </Button>
           <Button
             onClick={() => void submit(true)}

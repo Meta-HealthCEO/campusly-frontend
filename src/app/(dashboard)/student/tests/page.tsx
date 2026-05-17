@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FileText, Clock, CheckCircle2, Hourglass } from 'lucide-react';
 import { useStudentAssignedPapers } from '@/hooks/useStudentTests';
@@ -18,7 +19,17 @@ interface StatusInfo {
   ctaDisabled: boolean;
 }
 
-function statusInfo(status: SubmissionStatus): StatusInfo {
+function isBeforeRelease(releaseAt: string | null, now: number): boolean {
+  if (!releaseAt) return false;
+  const releaseTime = new Date(releaseAt).getTime();
+  return Number.isFinite(releaseTime) && releaseTime > now;
+}
+
+function statusInfo(status: SubmissionStatus, scheduled: boolean): StatusInfo {
+  if (scheduled && status === 'not_started') {
+    return { label: 'Scheduled', variant: 'outline', ctaLabel: 'Not open yet', ctaDisabled: true };
+  }
+
   switch (status) {
     case 'in_progress':
       return { label: 'In progress', variant: 'secondary', ctaLabel: 'Continue', ctaDisabled: false };
@@ -36,6 +47,12 @@ function statusInfo(status: SubmissionStatus): StatusInfo {
 export default function StudentTestsPage() {
   const router = useRouter();
   const { papers, loading } = useStudentAssignedPapers();
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   if (loading) return <LoadingSpinner />;
 
@@ -67,6 +84,7 @@ export default function StudentTestsPage() {
           <PaperCard
             key={`${p.paperId}-${p.assignmentId}`}
             paper={p}
+            now={now}
             onOpen={() => router.push(`/student/tests/${p.paperId}`)}
           />
         ))}
@@ -77,11 +95,13 @@ export default function StudentTestsPage() {
 
 interface CardProps {
   paper: AssignedPaperSummary;
+  now: number;
   onOpen: () => void;
 }
 
-function PaperCard({ paper, onOpen }: CardProps) {
-  const info = statusInfo(paper.submissionStatus);
+function PaperCard({ paper, now, onOpen }: CardProps) {
+  const scheduled = isBeforeRelease(paper.releaseAt, now);
+  const info = statusInfo(paper.submissionStatus, scheduled);
   const meta = [
     paper.subjectName,
     paper.gradeName,

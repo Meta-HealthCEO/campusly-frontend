@@ -1,14 +1,24 @@
-import type { Homework, HomeworkSubmission, HomeworkType } from '@/types';
+import type {
+  Homework,
+  HomeworkSubmission,
+  HomeworkType,
+  StudentHomeworkQuestion,
+  StudentHomeworkQuiz,
+} from '@/types';
 
 interface RawHomework {
   _id?: string;
   id?: string;
   title: string;
   type?: HomeworkType;
-  quizId?: string | { _id: string } | null;
+  quizId?: string | { _id?: string; id?: string } | null;
+  quiz?: RawQuiz | null;
   contentResourceId?: string | { _id: string } | null;
   pageRange?: string | null;
-  exerciseQuestionIds?: Array<string | { _id: string }>;
+  exerciseQuestionIds?: Array<string | RawQuestion>;
+  exerciseQuestions?: RawQuestion[];
+  comprehensionQuestionIds?: Array<string | RawQuestion>;
+  comprehensionQuestions?: RawQuestion[];
   subjectId: string | { _id: string; name?: string; code?: string };
   classId: string | { _id: string; name?: string };
   teacherId: string | { _id: string; firstName?: string; lastName?: string; email?: string };
@@ -21,6 +31,31 @@ interface RawHomework {
   createdAt?: string;
   updatedAt?: string;
   [key: string]: unknown;
+}
+
+interface RawQuestion {
+  _id?: string;
+  id?: string;
+  type?: StudentHomeworkQuestion['type'];
+  stem?: string;
+  media?: StudentHomeworkQuestion['media'];
+  diagram?: unknown | null;
+  options?: Array<{ label?: string; text?: string }>;
+  marks?: number;
+}
+
+interface RawQuiz {
+  _id?: string;
+  id?: string;
+  title?: string;
+  questions?: Array<{
+    questionText?: string;
+    questionType?: StudentHomeworkQuiz['questions'][number]['questionType'];
+    options?: Array<{ text?: string }>;
+    points?: number;
+  }>;
+  totalPoints?: number;
+  shuffleQuestions?: boolean;
 }
 
 interface RawSubmission {
@@ -40,6 +75,64 @@ interface RawSubmission {
   status?: string;
   content?: string;
   [key: string]: unknown;
+}
+
+function readRefId(ref: string | { _id?: string; id?: string } | null | undefined): string {
+  if (!ref) return '';
+  return typeof ref === 'string' ? ref : ref._id ?? ref.id ?? '';
+}
+
+function normalizeQuestion(raw: RawQuestion): StudentHomeworkQuestion {
+  const id = raw._id ?? raw.id ?? '';
+  return {
+    _id: id,
+    id,
+    type: raw.type ?? 'short_answer',
+    stem: raw.stem ?? '',
+    media: Array.isArray(raw.media) ? raw.media : [],
+    diagram: raw.diagram ?? null,
+    options: Array.isArray(raw.options)
+      ? raw.options.map((opt) => ({ label: opt.label ?? '', text: opt.text ?? '' }))
+      : [],
+    marks: raw.marks ?? 0,
+  };
+}
+
+function normalizeQuestionList(raw: unknown): StudentHomeworkQuestion[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((q): q is RawQuestion => typeof q === 'object' && q !== null)
+    .map(normalizeQuestion);
+}
+
+function normalizeIdList(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((q) => (typeof q === 'string' ? q : readRefId(q as { _id?: string; id?: string })))
+    .filter(Boolean);
+}
+
+function normalizeQuiz(raw: RawQuiz | null | undefined): StudentHomeworkQuiz | null {
+  if (!raw) return null;
+  const id = raw._id ?? raw.id ?? '';
+  if (!id) return null;
+  return {
+    _id: id,
+    id,
+    title: raw.title ?? '',
+    questions: Array.isArray(raw.questions)
+      ? raw.questions.map((q) => ({
+          questionText: q.questionText ?? '',
+          questionType: q.questionType ?? 'short_answer',
+          options: Array.isArray(q.options)
+            ? q.options.map((opt) => ({ text: opt.text ?? '' }))
+            : [],
+          points: q.points ?? 0,
+        }))
+      : [],
+    totalPoints: raw.totalPoints ?? 0,
+    shuffleQuestions: raw.shuffleQuestions,
+  };
 }
 
 /** Normalize a raw homework API object to match the frontend Homework type. */
@@ -73,18 +166,20 @@ export function normalizeHomework(raw: RawHomework): Homework {
     gradebookAutoPublish: typeof raw.gradebookAutoPublish === 'boolean' ? raw.gradebookAutoPublish : true,
     assessmentId: typeof raw.assessmentId === 'string' ? raw.assessmentId : null,
     version: typeof raw.version === 'number' ? raw.version : 1,
-    comprehensionQuestionIds: Array.isArray(raw.comprehensionQuestionIds)
-      ? (raw.comprehensionQuestionIds as string[])
-      : undefined,
+    comprehensionQuestionIds: normalizeIdList(raw.comprehensionQuestionIds),
   };
 
   const type: HomeworkType = raw.type ?? 'exercise';
 
   if (type === 'quiz') {
-    const quizId = typeof raw.quizId === 'string'
-      ? raw.quizId
-      : (raw.quizId?._id ?? '');
-    return { ...base, type: 'quiz', quizId };
+    const quizFromPayload = raw.quiz ?? (
+      typeof raw.quizId === 'object' && raw.quizId !== null
+        ? raw.quizId as RawQuiz
+        : null
+    );
+    const quiz = normalizeQuiz(quizFromPayload);
+    const quizId = readRefId(raw.quizId) || quiz?._id || '';
+    return { ...base, type: 'quiz', quizId, quiz };
   }
 
   if (type === 'reading') {
@@ -96,13 +191,19 @@ export function normalizeHomework(raw: RawHomework): Homework {
       type: 'reading',
       contentResourceId,
       pageRange: raw.pageRange ?? null,
+      comprehensionQuestions: normalizeQuestionList(
+        raw.comprehensionQuestions ?? raw.comprehensionQuestionIds,
+      ),
     };
   }
 
-  const exerciseQuestionIds = (raw.exerciseQuestionIds ?? []).map((q) =>
-    typeof q === 'string' ? q : q._id,
-  );
-  return { ...base, type: 'exercise', exerciseQuestionIds };
+  const exerciseQuestionIds = normalizeIdList(raw.exerciseQuestionIds);
+  return {
+    ...base,
+    type: 'exercise',
+    exerciseQuestionIds,
+    exerciseQuestions: normalizeQuestionList(raw.exerciseQuestions ?? raw.exerciseQuestionIds),
+  };
 }
 
 /** Normalize a raw submission from the API to the frontend HomeworkSubmission shape. */

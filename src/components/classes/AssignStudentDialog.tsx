@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,16 +10,23 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-import { getStudentDisplayName } from '@/lib/student-helpers';
-import { resolveField } from '@/lib/api-helpers';
-import type { Student } from '@/types';
+import apiClient from '@/lib/api-client';
+import { unwrapList } from '@/lib/api-helpers';
+
+interface SchoolRosterRow {
+  id: string;
+  firstName: string;
+  lastName: string;
+  admissionNumber: string;
+  classId: string | null;
+  className: string | null;
+}
 
 interface AssignStudentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  classId: string;
+  classId?: string;
   currentStudentIds: string[];
-  allStudents: Student[];
   onAssign: (studentId: string, classId: string) => Promise<void>;
 }
 
@@ -28,47 +35,70 @@ export function AssignStudentDialog({
   onOpenChange,
   classId,
   currentStudentIds,
-  allStudents,
   onAssign,
 }: AssignStudentDialogProps) {
   const [search, setSearch] = useState('');
+  const [debounced, setDebounced] = useState('');
+  const [rows, setRows] = useState<SchoolRosterRow[]>([]);
+  const [loading, setLoading] = useState(false);
   const [assigningId, setAssigningId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => setDebounced(search.trim()), 250);
+    return () => clearTimeout(t);
+  }, [search, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setLoading(true);
+    apiClient
+      .get('/students/search-roster', { params: { q: debounced } })
+      .then((res) => {
+        if (cancelled) return;
+        setRows(unwrapList<SchoolRosterRow>(res));
+      })
+      .catch(() => {
+        if (!cancelled) setRows([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [open, debounced]);
 
   const available = useMemo(() => {
     const currentSet = new Set(currentStudentIds);
-    const q = search.trim().toLowerCase();
-    return allStudents.filter((s: Student) => {
-      if (currentSet.has(s.id)) return false;
-      if (!q) return true;
-      const { full } = getStudentDisplayName(s);
-      return (
-        full.toLowerCase().includes(q) ||
-        (s.admissionNumber ?? '').toLowerCase().includes(q)
-      );
-    });
-  }, [allStudents, currentStudentIds, search]);
+    return rows.filter((r) => !currentSet.has(r.id));
+  }, [rows, currentStudentIds]);
 
-  const handleAssign = async (student: Student) => {
-    setAssigningId(student.id);
+  const handleAssign = async (row: SchoolRosterRow) => {
+    if (!classId) return;
+    setAssigningId(row.id);
     try {
-      await onAssign(student.id, classId);
+      await onAssign(row.id, classId);
     } finally {
       setAssigningId(null);
     }
   };
 
   const handleOpenChange = (o: boolean) => {
-    if (!o) setSearch('');
+    if (!o) {
+      setSearch('');
+      setDebounced('');
+      setRows([]);
+    }
     onOpenChange(o);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="flex flex-col max-h-[85vh] sm:max-w-lg">
+      <DialogContent className="flex max-h-[85vh] flex-col sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Assign Existing Student</DialogTitle>
+          <DialogTitle>Assign Existing Learner</DialogTitle>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto space-y-3">
+        <div className="flex-1 space-y-3 overflow-y-auto">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -79,41 +109,36 @@ export function AssignStudentDialog({
             />
           </div>
 
-          {allStudents.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              No students found. Add students to your classes first.
-            </p>
+          {loading ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">Searching…</p>
           ) : available.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              {search ? 'No students match your search.' : 'All students are already assigned to this class.'}
+              {debounced
+                ? 'No learners in this school match your search.'
+                : 'Start typing a name or admission number.'}
             </p>
           ) : (
             <div className="space-y-2">
-              {available.map((student: Student) => {
-                const { first, last } = getStudentDisplayName(student);
-                const currentClassName =
-                  resolveField<string>(student.class, 'name') ?? '';
-                const currentGradeName =
-                  resolveField<string>(student.grade, 'name') ?? '';
+              {available.map((row) => {
+                const currentGroup = row.className ? ` - ${row.className}` : '';
                 return (
                   <div
-                    key={student.id}
+                    key={row.id}
                     className="flex items-center gap-3 rounded-lg border p-3"
                   >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{first} {last}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {student.admissionNumber}
-                        {currentClassName ? ` · ${currentGradeName} ${currentClassName}`.trim() : ''}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{row.firstName} {row.lastName}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {row.admissionNumber}{currentGroup}
                       </p>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      disabled={assigningId === student.id}
-                      onClick={() => handleAssign(student)}
+                      disabled={assigningId === row.id || !classId}
+                      onClick={() => handleAssign(row)}
                     >
-                      {assigningId === student.id ? 'Assigning...' : 'Assign'}
+                      {assigningId === row.id ? 'Assigning...' : 'Assign'}
                     </Button>
                   </div>
                 );

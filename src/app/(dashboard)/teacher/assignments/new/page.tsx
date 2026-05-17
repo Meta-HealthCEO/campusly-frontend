@@ -13,10 +13,25 @@ import { Badge } from '@/components/ui/badge';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { WizardFooter } from '@/components/shared/WizardFooter';
-import { useGrades, useSubjects } from '@/hooks/useAcademics';
+import {
+  CurriculumTreeBrowser,
+  type CurriculumTreeBrowserSelectContext,
+} from '@/components/curriculum/CurriculumTreeBrowser';
+import { NodePicker } from '@/components/curriculum/NodePicker';
+import { displayNodeTitle } from '@/lib/curriculum-display';
+import { RichTextEditor } from '@/components/shared/RichTextEditor';
+import { RichTextView } from '@/components/shared/RichTextView';
+import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
+import {
+  useCurriculumPreparation,
+  extractCurriculumContext,
+  contextsMatch,
+} from '@/hooks/useCurriculumPreparation';
+import { ContextBadge } from '../../papers/new/_indicators';
 import { useTeacherAssignments } from '@/hooks/useTeacherAssignments';
 import {
   ASSIGNMENT_LENGTHS,
@@ -25,6 +40,7 @@ import {
   type AssignmentSubmissionFormat,
   type RubricCriterionInput,
 } from '@/types/assignments';
+import type { CurriculumNodeItem } from '@/types';
 
 type Step = 1 | 2 | 3;
 
@@ -49,19 +65,27 @@ const LATE_POLICY_LABELS: Record<AssignmentLatePolicy, string> = {
 
 export default function NewAssignmentPage() {
   const router = useRouter();
-  const { subjects, loading: subjectsLoading } = useSubjects();
-  const { grades, loading: gradesLoading } = useGrades();
+  const {
+    frameworks, selectedFramework, searchNodes, loadNode, resolveAncestors,
+  } = useCurriculumStructure();
+  const prep = useCurriculumPreparation();
+  // Pull `apply` out as a stable reference. `prep` itself is a fresh object
+  // every render — using `prep.apply` directly as an effect dep loops forever.
+  const applyPrep = prep.apply;
   const { generateDraft, create, update } = useTeacherAssignments();
 
   const [step, setStep] = useState<Step>(1);
 
-  // Step 1 — setup
-  const [subjectId, setSubjectId] = useState('');
-  const [gradeId, setGradeId] = useState('');
+  // Step 1 — non-curriculum settings (curriculum picks live in `prep`)
+  const [selectedNodes, setSelectedNodes] = useState<CurriculumNodeItem[]>([]);
   const [totalMarks, setTotalMarks] = useState(50);
   const [lengthHint, setLengthHint] = useState<AssignmentLengthHint>('medium');
   const [criterionCount, setCriterionCount] = useState(4);
   const [instructions, setInstructions] = useState('');
+
+  // Track ancestors per node we've seen — avoids re-fetching when the same
+  // node is re-clicked. Matches the pattern in _PapersNewWizard.
+  const [ancestorsByNode, setAncestorsByNode] = useState<Record<string, CurriculumNodeItem[]>>({});
 
   // Step 2 — AI draft (editable)
   const [generating, setGenerating] = useState(false);
@@ -76,17 +100,98 @@ export default function NewAssignmentPage() {
   const [gradebookAutoPublish, setGradebookAutoPublish] = useState(true);
   const [creating, setCreating] = useState(false);
 
-  const step1Ready =
-    !!subjectId && !!gradeId && totalMarks > 0 && instructions.trim().length >= 10;
+  const selectedFrameworkMeta = frameworks.find((f) => f.id === selectedFramework);
+
+  const handleTopicSelect = useCallback(async (
+    node: CurriculumNodeItem,
+    ctx?: CurriculumTreeBrowserSelectContext,
+  ) => {
+    // CurriculumTreeBrowser fires onSelect twice per click: first synchronously
+    // with `ctx.ancestors = []` (a "snappy UI" hint), then again after its
+    // async resolveAncestors completes. Swallow the snappy emission. The
+    // search picker calls with ctx=undefined; we resolve ancestors there too.
+    if (ctx && (!ctx.ancestors || ctx.ancestors.length === 0)) return;
+
+    let ancestors = ctx?.ancestors ?? ancestorsByNode[node.id] ?? [];
+    if (ancestors.length === 0) {
+      ancestors = await resolveAncestors(node);
+    }
+    if (ancestors.length > 0) {
+      setAncestorsByNode((prev) => (prev[node.id] ? prev : { ...prev, [node.id]: ancestors }));
+    }
+
+    const nextContext = extractCurriculumContext(node, ancestors);
+    if (!nextContext) {
+      toast.error('Choose a CAPS topic or subtopic that includes subject, grade, and term.');
+      return;
+    }
+    // Compute the next selection from the current snapshot, then apply it
+    // and sync prep in one shot. We deliberately don't put a side-effect
+    // inside the setSelectedNodes updater — that runs twice under StrictMode
+    // and could double-call apply.
+    const alreadySelected = selectedNodes.some((item) => item.id === node.id);
+    let next: CurriculumNodeItem[];
+    if (alreadySelected) {
+      next = selectedNodes.filter((item) => item.id !== node.id);
+    } else {
+      const primaryAncestors = selectedNodes[0]
+        ? ancestorsByNode[selectedNodes[0].id] ?? []
+        : ancestors;
+      const primaryContext = selectedNodes[0]
+        ? extractCurriculumContext(selectedNodes[0], primaryAncestors)
+        : nextContext;
+      if (primaryContext && !contextsMatch(primaryContext, nextContext)) {
+        toast.error('For one assignment, choose topics from the same subject, grade, and term.');
+        return;
+      }
+      next = [...selectedNodes, node];
+    }
+    setSelectedNodes(next);
+
+    const primary = next[0] ?? null;
+    const primaryAncestorsForApply = primary
+      ? (ancestorsByNode[primary.id] ?? ancestors)
+      : undefined;
+    applyPrep(primary, primaryAncestorsForApply);
+  }, [selectedNodes, ancestorsByNode, resolveAncestors, applyPrep]);
+
+  const handleRemoveNode = useCallback((nodeId: string) => {
+    const next = selectedNodes.filter((item) => item.id !== nodeId);
+    setSelectedNodes(next);
+    const primary = next[0] ?? null;
+    const primaryAncestors = primary ? ancestorsByNode[primary.id] : undefined;
+    applyPrep(primary, primaryAncestors);
+  }, [selectedNodes, ancestorsByNode, applyPrep]);
+
+  const step1Blocker: string | null = (() => {
+    if (selectedNodes.length === 0) return 'Pick at least one CAPS topic from the tree.';
+    if (prep.contextStatus === 'preparing') return 'Preparing subject and grade — give it a second…';
+    if (prep.contextStatus === 'error') {
+      return prep.contextError ?? 'Could not resolve the subject/grade for this topic.';
+    }
+    if (!prep.subjectId || !prep.gradeId) {
+      return 'Subject or grade could not be resolved for this topic.';
+    }
+    if (totalMarks <= 0) return 'Total marks must be at least 1.';
+    const instructionsLen = instructions.trim().length;
+    if (instructionsLen < 10) {
+      return `Instructions need ${10 - instructionsLen} more character${10 - instructionsLen === 1 ? '' : 's'}.`;
+    }
+    return null;
+  })();
+  const step1Ready = step1Blocker === null;
+
   const rubricSum = rubric.reduce((s, c) => s + c.maxMarks, 0);
   const step2Ready = title.trim().length > 0 && brief.trim().length > 0
     && rubric.length > 0 && rubricSum === totalMarks;
 
   const handleGenerate = useCallback(async () => {
+    if (!prep.subjectId || !prep.gradeId || selectedNodes.length === 0) return;
     setGenerating(true);
     const draft = await generateDraft({
-      subjectId,
-      gradeId,
+      subjectId: prep.subjectId,
+      gradeId: prep.gradeId,
+      topicIds: selectedNodes.map((n) => n.id),
       totalMarks,
       lengthHint,
       criterionCount,
@@ -98,9 +203,13 @@ export default function NewAssignmentPage() {
     setBrief(draft.brief);
     setRubric(draft.rubric);
     setStep(2);
-  }, [generateDraft, subjectId, gradeId, totalMarks, lengthHint, criterionCount, instructions]);
+  }, [
+    generateDraft, prep.subjectId, prep.gradeId, selectedNodes,
+    totalMarks, lengthHint, criterionCount, instructions,
+  ]);
 
   const handleCreate = useCallback(async (publish: boolean) => {
+    if (!prep.subjectId || !prep.gradeId || selectedNodes.length === 0) return;
     if (latePolicy === 'penalty' && latePenaltyPercent <= 0) {
       toast.error('Penalty % must be greater than 0.');
       return;
@@ -109,8 +218,9 @@ export default function NewAssignmentPage() {
     const created = await create({
       title: title.trim(),
       brief: brief.trim(),
-      subjectId,
-      gradeId,
+      subjectId: prep.subjectId,
+      gradeId: prep.gradeId,
+      topicIds: selectedNodes.map((n) => n.id),
       totalMarks,
       rubric,
       submissionFormat,
@@ -122,22 +232,15 @@ export default function NewAssignmentPage() {
       setCreating(false);
       return;
     }
-    // Optionally flip to published immediately so the teacher can push it
-    // to a class right away on the detail page.
     if (publish) {
-      const published = await update(created._id, { status: 'published' });
-      if (!published) {
-        // Toast already surfaced from the hook; route anyway so the teacher
-        // can retry from the header button.
-      }
+      await update(created._id, { status: 'published' });
     }
     router.push(`/teacher/assignments/${created._id}`);
   }, [
-    create, update, title, brief, subjectId, gradeId, totalMarks, rubric,
-    submissionFormat, latePolicy, latePenaltyPercent, gradebookAutoPublish, router,
+    create, update, title, brief, prep.subjectId, prep.gradeId, selectedNodes,
+    totalMarks, rubric, submissionFormat, latePolicy, latePenaltyPercent,
+    gradebookAutoPublish, router,
   ]);
-
-  // ─── Step footers ────────────────────────────────────────────────────────
 
   const footer = (() => {
     if (step === 1) {
@@ -173,7 +276,7 @@ export default function NewAssignmentPage() {
     };
   })();
 
-  if (subjectsLoading || gradesLoading) return <LoadingSpinner />;
+  if (!selectedFramework || frameworks.length === 0) return <LoadingSpinner />;
 
   return (
     <div className="space-y-6 pb-24">
@@ -189,102 +292,173 @@ export default function NewAssignmentPage() {
       </div>
 
       {step === 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">What is the assignment?</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Subject, grade, and total marks are required. Then write — in your own
-              words — exactly what you want the AI to draft. The more specific, the
-              better.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Subject <span className="text-destructive">*</span></Label>
-                <Select
-                  value={subjectId}
-                  onValueChange={(v: string | null) => setSubjectId(v ?? '')}
-                >
-                  <SelectTrigger className="w-full"><SelectValue placeholder="Pick subject" /></SelectTrigger>
-                  <SelectContent>
-                    {subjects.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Grade <span className="text-destructive">*</span></Label>
-                <Select
-                  value={gradeId}
-                  onValueChange={(v: string | null) => setGradeId(v ?? '')}
-                >
-                  <SelectTrigger className="w-full"><SelectValue placeholder="Pick grade" /></SelectTrigger>
-                  <SelectContent>
-                    {grades.map((g) => (
-                      <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Total marks <span className="text-destructive">*</span></Label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={1000}
-                  value={totalMarks}
-                  onChange={(e) => setTotalMarks(Number(e.target.value) || 1)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Length hint</Label>
-                <Select
-                  value={lengthHint}
-                  onValueChange={(v: string | null) => setLengthHint((v ?? 'medium') as AssignmentLengthHint)}
-                >
-                  <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {ASSIGNMENT_LENGTHS.map((l) => (
-                      <SelectItem key={l} value={l}>{LENGTH_LABELS[l]}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Rubric criteria</Label>
-                <Input
-                  type="number"
-                  min={2}
-                  max={10}
-                  value={criterionCount}
-                  onChange={(e) => setCriterionCount(Math.min(10, Math.max(2, Number(e.target.value) || 4)))}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Number of marking criteria the AI should produce. Marks split evenly across them.
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>
-                Tell the AI exactly what you want <span className="text-destructive">*</span>
-              </Label>
-              <Textarea
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
-                rows={6}
-                placeholder={`Examples:\n• "1500-word essay on the causes of WWI, focused on the Eastern Front. Accept video as alternative format."\n• "Group project: design and build a small bridge from spaghetti and tape. Include diagrams, materials list, and reflection."\n• "Research task on photosynthesis with at least 3 cited sources, due in 2 weeks."`}
-                className="min-h-37.5 font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                Minimum 10 characters. Be specific — the AI weaves your wording into
-                the brief verbatim. {instructions.length}/4000
+        <div className="space-y-4">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <h2 className="text-xl font-semibold">Choose a CAPS topic</h2>
+              <p className="text-sm text-muted-foreground">
+                The AI uses this topic to anchor the brief and rubric. Subject,
+                grade, and term are derived automatically.
+                {selectedFrameworkMeta && ` ${selectedFrameworkMeta.name} framework is active.`}
               </p>
             </div>
-          </CardContent>
-        </Card>
+            <ContextBadge status={prep.contextStatus} error={prep.contextError} />
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+            {/* Curriculum tree on the left */}
+            <Card>
+              <CardContent className="space-y-3">
+                <Tabs defaultValue="browse">
+                  <TabsList>
+                    <TabsTrigger value="browse">Browse</TabsTrigger>
+                    <TabsTrigger value="search">Search</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="browse" className="mt-3">
+                    <div className="max-h-[64vh] min-h-96 overflow-y-auto rounded-md border p-1">
+                      <CurriculumTreeBrowser
+                        frameworkId={selectedFramework}
+                        selectedNodeId={prep.selectedNode?.id ?? null}
+                        selectedNodeIds={selectedNodes.map((n) => n.id)}
+                        onSelect={(node, ctx) => void handleTopicSelect(node, ctx)}
+                      />
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="search" className="mt-3">
+                    <NodePicker
+                      frameworkId={selectedFramework}
+                      value={prep.selectedNode?.id ?? null}
+                      onChange={(_id, node) => { if (node) void handleTopicSelect(node); }}
+                      onSearch={searchNodes}
+                      onLoadNode={loadNode}
+                      placeholder="Search for a topic, subtopic, or assessment standard…"
+                    />
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+
+            {/* Settings on the right (sticky so they stay visible) */}
+            <Card className="lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
+              <CardHeader>
+                <div className="flex items-center justify-between gap-3">
+                  <CardTitle className="text-base">Assignment settings</CardTitle>
+                  <Badge variant="secondary">
+                    {selectedNodes.length} topic{selectedNodes.length === 1 ? '' : 's'}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {selectedNodes.length === 0 ? (
+                  <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+                    Pick one or more topics from the tree. They must all share the
+                    same subject, grade, and term.
+                  </div>
+                ) : (
+                  <ul className="space-y-2">
+                    {selectedNodes.map((node) => (
+                      <li
+                        key={node.id}
+                        className="flex items-start justify-between gap-2 rounded-md border bg-primary/5 px-3 py-2"
+                      >
+                        <span className="min-w-0 flex-1 text-sm leading-snug">
+                          {displayNodeTitle(node)}
+                        </span>
+                        <button
+                          type="button"
+                          className="shrink-0 text-xs text-muted-foreground hover:text-destructive"
+                          onClick={() => handleRemoveNode(node.id)}
+                          aria-label="Remove topic"
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {prep.curriculumContext && selectedNodes.length > 0 && (
+                  <div className="rounded-md border bg-muted/30 px-3 py-2 text-xs">
+                    <p className="text-muted-foreground">Context</p>
+                    <p className="mt-1 font-medium">
+                      {prep.curriculumContext.subjectName} · {prep.curriculumContext.gradeName} · Term {prep.term}
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <Label>Total marks <span className="text-destructive">*</span></Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={1000}
+                    value={totalMarks}
+                    onChange={(e) => setTotalMarks(Number(e.target.value) || 1)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label>Length hint</Label>
+                  <Select
+                    value={lengthHint}
+                    onValueChange={(v: string | null) =>
+                      setLengthHint((v ?? 'medium') as AssignmentLengthHint)
+                    }
+                  >
+                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {ASSIGNMENT_LENGTHS.map((l) => (
+                        <SelectItem key={l} value={l}>{LENGTH_LABELS[l]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label>Rubric criteria</Label>
+                  <Input
+                    type="number"
+                    min={2}
+                    max={10}
+                    value={criterionCount}
+                    onChange={(e) =>
+                      setCriterionCount(Math.min(10, Math.max(2, Number(e.target.value) || 4)))
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    The AI produces this many criteria. Marks split evenly across them.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label>
+                    Instructions for the AI <span className="text-destructive">*</span>
+                  </Label>
+                  <Textarea
+                    value={instructions}
+                    onChange={(e) => setInstructions(e.target.value)}
+                    rows={8}
+                    placeholder={`Examples:\n• "1500-word essay on causes of WWI, focused on the Eastern Front. Accept video as alternative format."\n• "Group project: design a small bridge from spaghetti and tape. Include diagrams, materials list, and reflection."\n• "Research task on photosynthesis with at least 3 cited sources, due in 2 weeks."`}
+                    className="min-h-37.5 font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Min 10 chars. The AI weaves your wording into the brief verbatim.
+                    {' '}{instructions.length}/4000
+                  </p>
+                </div>
+
+                {step === 1 && step1Blocker && (
+                  <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-xs">
+                    <p className="font-medium text-amber-900 dark:text-amber-200">
+                      Before generating
+                    </p>
+                    <p className="mt-0.5 text-amber-800 dark:text-amber-300">{step1Blocker}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       )}
 
       {step === 2 && (
@@ -325,15 +499,33 @@ export default function NewAssignmentPage() {
                 <Input value={title} onChange={(e) => setTitle(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label>Brief (markdown supported)</Label>
-                <Textarea
-                  value={brief}
-                  onChange={(e) => setBrief(e.target.value)}
-                  rows={14}
-                  className="font-mono text-sm"
-                />
+                <Label>Brief</Label>
+                <Tabs defaultValue="edit">
+                  <TabsList>
+                    <TabsTrigger value="edit">Edit</TabsTrigger>
+                    <TabsTrigger value="preview">Preview</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="edit" className="mt-3">
+                    <RichTextEditor
+                      initialHtml={brief}
+                      onChange={setBrief}
+                      minHeight="min-h-112"
+                    />
+                  </TabsContent>
+                  <TabsContent value="preview" className="mt-3">
+                    <div className="rounded-md border bg-muted/10 p-4 min-h-112 max-h-160 overflow-y-auto">
+                      {brief.trim().length > 0 ? (
+                        <RichTextView html={brief} />
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">
+                          Nothing to preview yet.
+                        </p>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
                 <p className="text-xs text-muted-foreground">
-                  This is what students will see. {brief.length}/20000
+                  Edit uses formatting controls; Preview shows exactly what students will see.
                 </p>
               </div>
             </CardContent>
@@ -461,14 +653,6 @@ export default function NewAssignmentPage() {
                 </span>
               </span>
             </label>
-
-            <div className="rounded-lg border bg-muted/30 px-4 py-3 text-sm">
-              <p className="font-medium">Saved as draft</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Drafts are not pushed to classes yet - open the assignment, then push
-                to a class with release and due dates from the Classes tab.
-              </p>
-            </div>
           </CardContent>
         </Card>
       )}

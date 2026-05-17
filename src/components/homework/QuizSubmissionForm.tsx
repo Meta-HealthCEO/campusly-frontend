@@ -4,9 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useHomeworkSubmission } from '@/hooks/useHomeworkSubmission';
-import { useQuiz } from '@/hooks/useQuiz';
 import type {
   QuizHomework,
   QuizSubmission,
@@ -21,7 +19,7 @@ interface Props {
 }
 
 export function QuizSubmissionForm({ homework, submission, onSubmit }: Props) {
-  const { quiz, loading } = useQuiz(homework.quizId);
+  const quiz = homework.quiz ?? null;
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submittedId, setSubmittedId] = useState<string | null>(submission?._id ?? null);
   const [submitting, setSubmitting] = useState(false);
@@ -45,7 +43,6 @@ export function QuizSubmissionForm({ homework, submission, onSubmit }: Props) {
     }
   };
 
-  if (loading) return <LoadingSpinner />;
   if (!quiz) return <p className="text-sm text-destructive">Quiz could not be loaded.</p>;
 
   const liveSub = live.submission?.type === 'quiz' ? (live.submission as QuizSubmission) : null;

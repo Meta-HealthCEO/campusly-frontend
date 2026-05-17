@@ -59,8 +59,6 @@ export interface AdmissionApplication {
   parentIdNumber?: string;
   parentRelationship?: ParentRelationship;
   address: AdmissionAddress;
-  medicalConditions?: string;
-  allergies?: string;
   specialNeeds?: string;
   documents: AdmissionDocuments;
   applicationFeeStatus: ApplicationFeeStatus;

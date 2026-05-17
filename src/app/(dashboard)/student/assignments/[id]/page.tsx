@@ -10,10 +10,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { MarkdownView } from '@/components/shared/MarkdownView';
+import { RichTextView } from '@/components/shared/RichTextView';
 import { SubmissionFileUploader, type UploadedFile } from '@/components/assignments/SubmissionFileUploader';
 import { useStudentAssignments } from '@/hooks/useStudentAssignments';
-import type { Assignment } from '@/types/assignments';
+import type { StudentAssignmentItem } from '@/types/assignments';
 
 export default function StudentAssignmentDetailPage({
   params,
@@ -23,7 +23,7 @@ export default function StudentAssignmentDetailPage({
   const { id } = use(params);
   const router = useRouter();
   const { getById, submit } = useStudentAssignments();
-  const [assignment, setAssignment] = useState<Assignment | null>(null);
+  const [assignment, setAssignment] = useState<StudentAssignmentItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState('');
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -35,6 +35,7 @@ export default function StudentAssignmentDetailPage({
     void getById(id).then((a) => {
       if (!cancelled) {
         setAssignment(a);
+        setSubmitted(Boolean(a?.submission));
         setLoading(false);
       }
     });
@@ -68,6 +69,17 @@ export default function StudentAssignmentDetailPage({
     setSubmitting(false);
     if (result) {
       setSubmitted(true);
+      setAssignment((current) => current
+        ? {
+            ...current,
+            submission: {
+              _id: result._id,
+              status: result.status,
+              submittedAt: result.submittedAt,
+              totalMark: result.totalMark,
+            },
+          }
+        : current);
       setText('');
       setFiles([]);
     }
@@ -79,6 +91,7 @@ export default function StudentAssignmentDetailPage({
       (allowsText && text.trim().length > 0)
       || (allowsFile && files.length > 0)
     );
+  const submittedAt = assignment.submission?.submittedAt;
 
   return (
     <div className="space-y-6">
@@ -96,14 +109,14 @@ export default function StudentAssignmentDetailPage({
           <CardTitle className="text-base">Brief</CardTitle>
         </CardHeader>
         <CardContent>
-          <MarkdownView>{assignment.brief}</MarkdownView>
+          <RichTextView html={assignment.brief} />
         </CardContent>
       </Card>
 
       {assignment.rubric.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">How you'll be marked</CardTitle>
+            <CardTitle className="text-base">How you&apos;ll be marked</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="divide-y">
@@ -141,7 +154,11 @@ export default function StudentAssignmentDetailPage({
         <CardContent className="space-y-4">
           {submitted && (
             <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm">
-              <p className="font-medium text-emerald-900">Submitted successfully.</p>
+              <p className="font-medium text-emerald-900">
+                {submittedAt
+                  ? `Submitted ${new Date(submittedAt).toLocaleString()}`
+                  : 'Submitted successfully.'}
+              </p>
               <p className="text-xs text-emerald-700 mt-1">
                 Your teacher will mark this against the rubric. You can re-submit while
                 the assignment is open — your latest version replaces the previous one.
@@ -176,7 +193,7 @@ export default function StudentAssignmentDetailPage({
           {!allowsText && !allowsFile && (
             <div className="flex items-start gap-2 text-sm">
               <AlertTriangle className="h-4 w-4 mt-0.5 text-destructive" />
-              <p>This assignment doesn't accept any submission format yet. Ask your teacher.</p>
+              <p>This assignment doesn&apos;t accept any submission format yet. Ask your teacher.</p>
             </div>
           )}
 

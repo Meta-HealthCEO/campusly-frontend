@@ -177,9 +177,9 @@ export default function TeacherTextbooksPage() {
           description={error}
         />
       ) : viewMode === 'shelf' ? (
-        <TextbookShelfView textbooks={textbooks} />
+        <TextbookShelfView textbooks={textbooks} onSelectTextbook={handleSelectTextbook} />
       ) : (
-        <TextbookListView textbooks={textbooks} />
+        <TextbookListView textbooks={textbooks} onSelectTextbook={handleSelectTextbook} />
       )}
 
       <TextbookFormDialog

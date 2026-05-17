@@ -9,7 +9,7 @@ import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import {
-  ShoppingBag, AlertTriangle, UtensilsCrossed, Receipt,
+  ShoppingBag, UtensilsCrossed, Receipt,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useCurrentParent } from '@/hooks/useCurrentParent';
@@ -42,12 +42,11 @@ export default function TuckshopPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Tuckshop" description="View your children's tuckshop spending and manage allergen preferences." />
+      <PageHeader title="Tuckshop" description="View your children's tuckshop spending." />
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <StatCard title="Total Spent" value={formatCurrency(overallSpent)} icon={ShoppingBag} description="This month" />
         <StatCard title="Total Orders" value={String(childOrders.reduce((sum, co) => sum + co.orders.length, 0))} icon={Receipt} description="Across all children" />
-        <StatCard title="Allergen Alerts" value={String(childOrders.filter((co) => co.allergens.length > 0).length)} icon={AlertTriangle} description="Children with allergies" />
       </div>
 
       <Tabs defaultValue={children[0]?.id ?? ''}>
@@ -59,28 +58,6 @@ export default function TuckshopPage() {
 
         {childOrders.map((co) => (
           <TabsContent key={co.childId} value={co.childId} className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-600" />Allergen Information
-                </CardTitle>
-                <CardDescription>Dietary restrictions and allergies for {co.firstName}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {co.allergens.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {co.allergens.map((allergen) => (
-                      <Badge key={allergen} variant="secondary" className="bg-destructive/10 text-destructive px-3 py-1">
-                        <AlertTriangle className="h-3 w-3 mr-1" />{allergen.charAt(0).toUpperCase() + allergen.slice(1)}
-                      </Badge>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No known allergies recorded for {co.firstName}.</p>
-                )}
-              </CardContent>
-            </Card>
-
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">

@@ -27,16 +27,16 @@ interface ClassFormData {
   name: string;
   gradeId: string;
   capacity: number;
-  subjectId?: string;
+  subjectId?: string | null;
   isHomeroom: boolean;
 }
 
 interface ClassFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: { name: string; gradeId: string; capacity: number; subjectId?: string; isHomeroom: boolean }) => Promise<void>;
+  onSubmit: (data: { name: string; gradeId: string; capacity: number; subjectId?: string | null; isHomeroom: boolean }) => Promise<void>;
   grades: Grade[];
-  initialData?: { name: string; gradeId: string; capacity: number; subjectId?: string; isHomeroom?: boolean };
+  initialData?: { name: string; gradeId: string; capacity: number; subjectId?: string | null; isHomeroom?: boolean };
   isLoading: boolean;
   copyMode?: 'class' | 'teachingGroup';
 }
@@ -71,7 +71,12 @@ export function ClassFormDialog({
   const selectedGradeId = watch('gradeId');
   const selectedSubjectId = watch('subjectId');
   const isHomeroom = watch('isHomeroom');
-  const { subjects } = useTeacherSubjects(open && selectedGradeId ? selectedGradeId : undefined);
+  const { subjects, loading: subjectsLoading } = useTeacherSubjects(open && selectedGradeId ? selectedGradeId : undefined);
+
+  useEffect(() => {
+    register('gradeId', { required: 'Grade is required' });
+    register('subjectId');
+  }, [register]);
 
   useEffect(() => {
     if (open) {
@@ -85,21 +90,27 @@ export function ClassFormDialog({
     }
   }, [open, initialData, reset]);
 
+  useEffect(() => {
+    if (!open || subjectsLoading || !selectedSubjectId) return;
+    const subjectStillValid = (subjects ?? []).some((subject) => subject.id === selectedSubjectId);
+    if (!subjectStillValid) {
+      setValue('subjectId', undefined, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [open, selectedSubjectId, setValue, subjects, subjectsLoading]);
+
   const [submitting, setSubmitting] = useState(false);
 
   const handleFormSubmit = async (data: ClassFormData) => {
     if (submitting) return;
     setSubmitting(true);
     try {
-      const payload: { name: string; gradeId: string; capacity: number; subjectId?: string; isHomeroom: boolean } = {
+      const payload: { name: string; gradeId: string; capacity: number; subjectId?: string | null; isHomeroom: boolean } = {
         name: data.name,
         gradeId: data.gradeId,
         capacity: data.capacity,
+        subjectId: data.subjectId && data.subjectId !== 'none' ? data.subjectId : null,
         isHomeroom: Boolean(data.isHomeroom),
       };
-      if (data.subjectId && data.subjectId !== 'none') {
-        payload.subjectId = data.subjectId;
-      }
       await onSubmit(payload);
     } finally {
       setSubmitting(false);
@@ -126,10 +137,14 @@ export function ClassFormDialog({
                 Grade <span className="text-destructive">*</span>
               </Label>
               <Select
-                value={selectedGradeId}
-                onValueChange={(val: unknown) =>
-                  setValue('gradeId', val as string, { shouldValidate: true })
-                }
+                value={selectedGradeId ?? ''}
+                onValueChange={(val: unknown) => {
+                  const nextGradeId = val as string;
+                  if (nextGradeId !== selectedGradeId) {
+                    setValue('subjectId', undefined, { shouldDirty: true, shouldValidate: true });
+                  }
+                  setValue('gradeId', nextGradeId, { shouldDirty: true, shouldValidate: true });
+                }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a grade" />
@@ -157,7 +172,7 @@ export function ClassFormDialog({
               <Select
                 value={selectedSubjectId ?? 'none'}
                 onValueChange={(val: unknown) =>
-                  setValue('subjectId', val === 'none' ? undefined : (val as string))
+                  setValue('subjectId', val === 'none' ? undefined : (val as string), { shouldDirty: true, shouldValidate: true })
                 }
               >
                 <SelectTrigger className="w-full">
@@ -198,8 +213,15 @@ export function ClassFormDialog({
               <Input
                 id="capacity"
                 type="number"
-                {...register('capacity', { valueAsNumber: true, min: 1 })}
+                {...register('capacity', {
+                  valueAsNumber: true,
+                  min: { value: 1, message: 'Expected learners must be at least 1' },
+                  max: { value: 200, message: 'Expected learners cannot exceed 200' },
+                })}
               />
+              {errors.capacity && (
+                <p className="text-xs text-destructive">{errors.capacity.message}</p>
+              )}
               {isTeachingGroup && (
                 <p className="text-xs text-muted-foreground">
                   You can leave this as an estimate. Learners can be added later when you want online assignments.

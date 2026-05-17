@@ -6,9 +6,6 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { useQuestionBankLibrary } from '@/hooks/useQuestionBankLibrary';
 import { ListChecks } from 'lucide-react';
-import Link from 'next/link';
-import { buttonVariants } from '@/components/ui/button';
-import { ExternalLink } from 'lucide-react';
 
 interface Props {
   subjectId: string;
@@ -56,8 +53,8 @@ export function HomeworkExercisePicker({
           title="No questions found"
           description={
             search.trim()
-              ? 'Try a different search term, or add questions to the Question Bank.'
-              : 'Add questions to the Question Bank to build exercise sets.'
+              ? 'Try a different search term or generate a fresh homework activity instead.'
+              : 'No saved questions are available yet. Generate a fresh homework activity instead.'
           }
         />
       )}
@@ -84,14 +81,6 @@ export function HomeworkExercisePicker({
             Selected: {selectedIds.length} question(s)
           </p>
         </>
-      )}
-      {questions.length === 0 && !search.trim() && (
-        <Link
-          href="/teacher/curriculum/questions"
-          className={buttonVariants({ variant: 'outline', size: 'sm' })}
-        >
-          Add questions <ExternalLink className="ml-1 h-3 w-3" />
-        </Link>
       )}
     </div>
   );

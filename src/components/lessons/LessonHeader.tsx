@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Sparkles } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, EyeOff, Send, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,6 +18,8 @@ import type {
 interface Props {
   lesson: Lesson;
   updateLesson: (patch: Partial<Lesson>) => Promise<Lesson>;
+  publish: () => Promise<Lesson>;
+  unpublish: () => Promise<Lesson>;
   assignClass: (classId: string, scheduledDate: string) => Promise<Lesson>;
   unassignClass: (classId: string) => Promise<Lesson>;
   updateAssignment: (classId: string, patch: UpdateAssignmentPayload) => Promise<Lesson>;
@@ -72,6 +74,8 @@ function resolveGradeName(lesson: Lesson): string {
 export function LessonHeader({
   lesson,
   updateLesson,
+  publish,
+  unpublish,
   assignClass,
   unassignClass,
   updateAssignment,
@@ -82,6 +86,25 @@ export function LessonHeader({
   const [reflectionDraft, setReflectionDraft] = useState(
     lesson.reflectionNotes ?? '',
   );
+  const [publishBusy, setPublishBusy] = useState(false);
+  const isPublished = Boolean(lesson.publishedAt);
+  const publishedDateLabel = lesson.publishedAt
+    ? new Date(lesson.publishedAt).toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : null;
+
+  const handleTogglePublish = async () => {
+    setPublishBusy(true);
+    try {
+      if (isPublished) await unpublish();
+      else await publish();
+    } finally {
+      setPublishBusy(false);
+    }
+  };
 
   const subjectName = resolveSubjectName(lesson);
   const gradeName = resolveGradeName(lesson);
@@ -160,7 +183,31 @@ export function LessonHeader({
             </button>
           )}
         </div>
-        <div className="shrink-0">
+        <div className="shrink-0 flex items-center gap-2">
+          <Button
+            type="button"
+            variant={isPublished ? 'outline' : 'default'}
+            size="default"
+            onClick={handleTogglePublish}
+            disabled={publishBusy}
+            title={
+              isPublished
+                ? 'Visible to students in every assigned class. Click to unpublish.'
+                : 'Make this lesson visible to students in every assigned class.'
+            }
+          >
+            {isPublished ? (
+              <>
+                <EyeOff className="mr-2 h-4 w-4" />
+                Unpublish
+              </>
+            ) : (
+              <>
+                <Send className="mr-2 h-4 w-4" />
+                Publish
+              </>
+            )}
+          </Button>
           <Button
             type="button"
             variant="outline"
@@ -173,6 +220,13 @@ export function LessonHeader({
           </Button>
         </div>
       </div>
+
+      {isPublished && publishedDateLabel && (
+        <div className="-mt-3 inline-flex items-center gap-1.5 text-xs text-emerald-700">
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          Published on {publishedDateLabel}
+        </div>
+      )}
 
       {/* Row 2 — Grade · Subject · Term · Duration as data badges */}
       <div className="flex flex-wrap gap-2">

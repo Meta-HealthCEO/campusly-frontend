@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +11,8 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/components/ui/select';
 import { Save, BookOpen, Download, FileText, AlertCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TermSummaryTab } from '@/components/grades/TermSummaryTab';
 import { useTeacherGrades } from '@/hooks/useTeacherGrades';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 // Assessment creation now goes through the Papers builder.
@@ -36,12 +37,22 @@ function getPaperId(a: Assessment): string | null {
 }
 
 const TERM_OPTIONS = [
-  { value: 'all', label: 'All terms' },
+  { value: 'year', label: 'Full year' },
   { value: '1', label: 'Term 1' },
   { value: '2', label: 'Term 2' },
   { value: '3', label: 'Term 3' },
   { value: '4', label: 'Term 4' },
 ];
+
+/** Convert the term-picker string into the value the Term Summary view
+ *  consumes — a number 1-4 for a specific term, or the literal 'year'
+ *  for the full-year roll-up. */
+function resolveTermScope(selected: string): number | 'year' {
+  if (selected === 'year') return 'year';
+  const n = Number(selected);
+  if (Number.isInteger(n) && n >= 1 && n <= 4) return n;
+  return 1;
+}
 
 export default function TeacherGradesPage() {
   const {
@@ -109,132 +120,16 @@ export default function TeacherGradesPage() {
     URL.revokeObjectURL(url);
   }
 
-  return (
-    <div className="space-y-6">
-      <PageHeader title="Gradebook" description="Enter and manage student assessment marks" />
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-4">
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Class:</span>
-              <Select value={selectedClass} onValueChange={(val: unknown) => setSelectedClass(val as string)}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Select class">
-                    {selectedClass ? classDisplayName : 'Select class'}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {classes.map((cls) => (
-                    <SelectItem key={cls.id} value={cls.id}>
-                      {cls.grade?.name ?? (cls as unknown as Record<string, unknown>).gradeName ?? ''} {cls.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Subject:</span>
-              <Select
-                value={selectedSubject || 'all'}
-                onValueChange={(val: unknown) => setSelectedSubject((val as string) === 'all' ? '' : (val as string))}
-              >
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="All subjects">{selectedSubjectName}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All subjects</SelectItem>
-                  {subjects.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Term:</span>
-              <Select value={selectedTerm} onValueChange={(val: unknown) => setSelectedTerm(val as string)}>
-                <SelectTrigger className="w-full sm:w-36">
-                  <SelectValue placeholder="All terms">{selectedTermLabel}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {TERM_OPTIONS.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Assessment:</span>
-              <Select value={selectedAssessment} onValueChange={(val: unknown) => setSelectedAssessment(val as string)}>
-                <SelectTrigger className="w-full sm:w-56">
-                  <SelectValue placeholder="Select assessment">
-                    {selectedAssessment ? selectedAssessmentName : 'Select assessment'}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {assessments.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      <span className="flex items-center gap-1.5">
-                        {getPaperId(a) && <FileText className="h-3 w-3 shrink-0 text-muted-foreground" />}
-                        {a.name} ({getSubjectName(a) || a.type})
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="sm:ml-auto">
-              <Link href="/teacher/papers/new">
-                <Button variant="outline">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Create Paper
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* No assessments empty state */}
-      {selectedClass && assessments.length === 0 && !selectedAssessment && (
-        <EmptyState
-          icon={BookOpen}
-          title="No assessments yet"
-          description="Create and finalise a paper, then capture its marks here."
-          action={
-            <Link href="/teacher/papers">
-              <Button>Go to Papers</Button>
-            </Link>
-          }
-        />
-      )}
-
-      {/* Current assessment info + edit/delete */}
-      {currentAssessment && (
-        <AssessmentInfoCard
-          assessment={currentAssessment}
-          onEdit={() => setEditOpen(true)}
-          onDelete={deleteAssessment}
-        />
-      )}
-
-      <EditAssessmentDialog
-        open={editOpen}
-        assessment={currentAssessment ?? null}
-        onClose={() => setEditOpen(false)}
-        onUpdate={async (id, payload) => { await updateAssessment(id, payload); }}
-      />
-
+  const captureContent = (
+    <>
       {classStats && currentAssessment && (
-        <ClassStatsBar stats={classStats} totalMarks={currentAssessment.totalMarks} />
+        <div className="space-y-2">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            Snapshot for &ldquo;{currentAssessment.name}&rdquo; — these numbers cover this assessment only.
+          </p>
+          <ClassStatsBar stats={classStats} totalMarks={currentAssessment.totalMarks} />
+        </div>
       )}
-
-      {/* Marks table */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">Student Marks ({markEntries.length} students)</CardTitle>
@@ -242,7 +137,7 @@ export default function TeacherGradesPage() {
         <CardContent>
           {markEntries.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              {selectedAssessment ? 'No students found for this class.' : 'Select a class and assessment to begin.'}
+              {selectedAssessment ? 'No students found for this class.' : 'Select an assessment to capture marks.'}
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -330,6 +225,136 @@ export default function TeacherGradesPage() {
           )}
         </CardContent>
       </Card>
+    </>
+  );
+
+  return (
+    <div className="space-y-6">
+      <PageHeader title="Gradebook" description="Track class performance and capture marks">
+        <div className="flex items-center gap-2">
+          <Select
+            value={selectedClass}
+            onValueChange={(val: unknown) => setSelectedClass(val as string)}
+          >
+            <SelectTrigger className="w-64">
+              <SelectValue placeholder="Pick class">
+                {selectedClass ? classDisplayName : 'Pick class'}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {classes.map((cls) => (
+                <SelectItem key={cls.id} value={cls.id}>
+                  {cls.grade?.name ?? (cls as unknown as Record<string, unknown>).gradeName ?? ''} {cls.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedTerm} onValueChange={(val: unknown) => setSelectedTerm(val as string)}>
+            <SelectTrigger className="w-32">
+              <SelectValue>{selectedTermLabel}</SelectValue>
+            </SelectTrigger>
+            <SelectContent alignItemWithTrigger={false}>
+              {TERM_OPTIONS.map((t) => (
+                <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </PageHeader>
+
+      {selectedClass ? (
+        <Tabs defaultValue="overview">
+          <TabsList>
+            <TabsTrigger value="overview">Class overview</TabsTrigger>
+            <TabsTrigger value="capture">Enter marks</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="mt-4">
+            <TermSummaryTab
+              classId={selectedClass}
+              term={resolveTermScope(selectedTerm)}
+              academicYear={new Date().getFullYear()}
+            />
+          </TabsContent>
+
+          <TabsContent value="capture" className="mt-4 space-y-4">
+            {/* Capture-only pickers — Subject narrows, Assessment selects the
+                row to enter marks for. Live here so the overview isn't
+                cluttered with controls that don't apply. */}
+            <Card>
+              <CardContent className="p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
+                <Select
+                  value={selectedSubject || 'all'}
+                  onValueChange={(val: unknown) =>
+                    setSelectedSubject((val as string) === 'all' ? '' : (val as string))
+                  }
+                >
+                  <SelectTrigger className="w-full sm:w-48">
+                    <SelectValue placeholder="All subjects">{selectedSubjectName}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All subjects</SelectItem>
+                    {subjects.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={selectedAssessment}
+                  onValueChange={(val: unknown) => setSelectedAssessment(val as string)}
+                >
+                  <SelectTrigger className="w-full sm:w-72">
+                    <SelectValue placeholder="Pick assessment">
+                      {selectedAssessment ? selectedAssessmentName : 'Pick assessment'}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {assessments.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        <span className="flex items-center gap-1.5">
+                          {getPaperId(a) && <FileText className="h-3 w-3 shrink-0 text-muted-foreground" />}
+                          {a.name} ({getSubjectName(a) || a.type})
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+
+            {assessments.length === 0 && !selectedAssessment && (
+              <EmptyState
+                icon={BookOpen}
+                title="No assessments for this term yet"
+                description="Marks will appear here once a paper is finalised and assigned. Manage papers from the Test Papers section."
+              />
+            )}
+
+            {currentAssessment && (
+              <AssessmentInfoCard
+                assessment={currentAssessment}
+                onEdit={() => setEditOpen(true)}
+                onDelete={deleteAssessment}
+              />
+            )}
+            {captureContent}
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <EmptyState
+          icon={BookOpen}
+          title="Pick a class to begin"
+          description="Use the class picker in the header. Class overview rolls up every test for that class; Enter marks is the capture workflow."
+        />
+      )}
+
+      <EditAssessmentDialog
+        open={editOpen}
+        assessment={currentAssessment ?? null}
+        onClose={() => setEditOpen(false)}
+        onUpdate={async (id, payload) => { await updateAssessment(id, payload); }}
+      />
 
       <StudentHistoryDialog
         student={selectedStudent}

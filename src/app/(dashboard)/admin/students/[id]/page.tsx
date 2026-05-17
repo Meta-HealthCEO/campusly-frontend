@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, User, GraduationCap, CreditCard, CalendarCheck, Heart, Pencil, Trash2, FileText } from 'lucide-react';
+import { ArrowLeft, User, GraduationCap, CreditCard, CalendarCheck, Pencil, Trash2, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,6 @@ import { PersonalTab } from '@/components/students/PersonalTab';
 import { AcademicTab } from '@/components/students/AcademicTab';
 import { FinancialTab } from '@/components/students/FinancialTab';
 import { AttendanceTab } from '@/components/students/AttendanceTab';
-import { MedicalProfileForm } from '@/components/students/MedicalProfileForm';
 import { StudentPhotoUpload } from '@/components/students/StudentPhotoUpload';
 import { useStudentProfile, deleteStudent } from '@/hooks/useStudentProfile';
 import { useStudentPhoto } from '@/hooks/useStudentPhoto';
@@ -149,20 +148,12 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
           <TabsTrigger value="academic"><GraduationCap className="mr-1 h-4 w-4" />Academic</TabsTrigger>
           <TabsTrigger value="financial"><CreditCard className="mr-1 h-4 w-4" />Financial</TabsTrigger>
           <TabsTrigger value="attendance"><CalendarCheck className="mr-1 h-4 w-4" />Attendance</TabsTrigger>
-          <TabsTrigger value="medical"><Heart className="mr-1 h-4 w-4" />Medical</TabsTrigger>
         </TabsList>
 
         <TabsContent value="personal" className="mt-4"><PersonalTab student={student} /></TabsContent>
         <TabsContent value="academic" className="mt-4"><AcademicTab grades={grades} /></TabsContent>
         <TabsContent value="financial" className="mt-4"><FinancialTab invoices={invoices} /></TabsContent>
         <TabsContent value="attendance" className="mt-4"><AttendanceTab attendance={attendance} /></TabsContent>
-        <TabsContent value="medical" className="mt-4">
-          <MedicalProfileForm
-            studentId={id}
-            medicalProfile={student.medicalProfile ?? { allergies: [], conditions: [], emergencyContacts: [] }}
-            onSaved={refetch}
-          />
-        </TabsContent>
       </Tabs>
     </div>
   );

@@ -95,15 +95,3 @@ export async function updateStudent(id: string, data: Record<string, unknown>): 
   }
 }
 
-export async function updateMedicalProfile(
-  id: string,
-  data: Record<string, unknown>,
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    await apiClient.patch(`/students/${id}/medical`, data);
-    return { success: true };
-  } catch (err: unknown) {
-    const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to update medical profile';
-    return { success: false, error: message };
-  }
-}

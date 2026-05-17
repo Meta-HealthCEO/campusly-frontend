@@ -5,7 +5,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useHomeworkSubmission } from '@/hooks/useHomeworkSubmission';
-import { useQuestionsByIds } from '@/hooks/useQuestionsByIds';
 import { useContentResource } from '@/hooks/useContentResource';
 import { ExerciseQuestionRenderer } from './ExerciseQuestionRenderer';
 import { ResourceHomeworkViewer } from './ResourceHomeworkViewer';
@@ -27,8 +26,7 @@ interface Props {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function ReadingSubmissionForm({ homework, submission, onSubmit }: Props) {
-  const ids = homework.comprehensionQuestionIds ?? [];
-  const { questions, loading: questionsLoading } = useQuestionsByIds(ids);
+  const questions = homework.comprehensionQuestions ?? [];
   const { resource, loading: resourceLoading } = useContentResource(homework.contentResourceId);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submittedId, setSubmittedId] = useState<string | null>(submission?._id ?? null);
@@ -54,7 +52,7 @@ export function ReadingSubmissionForm({ homework, submission, onSubmit }: Props)
     }
   };
 
-  if (questionsLoading || resourceLoading) return <LoadingSpinner />;
+  if (resourceLoading) return <LoadingSpinner />;
 
   const isLocked = !!submittedId;
   const liveSub = live.submission as ReadingSubmission | null;

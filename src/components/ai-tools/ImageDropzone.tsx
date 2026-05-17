@@ -96,14 +96,10 @@ export function ImageDropzone({
 
     if (validFiles.length === 0) return;
 
-    setMultiFiles((prev) => {
-      const remaining = maxFiles - prev.length;
-      if (remaining <= 0) {
-        setError(`Maximum of ${maxFiles} files allowed.`);
-        return prev;
-      }
-      return prev; // actual update happens after async reads below
-    });
+    if (multiFiles.length >= maxFiles) {
+      setError(`Maximum of ${maxFiles} files allowed.`);
+      return;
+    }
 
     try {
       const entries = await Promise.all(
@@ -114,30 +110,30 @@ export function ImageDropzone({
         })),
       );
 
-      setMultiFiles((prev) => {
-        const remaining = maxFiles - prev.length;
-        if (remaining <= 0) {
-          setError(`Maximum of ${maxFiles} files allowed.`);
-          return prev;
-        }
-        const toAdd = entries.slice(0, remaining);
-        const updated = [...prev, ...toAdd];
-        onFilesChange?.(updated.map((f) => ({ base64: f.base64, type: f.type })));
-        return updated;
-      });
+      // Compute updated state and side-effect outside any setState updater.
+      // Calling the parent's setState inside a setState updater triggers
+      // React's "Cannot update a component while rendering" warning under
+      // StrictMode because the updater is invoked twice.
+      const remaining = maxFiles - multiFiles.length;
+      if (remaining <= 0) {
+        setError(`Maximum of ${maxFiles} files allowed.`);
+        return;
+      }
+      const toAdd = entries.slice(0, remaining);
+      const updated = [...multiFiles, ...toAdd];
+      setMultiFiles(updated);
+      onFilesChange?.(updated.map((f) => ({ base64: f.base64, type: f.type })));
     } catch (err: unknown) {
       console.error('Failed to process files', err);
       setError('Failed to read one or more files.');
     }
-  }, [acceptPdf, maxFiles, readFileAsBase64, onFilesChange]);
+  }, [acceptPdf, maxFiles, multiFiles, readFileAsBase64, onFilesChange]);
 
   const handleRemoveMultiFile = useCallback((index: number) => {
-    setMultiFiles((prev) => {
-      const updated = prev.filter((_, i) => i !== index);
-      onFilesChange?.(updated.map((f) => ({ base64: f.base64, type: f.type })));
-      return updated;
-    });
-  }, [onFilesChange]);
+    const updated = multiFiles.filter((_, i) => i !== index);
+    setMultiFiles(updated);
+    onFilesChange?.(updated.map((f) => ({ base64: f.base64, type: f.type })));
+  }, [multiFiles, onFilesChange]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();

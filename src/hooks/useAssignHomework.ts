@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapList, extractErrorMessage } from '@/lib/api-helpers';
-import { useAuthStore } from '@/stores/useAuthStore';
 import { toast } from 'sonner';
 import type { SchoolClass } from '@/types';
 import type { AssignHomeworkFormValues } from '@/components/homework/AssignHomeworkDialog';
@@ -14,7 +13,6 @@ interface AssignPayload {
 }
 
 export function useAssignHomework() {
-  const { user } = useAuthStore();
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [classesLoading, setClassesLoading] = useState(true);
 
@@ -42,7 +40,6 @@ export function useAssignHomework() {
           title: resourceTitle,
           subjectId,
           classId: formData.classId,
-          schoolId: user?.schoolId,
           dueDate: new Date(formData.dueDate).toISOString(),
           totalMarks: Number(formData.totalMarks),
           contentResourceId: resourceId,
@@ -55,7 +52,7 @@ export function useAssignHomework() {
         return false;
       }
     },
-    [user?.schoolId],
+    [],
   );
 
   return { classes, classesLoading, refetchClasses: fetchClasses, assignHomework };

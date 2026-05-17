@@ -61,7 +61,7 @@ export function QuestionBankBrowser({
   return (
     <div className="flex flex-col gap-3 h-full">
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-        Question Bank
+        Saved Questions
       </p>
 
       {/* Filters row */}

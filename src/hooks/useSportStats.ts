@@ -146,8 +146,9 @@ export function useSportStats() {
       const params: Record<string, string> = {};
       if (sportCode) params.sportCode = sportCode;
       const res = await apiClient.get(`/sports/players/${studentId}/card`, { params });
-      const data = unwrap<PlayerCard | PlayerCard[]>(res);
-      const cards = Array.isArray(data) ? data : [data];
+      const cards = sportCode
+        ? [unwrap<PlayerCard>(res)]
+        : unwrapArr<PlayerCard>(res);
       setPlayerCards(cards);
       return cards;
     } catch (err: unknown) {
@@ -184,7 +185,7 @@ export function useSportStats() {
 
   const getParentSportsReport = useCallback(async (studentId: string): Promise<ParentSportsReport | null> => {
     try {
-      const res = await apiClient.get(`/sports/ai/player/${studentId}/parent-report`);
+      const res = await apiClient.post(`/sports/ai/player/${studentId}/parent-report`);
       return unwrap<ParentSportsReport>(res);
     } catch (err: unknown) {
       console.error('Failed to load parent sports report', err);

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Send, RotateCcw, MessageSquare, Sparkles } from 'lucide-react';
+import ReactMarkdown, { type Components } from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Button } from '@/components/ui/button';
 import { useLessonChat, type ChatMessage } from '@/hooks/useLessonChat';
 import { cn } from '@/lib/utils';
@@ -244,19 +246,52 @@ function ComposerBox({
   );
 }
 
+const markdownComponents: Components = {
+  h1: ({ children }) => <h3 className="text-sm font-semibold mt-2 mb-1 first:mt-0">{children}</h3>,
+  h2: ({ children }) => <h3 className="text-sm font-semibold mt-2 mb-1 first:mt-0">{children}</h3>,
+  h3: ({ children }) => <h4 className="text-sm font-semibold mt-2 mb-1 first:mt-0">{children}</h4>,
+  h4: ({ children }) => <h4 className="text-sm font-semibold mt-2 mb-1 first:mt-0">{children}</h4>,
+  p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
+  ul: ({ children }) => <ul className="list-disc pl-5 mb-2 last:mb-0 space-y-0.5">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal pl-5 mb-2 last:mb-0 space-y-0.5">{children}</ol>,
+  li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+  em: ({ children }) => <em className="italic">{children}</em>,
+  code: ({ children }) => (
+    <code className="rounded bg-background/60 px-1 py-0.5 text-[0.85em] font-mono">{children}</code>
+  ),
+  a: ({ href, children }) => (
+    <a href={href} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-2">
+      {children}
+    </a>
+  ),
+  hr: () => <hr className="my-2 border-border" />,
+  blockquote: ({ children }) => (
+    <blockquote className="border-l-2 border-border pl-3 italic text-muted-foreground">
+      {children}
+    </blockquote>
+  ),
+};
+
 function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === 'user';
   return (
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap break-words',
+          'max-w-[85%] rounded-lg px-3 py-2 text-sm wrap-break-word',
           isUser
-            ? 'bg-primary/10 text-foreground'
+            ? 'bg-primary/10 text-foreground whitespace-pre-wrap'
             : 'bg-muted text-foreground',
         )}
       >
-        {message.content}
+        {isUser ? (
+          message.content
+        ) : (
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+            {message.content}
+          </ReactMarkdown>
+        )}
       </div>
     </div>
   );

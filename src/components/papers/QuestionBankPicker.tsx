@@ -111,8 +111,8 @@ export function QuestionBankPicker({
           )}
           {!loading && questions.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              Question Bank is empty for this subject/grade. Questions will be
-              added in Module 4. For now, use AI generation instead.
+              No saved questions are available for this subject and grade yet.
+              Use AI generation or add custom questions instead.
             </p>
           )}
           <div className="space-y-1">

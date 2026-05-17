@@ -116,7 +116,7 @@ export default function AdminTextbooksPage() {
 
   const handleArchive = useCallback(async () => {
     if (!selected) return;
-    const result = await updateTextbook(selected.id, {});
+    const result = await updateTextbook(selected.id, { status: 'archived' });
     if (result) { applyFilters(); await refreshSelected(selected.id); }
   }, [selected, updateTextbook, applyFilters, refreshSelected]);
 

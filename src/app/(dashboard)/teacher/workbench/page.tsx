@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import {
   BookOpen,
-  Database,
   CheckCircle,
   ClipboardCheck,
   FileText,
@@ -19,15 +18,9 @@ import { useWorkbenchDashboard } from '@/hooks/useWorkbenchDashboard';
 const QUICK_ACTIONS = [
   {
     title: 'Build Paper',
-    description: 'Create and compile assessment papers from your question bank.',
+    description: 'Create and compile assessment papers with AI and saved paper templates.',
     href: '/teacher/workbench/papers/builder',
     icon: FileText,
-  },
-  {
-    title: 'Question Bank',
-    description: 'Browse, add, and manage your reusable question library.',
-    href: '/teacher/workbench/question-bank',
-    icon: Database,
   },
   {
     title: 'View Planner',
@@ -55,18 +48,12 @@ export default function WorkbenchPage() {
         description="Your teaching automation hub"
       />
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard
           title="Coverage"
           value={`${data?.coveragePercentage ?? 0}%`}
           icon={BookOpen}
           description="Curriculum covered this term"
-        />
-        <StatCard
-          title="Questions"
-          value={String(data?.questionCount ?? 0)}
-          icon={Database}
-          description="In your question bank"
         />
         <StatCard
           title="Moderation"

@@ -4,18 +4,16 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useTeacherHomeworkWizardStore } from '@/stores/useTeacherHomeworkWizardStore';
 import { useTeacherHomeworkMutations } from '@/hooks/useTeacherHomework';
-import { useAuthStore } from '@/stores/useAuthStore';
 import { toast } from 'sonner';
 
 export function HomeworkWizardStep4() {
   const state = useTeacherHomeworkWizardStore();
   const { createHomework, loading } = useTeacherHomeworkMutations();
-  const { user } = useAuthStore();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (): Promise<void> => {
-    if (submitting || !user?.schoolId) return;
+    if (submitting) return;
     if (!state.type) {
       toast.error('Type missing — go back and pick a type');
       return;
@@ -25,7 +23,6 @@ export function HomeworkWizardStep4() {
       title: state.title,
       subjectId: state.subjectId,
       classId: state.classId,
-      schoolId: user.schoolId,
       dueDate: new Date(state.dueDate).toISOString(),
       totalMarks: state.totalMarks,
       latePolicy: state.latePolicy,

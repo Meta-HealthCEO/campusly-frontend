@@ -26,8 +26,7 @@ export function useTeacherSubjects(gradeId?: string) {
         if (gradeId) params.gradeId = gradeId;
         const res = await apiClient.get('/academic/subjects', { params });
         if (!cancelled) setSubjects(unwrapList<Subject>(res));
-      } catch (err: unknown) {
-        console.error('Failed to load teacher subjects', err);
+      } catch {
         toast.error('Could not load subjects.');
       } finally {
         if (!cancelled) setLoading(false);

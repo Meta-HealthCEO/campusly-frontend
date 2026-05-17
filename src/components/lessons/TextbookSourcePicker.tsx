@@ -112,7 +112,7 @@ export function TextbookSourcePicker({ value, onChange }: Props) {
   const [internal, setInternal] = useState<InternalState>(() => initInternal(value));
   const [external, setExternal] = useState<ExternalState>(() => initExternal(value));
 
-  useEffect(() => { fetchTextbooks(); }, [fetchTextbooks]);
+  useEffect(() => { fetchTextbooks({ status: 'published' }); }, [fetchTextbooks]);
 
   const updateInternal = (patch: Partial<InternalState>) => {
     setInternal((prev) => {

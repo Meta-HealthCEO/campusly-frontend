@@ -9,8 +9,6 @@
 // `lesson-plans.ts` remains in place until Task 23 retires it.
 // ============================================================
 
-export type LessonStatus = 'draft' | 'ready' | 'taught';
-
 export type LessonPhase =
   | 'introduction'
   | 'direct_instruction'
@@ -61,6 +59,14 @@ export interface ExternalTextbookRef {
 
 export type TextbookRef = InternalTextbookRef | ExternalTextbookRef;
 
+export type LessonPopulatedRef<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> = string | ({
+  _id?: string;
+  id?: string;
+  title?: string;
+} & T);
+
 // ─── Lesson materials (discriminated union by `kind`) ───────────────────────
 
 interface LessonMaterialBase {
@@ -76,47 +82,47 @@ interface LessonMaterialBase {
 export interface ReadingMaterial extends LessonMaterialBase {
   kind: 'reading';
   textbookRef: TextbookRef;
-  comprehensionQuestionIds?: string[];
+  comprehensionQuestionIds?: LessonPopulatedRef[];
 }
 
 export interface WorksheetMaterial extends LessonMaterialBase {
   kind: 'worksheet';
-  contentResourceId: string;
+  contentResourceId: LessonPopulatedRef<{ blocks?: unknown[]; type?: string }>;
 }
 
 export interface ActivityMaterial extends LessonMaterialBase {
   kind: 'activity';
-  contentResourceId: string;
+  contentResourceId: LessonPopulatedRef<{ blocks?: unknown[]; type?: string }>;
 }
 
 export interface NotesMaterial extends LessonMaterialBase {
   kind: 'study_notes';
-  contentResourceId?: string;
+  contentResourceId?: LessonPopulatedRef<{ blocks?: unknown[]; type?: string }>;
 }
 
 export interface WorkedExampleMaterial extends LessonMaterialBase {
   kind: 'worked_example';
-  contentResourceId: string;
+  contentResourceId: LessonPopulatedRef<{ blocks?: unknown[]; type?: string }>;
 }
 
 export interface QuizMaterial extends LessonMaterialBase {
   kind: 'quiz';
-  quizId: string;
+  quizId: LessonPopulatedRef<{ questions?: unknown[] }>;
 }
 
 export interface PracticeQuestionsMaterial extends LessonMaterialBase {
   kind: 'practice_questions';
-  questionIds: string[];
+  questionIds: LessonPopulatedRef[];
 }
 
 export interface HomeworkMaterial extends LessonMaterialBase {
   kind: 'homework';
-  homeworkId: string;
+  homeworkId: LessonPopulatedRef<{ dueDate?: string; status?: string }>;
 }
 
 export interface PaperMaterial extends LessonMaterialBase {
   kind: 'paper';
-  paperId: string;
+  paperId: LessonPopulatedRef<{ releaseAt?: string; dueAt?: string }>;
 }
 
 export type LessonMaterial =
@@ -178,7 +184,8 @@ export interface Lesson {
   objectives: string[];
   phases: LessonPhaseEntry[];
   materials: LessonMaterial[];
-  status: LessonStatus;
+  /** ISO timestamp set on publish; null while the lesson is still teacher-only. */
+  publishedAt: string | null;
   reflectionNotes?: string;
   aiGenerated: boolean;
   isDeleted: boolean;

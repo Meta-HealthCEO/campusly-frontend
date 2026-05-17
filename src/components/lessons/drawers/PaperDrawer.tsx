@@ -30,6 +30,12 @@ interface Props {
   existing?: PaperMaterial;
 }
 
+function refId(ref: PaperMaterial['paperId'] | undefined): string {
+  if (!ref) return '';
+  if (typeof ref === 'string') return ref;
+  return ref._id ?? ref.id ?? '';
+}
+
 const PAPER_TYPE_OPTIONS: { value: PaperType; label: string }[] = [
   { value: 'test', label: 'Class test' },
   { value: 'exam', label: 'Exam' },
@@ -53,7 +59,7 @@ export function PaperDrawer({ onSubmit, existing }: Props) {
   const [submitting, setSubmitting] = useState(false);
 
   // Link-mode
-  const [existingPaperId, setExistingPaperId] = useState(existing?.paperId ?? '');
+  const [existingPaperId, setExistingPaperId] = useState(refId(existing?.paperId));
 
   // Create-mode
   const [paperType, setPaperType] = useState<PaperType>('test');
@@ -67,7 +73,7 @@ export function PaperDrawer({ onSubmit, existing }: Props) {
     setMode('link');
     setTitle(existing.title);
     setTeacherNotes(existing.teacherNotes ?? '');
-    setExistingPaperId(existing.paperId);
+    setExistingPaperId(refId(existing.paperId));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existing?._id]);
 

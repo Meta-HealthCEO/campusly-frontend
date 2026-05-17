@@ -9,7 +9,7 @@ import {
   Compass, Target, Clipboard, Newspaper,
   CalendarCheck, CalendarCog, Crown, DoorOpen, UserPlus,
   AlertTriangle, Calculator,
-  CheckSquare, Video, PlayCircle, FileQuestion, ScanLine, ScrollText,
+  CheckSquare, Video, PlayCircle, ScrollText,
   User,
   type LucideIcon
 } from 'lucide-react';
@@ -271,7 +271,7 @@ export const ADMIN_NAV: NavItem[] = [
     ],
   },
   {
-    label: 'Fees', href: ROUTES.ADMIN_FEES, icon: DollarSign, module: 'fees',
+    label: 'Fees', href: ROUTES.ADMIN_FEES, icon: DollarSign, module: 'fee',
     children: [
       { label: 'Overview', href: ROUTES.ADMIN_FEES, icon: DollarSign },
       { label: 'Invoices', href: ROUTES.ADMIN_INVOICES, icon: Receipt },
@@ -287,7 +287,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Timetable Builder', href: ROUTES.ADMIN_TIMETABLE_BUILDER, icon: CalendarCog },
   { label: 'Attendance', href: ROUTES.ADMIN_ATTENDANCE, icon: ClipboardList },
   { label: 'Substitutes', href: ROUTES.ADMIN_SUBSTITUTES, icon: UserCheck },
-  { label: 'Events', href: ROUTES.ADMIN_EVENTS, icon: CalendarDays, module: 'events' },
+  { label: 'Events', href: ROUTES.ADMIN_EVENTS, icon: CalendarDays, module: 'event' },
   { label: 'Transport', href: ROUTES.ADMIN_TRANSPORT, icon: Bus, module: 'transport' },
   {
     label: 'Communication', href: ROUTES.ADMIN_COMMUNICATION, icon: MessageSquare, module: 'communication',
@@ -307,7 +307,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Data Migration', href: ROUTES.ADMIN_MIGRATION, icon: Upload },
   { label: 'Uniform Shop', href: ROUTES.ADMIN_UNIFORM, icon: Shirt },
   {
-    label: 'Sport', href: ROUTES.ADMIN_SPORT, icon: Trophy, module: 'sports',
+    label: 'Sport', href: ROUTES.ADMIN_SPORT, icon: Trophy, module: 'sport',
     children: [
       { label: 'Overview', href: ROUTES.ADMIN_SPORT, icon: Trophy },
       { label: 'Player Cards', href: ROUTES.ADMIN_SPORT_PLAYER_CARDS, icon: Award },
@@ -367,7 +367,7 @@ export const ADMIN_NAV: NavItem[] = [
 export const PARENT_NAV: NavItem[] = [
   { label: 'Dashboard', href: ROUTES.PARENT_DASHBOARD, icon: Home },
   { label: 'Wallet', href: ROUTES.PARENT_WALLET, icon: Wallet, module: 'wallet' },
-  { label: 'Fees', href: ROUTES.PARENT_FEES, icon: CreditCard, module: 'fees' },
+  { label: 'Fees', href: ROUTES.PARENT_FEES, icon: CreditCard, module: 'fee' },
   { label: 'Academics', href: ROUTES.PARENT_ACADEMICS, icon: BookOpen },
   { label: 'Attendance', href: ROUTES.PARENT_ATTENDANCE, icon: UserCheck },
   { label: 'Homework', href: ROUTES.PARENT_HOMEWORK, icon: ClipboardList, module: 'homework' },
@@ -375,13 +375,13 @@ export const PARENT_NAV: NavItem[] = [
   { label: 'Notice Board', href: ROUTES.PARENT_NOTICE_BOARD, icon: Clipboard },
   { label: 'Daily Digest', href: ROUTES.PARENT_DIGEST, icon: Newspaper },
   { label: 'Communication', href: ROUTES.PARENT_COMMUNICATION, icon: Megaphone, module: 'communication' },
-  { label: 'Events', href: ROUTES.PARENT_EVENTS, icon: Ticket, module: 'events' },
+  { label: 'Events', href: ROUTES.PARENT_EVENTS, icon: Ticket, module: 'event' },
   { label: 'Consent', href: ROUTES.PARENT_CONSENT, icon: Shield },
   { label: 'Tuck Shop', href: ROUTES.PARENT_TUCKSHOP, icon: ShoppingBag, module: 'tuckshop' },
   { label: 'Transport', href: ROUTES.PARENT_TRANSPORT, icon: Bus, module: 'transport' },
   { label: 'Lost & Found', href: ROUTES.PARENT_LOST_FOUND, icon: PackageSearch },
   { label: 'Library', href: ROUTES.PARENT_LIBRARY, icon: BookMarked, module: 'library' },
-  { label: 'Sports', href: ROUTES.PARENT_SPORTS, icon: Trophy, module: 'sports' },
+  { label: 'Sports', href: ROUTES.PARENT_SPORTS, icon: Trophy, module: 'sport' },
   { label: 'Admissions', href: ROUTES.PARENT_ADMISSIONS, icon: UserPlus, module: 'admissions' },
   { label: 'Meetings', href: ROUTES.PARENT_MEETINGS, icon: CalendarCheck },
   { label: 'Conferences', href: ROUTES.PARENT_CONFERENCES, icon: Users, module: 'conference_booking' },
@@ -402,10 +402,10 @@ export const STUDENT_NAV: NavItem[] = [
   // Phase 1 (always visible)
   { label: 'Dashboard', href: ROUTES.STUDENT_DASHBOARD, icon: Home },
   { label: 'Lessons',   href: '/student/lessons',        icon: BookOpen },
-  { label: 'Homework',  href: ROUTES.STUDENT_HOMEWORK,   icon: ClipboardList },
-  { label: 'Assignments', href: '/student/assignments',  icon: ScrollText },
+  { label: 'Homework',  href: ROUTES.STUDENT_HOMEWORK,   icon: ClipboardList, module: 'homework' },
+  { label: 'Assignments', href: '/student/assignments',  icon: ScrollText, module: 'homework' },
   { label: 'Tests',     href: '/student/tests',          icon: FileText },
-  { label: 'AI Tutor',  href: ROUTES.STUDENT_AI_TUTOR,   icon: Sparkles },
+  { label: 'AI Tutor',  href: ROUTES.STUDENT_AI_TUTOR,   icon: Sparkles, module: 'ai_tools' },
   { label: 'Profile',   href: '/student/profile',        icon: User },
 
   // Phase 2 (module-gated)
@@ -415,7 +415,7 @@ export const STUDENT_NAV: NavItem[] = [
   { label: 'Wallet',        href: ROUTES.STUDENT_WALLET,        icon: Wallet,   module: 'wallet' },
   { label: 'Library',       href: ROUTES.STUDENT_LIBRARY,       icon: BookMarked, module: 'library' },
   { label: 'Achievements',  href: ROUTES.STUDENT_ACHIEVEMENTS,  icon: Award,    module: 'achiever' },
-  { label: 'My Sports',     href: ROUTES.STUDENT_SPORTS,        icon: Trophy,   module: 'sports' },
+  { label: 'My Sports',     href: ROUTES.STUDENT_SPORTS,        icon: Trophy,   module: 'sport' },
   { label: 'Wellbeing',     href: ROUTES.STUDENT_WELLBEING,     icon: Heart,    module: 'incident_wellbeing' },
   {
     label: 'Career Guidance', href: ROUTES.STUDENT_CAREERS, icon: Compass, module: 'careers',
@@ -473,7 +473,6 @@ export const TEACHER_NAV: NavItem[] = [
   { label: 'Assignments', href: '/teacher/assignments', icon: ScrollText, badge: 'AI' },
   { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
   { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
-  { label: 'Digitise Paper', href: '/teacher/curriculum/import', icon: ScanLine, badge: 'AI' },
   {
     label: 'Courses',
     href: ROUTES.TEACHER_COURSES,
@@ -535,9 +534,7 @@ export const STANDALONE_TEACHER_NAV: NavItem[] = [
   { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
   { label: 'Assignments', href: '/teacher/assignments', icon: ScrollText, badge: 'AI' },
   { label: 'Test Papers', href: '/teacher/papers', icon: FileText, badge: 'AI' },
-  { label: 'Question Bank', href: ROUTES.TEACHER_CURRICULUM_QUESTIONS, icon: FileQuestion },
   { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
-  { label: 'Digitise Paper', href: '/teacher/curriculum/import', icon: ScanLine, badge: 'AI' },
   { label: 'Billing', href: '/my/billing', icon: CreditCard },
   { label: 'Settings', href: '/teacher/settings', icon: Settings },
 ];

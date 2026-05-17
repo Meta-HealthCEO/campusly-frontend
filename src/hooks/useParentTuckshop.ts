@@ -10,7 +10,6 @@ export interface ChildOrderData {
   lastName: string;
   orders: TuckshopOrder[];
   totalSpent: number;
-  allergens: string[];
 }
 
 interface ParentTuckshopResult {
@@ -48,10 +47,9 @@ export function useParentTuckshop(): ParentTuckshopResult {
           } catch { /* no orders */ }
 
           const totalSpent = orders.reduce((sum, o) => sum + o.totalAmount, 0);
-          const allergens: string[] = child.medicalProfile?.allergies ?? [];
           const { firstName, lastName } = resolveChildName(child as unknown as Record<string, unknown>);
 
-          results.push({ childId: child.id, firstName, lastName, orders, totalSpent, allergens });
+          results.push({ childId: child.id, firstName, lastName, orders, totalSpent });
         }
         setChildOrders(results);
       } catch {

@@ -83,13 +83,14 @@ export function AssignmentSubmissionsTab({ assignment, onChanged }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    void listSubmissions(assignment._id).then((list) => {
+    void (async () => {
+      setLoading(true);
+      const list = await listSubmissions(assignment._id);
       if (!cancelled) {
         setSubmissions(list);
         setLoading(false);
       }
-    });
+    })();
     return () => { cancelled = true; };
   }, [assignment._id, listSubmissions]);
 

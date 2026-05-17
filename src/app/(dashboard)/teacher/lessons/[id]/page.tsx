@@ -120,6 +120,8 @@ export default function LessonWorkspacePage() {
             <LessonHeader
               lesson={lesson}
               updateLesson={lessonHook.updateLesson}
+              publish={lessonHook.publish}
+              unpublish={lessonHook.unpublish}
               assignClass={lessonHook.assignClass}
               unassignClass={lessonHook.unassignClass}
               updateAssignment={lessonHook.updateAssignment}

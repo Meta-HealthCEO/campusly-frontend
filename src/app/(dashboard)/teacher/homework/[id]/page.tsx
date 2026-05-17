@@ -1,6 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,9 +13,11 @@ import {
   Calendar,
   Paperclip,
   ExternalLink,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
-import { HomeworkGradingPanel } from '@/components/homework/HomeworkGradingPanel';
+import { HomeworkSubmissionsTable } from '@/components/homework/HomeworkSubmissionsTable';
 import { ExerciseQuestionsList } from '@/components/homework/ExerciseQuestionsList';
 import {
   LinkedQuizSummary,
@@ -36,6 +39,7 @@ export default function TeacherHomeworkDetailPage() {
 
   const { homework, loading, changeStatus } =
     useTeacherHomeworkDetail(homeworkId);
+  const [contentOpen, setContentOpen] = useState(false);
 
   if (loading) return <LoadingSpinner />;
 
@@ -57,8 +61,8 @@ export default function TeacherHomeworkDetailPage() {
     );
   }
 
-  // Build a minimal Homework union shape for HomeworkGradingPanel.
-  // version and type come from the real API response via useTeacherHomeworkDetail.
+  // Minimal Homework union shape for the submissions table — version and type
+  // come from the real API response via useTeacherHomeworkDetail.
   const homeworkForPanel = {
     _id: homework.id,
     version: homework.version,
@@ -133,7 +137,9 @@ export default function TeacherHomeworkDetailPage() {
             <span>Total marks: {homework.totalMarks}</span>
           </div>
 
-          <p className="mt-3 text-sm">{homework.description}</p>
+          {homework.description && (
+            <p className="mt-3 text-sm">{homework.description}</p>
+          )}
 
           {homework.resourceId && (
             <div className="mt-3">
@@ -142,7 +148,7 @@ export default function TeacherHomeworkDetailPage() {
                 className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
-                View Linked Resource
+                {homework.resourceTitle ? `View ${homework.resourceTitle}` : 'View Linked Resource'}
                 {homework.resourceType && (
                   <Badge variant="secondary" className="ml-1">
                     {homework.resourceType.replace('_', ' ')}
@@ -176,26 +182,40 @@ export default function TeacherHomeworkDetailPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Content</CardTitle>
+          <CardTitle className="text-lg">Submissions</CardTitle>
         </CardHeader>
         <CardContent>
-          {homework.type === 'exercise' && (
-            <ExerciseQuestionsList questions={homework.exerciseQuestions} />
-          )}
-          {homework.type === 'quiz' && <LinkedQuizSummary quiz={homework.quiz} />}
-          {homework.type === 'reading' && (
-            <LinkedReadingSummary resource={homework.reading} />
-          )}
+          <HomeworkSubmissionsTable homework={homeworkForPanel} />
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Submissions</CardTitle>
+        <CardHeader className="pb-2">
+          <button
+            type="button"
+            onClick={() => setContentOpen((v) => !v)}
+            className="flex w-full items-center justify-between gap-2 text-left"
+            aria-expanded={contentOpen}
+          >
+            <CardTitle className="text-lg">Content</CardTitle>
+            {contentOpen ? (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            )}
+          </button>
         </CardHeader>
-        <CardContent>
-          <HomeworkGradingPanel homework={homeworkForPanel} />
-        </CardContent>
+        {contentOpen && (
+          <CardContent>
+            {homework.type === 'exercise' && (
+              <ExerciseQuestionsList questions={homework.exerciseQuestions} />
+            )}
+            {homework.type === 'quiz' && <LinkedQuizSummary quiz={homework.quiz} />}
+            {homework.type === 'reading' && (
+              <LinkedReadingSummary resource={homework.reading} />
+            )}
+          </CardContent>
+        )}
       </Card>
     </div>
   );

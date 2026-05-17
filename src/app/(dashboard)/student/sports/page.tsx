@@ -32,12 +32,12 @@ import type { CareerStats, StudentMatchEntry } from '@/types/sport';
 
 export default function StudentSportsPage() {
   const { user } = useAuthStore();
-  const studentId = user?.id ?? '';
-  const { studentId: myStudentRecordId } = useMyStudentId();
+  const { studentId: myStudentRecordId, loading: studentIdLoading } = useMyStudentId();
+  const studentId = myStudentRecordId ?? '';
 
   const {
     playerCards, personalBests, sportConfigs, loading,
-    loadPlayerCards, loadPersonalBests, loadSportConfigs,
+    loadPlayerCardsByStudent, loadPersonalBests, loadSportConfigs,
     getPlayerCareerStats, getStudentMatchHistory,
   } = useSportStats();
 
@@ -59,14 +59,14 @@ export default function StudentSportsPage() {
 
   useEffect(() => {
     loadSportConfigs();
-    loadPlayerCards();
-  }, [loadSportConfigs, loadPlayerCards]);
+  }, [loadSportConfigs]);
 
   useEffect(() => {
     if (!studentId) return;
     const sportCode = selectedSport === 'all' ? undefined : selectedSport;
+    loadPlayerCardsByStudent(studentId, sportCode);
     loadPersonalBests(studentId, sportCode);
-  }, [studentId, selectedSport, loadPersonalBests]);
+  }, [studentId, selectedSport, loadPersonalBests, loadPlayerCardsByStudent]);
 
   const loadCareerStats = useCallback(async (sportCode: string) => {
     if (!studentId || sportCode === 'all') {
@@ -90,14 +90,11 @@ export default function StudentSportsPage() {
     setMatchesLoading(false);
   }, [studentId, getStudentMatchHistory]);
 
-  const myCards = useMemo(
-    () => playerCards.filter((c) => c.studentId === studentId),
-    [playerCards, studentId]
-  );
-
   const filteredCards = useMemo(
-    () => selectedSport === 'all' ? myCards : myCards.filter((c) => c.sportCode === selectedSport),
-    [myCards, selectedSport]
+    () => selectedSport === 'all'
+      ? playerCards
+      : playerCards.filter((c) => c.sportCode === selectedSport),
+    [playerCards, selectedSport],
   );
 
   const handleTabChange = useCallback((val: unknown) => {
@@ -112,7 +109,17 @@ export default function StudentSportsPage() {
     setMatches([]);
   }, []);
 
-  if (loading && myCards.length === 0) return <LoadingSpinner />;
+  if (studentIdLoading || (loading && playerCards.length === 0)) return <LoadingSpinner />;
+
+  if (!studentId) {
+    return (
+      <EmptyState
+        icon={Trophy}
+        title="No sports profile"
+        description="Your student sports profile is not linked yet."
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

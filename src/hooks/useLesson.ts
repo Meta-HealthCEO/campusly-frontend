@@ -6,7 +6,6 @@ import type {
   Lesson,
   LessonMaterial,
   LessonPhase,
-  LessonStatus,
   UpdateAssignmentPayload,
 } from '@/types/lesson';
 
@@ -46,14 +45,26 @@ export function useLesson(id: string) {
     }
   }, [id]);
 
-  const patchStatus = useCallback(async (status: LessonStatus) => {
+  const publish = useCallback(async () => {
     try {
-      const res = await apiClient.patch(`/lessons/${id}/status`, { status });
+      const res = await apiClient.post(`/lessons/${id}/publish`);
       const updated = unwrapResponse<Lesson>(res);
       setLesson(updated);
       return updated;
     } catch (err: unknown) {
-      toastError(err, 'Failed to update lesson status');
+      toastError(err, 'Failed to publish lesson');
+      throw err;
+    }
+  }, [id]);
+
+  const unpublish = useCallback(async () => {
+    try {
+      const res = await apiClient.post(`/lessons/${id}/unpublish`);
+      const updated = unwrapResponse<Lesson>(res);
+      setLesson(updated);
+      return updated;
+    } catch (err: unknown) {
+      toastError(err, 'Failed to unpublish lesson');
       throw err;
     }
   }, [id]);
@@ -182,7 +193,8 @@ export function useLesson(id: string) {
     error,
     refetch: fetchOne,
     updateLesson,
-    patchStatus,
+    publish,
+    unpublish,
     addMaterial,
     updateMaterial,
     moveMaterial,

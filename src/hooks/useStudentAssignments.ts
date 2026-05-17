@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse, extractErrorMessage } from '@/lib/api-helpers';
 import type {
-  Assignment,
   AssignmentSubmission,
   StudentAssignmentItem,
   SubmitAssignmentInput,
@@ -30,10 +29,10 @@ export function useStudentAssignments() {
 
   useEffect(() => { void fetchAssignments(); }, [fetchAssignments]);
 
-  const getById = useCallback(async (id: string): Promise<Assignment | null> => {
+  const getById = useCallback(async (id: string): Promise<StudentAssignmentItem | null> => {
     try {
       const res = await apiClient.get(`/assignments/${id}`);
-      return unwrapResponse<Assignment>(res);
+      return unwrapResponse<StudentAssignmentItem>(res);
     } catch (err: unknown) {
       toast.error(extractErrorMessage(err, 'Could not load assignment.'));
       return null;

@@ -76,22 +76,6 @@ export const studentSchema = z.object({
   afterCareRequired: z.boolean().optional(),
 });
 
-export const medicalProfileSchema = z.object({
-  allergies: z.array(z.string()),
-  conditions: z.array(z.string()),
-  bloodType: z.string().optional(),
-  emergencyContacts: z.array(z.object({
-    name: z.string().min(1, 'Name is required'),
-    relationship: z.string().min(1, 'Relationship is required'),
-    phone: z.string().min(1, 'Phone is required'),
-  })),
-  medicalAidInfo: z.object({
-    provider: z.string().min(1, 'Provider is required'),
-    memberNumber: z.string().min(1, 'Member number is required'),
-    mainMember: z.string().min(1, 'Main member is required'),
-  }).optional(),
-});
-
 export const staffSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
@@ -162,7 +146,6 @@ export const lostReportSchema = z.object({
 });
 
 export type StudentFormData = z.infer<typeof studentSchema>;
-export type MedicalProfileFormData = z.infer<typeof medicalProfileSchema>;
 export type StaffFormData = z.infer<typeof staffSchema>;
 export type FeeTypeFormData = z.infer<typeof feeTypeSchema>;
 export type EventFormData = z.infer<typeof eventSchema>;

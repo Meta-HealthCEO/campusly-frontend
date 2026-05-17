@@ -26,6 +26,11 @@ export function useTeamAnnouncements(filters: ListFilters = {}) {
 
   const fetchAnnouncements = useCallback(async () => {
     if (!schoolId) return;
+    if (user?.role === 'parent' && !filters.studentId) {
+      setAnnouncements([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await apiClient.get('/sports/announcements', { params: filters });
@@ -36,7 +41,7 @@ export function useTeamAnnouncements(filters: ListFilters = {}) {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schoolId, paramKey]);
+  }, [schoolId, paramKey, user?.role]);
 
   useEffect(() => { fetchAnnouncements(); }, [fetchAnnouncements]);
 

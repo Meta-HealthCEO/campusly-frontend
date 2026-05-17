@@ -42,11 +42,9 @@ export function ReviewStep({ form, files }: Props) {
         <p className="text-sm">{form.city}, {form.province} {form.postalCode}</p>
       </Section>
 
-      {(form.medicalConditions || form.allergies || form.specialNeeds) && (
-        <Section title="Medical">
-          {form.medicalConditions && <Row label="Conditions" value={form.medicalConditions} />}
-          {form.allergies && <Row label="Allergies" value={form.allergies} />}
-          {form.specialNeeds && <Row label="Special Needs" value={form.specialNeeds} />}
+      {form.specialNeeds && (
+        <Section title="Additional Notes">
+          <Row label="Special Needs" value={form.specialNeeds} />
         </Section>
       )}
 

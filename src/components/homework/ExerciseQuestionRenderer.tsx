@@ -1,10 +1,10 @@
 'use client';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import type { QuestionItem, QuestionType } from '@/types/question-bank';
+import type { StudentHomeworkQuestion } from '@/types/homework';
 
 interface Props {
-  question: Pick<QuestionItem, 'type' | 'options' | 'stem' | 'id'>;
+  question: Pick<StudentHomeworkQuestion, 'type' | 'options' | 'stem' | 'id'>;
   value: string;
   onChange: (v: string) => void;
   disabled?: boolean;
@@ -13,7 +13,7 @@ interface Props {
 export function ExerciseQuestionRenderer({ question, value, onChange, disabled }: Props) {
   const radioGroupName = `q-${question.id}`;
 
-  switch (question.type as QuestionType) {
+  switch (question.type) {
     case 'mcq':
       return (
         <div className="space-y-2">

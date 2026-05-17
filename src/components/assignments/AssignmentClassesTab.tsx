@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Plus, Trash2, AlertTriangle, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,16 +52,11 @@ export function AssignmentClassesTab({ assignment, onChanged }: Props) {
   const { addClassPush, removeClassPush } = useTeacherAssignments();
   const { classes, loading: classesLoading } = useTeacherClasses();
 
-  const [pushes, setPushes] = useState<AssignmentClassPush[]>(assignment.assignedClasses);
   const [open, setOpen] = useState(false);
   const [classId, setClassId] = useState('');
   const [releaseAt, setReleaseAt] = useState('');
   const [dueAt, setDueAt] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    setPushes(assignment.assignedClasses);
-  }, [assignment.assignedClasses]);
 
   const handleAdd = async () => {
     if (!classId) return;
@@ -73,7 +68,6 @@ export function AssignmentClassesTab({ assignment, onChanged }: Props) {
     });
     setSubmitting(false);
     if (result) {
-      setPushes(result);
       setClassId('');
       setReleaseAt('');
       setDueAt('');
@@ -85,12 +79,12 @@ export function AssignmentClassesTab({ assignment, onChanged }: Props) {
   const handleRemove = async (classPushId: string) => {
     const result = await removeClassPush(assignment._id, classPushId);
     if (result) {
-      setPushes(result);
       await onChanged();
     }
   };
 
   const teacherClasses = classes.map((c) => ({ id: c.id, name: c.name }));
+  const pushes = assignment.assignedClasses;
 
   if (assignment.status !== 'published') {
     return (

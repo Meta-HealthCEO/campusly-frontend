@@ -9,6 +9,7 @@ import type { TextbookItem } from '@/types';
 
 interface TextbookShelfViewProps {
   textbooks: TextbookItem[];
+  onSelectTextbook?: (id: string) => void | Promise<void>;
 }
 
 function resolveLabel(field: string | { id: string; name: string }): string {
@@ -26,7 +27,7 @@ interface GradeGroup {
   books: TextbookItem[];
 }
 
-export function TextbookShelfView({ textbooks }: TextbookShelfViewProps) {
+export function TextbookShelfView({ textbooks, onSelectTextbook }: TextbookShelfViewProps) {
   const router = useRouter();
 
   const gradeGroups = useMemo<GradeGroup[]>(() => {
@@ -75,7 +76,13 @@ export function TextbookShelfView({ textbooks }: TextbookShelfViewProps) {
                 subjectName={resolveLabel(tb.subjectId)}
                 gradeName={group.gradeName}
                 chapterCount={tb.chapters?.length ?? 0}
-                onClick={() => router.push(`/teacher/curriculum/textbooks/${tb.id}`)}
+                onClick={() => {
+                  if (onSelectTextbook) {
+                    void onSelectTextbook(tb.id);
+                  } else {
+                    router.push(`/teacher/curriculum/textbooks/${tb.id}`);
+                  }
+                }}
               />
             ))}
           </div>

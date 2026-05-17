@@ -43,40 +43,67 @@ function mapPreference(raw: Record<string, unknown>): NotificationPreference {
 }
 
 export function useNotifications() {
-  const store = useNotificationStore();
+  // Subscribe to reactive state with individual selectors. Subscribing to
+  // the whole store via useNotificationStore() would re-render this hook
+  // on every store mutation — and because setLoading() inside fetch calls
+  // mutates state, the resulting store-ref change invalidates the
+  // useCallback deps, hands a new fetchNotifications identity to
+  // consumers, and fires their useEffect again. The dropdown's
+  // [isOpen, fetchNotifications] effect then re-fetches on every render
+  // — an infinite loop that spams "Failed to load notifications".
+  const notifications = useNotificationStore((s) => s.notifications);
+  const total = useNotificationStore((s) => s.total);
+  const page = useNotificationStore((s) => s.page);
+  const totalPages = useNotificationStore((s) => s.totalPages);
+  const isLoading = useNotificationStore((s) => s.isLoading);
+  const unreadCount = useNotificationStore((s) => s.unreadCount);
+  const preferences = useNotificationStore((s) => s.preferences);
+  const preferencesLoading = useNotificationStore((s) => s.preferencesLoading);
+
+  // Action selectors — Zustand actions are created once in the store
+  // factory, so these references are stable across renders and safe to
+  // use as useCallback deps.
+  const setUnreadCount = useNotificationStore((s) => s.setUnreadCount);
+  const setNotifications = useNotificationStore((s) => s.setNotifications);
+  const appendNotifications = useNotificationStore((s) => s.appendNotifications);
+  const setLoading = useNotificationStore((s) => s.setLoading);
+  const markOneAsRead = useNotificationStore((s) => s.markOneAsRead);
+  const markAllAsReadStore = useNotificationStore((s) => s.markAllAsRead);
+  const setPreferences = useNotificationStore((s) => s.setPreferences);
+  const setPreferencesLoading = useNotificationStore((s) => s.setPreferencesLoading);
 
   const fetchUnreadCount = useCallback(async () => {
     try {
       const res = await notificationsApi.getUnreadCount();
       const raw = unwrapResponse(res);
       const count = typeof raw === 'number' ? raw : (raw.count as number) ?? 0;
-      store.setUnreadCount(count);
+      setUnreadCount(count);
     } catch {
       // Silently fail — badge just shows stale count
     }
-  }, [store]);
+  }, [setUnreadCount]);
 
   const fetchNotifications = useCallback(
     async (params?: { page?: number; limit?: number; isRead?: string }) => {
-      store.setLoading(true);
+      setLoading(true);
       try {
         const res = await notificationsApi.list(params);
         const raw = unwrapResponse(res);
         const notifArray = raw.notifications ?? raw;
-        const notifications: AppNotification[] = Array.isArray(notifArray)
+        const list: AppNotification[] = Array.isArray(notifArray)
           ? notifArray.map((n: Record<string, unknown>) => mapNotification(n))
           : [];
         const listData: NotificationListResponse = {
-          notifications,
-          total: (raw.total as number) ?? notifications.length,
+          notifications: list,
+          total: (raw.total as number) ?? list.length,
           page: (raw.page as number) ?? 1,
           limit: (raw.limit as number) ?? 20,
           totalPages: (raw.totalPages as number) ?? 1,
         };
         if (params?.page && params.page > 1) {
-          store.appendNotifications(listData);
+          appendNotifications(listData);
         } else {
-          store.setNotifications(listData);
+          setNotifications(listData);
         }
         return listData;
       } catch (err: unknown) {
@@ -86,15 +113,15 @@ export function useNotifications() {
         toast.error(msg);
         return null;
       } finally {
-        store.setLoading(false);
+        setLoading(false);
       }
     },
-    [store]
+    [setLoading, setNotifications, appendNotifications]
   );
 
   const markAsRead = useCallback(
     async (id: string) => {
-      store.markOneAsRead(id);
+      markOneAsRead(id);
       try {
         await notificationsApi.markAsRead(id);
       } catch {
@@ -102,11 +129,11 @@ export function useNotifications() {
         await fetchUnreadCount();
       }
     },
-    [store, fetchUnreadCount]
+    [markOneAsRead, fetchUnreadCount]
   );
 
   const markAllAsRead = useCallback(async () => {
-    store.markAllAsRead();
+    markAllAsReadStore();
     try {
       await notificationsApi.markAllAsRead();
     } catch (err: unknown) {
@@ -116,15 +143,15 @@ export function useNotifications() {
       toast.error(msg);
       await fetchUnreadCount();
     }
-  }, [store, fetchUnreadCount]);
+  }, [markAllAsReadStore, fetchUnreadCount]);
 
   const fetchPreferences = useCallback(async () => {
-    store.setPreferencesLoading(true);
+    setPreferencesLoading(true);
     try {
       const res = await notificationsApi.getPreferences();
       const raw = unwrapResponse(res);
       const prefs = mapPreference(raw as Record<string, unknown>);
-      store.setPreferences(prefs);
+      setPreferences(prefs);
       return prefs;
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
@@ -133,25 +160,28 @@ export function useNotifications() {
       toast.error(msg);
       return null;
     } finally {
-      store.setPreferencesLoading(false);
+      setPreferencesLoading(false);
     }
-  }, [store]);
+  }, [setPreferences, setPreferencesLoading]);
 
   const updatePreference = useCallback(
     async (field: 'email' | 'sms' | 'push' | 'inApp', value: boolean) => {
-      const prev = store.preferences;
+      // Read latest preferences via getState — avoids adding `preferences`
+      // to deps (which would re-create this callback on every prefs change
+      // and propagate identity churn to consumers).
+      const prev = useNotificationStore.getState().preferences;
       if (prev) {
-        store.setPreferences({ ...prev, [field]: value });
+        setPreferences({ ...prev, [field]: value });
       }
       try {
         const res = await notificationsApi.updatePreferences({ [field]: value });
         const raw = unwrapResponse(res);
         const prefs = mapPreference(raw as Record<string, unknown>);
-        store.setPreferences(prefs);
+        setPreferences(prefs);
         toast.success('Preference updated');
       } catch (err: unknown) {
         if (prev) {
-          store.setPreferences(prev);
+          setPreferences(prev);
         }
         const msg = (err as { response?: { data?: { error?: string; message?: string } } })?.response?.data?.error
           ?? (err as { response?: { data?: { message?: string } } })?.response?.data?.message
@@ -159,11 +189,18 @@ export function useNotifications() {
         toast.error(msg);
       }
     },
-    [store]
+    [setPreferences]
   );
 
   return {
-    ...store,
+    notifications,
+    total,
+    page,
+    totalPages,
+    isLoading,
+    unreadCount,
+    preferences,
+    preferencesLoading,
     fetchUnreadCount,
     fetchNotifications,
     markAsRead,

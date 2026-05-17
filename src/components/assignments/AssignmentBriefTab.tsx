@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pencil, Save, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { MarkdownView } from '@/components/shared/MarkdownView';
+import { RichTextEditor } from '@/components/shared/RichTextEditor';
+import { RichTextView } from '@/components/shared/RichTextView';
 import { useTeacherAssignments } from '@/hooks/useTeacherAssignments';
 import type { Assignment } from '@/types/assignments';
 
@@ -23,12 +23,11 @@ export function AssignmentBriefTab({ assignment, onChanged }: Props) {
   const [brief, setBrief] = useState(assignment.brief);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (!editing) {
-      setTitle(assignment.title);
-      setBrief(assignment.brief);
-    }
-  }, [editing, assignment.title, assignment.brief]);
+  const startEditing = () => {
+    setTitle(assignment.title);
+    setBrief(assignment.brief);
+    setEditing(true);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -46,7 +45,7 @@ export function AssignmentBriefTab({ assignment, onChanged }: Props) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">Assignment brief</CardTitle>
           {!editing ? (
-            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+            <Button variant="outline" size="sm" onClick={startEditing}>
               <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
             </Button>
           ) : (
@@ -74,17 +73,16 @@ export function AssignmentBriefTab({ assignment, onChanged }: Props) {
               <Input value={title} onChange={(e) => setTitle(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Brief (markdown supported)</Label>
-              <Textarea
-                value={brief}
-                onChange={(e) => setBrief(e.target.value)}
-                rows={20}
-                className="font-mono text-sm"
+              <Label>Brief</Label>
+              <RichTextEditor
+                initialHtml={brief}
+                onChange={setBrief}
+                minHeight="min-h-96"
               />
             </div>
           </div>
         ) : (
-          <MarkdownView>{assignment.brief}</MarkdownView>
+          <RichTextView html={assignment.brief} />
         )}
       </CardContent>
     </Card>

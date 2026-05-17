@@ -38,10 +38,22 @@ const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
   sports_manager: COACH_NAV,
 };
 
+const MODULE_ALIASES: Record<string, string> = {
+  fees: 'fee',
+  sports: 'sport',
+  events: 'event',
+  tuck_shop: 'tuckshop',
+};
+
+function normalizeModuleName(moduleName: string): string {
+  return MODULE_ALIASES[moduleName] ?? moduleName;
+}
+
 function filterByModule(items: NavItem[], enabledModules: string[]): NavItem[] {
+  const normalizedModules = new Set(enabledModules.map(normalizeModuleName));
   return items.filter((item) => {
     if (!item.module) return true;
-    return enabledModules.includes(item.module);
+    return normalizedModules.has(normalizeModuleName(item.module));
   });
 }
 
@@ -64,7 +76,6 @@ function isStandaloneTeacherPathAllowed(pathname: string): boolean {
     '/teacher/students',
     '/teacher/curriculum/textbooks',
     '/teacher/curriculum/content',
-    '/teacher/curriculum/questions',
     '/teacher/curriculum/preview',
     '/teacher/curriculum/mark-papers',
     '/teacher/lesson-plans',

@@ -14,6 +14,7 @@ interface SurveyResponseFormProps {
 }
 
 export function SurveyResponseForm({ survey, onSubmit }: SurveyResponseFormProps) {
+  const questions = Array.isArray(survey.questions) ? survey.questions : [];
   const [answers, setAnswers] = useState<Record<number, string | number | boolean>>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -35,7 +36,7 @@ export function SurveyResponseForm({ survey, onSubmit }: SurveyResponseFormProps
     }
   };
 
-  const allRequiredAnswered = survey.questions.every((q, idx) =>
+  const allRequiredAnswered = questions.every((q, idx) =>
     !q.required || answers[idx] !== undefined,
   );
 
@@ -49,7 +50,13 @@ export function SurveyResponseForm({ survey, onSubmit }: SurveyResponseFormProps
         )}
       </CardHeader>
       <CardContent className="space-y-6">
-        {survey.questions.map((q, idx) => (
+        {questions.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            This survey does not have any questions yet.
+          </p>
+        )}
+
+        {questions.map((q, idx) => (
           <div key={idx} className="space-y-2">
             <Label className="text-sm font-medium">
               {q.text} {q.required && <span className="text-destructive">*</span>}
@@ -123,7 +130,7 @@ export function SurveyResponseForm({ survey, onSubmit }: SurveyResponseFormProps
 
         <Button
           onClick={handleSubmit}
-          disabled={submitting || !allRequiredAnswered}
+          disabled={submitting || questions.length === 0 || !allRequiredAnswered}
           className="w-full sm:w-auto"
         >
           {submitting ? 'Submitting...' : 'Submit Response'}

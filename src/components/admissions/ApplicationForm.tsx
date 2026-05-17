@@ -21,7 +21,7 @@ const EMPTY_FORM: FormData = {
   parentFirstName: '', parentLastName: '', parentEmail: '', parentPhone: '',
   parentIdNumber: '', parentRelationship: '',
   street: '', city: '', province: '', postalCode: '',
-  medicalConditions: '', allergies: '', specialNeeds: '', additionalNotes: '',
+  specialNeeds: '', additionalNotes: '',
 };
 
 interface Props {
@@ -78,8 +78,6 @@ export function ApplicationForm({ schoolId, onSubmit, submitting }: Props) {
     fd.append('address[city]', form.city);
     fd.append('address[province]', form.province);
     fd.append('address[postalCode]', form.postalCode);
-    if (form.medicalConditions) fd.append('medicalConditions', form.medicalConditions);
-    if (form.allergies) fd.append('allergies', form.allergies);
     if (form.specialNeeds) fd.append('specialNeeds', form.specialNeeds);
     if (form.additionalNotes) fd.append('additionalNotes', form.additionalNotes);
     if (files.birthCertificate) fd.append('birthCertificate', files.birthCertificate);

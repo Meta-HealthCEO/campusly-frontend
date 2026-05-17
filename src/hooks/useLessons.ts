@@ -2,12 +2,13 @@ import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
-import type { Lesson, LessonsListResult, LessonStatus } from '@/types/lesson';
+import type { Lesson, LessonsListResult } from '@/types/lesson';
 
 export interface LessonsFilters {
   classId?: string;
   subjectId?: string;
-  status?: LessonStatus;
+  /** When true, return only published lessons. */
+  published?: boolean;
   dateFrom?: string;
   dateTo?: string;
   search?: string;

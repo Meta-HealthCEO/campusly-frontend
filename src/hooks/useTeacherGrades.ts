@@ -75,19 +75,24 @@ export function useTeacherGrades() {
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedAssessment, setSelectedAssessment] = useState('');
-  const [selectedTerm, setSelectedTerm] = useState('all');
+  const [selectedTerm, setSelectedTerm] = useState('year');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [studentHistory, setStudentHistory] = useState<StudentMark[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<MarkEntry | null>(null);
 
-  // Load classes
+  // Load classes — auto-select the first one so the gradebook lands on
+  // something useful instead of a blank "Select class" prompt.
   useEffect(() => {
     async function fetchClasses() {
       try {
         const res = await apiClient.get('/academic/classes');
-        setClasses(unwrapList<SchoolClass>(res));
+        const list = unwrapList<SchoolClass>(res);
+        setClasses(list);
+        if (list.length > 0) {
+          setSelectedClass((prev) => prev || list[0].id);
+        }
       } catch (err: unknown) {
         console.error('Failed to load classes', err);
         toast.error('Could not load classes. Please refresh.');
@@ -112,11 +117,11 @@ export function useTeacherGrades() {
     fetchSubjects();
   }, []);
 
-  // Reset when class changes
+  // Reset assessment-scoped state when class changes — but keep the term
+  // picker as-is so the teacher's chosen term carries across class switches.
   useEffect(() => {
     setSelectedSubject('');
     setSelectedAssessment('');
-    setSelectedTerm('all');
     setAllAssessments([]);
     setMarkEntries([]);
   }, [selectedClass]);
@@ -132,7 +137,13 @@ export function useTeacherGrades() {
         const params: Record<string, string> = { classId: selectedClass };
         if (selectedSubject) params.subjectId = selectedSubject;
         const res = await apiClient.get('/academic/assessments', { params });
-        setAllAssessments(unwrapList<Assessment>(res));
+        const list = unwrapList<Assessment>(res);
+        setAllAssessments(list);
+        // Auto-select the most recently created assessment so a fresh publish
+        // is immediately visible. Backend default sort is `-createdAt`.
+        if (list.length > 0) {
+          setSelectedAssessment((prev) => prev || list[0].id);
+        }
       } catch (err: unknown) {
         console.error('Failed to load assessments', err);
         toast.error('Could not load assessments. Please refresh.');
@@ -143,9 +154,9 @@ export function useTeacherGrades() {
     setMarkEntries([]);
   }, [selectedClass, selectedSubject]);
 
-  // Filtered assessments by term
+  // Filtered assessments by term; 'year' shows every assessment.
   const assessments = useMemo(() => {
-    if (selectedTerm === 'all') return allAssessments;
+    if (selectedTerm === 'year') return allAssessments;
     return allAssessments.filter((a) => String(a.term) === selectedTerm);
   }, [allAssessments, selectedTerm]);
 

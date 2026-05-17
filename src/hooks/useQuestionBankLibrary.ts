@@ -58,6 +58,7 @@ export function useQuestionBankLibrary(
 
       const query: Record<string, string | number> = {
         subjectId,
+        status: 'approved',
         limit: 50,
       };
       if (gradeId) query.gradeId = gradeId;

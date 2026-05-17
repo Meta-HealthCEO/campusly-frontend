@@ -24,7 +24,7 @@ export function useTeacherResources(filters?: {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const params: Record<string, string> = { status: 'published' };
+    const params: Record<string, string> = { status: 'approved' };
     if (filters?.subjectId) params.subjectId = filters.subjectId;
     if (filters?.gradeId) params.gradeId = filters.gradeId;
     if (filters?.curriculumNodeId) params.curriculumNodeId = filters.curriculumNodeId;

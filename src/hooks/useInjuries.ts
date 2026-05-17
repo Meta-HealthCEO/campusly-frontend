@@ -28,6 +28,11 @@ export function useInjuries(filters: ListFilters = {}) {
 
   const fetchInjuries = useCallback(async () => {
     if (!schoolId) return;
+    if (user?.role === 'parent' && !filters.studentId) {
+      setInjuries([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await apiClient.get('/sports/injuries', { params: filters });
@@ -38,7 +43,7 @@ export function useInjuries(filters: ListFilters = {}) {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schoolId, paramKey]);
+  }, [schoolId, paramKey, user?.role]);
 
   useEffect(() => { fetchInjuries(); }, [fetchInjuries]);
 

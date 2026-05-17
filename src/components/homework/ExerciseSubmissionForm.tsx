@@ -2,9 +2,7 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useHomeworkSubmission } from '@/hooks/useHomeworkSubmission';
-import { useQuestionsByIds } from '@/hooks/useQuestionsByIds';
 import { ExerciseQuestionRenderer } from './ExerciseQuestionRenderer';
 import type {
   ExerciseSubmission,
@@ -20,8 +18,7 @@ interface Props {
 }
 
 export function ExerciseSubmissionForm({ homework, submission, onSubmit }: Props) {
-  const ids = homework.exerciseQuestionIds;
-  const { questions, loading } = useQuestionsByIds(ids);
+  const questions = homework.exerciseQuestions ?? [];
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submittedId, setSubmittedId] = useState<string | null>(
     submission?._id ?? null,
@@ -46,8 +43,6 @@ export function ExerciseSubmissionForm({ homework, submission, onSubmit }: Props
       setSubmitting(false);
     }
   };
-
-  if (loading) return <LoadingSpinner />;
 
   if (questions.length === 0) {
     return (
