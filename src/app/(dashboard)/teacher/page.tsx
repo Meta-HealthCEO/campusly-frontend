@@ -1,6 +1,5 @@
 'use client';
 
-import { PageHeader } from '@/components/shared/PageHeader';
 import { DashboardSkeleton } from '@/components/shared/skeletons';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSchoolStore } from '@/stores/useSchoolStore';
@@ -13,6 +12,12 @@ import { TodayZone } from '@/components/teacher-home/TodayZone';
 import { GradingZone } from '@/components/teacher-home/GradingZone';
 import { DraftsZone } from '@/components/teacher-home/DraftsZone';
 
+function salutationForHour(hour: number): string {
+  if (hour < 12) return 'Good morning, ';
+  if (hour < 17) return 'Good afternoon, ';
+  return 'Good evening, ';
+}
+
 export default function TeacherHomePage() {
   const user = useAuthStore((s) => s.user);
   const school = useSchoolStore((s) => s.school);
@@ -21,7 +26,9 @@ export default function TeacherHomePage() {
   const { isEmpty: scopeEmpty, loading: scopeLoading } = useTeachingScope();
 
   const firstName = user?.firstName ?? 'Teacher';
-  const dateLabel = new Date().toLocaleDateString('en-ZA', {
+  const now = new Date();
+  const salutation = salutationForHour(now.getHours());
+  const dateLabel = now.toLocaleDateString('en-ZA', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -39,8 +46,13 @@ export default function TeacherHomePage() {
     dashboard.todayTotal > 0 || dashboard.gradingTotal > 0 || dashboard.draftsTotal > 0;
 
   return (
-    <div className="space-y-6">
-      <PageHeader title={`Hi ${firstName}`} description={dateLabel} />
+    <div className="space-y-8 bg-background bg-linear-to-b from-muted/40 to-background bg-no-repeat bg-size-[100%_200px] dark:from-background">
+      <header>
+        <h1 className="text-3xl font-semibold tracking-tight">
+          {salutation}{firstName}
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">{dateLabel}</p>
+      </header>
 
       <AIQuickMakeHero />
 
@@ -57,7 +69,7 @@ export default function TeacherHomePage() {
       {dashboard.loading ? (
         <DashboardSkeleton />
       ) : anyZoneHasContent ? (
-        <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           <TodayZone items={dashboard.today} total={dashboard.todayTotal} />
           <GradingZone items={dashboard.grading} total={dashboard.gradingTotal} />
           <DraftsZone items={dashboard.drafts} total={dashboard.draftsTotal} />
