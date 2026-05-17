@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Sparkles, FileText, ClipboardList } from 'lucide-react';
+import { Sparkles, FileText, ClipboardList, ChevronRight } from 'lucide-react';
 
 interface Tile {
   href: string;
@@ -36,12 +36,17 @@ export function AIQuickMakeHero() {
         <Link
           key={tile.href}
           href={tile.href}
-          className="group flex min-h-30 flex-col gap-2 rounded-lg border border-primary/20 bg-primary/5 p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/10"
+          className="group flex min-h-35 flex-col justify-between rounded-xl border border-border/40 bg-card p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-border/80 hover:shadow-md"
         >
-          <tile.icon className="h-7 w-7 text-primary" />
-          <div className="space-y-0.5">
-            <p className="text-base font-semibold group-hover:text-primary">{tile.label}</p>
-            <p className="text-xs text-muted-foreground">{tile.subLabel}</p>
+          <div className="flex size-12 items-center justify-center rounded-xl bg-muted/60">
+            <tile.icon className="size-8 text-foreground" />
+          </div>
+          <div className="flex items-end justify-between gap-3">
+            <div className="space-y-0.5 min-w-0">
+              <p className="text-base font-semibold text-foreground">{tile.label}</p>
+              <p className="text-xs text-muted-foreground truncate">{tile.subLabel}</p>
+            </div>
+            <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-1" />
           </div>
         </Link>
       ))}
