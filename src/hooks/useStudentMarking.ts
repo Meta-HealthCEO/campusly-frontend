@@ -8,6 +8,7 @@ export interface StudentMarkingSummary {
   id: string;
   paperId: string;
   paperTitle: string;
+  subjectId: string;
   subjectName: string;
   totalMarks: number;
   maxMarks: number;
@@ -17,6 +18,7 @@ export interface StudentMarkingSummary {
 
 export interface StudentMarkingDetail extends PaperMarking {
   paperTitle: string;
+  subjectId: string;
   subjectName: string;
 }
 

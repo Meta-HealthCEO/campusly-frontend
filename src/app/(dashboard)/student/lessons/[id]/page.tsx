@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { LessonMaterialCard } from '@/components/student/LessonMaterialCard';
-import { AskAITutorCTA } from '@/components/student/AskAITutorCTA';
+import { AskBuddyDrawer } from '@/components/ai-tutor/AskBuddyDrawer';
 import { useStudentLesson } from '@/hooks/useStudentLesson';
 import { useStudentLessonExport } from '@/hooks/useStudentLessonExport';
 
@@ -96,7 +96,15 @@ export default function StudentLessonDetailPage({
       </section>
 
       <div className="pt-2">
-        <AskAITutorCTA subjectId={lesson.subjectId} context={lesson.title} />
+        <AskBuddyDrawer
+          subjectId={lesson.subjectId}
+          subjectName={lesson.subjectName}
+          context={{
+            surface: 'lesson',
+            surfaceId: lesson.id,
+            title: lesson.title,
+          }}
+        />
       </div>
     </div>
   );

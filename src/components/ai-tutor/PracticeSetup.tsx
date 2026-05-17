@@ -21,6 +21,9 @@ interface PracticeSetupProps {
   generating: boolean;
   subjects: Subject[];
   grade: number;
+  /** Optional pre-fill (e.g. arriving from a "Practice this topic" recommendation). */
+  initialSubjectId?: string;
+  initialTopic?: string;
 }
 
 type Difficulty = 'easy' | 'medium' | 'hard' | 'mixed';
@@ -39,9 +42,16 @@ const Q_TYPES: { value: QuestionType; label: string }[] = [
   { value: 'true_false', label: 'True / False' },
 ];
 
-export function PracticeSetup({ onGenerate, generating, subjects, grade }: PracticeSetupProps) {
-  const [subjectId, setSubjectId] = useState('');
-  const [topic, setTopic] = useState('');
+export function PracticeSetup({
+  onGenerate,
+  generating,
+  subjects,
+  grade,
+  initialSubjectId,
+  initialTopic,
+}: PracticeSetupProps) {
+  const [subjectId, setSubjectId] = useState(initialSubjectId ?? '');
+  const [topic, setTopic] = useState(initialTopic ?? '');
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
   const [questionCount, setQuestionCount] = useState(5);
   const [questionTypes, setQuestionTypes] = useState<QuestionType[]>(['mcq']);

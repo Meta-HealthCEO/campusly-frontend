@@ -9,6 +9,8 @@ import { StatCard } from '@/components/shared/StatCard';
 import { useStudentDashboard } from '@/hooks/useStudentDashboard';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { JoinClassCard } from '@/components/student/JoinClassCard';
+import { RecommendedWidget } from '@/components/student/RecommendedWidget';
+import { MasteryWidget } from '@/components/student/MasteryWidget';
 
 export default function StudentDashboard() {
   const { dashboard, loading, refresh } = useStudentDashboard();
@@ -135,6 +137,11 @@ export default function StudentDashboard() {
           value={String(dashboard.counts.homeworkOverdue)}
           icon={AlertTriangle}
         />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <RecommendedWidget />
+        <MasteryWidget />
       </div>
 
       <Card className="bg-primary/5 border-primary/20">

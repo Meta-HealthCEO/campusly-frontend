@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { BookOpen } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useAIPractice } from '@/hooks/useAIPractice';
 import { useSubjects } from '@/hooks/useAcademics';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
@@ -16,6 +17,9 @@ import { Button } from '@/components/ui/button';
 import type { PracticeQuestion } from '@/types';
 
 export default function PracticePage() {
+  const searchParams = useSearchParams();
+  const initialSubjectId = searchParams.get('subjectId') ?? '';
+  const initialTopic = searchParams.get('topic') ?? '';
   const { student, loading: studentLoading } = useCurrentStudent();
   const { subjects, loading: subjectsLoading } = useSubjects();
   const {
@@ -72,9 +76,14 @@ export default function PracticePage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Practice Questions" description="Generate and answer practice questions">
-        <Link href="/student/ai-tutor">
-          <Button variant="outline">Back to AI Tutor</Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/student/ai-tutor/practice/history">
+            <Button variant="outline">History</Button>
+          </Link>
+          <Link href="/student/ai-tutor">
+            <Button variant="outline">Back to AI Tutor</Button>
+          </Link>
+        </div>
       </PageHeader>
 
       {!currentAttempt && (
@@ -83,6 +92,8 @@ export default function PracticePage() {
           generating={generating}
           subjects={subjects}
           grade={grade}
+          initialSubjectId={initialSubjectId || undefined}
+          initialTopic={initialTopic || undefined}
         />
       )}
 

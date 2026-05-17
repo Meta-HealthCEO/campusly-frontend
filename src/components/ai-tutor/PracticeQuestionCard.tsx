@@ -22,8 +22,6 @@ export function PracticeQuestionCard({
   onAnswer,
   showResult,
 }: PracticeQuestionCardProps) {
-  const answered = question.studentAnswer !== undefined && question.studentAnswer !== '';
-
   return (
     <Card className={cn(
       showResult && question.isCorrect === true && 'border-emerald-500/50',
@@ -101,10 +99,18 @@ export function PracticeQuestionCard({
             'rounded-lg p-3 text-sm',
             question.isCorrect ? 'bg-emerald-500/10' : 'bg-destructive/10',
           )}>
+            <p className="font-medium">
+              {question.marksAwarded ?? (question.isCorrect ? question.marks : 0)}
+              {' / '}
+              {question.marks} marks
+            </p>
             {!question.isCorrect && (
-              <p className="font-medium">
+              <p className="mt-1 font-medium">
                 Correct answer: <span className="text-emerald-600">{question.correctAnswer}</span>
               </p>
+            )}
+            {question.feedback && (
+              <p className="mt-1 text-foreground">{question.feedback}</p>
             )}
             <p className="mt-1 text-muted-foreground">{question.explanation}</p>
           </div>

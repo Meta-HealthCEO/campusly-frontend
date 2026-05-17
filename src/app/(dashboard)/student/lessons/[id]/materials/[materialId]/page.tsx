@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LessonResourceContent } from '@/components/student/LessonResourceContent';
+import { AskBuddyDrawer } from '@/components/ai-tutor/AskBuddyDrawer';
 import { useStudentLesson } from '@/hooks/useStudentLesson';
 
 const KIND_LABEL: Record<string, string> = {
@@ -80,6 +81,15 @@ export default function StudentLessonMaterialPage({
           {material.phase && (
             <span className="text-xs text-muted-foreground">{material.phase}</span>
           )}
+          <AskBuddyDrawer
+            subjectId={lesson.subjectId}
+            subjectName={lesson.subjectName}
+            context={{
+              surface: 'lesson_material',
+              surfaceId: material.id,
+              title: `${lesson.title} — ${material.title}`,
+            }}
+          />
         </div>
       </PageHeader>
 

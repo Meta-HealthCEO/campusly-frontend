@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Download, Images } from 'lucide-react';
 import { MarkingPagesLightbox } from '@/components/ai-tools/MarkingPagesLightbox';
 import { MarkingQuestionCard } from '@/components/ai-tools/MarkingQuestionCard';
+import { AskBuddyDrawer } from '@/components/ai-tutor/AskBuddyDrawer';
 import { useStudentMarking } from '@/hooks/useStudentMarking';
 import type { StudentMarkingDetail } from '@/hooks/useStudentMarking';
 
@@ -44,9 +45,9 @@ export function StudentMarkingReview({ marking }: StudentMarkingReviewProps) {
             </p>
           )}
         </CardHeader>
-        {hasImages && (
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-2">
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-2 flex-wrap">
+            {hasImages && (
               <Button
                 type="button"
                 variant="outline"
@@ -56,6 +57,8 @@ export function StudentMarkingReview({ marking }: StudentMarkingReviewProps) {
                 <Images className="h-4 w-4" />
                 View marked pages
               </Button>
+            )}
+            {hasImages && (
               <Button
                 type="button"
                 variant="outline"
@@ -65,9 +68,22 @@ export function StudentMarkingReview({ marking }: StudentMarkingReviewProps) {
                 <Download className="h-4 w-4" />
                 Download PDF
               </Button>
-            </div>
-          </CardContent>
-        )}
+            )}
+            {marking.subjectId && (
+              <AskBuddyDrawer
+                subjectId={marking.subjectId}
+                subjectName={marking.subjectName}
+                context={{
+                  surface: 'test_review',
+                  surfaceId: marking.id,
+                  title: marking.paperTitle,
+                  // Marking is post-submission; never treated as active.
+                  isAssessmentActive: false,
+                }}
+              />
+            )}
+          </div>
+        </CardContent>
       </Card>
 
       <div className="space-y-3">

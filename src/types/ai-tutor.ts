@@ -39,6 +39,10 @@ export interface PracticeQuestion {
   correctAnswer: string;
   studentAnswer?: string;
   isCorrect?: boolean;
+  /** Marks actually awarded (supports partial credit on short answers). */
+  marksAwarded?: number;
+  /** Short marker-style feedback (mainly for short-answer questions). */
+  feedback?: string;
   explanation: string;
   marks: number;
 }
@@ -58,10 +62,84 @@ export interface PracticeAttempt {
 export interface WeakArea {
   subject: string;
   subjectId: string;
-  topic: string;
   averageMark: number;
   assessmentCount: number;
   recommendation: string;
+}
+
+// ─── Mastery + Recommendations ──────────────────────────────────────────────
+
+export interface TopicMastery {
+  topic: string;
+  score: number;
+  attempts: number;
+}
+
+export interface SubjectMastery {
+  subjectId: string;
+  subjectName: string;
+  score: number | null;
+  signalCount: number;
+  signals: {
+    practice: { count: number; avg: number | null };
+    homework: { count: number; avg: number | null };
+    marks: { count: number; avg: number | null };
+  };
+  topics: TopicMastery[];
+}
+
+export type RecommendationKind =
+  | 'homework_due_soon'
+  | 'test_coming_up'
+  | 'weak_subject'
+  | 'weak_topic';
+
+export interface Recommendation {
+  kind: RecommendationKind;
+  title: string;
+  subtitle: string;
+  actionHref: string;
+  actionLabel?: string;
+  priority: number;
+}
+
+export interface PracticeHistoryItem {
+  id: string;
+  subjectId: string;
+  subjectName: string;
+  topic: string;
+  grade: number;
+  score: number;
+  totalMarks: number;
+  percentage: number;
+  completedAt: string | null;
+  createdAt: string;
+}
+
+export type BuddySurface =
+  | 'free'
+  | 'homework'
+  | 'lesson'
+  | 'lesson_material'
+  | 'test_review'
+  | 'assignment_review';
+
+export interface BuddyContext {
+  surface: BuddySurface;
+  surfaceId?: string;
+  title?: string;
+  questionText?: string;
+  studentDraft?: string;
+  correctAnswer?: string;
+  teacherFeedback?: string;
+  curriculumNodeId?: string;
+  isAssessmentActive?: boolean;
+}
+
+export interface BuddyImagePayload {
+  mediaType: 'image/jpeg' | 'image/png' | 'image/webp';
+  /** Base64-encoded image data without the `data:...,` prefix. */
+  base64: string;
 }
 
 export interface SendMessagePayload {
@@ -71,6 +149,8 @@ export interface SendMessagePayload {
   grade: number;
   message: string;
   mode?: TutorMode;
+  context?: BuddyContext;
+  image?: BuddyImagePayload;
 }
 
 export interface GeneratePracticePayload {

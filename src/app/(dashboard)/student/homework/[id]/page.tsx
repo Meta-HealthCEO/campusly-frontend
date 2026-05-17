@@ -14,6 +14,7 @@ import { formatDate } from '@/lib/utils';
 import { QuizSubmissionForm } from '@/components/homework/QuizSubmissionForm';
 import { ExerciseSubmissionForm } from '@/components/homework/ExerciseSubmissionForm';
 import { ReadingSubmissionForm } from '@/components/homework/ReadingSubmissionForm';
+import { AskBuddyDrawer } from '@/components/ai-tutor/AskBuddyDrawer';
 
 export default function StudentHomeworkDetailPage() {
   const params = useParams();
@@ -59,7 +60,20 @@ export default function StudentHomeworkDetailPage() {
         {backLabel}
       </Link>
 
-      <PageHeader title={detail.title} description="" />
+      <PageHeader title={detail.title} description="">
+        {detail.subjectId && (
+          <AskBuddyDrawer
+            subjectId={detail.subjectId}
+            subjectName={detail.subject}
+            context={{
+              surface: 'homework',
+              surfaceId: detail.id,
+              title: detail.title,
+              isAssessmentActive: detail.status === 'pending' || detail.status === 'overdue',
+            }}
+          />
+        )}
+      </PageHeader>
 
       <Card>
         <CardHeader>

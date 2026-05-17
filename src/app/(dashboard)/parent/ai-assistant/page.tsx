@@ -98,6 +98,7 @@ export default function ParentAIAssistantPage() {
             conversation={currentConversation}
             onSend={handleSend}
             sending={sending}
+            canChat={Boolean(selectedChildId)}
           />
         </div>
       </div>

@@ -13,6 +13,7 @@ import {
 import { formatDate } from '@/lib/utils';
 import { useCurrentParent } from '@/hooks/useCurrentParent';
 import { useParentAcademics } from '@/hooks/useParentAcademics';
+import { ChildInsightsCard } from '@/components/parent/ChildInsightsCard';
 import type { StudentGrade, Homework } from '@/types';
 
 const assessmentColumns: ColumnDef<StudentGrade, unknown>[] = [
@@ -131,6 +132,8 @@ export default function AcademicsPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              <ChildInsightsCard studentId={cd.childId} childFirstName={cd.firstName} />
 
               <div>
                 <h3 className="text-base font-semibold mb-3">Subject Performance</h3>
