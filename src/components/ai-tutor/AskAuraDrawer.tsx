@@ -14,25 +14,26 @@ import { Button } from '@/components/ui/button';
 import { ChatInterface } from './ChatInterface';
 import { useAITutor } from '@/hooks/useAITutor';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
-import type { BuddyContext, BuddyImagePayload, SendMessagePayload, TutorMode } from '@/types';
+import { useStudentClasses } from '@/hooks/useStudentClasses';
+import { resolveGradeLevel } from '@/lib/student-helpers';
+import type { AuraContext, AuraImagePayload, SendMessagePayload, TutorMode } from '@/types';
 
-interface AskBuddyDrawerProps {
-  /** The element that opens the drawer. Defaults to a "Ask Buddy" outline button. */
+interface AskAuraDrawerProps {
+  /** The element that opens the drawer. Defaults to a "Ask Aura" outline button. */
   trigger?: ReactElement<unknown, string | JSXElementConstructor<unknown>>;
   subjectId: string;
   subjectName: string;
-  /** Tutoring mode — derived from surface if not specified. */
+  /** Tutoring mode - derived from surface if not specified. */
   mode?: TutorMode;
-  context: BuddyContext;
+  context: AuraContext;
 }
 
-function defaultModeForSurface(surface: BuddyContext['surface']): TutorMode {
+function defaultModeForSurface(surface: AuraContext['surface']): TutorMode {
   switch (surface) {
     case 'homework':
     case 'assignment_review':
       return 'homework_help';
     case 'test_review':
-      return 'chat';
     case 'lesson':
     case 'lesson_material':
       return 'chat';
@@ -41,7 +42,7 @@ function defaultModeForSurface(surface: BuddyContext['surface']): TutorMode {
   }
 }
 
-function contextHeading(ctx: BuddyContext): string {
+function contextHeading(ctx: AuraContext): string {
   switch (ctx.surface) {
     case 'homework':
       return ctx.title ? `Homework: ${ctx.title}` : 'Homework help';
@@ -53,25 +54,26 @@ function contextHeading(ctx: BuddyContext): string {
     case 'assignment_review':
       return ctx.title ? `Assignment review: ${ctx.title}` : 'Assignment review';
     default:
-      return 'Ask Buddy';
+      return 'Ask Aura';
   }
 }
 
 /**
  * Embedded AI tutor drawer. Drop into any study surface (homework page,
  * lesson page, test review page) to give students contextual help without
- * sending them to a separate route. Buddy receives the surface context so
+ * sending them to a separate route. Aura receives the surface context so
  * its replies are anchored to what the student is currently looking at.
  */
-export function AskBuddyDrawer({
+export function AskAuraDrawer({
   trigger,
   subjectId,
   subjectName,
   mode,
   context,
-}: AskBuddyDrawerProps) {
+}: AskAuraDrawerProps) {
   const [open, setOpen] = useState(false);
   const { student } = useCurrentStudent();
+  const { homeroom } = useStudentClasses();
   const {
     currentConversation,
     sending,
@@ -81,7 +83,7 @@ export function AskBuddyDrawer({
     startNewConversation,
   } = useAITutor();
 
-  const grade = student?.grade?.level ?? 0;
+  const grade = resolveGradeLevel(student, homeroom);
   const effectiveMode = mode ?? defaultModeForSurface(context.surface);
   const canChat = Boolean(subjectId && subjectName && grade >= 1);
 
@@ -91,7 +93,7 @@ export function AskBuddyDrawer({
     if (!open) startNewConversation();
   }, [open, startNewConversation]);
 
-  const handleSend = (message: string, image?: BuddyImagePayload) => {
+  const handleSend = (message: string, image?: AuraImagePayload) => {
     if (!canChat) return;
     const payload: SendMessagePayload = {
       conversationId: currentConversation?.id,
@@ -116,7 +118,7 @@ export function AskBuddyDrawer({
         render={
           trigger ?? (
             <Button variant="outline" className="inline-flex items-center gap-2">
-              <Sparkles className="h-4 w-4" /> Ask Buddy
+              <Sparkles className="h-4 w-4" /> Ask Aura
             </Button>
           )
         }
@@ -125,11 +127,11 @@ export function AskBuddyDrawer({
         <SheetHeader className="border-b">
           <SheetTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
-            Buddy
+            Aura
           </SheetTitle>
           <p className="truncate text-xs text-muted-foreground">
-            {contextHeading(context)} &middot; {subjectName} &middot; {modeLabel(effectiveMode)}
-            {context.isAssessmentActive && ' · live assessment'}
+            {contextHeading(context)} - {subjectName} - {modeLabel(effectiveMode)}
+            {context.isAssessmentActive && ' - live assessment'}
           </p>
         </SheetHeader>
         <div className="flex flex-1 overflow-hidden">
@@ -139,6 +141,10 @@ export function AskBuddyDrawer({
             sending={sending}
             canChat={canChat}
             streamingText={streamingText}
+            mode={effectiveMode}
+            subjectName={subjectName}
+            grade={grade}
+            modeLabel={modeLabel(effectiveMode)}
           />
         </div>
       </SheetContent>

@@ -7,7 +7,8 @@ export interface StudentClass {
   name: string;
   classroomCode: string;
   isHomeroom: boolean;
-  grade: { id: string; name: string };
+  grade: { id: string; name: string; level?: number };
+  subject?: { id: string; name: string; code?: string } | null;
   teacher: { id: string; firstName: string; lastName: string };
 }
 

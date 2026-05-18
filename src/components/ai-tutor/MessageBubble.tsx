@@ -1,16 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { Sparkles, Volume2, Square } from 'lucide-react';
+import { Check, Copy, MoreHorizontal, Sparkles, Square, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import type { TutorMessage } from '@/types';
-import { BuddyMarkdown } from './BuddyMarkdown';
+import { AuraMarkdown } from './AuraMarkdown';
+import { cn } from '@/lib/utils';
 
 interface MessageBubbleProps {
   message: TutorMessage;
-  /** When true, render a blinking caret to indicate the reply is still streaming. */
   isStreaming?: boolean;
+  onFollowUp?: (prompt: string) => void;
 }
+
+const FOLLOW_UP_PROMPTS = [
+  { label: 'Explain it simpler', prompt: 'Explain that more simply, like I am hearing it for the first time.' },
+  { label: 'Give me an example', prompt: 'Give me a concrete worked example for what you just said.' },
+  { label: 'Quiz me on this', prompt: 'Ask me one question to check if I understood that.' },
+];
 
 function formatTime(ts: string): string {
   try {
@@ -21,15 +34,23 @@ function formatTime(ts: string): string {
   }
 }
 
-export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
+export function MessageBubble({ message, isStreaming, onFollowUp }: MessageBubbleProps) {
   const isStudent = message.role === 'student';
   const [speaking, setSpeaking] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const canSpeak =
     !isStudent &&
     !isStreaming &&
     typeof window !== 'undefined' &&
     'speechSynthesis' in window;
+
+  const handleCopy = async (): Promise<void> => {
+    if (typeof navigator === 'undefined' || !navigator.clipboard) return;
+    await navigator.clipboard.writeText(message.content);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
+  };
 
   const toggleSpeak = (): void => {
     if (!canSpeak) return;
@@ -38,7 +59,6 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
       setSpeaking(false);
       return;
     }
-    // Strip markdown/math so the speech sounds natural — TTS reads literal symbols otherwise.
     const cleaned = message.content
       .replace(/\$\$[\s\S]*?\$\$/g, ' ')
       .replace(/\$([^$\n]+)\$/g, ' $1 ')
@@ -53,48 +73,100 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
   };
 
   return (
-    <div className={`flex ${isStudent ? 'justify-end' : 'justify-start'} mb-3`}>
-      <div className={`flex max-w-[85%] gap-2 sm:max-w-[70%] ${isStudent ? 'flex-row-reverse' : 'flex-row'}`}>
+    <div className={cn('group/msg mb-4 flex', isStudent ? 'justify-end' : 'justify-start')}>
+      <div
+        className={cn(
+          'flex max-w-[92%] gap-3',
+          isStudent ? 'flex-row-reverse sm:max-w-[78%]' : 'flex-row sm:max-w-[88%]',
+        )}
+      >
         {!isStudent && (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-            <Sparkles className="h-4 w-4 text-primary" />
+          <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border bg-primary/10 text-primary">
+            <Sparkles className="h-4 w-4" />
           </div>
         )}
-        <div>
+
+        <div className={cn('min-w-0', isStudent && 'flex flex-col items-end')}>
           <div
-            className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+            className={cn(
+              'rounded-lg px-4 py-3 text-sm leading-relaxed shadow-sm',
               isStudent
                 ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-foreground'
-            }`}
+                : 'border bg-card text-foreground',
+            )}
           >
             {isStudent ? (
               <p className="whitespace-pre-wrap">{message.content}</p>
             ) : (
               <>
-                <BuddyMarkdown content={message.content} />
-                {isStreaming && <span className="ml-0.5 inline-block animate-pulse">▍</span>}
+                <AuraMarkdown content={message.content} />
+                {isStreaming && <span className="ml-0.5 inline-block animate-pulse">|</span>}
               </>
             )}
           </div>
+
           {!isStreaming && (
             <div
-              className={`mt-1 flex items-center gap-2 text-xs text-muted-foreground ${
-                isStudent ? 'justify-end' : 'justify-start'
-              }`}
+              className={cn(
+                'mt-1 flex items-center gap-0.5 text-[11px] text-muted-foreground',
+                isStudent ? 'justify-end' : 'justify-start',
+                // Hide on desktop until the message is hovered/focused; always
+                // show on touch screens (no hover state available).
+                'opacity-0 transition-opacity duration-100',
+                'group-hover/msg:opacity-100 focus-within:opacity-100',
+                '[@media(hover:none)]:opacity-100',
+              )}
             >
-              <span>{formatTime(message.timestamp)}</span>
-              {canSpeak && (
-                <Button
-                  type="button"
-                  size="icon-sm"
-                  variant="ghost"
-                  onClick={toggleSpeak}
-                  className="h-6 w-6"
-                  aria-label={speaking ? 'Stop reading' : 'Read aloud'}
-                >
-                  {speaking ? <Square className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
-                </Button>
+              <span className="px-1">{formatTime(message.timestamp)}</span>
+              {!isStudent && (
+                <>
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="ghost"
+                    onClick={handleCopy}
+                    aria-label="Copy reply"
+                  >
+                    {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                  </Button>
+                  {canSpeak && (
+                    <Button
+                      type="button"
+                      size="icon-xs"
+                      variant="ghost"
+                      onClick={toggleSpeak}
+                      aria-label={speaking ? 'Stop reading' : 'Read aloud'}
+                    >
+                      {speaking ? <Square className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
+                    </Button>
+                  )}
+                  {onFollowUp && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button
+                            type="button"
+                            size="icon-xs"
+                            variant="ghost"
+                            aria-label="More follow-up prompts"
+                          />
+                        }
+                      >
+                        <MoreHorizontal className="h-3 w-3" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-56">
+                        {FOLLOW_UP_PROMPTS.map((item) => (
+                          <DropdownMenuItem
+                            key={item.label}
+                            onClick={() => onFollowUp(item.prompt)}
+                          >
+                            {item.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </>
               )}
             </div>
           )}

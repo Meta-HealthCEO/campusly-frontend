@@ -116,7 +116,7 @@ export interface PracticeHistoryItem {
   createdAt: string;
 }
 
-export type BuddySurface =
+export type AuraSurface =
   | 'free'
   | 'homework'
   | 'lesson'
@@ -124,8 +124,8 @@ export type BuddySurface =
   | 'test_review'
   | 'assignment_review';
 
-export interface BuddyContext {
-  surface: BuddySurface;
+export interface AuraContext {
+  surface: AuraSurface;
   surfaceId?: string;
   title?: string;
   questionText?: string;
@@ -136,7 +136,7 @@ export interface BuddyContext {
   isAssessmentActive?: boolean;
 }
 
-export interface BuddyImagePayload {
+export interface AuraImagePayload {
   mediaType: 'image/jpeg' | 'image/png' | 'image/webp';
   /** Base64-encoded image data without the `data:...,` prefix. */
   base64: string;
@@ -149,8 +149,8 @@ export interface SendMessagePayload {
   grade: number;
   message: string;
   mode?: TutorMode;
-  context?: BuddyContext;
-  image?: BuddyImagePayload;
+  context?: AuraContext;
+  image?: AuraImagePayload;
 }
 
 export interface GeneratePracticePayload {

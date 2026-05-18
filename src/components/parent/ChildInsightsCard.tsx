@@ -14,7 +14,7 @@ interface ChildInsightsCardProps {
 /**
  * Privacy-respecting parent view of a child's current weak spots. Pulls from
  * the same combined-signal mastery service the student sees, but parents
- * never see the child's chat content with Buddy.
+ * never see the child's chat content with Aura.
  */
 export function ChildInsightsCard({ studentId, childFirstName }: ChildInsightsCardProps) {
   const { insights, loading } = useParentChildInsights(studentId);
@@ -41,7 +41,7 @@ export function ChildInsightsCard({ studentId, childFirstName }: ChildInsightsCa
           Where {childFirstName} could use support
         </CardTitle>
         <CardDescription>
-          Combined from practice attempts, homework, and tests. Your child&apos;s chats with Buddy are private.
+          Combined from practice attempts, homework, and tests. Your child&apos;s chats with Aura are private.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">

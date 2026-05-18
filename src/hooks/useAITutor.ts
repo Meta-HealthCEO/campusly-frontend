@@ -35,6 +35,7 @@ export function useAITutor() {
   const [sending, setSending] = useState(false);
   /** The assistant text being streamed for the in-flight reply. Empty when idle. */
   const [streamingText, setStreamingText] = useState('');
+  const [lastError, setLastError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const loadConversations = useCallback(async () => {
@@ -73,6 +74,7 @@ export function useAITutor() {
    */
   const sendMessage = useCallback(async (payload: SendMessagePayload) => {
     setSending(true);
+    setLastError(null);
     try {
       const res = await apiClient.post('/ai-tutor/chat', payload);
       const raw = unwrapResponse(res);
@@ -81,14 +83,17 @@ export function useAITutor() {
         id: (raw._id as string) ?? (raw.id as string),
       } as unknown as TutorConversation;
       setCurrentConversation(conv);
+      void loadConversations();
       return conv;
     } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to send message'));
+      const message = extractErrorMessage(err, 'Failed to send message');
+      setLastError(message);
+      toast.error(message);
       return null;
     } finally {
       setSending(false);
     }
-  }, []);
+  }, [loadConversations]);
 
   /**
    * Stream a reply via SSE, painting tokens into the chat as they arrive.
@@ -105,6 +110,7 @@ export function useAITutor() {
 
     setSending(true);
     setStreamingText('');
+    setLastError(null);
 
     // Optimistically show the student's message right away.
     setCurrentConversation((prev) => {
@@ -129,6 +135,7 @@ export function useAITutor() {
         {
           signal: controller.signal,
           onError: (err) => {
+            setLastError(err.message);
             toast.error(err.message);
           },
           onEvent: (event, data) => {
@@ -168,16 +175,21 @@ export function useAITutor() {
               } as unknown as TutorConversation;
               setCurrentConversation(finalConv);
               setStreamingText('');
+              void loadConversations();
             } else if (event === 'error') {
               const errData = data as StreamEventMap['error'];
-              toast.error(errData.message ?? 'Something went wrong');
+              const message = errData.message ?? 'Something went wrong';
+              setLastError(message);
+              toast.error(message);
             }
           },
         },
       );
     } catch (err: unknown) {
       if ((err as Error)?.name !== 'AbortError') {
-        toast.error(extractErrorMessage(err, 'Streaming failed'));
+        const message = extractErrorMessage(err, 'Streaming failed');
+        setLastError(message);
+        toast.error(message);
       }
     } finally {
       setSending(false);
@@ -185,10 +197,11 @@ export function useAITutor() {
       abortRef.current = null;
     }
     return null;
-  }, []);
+  }, [loadConversations]);
 
   const stopStreaming = useCallback(() => {
     abortRef.current?.abort();
+    setStreamingText('');
   }, []);
 
   const loadWeakAreas = useCallback(async () => {
@@ -212,6 +225,7 @@ export function useAITutor() {
     loading,
     sending,
     streamingText,
+    lastError,
     loadConversations,
     loadConversation,
     sendMessage,

@@ -1,15 +1,22 @@
 'use client';
 
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { Send, Loader2, Paperclip, X } from 'lucide-react';
+import { Send, Loader2, X, ImagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import type { BuddyImagePayload } from '@/types';
+import type { AuraImagePayload } from '@/types';
 
 interface ChatInputProps {
-  onSend: (message: string, image?: BuddyImagePayload) => void;
+  onSend: (message: string, image?: AuraImagePayload) => void;
   disabled: boolean;
+  /**
+   * True only while a reply is actually in flight. Drives the spinner on the
+   * send button. We distinguish this from `disabled` so the button doesn't
+   * look like it's loading when it's really just waiting for a subject or
+   * grade to be set.
+   */
+  sending?: boolean;
   placeholder?: string;
   initialValue?: string;
 }
@@ -18,9 +25,9 @@ const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'] as const;
 type AllowedMime = (typeof ALLOWED_MIME)[number];
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024; // 4 MB
 
-export function ChatInput({ onSend, disabled, placeholder, initialValue }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, sending, placeholder, initialValue }: ChatInputProps) {
   const [text, setText] = useState(initialValue ?? '');
-  const [image, setImage] = useState<{ payload: BuddyImagePayload; previewUrl: string } | null>(null);
+  const [image, setImage] = useState<{ payload: AuraImagePayload; previewUrl: string } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,6 +49,7 @@ export function ChatInput({ onSend, disabled, placeholder, initialValue }: ChatI
     if ((!trimmed && !image) || disabled) return;
     onSend(trimmed || 'Please look at this image.', image?.payload);
     setText('');
+    if (image?.previewUrl) URL.revokeObjectURL(image.previewUrl);
     setImage(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
     textareaRef.current?.focus();
@@ -52,6 +60,14 @@ export function ChatInput({ onSend, disabled, placeholder, initialValue }: ChatI
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleTextChange = (value: string): void => {
+    setText(value);
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
@@ -75,12 +91,13 @@ export function ChatInput({ onSend, disabled, placeholder, initialValue }: ChatI
   };
 
   const clearImage = (): void => {
+    if (image?.previewUrl) URL.revokeObjectURL(image.previewUrl);
     setImage(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
-    <div className="border-t bg-background p-3 space-y-2">
+    <div className="space-y-2 border-t bg-background p-3">
       {image && (
         <div className="flex items-center gap-2 rounded-lg border bg-muted/40 p-2 pr-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -101,7 +118,7 @@ export function ChatInput({ onSend, disabled, placeholder, initialValue }: ChatI
           </Button>
         </div>
       )}
-      <div className="flex items-end gap-2">
+      <div className="mx-auto flex max-w-4xl items-end gap-2">
         <input
           ref={fileInputRef}
           type="file"
@@ -118,16 +135,16 @@ export function ChatInput({ onSend, disabled, placeholder, initialValue }: ChatI
           onClick={() => fileInputRef.current?.click()}
           aria-label="Attach photo"
         >
-          <Paperclip className="h-4 w-4" />
+          <ImagePlus className="h-4 w-4" />
         </Button>
         <Textarea
           ref={textareaRef}
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => handleTextChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder ?? 'Type your message... (Shift+Enter for new line)'}
           disabled={disabled}
-          className="min-h-[44px] max-h-32 resize-none"
+          className="min-h-[44px] max-h-40 resize-none rounded-lg"
           rows={1}
         />
         <Button
@@ -136,12 +153,16 @@ export function ChatInput({ onSend, disabled, placeholder, initialValue }: ChatI
           size="icon"
           className="h-10 w-10 shrink-0"
         >
-          {disabled ? (
+          {sending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <Send className="h-4 w-4" />
           )}
         </Button>
+      </div>
+      <div className="mx-auto flex max-w-4xl items-center justify-between px-12 text-[11px] text-muted-foreground">
+        <span>Enter to send, Shift+Enter for a new line</span>
+        <span className="hidden sm:inline">Attach a worksheet photo for step-by-step help</span>
       </div>
     </div>
   );

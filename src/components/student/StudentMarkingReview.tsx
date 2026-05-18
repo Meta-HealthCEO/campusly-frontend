@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Download, Images } from 'lucide-react';
 import { MarkingPagesLightbox } from '@/components/ai-tools/MarkingPagesLightbox';
 import { MarkingQuestionCard } from '@/components/ai-tools/MarkingQuestionCard';
-import { AskBuddyDrawer } from '@/components/ai-tutor/AskBuddyDrawer';
+import { AskAuraDrawer } from '@/components/ai-tutor/AskAuraDrawer';
 import { useStudentMarking } from '@/hooks/useStudentMarking';
 import type { StudentMarkingDetail } from '@/hooks/useStudentMarking';
 
@@ -70,7 +70,7 @@ export function StudentMarkingReview({ marking }: StudentMarkingReviewProps) {
               </Button>
             )}
             {marking.subjectId && (
-              <AskBuddyDrawer
+              <AskAuraDrawer
                 subjectId={marking.subjectId}
                 subjectName={marking.subjectName}
                 context={{

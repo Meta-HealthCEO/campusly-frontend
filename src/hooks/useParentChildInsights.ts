@@ -11,8 +11,8 @@ export interface ChildInsights {
 
 /**
  * Privacy-safe view of how a linked child is doing: mastery snapshot only.
- * Chat history with Buddy is NOT returned — the parent should never see what
- * the child has said to Buddy.
+ * Chat history with Aura is NOT returned — the parent should never see what
+ * the child has said to Aura.
  */
 export function useParentChildInsights(studentId: string | null) {
   const [insights, setInsights] = useState<ChildInsights | null>(null);

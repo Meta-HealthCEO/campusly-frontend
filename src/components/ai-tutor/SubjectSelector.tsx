@@ -29,7 +29,7 @@ export function SubjectSelector({ subjects, selected, onSelect }: SubjectSelecto
     <div className="space-y-1.5">
       <Label htmlFor="subject-select">Subject</Label>
       <Select value={selected} onValueChange={handleChange}>
-        <SelectTrigger className="w-full sm:w-64">
+        <SelectTrigger className="w-full">
           <SelectValue placeholder="Select a subject" />
         </SelectTrigger>
         <SelectContent>

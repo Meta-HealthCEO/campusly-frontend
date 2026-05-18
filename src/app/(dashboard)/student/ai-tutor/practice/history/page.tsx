@@ -22,7 +22,7 @@ export default function PracticeHistoryPage() {
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
-    <div className="space-y-4 max-w-3xl mx-auto">
+    <div className="mx-auto max-w-3xl space-y-4">
       <Link
         href="/student/ai-tutor/practice"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -54,9 +54,9 @@ export default function PracticeHistoryPage() {
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <CardTitle className="text-base truncate">{item.topic}</CardTitle>
+                      <CardTitle className="truncate text-base">{item.topic}</CardTitle>
                       <p className="text-xs text-muted-foreground">
-                        {item.subjectName} · Grade {item.grade}
+                        {item.subjectName} - Grade {item.grade}
                       </p>
                     </div>
                     <Badge variant={scoreTone(item.percentage)} className="shrink-0">

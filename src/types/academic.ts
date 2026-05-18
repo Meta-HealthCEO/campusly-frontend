@@ -2,7 +2,7 @@
 // Academic Types — Grade, Class, Subject, Assessment, Marks, Timetable
 // ============================================================
 
-import type { User, Teacher, Student } from './common';
+import type { Teacher, Student } from './common';
 
 export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday';
 
@@ -28,9 +28,11 @@ export interface SchoolClass {
 
 export interface Subject {
   id: string;
+  _id?: string;
   name: string;
   code: string;
   gradeId: string;
+  gradeIds?: string[];
   teacherId: string;
   teacher: Teacher;
   isElective: boolean;

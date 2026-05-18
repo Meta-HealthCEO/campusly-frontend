@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { LessonMaterialCard } from '@/components/student/LessonMaterialCard';
-import { AskBuddyDrawer } from '@/components/ai-tutor/AskBuddyDrawer';
+import { AskAuraDrawer } from '@/components/ai-tutor/AskAuraDrawer';
 import { useStudentLesson } from '@/hooks/useStudentLesson';
 import { useStudentLessonExport } from '@/hooks/useStudentLessonExport';
 
@@ -96,7 +96,7 @@ export default function StudentLessonDetailPage({
       </section>
 
       <div className="pt-2">
-        <AskBuddyDrawer
+        <AskAuraDrawer
           subjectId={lesson.subjectId}
           subjectName={lesson.subjectName}
           context={{

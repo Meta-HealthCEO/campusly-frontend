@@ -14,7 +14,7 @@ import { formatDate } from '@/lib/utils';
 import { QuizSubmissionForm } from '@/components/homework/QuizSubmissionForm';
 import { ExerciseSubmissionForm } from '@/components/homework/ExerciseSubmissionForm';
 import { ReadingSubmissionForm } from '@/components/homework/ReadingSubmissionForm';
-import { AskBuddyDrawer } from '@/components/ai-tutor/AskBuddyDrawer';
+import { AskAuraDrawer } from '@/components/ai-tutor/AskAuraDrawer';
 
 export default function StudentHomeworkDetailPage() {
   const params = useParams();
@@ -62,7 +62,7 @@ export default function StudentHomeworkDetailPage() {
 
       <PageHeader title={detail.title} description="">
         {detail.subjectId && (
-          <AskBuddyDrawer
+          <AskAuraDrawer
             subjectId={detail.subjectId}
             subjectName={detail.subject}
             context={{

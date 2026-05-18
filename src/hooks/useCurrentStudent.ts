@@ -10,6 +10,23 @@ interface CurrentStudentResult {
   loading: boolean;
 }
 
+function populatedObject(value: unknown): Record<string, unknown> | undefined {
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : undefined;
+}
+
+function normaliseStudent(match: Student): Student {
+  const record = match as unknown as Record<string, unknown>;
+  const grade = populatedObject(record.grade) ?? populatedObject(record.gradeId);
+  const classRecord = populatedObject(record.class) ?? populatedObject(record.classId);
+
+  return {
+    ...match,
+    id: (record._id as string | undefined) ?? (record.id as string | undefined) ?? match.id,
+    ...(grade ? { grade: grade as unknown as Student['grade'] } : {}),
+    ...(classRecord ? { class: classRecord as unknown as Student['class'] } : {}),
+  };
+}
+
 export function useCurrentStudent(): CurrentStudentResult {
   const { user } = useAuthStore();
   const [student, setStudent] = useState<Student | null>(null);
@@ -27,7 +44,7 @@ export function useCurrentStudent(): CurrentStudentResult {
       try {
         const res = await apiClient.get('/students/me');
         const match = unwrapResponse<Student>(res);
-        setStudent({ ...match, id: (match as unknown as { _id?: string })._id ?? match.id });
+        setStudent(normaliseStudent(match));
       } catch (err: unknown) {
         setStudent(null);
         // 404 means this user has no Student record yet — an expected state

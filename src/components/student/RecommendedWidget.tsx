@@ -46,7 +46,7 @@ export function RecommendedWidget() {
             href="/student/ai-tutor"
             className="text-xs text-muted-foreground hover:text-foreground"
           >
-            Open Buddy
+            Open Aura
           </Link>
         </div>
       </CardHeader>

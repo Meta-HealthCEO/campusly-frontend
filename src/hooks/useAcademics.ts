@@ -57,7 +57,7 @@ export function useClasses(gradeId?: string) {
   return { classes, loading, refetch: fetchClasses };
 }
 
-export function useSubjects() {
+export function useSubjects(gradeId?: string) {
   const { user } = useAuthStore();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,14 +65,16 @@ export function useSubjects() {
   const fetchSubjects = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await apiClient.get('/academic/subjects');
+      const params: Record<string, string | number> = { limit: 100 };
+      if (gradeId) params.gradeId = gradeId;
+      const res = await apiClient.get('/academic/subjects', { params });
       setSubjects(unwrapList<Subject>(res));
     } catch {
       console.warn('Failed to load subjects');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [gradeId]);
 
   useEffect(() => { if (user?.id) fetchSubjects(); }, [user?.id, fetchSubjects]);
 

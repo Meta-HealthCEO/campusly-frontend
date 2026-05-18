@@ -99,6 +99,14 @@ export default function ParentAIAssistantPage() {
             onSend={handleSend}
             sending={sending}
             canChat={Boolean(selectedChildId)}
+            mode="chat"
+            subjectName={
+              children.find((c) => c.id === selectedChildId)
+                ? `${children.find((c) => c.id === selectedChildId)?.firstName ?? ''}`.trim()
+                : ''
+            }
+            grade={0}
+            modeLabel="Parent assistant"
           />
         </div>
       </div>
