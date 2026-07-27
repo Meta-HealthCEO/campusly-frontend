@@ -133,6 +133,8 @@ export interface AuraContext {
   correctAnswer?: string;
   teacherFeedback?: string;
   curriculumNodeId?: string;
+  /** Human-readable topic title, e.g. "Quadratic equations". */
+  topic?: string;
   isAssessmentActive?: boolean;
 }
 

@@ -66,6 +66,32 @@ function normaliseSubject(subject: Subject): Subject | null {
   };
 }
 
+function subjectIdentityKey(subject: Subject): string {
+  return subject.name.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function addSubject(
+  byId: Map<string, Subject>,
+  idByIdentity: Map<string, string>,
+  subject: Subject,
+  selectedSubjectId: string,
+): void {
+  const identity = subjectIdentityKey(subject);
+  const existingId = idByIdentity.get(identity);
+
+  if (existingId && existingId !== subject.id) {
+    if (subject.id === selectedSubjectId) {
+      byId.delete(existingId);
+      byId.set(subject.id, subject);
+      idByIdentity.set(identity, subject.id);
+    }
+    return;
+  }
+
+  byId.set(subject.id, subject);
+  idByIdentity.set(identity, subject.id);
+}
+
 function subjectFromClass(cls: TutorClassSubjectSource | null): Subject | null {
   if (!cls) return null;
   const subject = cls.subject;
@@ -87,20 +113,25 @@ export function buildTutorSubjects(
   selectedSubjectId: string,
 ): Subject[] {
   const byId = new Map<string, Subject>();
+  const idByIdentity = new Map<string, string>();
   const classSubjects = [homeroom, ...subjectClasses].map(subjectFromClass).filter(Boolean) as Subject[];
+
+  // Always include the subjects the student is actually enrolled in via their
+  // classes — these are the canonical "what I'm studying" set. The catalogue
+  // query (allSubjects) returns whatever the admin has configured for the
+  // grade, but it often misses subjects the student is actually taking when
+  // the subject's gradeIds aren't populated, leaving the picker with a tiny
+  // subset. Union them so the student sees everything available to them.
+  for (const subject of classSubjects) addSubject(byId, idByIdentity, subject, selectedSubjectId);
 
   for (const subject of allSubjects) {
     const normalised = normaliseSubject(subject);
-    if (normalised) byId.set(normalised.id, normalised);
+    if (normalised) addSubject(byId, idByIdentity, normalised, selectedSubjectId);
   }
 
   if (selectedSubjectId && !byId.has(selectedSubjectId)) {
     const selectedFromClass = classSubjects.find((subject) => subject.id === selectedSubjectId);
-    if (selectedFromClass) byId.set(selectedFromClass.id, selectedFromClass);
-  }
-
-  if (byId.size === 0) {
-    for (const subject of classSubjects) byId.set(subject.id, subject);
+    if (selectedFromClass) addSubject(byId, idByIdentity, selectedFromClass, selectedSubjectId);
   }
 
   return Array.from(byId.values()).sort((a, b) => a.name.localeCompare(b.name));

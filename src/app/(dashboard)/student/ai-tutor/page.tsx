@@ -17,13 +17,14 @@ import { toast } from 'sonner';
 import { useAITutor } from '@/hooks/useAITutor';
 import { useSubjects } from '@/hooks/useAcademics';
 import { useCapsGrades, useCapsSubjects } from '@/hooks/useCapsGrades';
+import { useCurriculumTopicTree } from '@/hooks/useCurriculumTopics';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { useStudentClasses } from '@/hooks/useStudentClasses';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ChatInterface } from '@/components/ai-tutor/ChatInterface';
 import { ConversationList } from '@/components/ai-tutor/ConversationList';
-import { SubjectChip, ModeChip } from '@/components/ai-tutor/TutorChips';
+import { SubjectChip, ModeChip, TopicChip, type TopicOption } from '@/components/ai-tutor/TutorChips';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -108,10 +109,7 @@ export default function StudentAITutorPage() {
     () => findCurriculumGradeNodeId(capsGrades, gradeLevel),
     [capsGrades, gradeLevel],
   );
-  const { subjects: capsSubjects, loading: capsSubjectsLoading } = useCapsSubjects(
-    capsGradeNodeId,
-    frameworkId,
-  );
+  const { subjects: capsSubjects, loading: capsSubjectsLoading } = useCapsSubjects(capsGradeNodeId, frameworkId);
 
   const {
     conversations,
@@ -129,6 +127,13 @@ export default function StudentAITutorPage() {
   const [selectedSubjectId, setSelectedSubjectId] = useState(initialSubjectId);
   const [selectedMode, setSelectedMode] = useState<TutorMode>(initialMode);
   const [historyOpen, setHistoryOpen] = useState(false);
+
+  // Optional CAPS-aligned topic narrowing. `selectedTopicId` is set only when
+  // the student picks a structured syllabus topic; `customTopic` is set when
+  // they type a free-text topic instead. Either or neither may be set.
+  const [selectedTopicId, setSelectedTopicId] = useState('');
+  const [selectedTopicTitle, setSelectedTopicTitle] = useState('');
+  const [customTopic, setCustomTopic] = useState('');
 
   useEffect(() => {
     void loadConversations();
@@ -152,6 +157,27 @@ export default function StudentAITutorPage() {
     subjects,
   ]);
 
+  // Load topics from the same source the teacher's lesson generator uses:
+  // school subjectId + school gradeId. This guarantees the student sees the
+  // exact topic catalogue their teacher works against, not a CAPS-framework
+  // subset.
+  const activeSubjectIdForLookup = currentConversation?.subjectId ?? selectedSubjectId;
+  const { tree: curriculumTopicTree, loading: topicsLoading } = useCurriculumTopicTree({
+    subjectId: activeSubjectIdForLookup,
+    gradeId: studentGradeId,
+  });
+
+  const topicOptions = useMemo<TopicOption[]>(
+    () =>
+      curriculumTopicTree.map((node) => ({
+        id: node.id,
+        title: node.title,
+        code: node.code,
+        subtopics: node.subtopics,
+      })),
+    [curriculumTopicTree],
+  );
+
   if (studentLoading || subjectsLoading || classesLoading || capsGradesLoading || capsSubjectsLoading) {
     return <LoadingSpinner />;
   }
@@ -174,6 +200,9 @@ export default function StudentAITutorPage() {
   const canChat = Boolean(effectiveSubjectId && effectiveSubjectName && grade >= 1);
   const activeModeMeta = MODE_OPTIONS.find((m) => m.id === activeMode) ?? MODE_OPTIONS[0];
 
+  const effectiveTopicTitle = customTopic || selectedTopicTitle;
+  const effectiveTopicNodeId = customTopic ? '' : selectedTopicId;
+
   const handleSend = (message: string, image?: AuraImagePayload) => {
     if (!effectiveSubjectId || !effectiveSubjectName) {
       toast.error('Pick a subject first');
@@ -191,6 +220,15 @@ export default function StudentAITutorPage() {
       message,
       mode: activeMode,
       image,
+      // Only attach a context object when the student actually narrowed the
+      // syllabus topic — keeps free-form chats lean.
+      context: effectiveTopicTitle
+        ? {
+            surface: 'free',
+            topic: effectiveTopicTitle,
+            curriculumNodeId: effectiveTopicNodeId || undefined,
+          }
+        : undefined,
     };
     if (image) {
       void sendMessage(payload);
@@ -211,11 +249,33 @@ export default function StudentAITutorPage() {
   const handleSwitchSubject = (id: string) => {
     if (currentConversation) startNewConversation();
     setSelectedSubjectId(id);
+    // Switching subject invalidates the previous topic pick.
+    setSelectedTopicId('');
+    setSelectedTopicTitle('');
+    setCustomTopic('');
   };
 
   const handleSwitchMode = (mode: TutorMode) => {
     if (currentConversation) startNewConversation();
     setSelectedMode(mode);
+  };
+
+  const handleSelectTopic = (id: string, title: string) => {
+    setSelectedTopicId(id);
+    setSelectedTopicTitle(title);
+    setCustomTopic('');
+  };
+
+  const handleSelectCustomTopic = (title: string) => {
+    setSelectedTopicId('');
+    setSelectedTopicTitle('');
+    setCustomTopic(title);
+  };
+
+  const handleClearTopic = () => {
+    setSelectedTopicId('');
+    setSelectedTopicTitle('');
+    setCustomTopic('');
   };
 
   const practiceHref = effectiveSubjectId
@@ -240,6 +300,17 @@ export default function StudentAITutorPage() {
             grade={grade}
             onSelect={handleSwitchSubject}
             disabled={tutorSubjects.length === 0}
+          />
+          <TopicChip
+            topics={topicOptions}
+            selectedId={selectedTopicId}
+            selectedTitle={selectedTopicTitle}
+            customTitle={customTopic}
+            onSelectTopic={handleSelectTopic}
+            onSelectCustom={handleSelectCustomTopic}
+            onClear={handleClearTopic}
+            disabled={!effectiveSubjectId}
+            loading={topicsLoading}
           />
           <ModeChip
             options={MODE_OPTIONS}

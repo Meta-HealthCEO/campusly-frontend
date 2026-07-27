@@ -70,3 +70,42 @@ export function useCapsSubjects(gradeId: string, frameworkId: string) {
 
   return { subjects, loading };
 }
+
+/**
+ * Load CAPS topics for a given subject node. Uses the denormalized `subjectId`
+ * filter so topics that live under a term sub-tree are still returned.
+ */
+export function useCapsTopics(subjectNodeId: string, frameworkId: string) {
+  const [topics, setTopics] = useState<CurriculumNodeItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!subjectNodeId || !frameworkId) {
+      setTopics([]);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      try {
+        const res = await apiClient.get('/curriculum-structure/nodes', {
+          params: { frameworkId, subjectId: subjectNodeId, type: 'topic', limit: 200 },
+        });
+        const result = unwrapResponse<{ nodes: CurriculumNodeItem[] }>(res);
+        if (!cancelled) {
+          setTopics([...result.nodes].sort((a, b) => a.order - b.order));
+        }
+      } catch (err: unknown) {
+        console.error('Failed to load topics for subject', subjectNodeId, err);
+        if (!cancelled) setTopics([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    void load();
+    return () => { cancelled = true; };
+  }, [subjectNodeId, frameworkId]);
+
+  return { topics, loading };
+}
