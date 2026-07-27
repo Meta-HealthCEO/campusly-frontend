@@ -6,10 +6,9 @@ import remarkGfm from 'remark-gfm';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { BlockRenderer } from '@/components/content/renderers/BlockRenderer';
+import { useResourceBlockAttempts } from '@/hooks/useResourceBlockAttempts';
 import { ExternalLink } from 'lucide-react';
 import type {
-  AttemptResult,
-  BlockInteractionState,
   ContentBlockItem,
   ContentBlockType,
   StudentLessonMaterial,
@@ -19,31 +18,6 @@ const BLOCK_TYPES = new Set<ContentBlockType>([
   'text', 'image', 'video', 'quiz', 'drag_drop', 'fill_blank',
   'match_columns', 'ordering', 'hotspot', 'step_reveal', 'code',
 ]);
-
-const NOOP_ATTEMPT_RESULT: AttemptResult = {
-  id: 'reader',
-  correct: false,
-  score: 0,
-  maxScore: 0,
-  attemptNumber: 0,
-};
-
-function defaultInteraction(blockId: string): BlockInteractionState {
-  return {
-    blockId,
-    answered: false,
-    correct: null,
-    score: 0,
-    maxScore: 0,
-    showExplanation: false,
-    hintsRevealed: 0,
-    attemptResult: null,
-  };
-}
-
-async function noopAttempt(): Promise<AttemptResult> {
-  return NOOP_ATTEMPT_RESULT;
-}
 
 function normalizeBlock(raw: unknown, index: number): ContentBlockItem {
   const block = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
@@ -67,6 +41,9 @@ function normalizeBlock(raw: unknown, index: number): ContentBlockItem {
 
 export function LessonResourceContent({ material }: { material: StudentLessonMaterial }) {
   const resource = material.contentResource;
+  // Interactive blocks submit through the mastery API (with a local-grading
+  // fallback), so quiz answers inside lessons count toward mastery.
+  const { getInteraction, submitBlockAttempt } = useResourceBlockAttempts(resource?.id);
   const blocks = (resource?.blocks ?? [])
     .map(normalizeBlock)
     .sort((a, b) => a.order - b.order);
@@ -106,8 +83,11 @@ export function LessonResourceContent({ material }: { material: StudentLessonMat
             <div key={block.blockId} className="rounded-lg border p-4">
               <BlockRenderer
                 block={block}
-                onAttempt={noopAttempt}
-                interaction={defaultInteraction(block.blockId)}
+                onAttempt={(blockId, response) => {
+                  const target = blocks.find((b) => b.blockId === blockId) ?? block;
+                  return submitBlockAttempt(target, response);
+                }}
+                interaction={getInteraction(block.blockId)}
               />
             </div>
           ))}

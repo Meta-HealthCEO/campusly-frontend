@@ -9,6 +9,7 @@ import { OrderingBlock } from './OrderingBlock';
 import { StepRevealBlock } from './StepRevealBlock';
 import { MermaidBlock } from './MermaidBlock';
 import { GeoGebraBlock } from './GeoGebraBlock';
+import { CodeBlock } from './CodeBlock';
 import { AlertCircle } from 'lucide-react';
 import type { ContentBlockItem, BlockInteractionState, AttemptResult } from '@/types';
 
@@ -44,6 +45,9 @@ export function BlockRenderer({ block, onAttempt, interaction }: BlockRendererPr
 
     case 'step_reveal':
       return <StepRevealBlock block={block} />;
+
+    case 'code':
+      return <CodeBlock block={block} />;
 
     case 'image': {
       // Check if metadata indicates a GeoGebra embed
