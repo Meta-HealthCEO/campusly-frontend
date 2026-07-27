@@ -11,8 +11,8 @@ import {
   Receipt,
   Sparkles,
 } from 'lucide-react';
-import apiClient from '@/lib/api-client';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionActions } from '@/hooks/useSubscriptionActions';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useCheckout } from '@/hooks/useCheckout';
 import { CancelDialog } from '@/components/subscription/CancelDialog';
@@ -81,6 +81,7 @@ export default function BillingPage() {
   } = useSubscription();
   const { invoices, loading: invLoading } = useInvoices();
   const { launch, loading: launchLoading } = useCheckout();
+  const { resumeSubscription } = useSubscriptionActions();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [resumeLoading, setResumeLoading] = useState(false);
 
@@ -100,7 +101,7 @@ export default function BillingPage() {
   const resume = async () => {
     setResumeLoading(true);
     try {
-      await apiClient.post('/subscriptions/resume', {});
+      await resumeSubscription();
       toast.success('Subscription resumed');
       await refetch();
     } catch (err: unknown) {

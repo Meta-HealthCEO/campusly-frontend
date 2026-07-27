@@ -228,3 +228,12 @@ export interface StudentAssignmentItem extends Assignment {
     totalMark?: number;
   } | null;
 }
+
+// ─── File uploads ──────────────────────────────────────────────────────────
+
+export interface UploadedFile {
+  filename: string;
+  url: string;
+  sizeBytes: number;
+  mimeType: string;
+}

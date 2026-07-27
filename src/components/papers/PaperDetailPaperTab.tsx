@@ -10,7 +10,7 @@ import { Trash2, RefreshCw, Pencil, BookmarkPlus, BookmarkCheck } from 'lucide-r
 import { QuestionEditDialog } from './QuestionEditDialog';
 import { QuestionBankPicker } from './QuestionBankPicker';
 import { getPaperQuestionOptions, getPaperQuestionText } from '@/lib/paper-question';
-import apiClient from '@/lib/api-client';
+import { usePaperBankActions } from '@/hooks/usePaperBankActions';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import type { Paper, PaperQuestion, PopulatedPaperQuestionRef } from '@/types/papers';
 
@@ -26,6 +26,7 @@ interface EditingState {
 
 export function PaperDetailPaperTab({ paper, onChanged }: Props) {
   const { regenerateQuestion, deleteQuestion } = useTeacherPapers(false);
+  const { saveQuestionToBank } = usePaperBankActions();
   const [editing, setEditing] = useState<EditingState | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -65,9 +66,7 @@ export function PaperDetailPaperTab({ paper, onChanged }: Props) {
   ): Promise<void> => {
     setBusy(true);
     try {
-      await apiClient.post(
-        `/question-bank/papers/${paper._id}/sections/${sectionIdx}/questions/${position}/save-to-bank`,
-      );
+      await saveQuestionToBank(paper._id, sectionIdx, position);
       toast.success('Saved to your Practice Questions bank');
       await onChanged();
     } catch (err: unknown) {

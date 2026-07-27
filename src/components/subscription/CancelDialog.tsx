@@ -11,8 +11,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import apiClient from '@/lib/api-client';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionActions } from '@/hooks/useSubscriptionActions';
 
 interface Props {
   open: boolean;
@@ -21,6 +21,7 @@ interface Props {
 
 export function CancelDialog({ open, onOpenChange }: Props) {
   const { subscription, refetch } = useSubscription();
+  const { cancelSubscription } = useSubscriptionActions();
   const [loading, setLoading] = useState(false);
 
   const periodEnd = subscription?.currentPeriodEnd
@@ -30,7 +31,7 @@ export function CancelDialog({ open, onOpenChange }: Props) {
   const cancel = async () => {
     setLoading(true);
     try {
-      await apiClient.post('/subscriptions/cancel', {});
+      await cancelSubscription();
       toast.success(`Cancelled. Pro stays active until ${periodEnd}.`);
       await refetch();
       onOpenChange(false);

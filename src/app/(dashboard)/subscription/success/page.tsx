@@ -3,9 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle2 } from 'lucide-react';
-import apiClient from '@/lib/api-client';
-import { unwrapResponse } from '@/lib/api-helpers';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscriptionActions } from '@/hooks/useSubscriptionActions';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 
@@ -18,6 +17,7 @@ export default function SubscriptionSuccessPage() {
   const params = useSearchParams();
   const router = useRouter();
   const { refetch } = useSubscription();
+  const { fetchCheckoutSessionStatus } = useSubscriptionActions();
   const [status, setStatus] = useState<ViewStatus>('loading');
 
   useEffect(() => {
@@ -33,8 +33,7 @@ export default function SubscriptionSuccessPage() {
     const poll = async () => {
       attempts++;
       try {
-        const res = await apiClient.get(`/subscriptions/checkout-session/${sessionId}`);
-        const data = unwrapResponse<{ status: string }>(res);
+        const data = await fetchCheckoutSessionStatus(sessionId);
         if (cancelled) return;
 
         if (data.status === 'completed') {

@@ -6,17 +6,9 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ExerciseQuestionsList } from '@/components/homework/ExerciseQuestionsList';
 import { BlockRenderer } from '@/components/content/renderers/BlockRenderer';
 import { useLessonMaterialPreview } from '@/hooks/useLessonMaterialPreview';
-import apiClient from '@/lib/api-client';
-import { unwrapResponse } from '@/lib/api-helpers';
+import { useAttemptPreviewGrader } from '@/hooks/useAttemptPreviewGrader';
 import type { LessonMaterial } from '@/types/lesson';
 import type { ContentBlockItem, AttemptResult, BlockInteractionState } from '@/types';
-
-interface ApiGradeResult {
-  correct: boolean;
-  score: number;
-  maxScore: number;
-  feedback: string;
-}
 
 interface Props {
   material: LessonMaterial;
@@ -91,6 +83,7 @@ function defaultInteraction(blockId: string): BlockInteractionState {
 }
 
 function ContentBlocksList({ blocks }: { blocks: unknown[] }) {
+  const { gradePreviewAttempt } = useAttemptPreviewGrader();
   const [interactions, setInteractions] = useState<Map<string, BlockInteractionState>>(
     () => new Map(),
   );
@@ -107,20 +100,13 @@ function ContentBlocksList({ blocks }: { blocks: unknown[] }) {
       let maxScore = 1;
 
       if (raw) {
-        try {
-          const res = await apiClient.post('/content-library/grade-attempt', {
-            blockContent: raw.content,
-            blockType: raw.type,
-            response,
-          });
-          const data = unwrapResponse<ApiGradeResult>(res);
+        // A null result (network/auth error) leaves correctness unknown —
+        // the QuizBlock renders a neutral "Answer recorded" state.
+        const data = await gradePreviewAttempt(raw.content, raw.type, response);
+        if (data) {
           correct = data.correct;
           score = data.score;
           maxScore = data.maxScore;
-        } catch {
-          // Network or auth error — leave correctness unknown. The QuizBlock
-          // renders a neutral "Answer recorded" state when correct is null.
-          correct = null;
         }
       }
 
@@ -147,7 +133,7 @@ function ContentBlocksList({ blocks }: { blocks: unknown[] }) {
       });
       return result;
     },
-    [blocks],
+    [blocks, gradePreviewAttempt],
   );
 
   if (blocks.length === 0) {

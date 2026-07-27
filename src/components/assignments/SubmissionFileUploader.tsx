@@ -5,15 +5,11 @@ import { Upload, Trash2, FileText, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import apiClient from '@/lib/api-client';
-import { unwrapResponse, extractErrorMessage } from '@/lib/api-helpers';
+import { extractErrorMessage } from '@/lib/api-helpers';
+import { useAssignmentFileUpload } from '@/hooks/useAssignmentFileUpload';
+import type { UploadedFile } from '@/types/assignments';
 
-export interface UploadedFile {
-  filename: string;
-  url: string;
-  sizeBytes: number;
-  mimeType: string;
-}
+export type { UploadedFile };
 
 interface Props {
   files: UploadedFile[];
@@ -37,6 +33,7 @@ export function SubmissionFileUploader({
   maxFiles = MAX_FILES_DEFAULT,
   disabled,
 }: Props) {
+  const { uploadFile } = useAssignmentFileUpload();
   const [uploading, setUploading] = useState(false);
 
   const handleFiles = async (picked: FileList | null) => {
@@ -50,13 +47,7 @@ export function SubmissionFileUploader({
     const next: UploadedFile[] = [...files];
     for (const file of Array.from(picked)) {
       try {
-        const fd = new FormData();
-        fd.append('file', file);
-        const res = await apiClient.post('/assignments/uploads/file', fd, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        const result = unwrapResponse<UploadedFile>(res);
-        next.push(result);
+        next.push(await uploadFile(file));
       } catch (err: unknown) {
         toast.error(extractErrorMessage(err, `Failed to upload ${file.name}`));
       }

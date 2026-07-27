@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import apiClient from '@/lib/api-client';
+import { useAuthenticatedBlobUrl } from '@/hooks/useAuthenticatedBlobUrl';
 
 interface AuthenticatedImageProps {
   /** Path relative to the API base URL — e.g. `/ai-tools/markings/<id>/image/<filename>`. */
@@ -20,26 +19,7 @@ interface AuthenticatedImageProps {
  * The blob URL is revoked on unmount or src change.
  */
 export function AuthenticatedImage({ path, alt, className }: AuthenticatedImageProps) {
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    let createdUrl: string | null = null;
-    apiClient
-      .get(path, { responseType: 'blob' })
-      .then((res) => {
-        if (cancelled) return;
-        createdUrl = URL.createObjectURL(res.data as Blob);
-        setBlobUrl(createdUrl);
-      })
-      .catch(() => {
-        if (!cancelled) setBlobUrl(null);
-      });
-    return () => {
-      cancelled = true;
-      if (createdUrl) URL.revokeObjectURL(createdUrl);
-    };
-  }, [path]);
+  const blobUrl = useAuthenticatedBlobUrl(path);
 
   if (!blobUrl) {
     return <div className={className} aria-label={alt} />;

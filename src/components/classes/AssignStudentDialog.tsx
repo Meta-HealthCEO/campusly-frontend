@@ -10,17 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-import apiClient from '@/lib/api-client';
-import { unwrapList } from '@/lib/api-helpers';
-
-interface SchoolRosterRow {
-  id: string;
-  firstName: string;
-  lastName: string;
-  admissionNumber: string;
-  classId: string | null;
-  className: string | null;
-}
+import { useRosterSearch, type SchoolRosterRow } from '@/hooks/useRosterSearch';
 
 interface AssignStudentDialogProps {
   open: boolean;
@@ -39,8 +29,6 @@ export function AssignStudentDialog({
 }: AssignStudentDialogProps) {
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
-  const [rows, setRows] = useState<SchoolRosterRow[]>([]);
-  const [loading, setLoading] = useState(false);
   const [assigningId, setAssigningId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -49,24 +37,7 @@ export function AssignStudentDialog({
     return () => clearTimeout(t);
   }, [search, open]);
 
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    setLoading(true);
-    apiClient
-      .get('/students/search-roster', { params: { q: debounced } })
-      .then((res) => {
-        if (cancelled) return;
-        setRows(unwrapList<SchoolRosterRow>(res));
-      })
-      .catch(() => {
-        if (!cancelled) setRows([]);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, [open, debounced]);
+  const { rows, loading } = useRosterSearch(debounced, open);
 
   const available = useMemo(() => {
     const currentSet = new Set(currentStudentIds);
@@ -87,7 +58,6 @@ export function AssignStudentDialog({
     if (!o) {
       setSearch('');
       setDebounced('');
-      setRows([]);
     }
     onOpenChange(o);
   };
