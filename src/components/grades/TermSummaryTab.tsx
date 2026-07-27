@@ -1,9 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import {
-  TrendingUp, TrendingDown, Minus, BookOpen, Settings2, AlertTriangle,
-} from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -15,12 +13,14 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import {
   useTermSummary,
   type TermSummaryStudentRow,
-  type TermSummarySubjectColumn,
-  type TermSummaryAssessment,
 } from '@/hooks/useTermSummary';
 import { SubjectTrendDialog } from './SubjectTrendDialog';
 import { StudentTermDetailDialog } from './StudentTermDetailDialog';
 import { SubjectWeightingDialog } from './SubjectWeightingDialog';
+import { gradeColor, type SubjectGroup } from './TermSummaryHelpers';
+import { TermSummaryTotalsTable } from './TermSummaryTotalsTable';
+import { TermSummaryTestsTable } from './TermSummaryTestsTable';
+import { TermSummarySubjectChip } from './TermSummarySubjectChip';
 import { cn } from '@/lib/utils';
 
 type ViewMode = 'totals' | 'tests';
@@ -30,30 +30,6 @@ interface Props {
   // Pass 'year' for the full-year roll-up.
   term: number | 'year';
   academicYear: number;
-}
-
-function gradeColor(pct: number | null): string {
-  if (pct === null) return 'text-muted-foreground';
-  if (pct >= 80) return 'text-emerald-600 dark:text-emerald-400';
-  if (pct >= 50) return 'text-foreground';
-  return 'text-destructive';
-}
-
-function deltaIcon(value: number | null, base: number | null) {
-  if (value === null || base === null) return null;
-  const diff = value - base;
-  if (Math.abs(diff) < 1) {
-    return <Minus className="h-3 w-3 text-muted-foreground" aria-label="On par with class" />;
-  }
-  if (diff > 0) {
-    return <TrendingUp className="h-3 w-3 text-emerald-600" aria-label={`+${diff.toFixed(1)} vs class`} />;
-  }
-  return <TrendingDown className="h-3 w-3 text-destructive" aria-label={`${diff.toFixed(1)} vs class`} />;
-}
-
-interface SubjectGroup {
-  subject: TermSummarySubjectColumn;
-  assessments: TermSummaryAssessment[];
 }
 
 export function TermSummaryTab({ classId, term, academicYear }: Props) {
@@ -82,7 +58,7 @@ export function TermSummaryTab({ classId, term, academicYear }: Props) {
   // Group assessments by subject for the Tests view, preserving date order.
   const allSubjectGroups = useMemo<SubjectGroup[]>(() => {
     if (!summary) return [];
-    const bySubject = new Map<string, TermSummaryAssessment[]>();
+    const bySubject = new Map<string, SubjectGroup['assessments']>();
     for (const a of summary.assessments) {
       const arr = bySubject.get(a.subjectId) ?? [];
       arr.push(a);
@@ -151,7 +127,7 @@ export function TermSummaryTab({ classId, term, academicYear }: Props) {
           </div>
           <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
             {summary.subjects.map((s) => (
-              <SubjectChip
+              <TermSummarySubjectChip
                 key={s.subjectId}
                 subject={s}
                 onOpenTrend={() => setSubjectDrill({ id: s.subjectId, name: s.subjectName })}
@@ -206,100 +182,19 @@ export function TermSummaryTab({ classId, term, academicYear }: Props) {
         </CardHeader>
         <CardContent className="p-0">
           {viewMode === 'totals' ? (
-            <TotalsTable
+            <TermSummaryTotalsTable
               subjects={summary.subjects}
               students={filteredRows}
               onOpenStudent={(id, name) => setStudentDrill({ id, name })}
               onOpenSubject={(id, name) => setSubjectDrill({ id, name })}
             />
           ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full w-auto text-sm border-separate border-spacing-0">
-              <thead>
-                <tr className="bg-muted/30">
-                  <th className="sticky left-0 z-10 bg-muted/30 px-4 py-2 text-left font-medium text-muted-foreground border-b w-64">
-                    Student
-                  </th>
-                  {subjectGroups.flatMap((g) => {
-                    // When there's only one subject in the whole view, the
-                    // subject label on every column header is noise — it's
-                    // already on the chip above. Hide it in that case.
-                    const showSubjectLabel = subjectGroups.length > 1;
-                    const headers: React.ReactNode[] = g.assessments.map((a) => (
-                      <th
-                        key={a.assessmentId}
-                        className="px-3 py-2 text-center font-medium text-foreground border-b border-l whitespace-nowrap"
-                        title={`${g.subject.subjectName} · ${a.name}`}
-                      >
-                        {showSubjectLabel && (
-                          <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                            {g.subject.subjectName}
-                          </div>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setSubjectDrill({
-                            id: g.subject.subjectId,
-                            name: g.subject.subjectName,
-                          })}
-                          className="max-w-32 truncate hover:underline block mx-auto"
-                        >
-                          {a.name}
-                        </button>
-                        <div className="text-[10px] font-normal text-muted-foreground">
-                          T{a.term} · /{a.totalMarks}
-                        </div>
-                      </th>
-                    ));
-                    if (g.assessments.length > 1) {
-                      headers.push(
-                        <th
-                          key={`${g.subject.subjectId}-avg`}
-                          className="px-3 py-2 text-center font-medium text-muted-foreground border-b border-l bg-muted/40 whitespace-nowrap"
-                        >
-                          {showSubjectLabel && (
-                            <div className="text-[10px] font-semibold uppercase tracking-wide">
-                              {g.subject.subjectName}
-                            </div>
-                          )}
-                          <div className="text-foreground">Subject avg</div>
-                        </th>,
-                      );
-                    }
-                    return headers;
-                  })}
-                  <th className="sticky right-0 z-10 bg-muted/30 px-3 py-2 text-center font-semibold text-foreground border-b border-l whitespace-nowrap">
-                    Overall
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRows.map((row) => (
-                  <StudentRow
-                    key={row.studentId}
-                    row={row}
-                    groups={subjectGroups}
-                    onOpen={() =>
-                      setStudentDrill({ id: row.studentId, name: row.studentName })
-                    }
-                  />
-                ))}
-                {filteredRows.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={2 + subjectGroups.reduce(
-                        (sum, g) => sum + g.assessments.length + (g.assessments.length > 1 ? 1 : 0),
-                        0,
-                      )}
-                      className="px-4 py-6 text-center text-sm text-muted-foreground"
-                    >
-                      No students match this search.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+            <TermSummaryTestsTable
+              subjectGroups={subjectGroups}
+              students={filteredRows}
+              onOpenStudent={(id, name) => setStudentDrill({ id, name })}
+              onOpenSubject={(id, name) => setSubjectDrill({ id, name })}
+            />
           )}
         </CardContent>
       </Card>
@@ -328,240 +223,6 @@ export function TermSummaryTab({ classId, term, academicYear }: Props) {
         subjectId={weightingSubjectId}
         gradeId={summary.gradeId}
       />
-    </div>
-  );
-}
-
-interface StudentRowProps {
-  row: TermSummaryStudentRow;
-  groups: SubjectGroup[];
-  onOpen: () => void;
-}
-
-function StudentRow({ row, groups, onOpen }: StudentRowProps) {
-  return (
-    <tr
-      className="hover:bg-muted/20 cursor-pointer"
-      onClick={onOpen}
-    >
-      <td className="sticky left-0 z-10 bg-background px-4 py-2 border-b w-64">
-        <div className="font-medium hover:underline truncate">{row.studentName}</div>
-        {row.admissionNumber && (
-          <div className="text-xs text-muted-foreground truncate">{row.admissionNumber}</div>
-        )}
-      </td>
-      {groups.flatMap((g) => {
-        const cells: React.ReactNode[] = g.assessments.map((a) => {
-          const m = row.marksByAssessment[a.assessmentId];
-          return (
-            <td
-              key={a.assessmentId}
-              className="px-3 py-2 text-center whitespace-nowrap border-b border-l"
-            >
-              <CellMark mark={m} base={a.classAverage} />
-            </td>
-          );
-        });
-        if (g.assessments.length > 1) {
-          const subjectAvg = row.subjectAverages[g.subject.subjectId] ?? null;
-          cells.push(
-            <td
-              key={`${g.subject.subjectId}-avg`}
-              className="px-3 py-2 text-center border-b border-l bg-muted/10 whitespace-nowrap"
-            >
-              <span className={cn('font-semibold', gradeColor(subjectAvg))}>
-                {subjectAvg !== null ? `${subjectAvg}%` : '—'}
-              </span>
-            </td>,
-          );
-        }
-        return cells;
-      })}
-      <td className="sticky right-0 z-10 bg-background px-3 py-2 text-center border-b border-l whitespace-nowrap">
-        <span className={cn('font-semibold', gradeColor(row.overallAverage))}>
-          {row.overallAverage !== null ? `${row.overallAverage}%` : '—'}
-        </span>
-      </td>
-    </tr>
-  );
-}
-
-function CellMark({
-  mark,
-  base,
-}: {
-  mark: { mark: number; total: number; percent: number; isAbsent: boolean } | undefined;
-  base: number | null;
-}) {
-  if (!mark) return <span className="text-xs text-muted-foreground">—</span>;
-  if (mark.isAbsent) return <span className="text-xs text-muted-foreground">abs</span>;
-  return (
-    <div className="inline-flex items-center gap-1">
-      <span className={cn('font-medium', gradeColor(mark.percent))}>{mark.percent}%</span>
-      {deltaIcon(mark.percent, base)}
-    </div>
-  );
-}
-
-/**
- * Compact "report card" view: student × subject matrix. Each cell holds the
- * student's per-subject weighted average for the current term/year, with the
- * cohort-average delta chip. Final column = student's overall.
- */
-function TotalsTable({
-  subjects,
-  students,
-  onOpenStudent,
-  onOpenSubject,
-}: {
-  subjects: TermSummarySubjectColumn[];
-  students: TermSummaryStudentRow[];
-  onOpenStudent: (id: string, name: string) => void;
-  onOpenSubject: (id: string, name: string) => void;
-}) {
-  return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full w-auto text-sm border-separate border-spacing-0">
-        <thead>
-          <tr className="bg-muted/30">
-            <th className="sticky left-0 z-10 bg-muted/30 px-4 py-2 text-left font-medium text-muted-foreground border-b w-64">
-              Student
-            </th>
-            {subjects.map((s) => (
-              <th
-                key={s.subjectId}
-                className="px-3 py-2 text-center font-medium text-foreground border-b border-l whitespace-nowrap"
-              >
-                <button
-                  type="button"
-                  onClick={() => onOpenSubject(s.subjectId, s.subjectName)}
-                  className="hover:underline"
-                >
-                  {s.subjectName}
-                </button>
-                <div className="text-[10px] font-normal text-muted-foreground">
-                  {s.assessmentCount} test{s.assessmentCount === 1 ? '' : 's'}
-                </div>
-              </th>
-            ))}
-            <th className="sticky right-0 z-10 bg-muted/30 px-3 py-2 text-center font-semibold text-foreground border-b border-l whitespace-nowrap">
-              Overall
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {students.map((row) => (
-            <tr
-              key={row.studentId}
-              className="hover:bg-muted/20 cursor-pointer"
-              onClick={() => onOpenStudent(row.studentId, row.studentName)}
-            >
-              <td className="sticky left-0 z-10 bg-background px-4 py-2 border-b w-64">
-                <div className="font-medium hover:underline truncate">{row.studentName}</div>
-                {row.admissionNumber && (
-                  <div className="text-xs text-muted-foreground truncate">{row.admissionNumber}</div>
-                )}
-              </td>
-              {subjects.map((s) => {
-                const value = row.subjectAverages[s.subjectId] ?? null;
-                return (
-                  <td
-                    key={s.subjectId}
-                    className="px-3 py-2 text-center border-b border-l whitespace-nowrap"
-                  >
-                    {value === null ? (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    ) : (
-                      <div className="inline-flex items-center gap-1">
-                        <span className={cn('font-medium', gradeColor(value))}>{value}%</span>
-                        {deltaIcon(value, s.classAverage)}
-                      </div>
-                    )}
-                  </td>
-                );
-              })}
-              <td className="sticky right-0 z-10 bg-background px-3 py-2 text-center border-b border-l whitespace-nowrap">
-                <span className={cn('font-semibold', gradeColor(row.overallAverage))}>
-                  {row.overallAverage !== null ? `${row.overallAverage}%` : '—'}
-                </span>
-              </td>
-            </tr>
-          ))}
-          {students.length === 0 && (
-            <tr>
-              <td
-                colSpan={subjects.length + 2}
-                className="px-4 py-6 text-center text-sm text-muted-foreground"
-              >
-                No students match this search.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-interface SubjectChipProps {
-  subject: TermSummarySubjectColumn;
-  onOpenTrend: () => void;
-  onConfigureWeightings: () => void;
-}
-
-// One subject card. Two surfaces:
-//   • Body (clickable) → opens the per-term trend drilldown.
-//   • Cog button (top-right) → opens the weightings config.
-// When weightings aren't configured, the body's average is replaced with
-// a destructive "Set weightings" prompt — there is no flat-average
-// fallback by design (school policy must be set first).
-function SubjectChip({
-  subject, onOpenTrend, onConfigureWeightings,
-}: SubjectChipProps) {
-  const missing = subject.missingWeighting;
-  return (
-    <div className={cn(
-      'group relative rounded-lg border bg-muted/10 transition-colors',
-      missing ? 'border-destructive/40' : 'hover:border-primary/50 hover:bg-muted/30',
-    )}>
-      <button
-        type="button"
-        onClick={onOpenTrend}
-        className="block w-full text-left px-3 py-2 pr-9"
-        aria-label={`View trend for ${subject.subjectName}`}
-      >
-        <p className="text-sm font-medium truncate">{subject.subjectName}</p>
-        {missing ? (
-          <div className="mt-1 flex items-center gap-1 text-destructive">
-            <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-xs font-medium">Set weightings</span>
-          </div>
-        ) : (
-          <div className="mt-1 flex items-baseline gap-1">
-            <span className={cn('text-xl font-semibold', gradeColor(subject.classAverage))}>
-              {subject.classAverage !== null ? `${subject.classAverage}%` : '—'}
-            </span>
-            <span className="text-xs text-muted-foreground">class avg</span>
-          </div>
-        )}
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {subject.studentsWithMarks} marked · {subject.assessmentCount} test{subject.assessmentCount === 1 ? '' : 's'}
-        </p>
-      </button>
-      <button
-        type="button"
-        onClick={onConfigureWeightings}
-        className={cn(
-          'absolute top-1.5 right-1.5 inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted',
-          missing
-            ? 'text-destructive opacity-100'
-            : 'text-muted-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100',
-        )}
-        title="Configure weightings"
-        aria-label={`Configure weightings for ${subject.subjectName}`}
-      >
-        <Settings2 className="h-4 w-4" />
-      </button>
     </div>
   );
 }
