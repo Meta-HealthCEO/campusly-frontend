@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { FileQuestion, Upload, Search, AlertTriangle, Trash2 } from 'lucide-react';
+import { FileQuestion, Upload, AlertTriangle } from 'lucide-react';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -12,19 +12,16 @@ import {
 } from '@/components/questions';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
 import { NodePicker } from '@/components/curriculum';
 import { useQuestionBank } from '@/hooks/useQuestionBank';
 import { useSubjects, useGrades } from '@/hooks/useAcademics';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
-import { QUESTION_TYPES, CAPS_LEVELS } from '@/components/questions/question-constants';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import { toast } from 'sonner';
+import { buildQuestionColumns } from './_questionColumns';
+import { QuestionFilterBar } from './_QuestionFilterBar';
 import type {
   QuestionItem,
   QuestionType,
@@ -35,23 +32,6 @@ import type {
   UpdateQuestionPayload,
 } from '@/types/question-bank';
 import type { CurriculumNodeItem } from '@/types/curriculum-structure';
-
-const DIFFICULTY_OPTIONS = [
-  { value: 'all', label: 'All Difficulties' },
-  { value: '1', label: 'Difficulty 1' },
-  { value: '2', label: 'Difficulty 2' },
-  { value: '3', label: 'Difficulty 3' },
-  { value: '4', label: 'Difficulty 4' },
-  { value: '5', label: 'Difficulty 5' },
-];
-
-const STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: 'all', label: 'All Statuses' },
-  { value: 'draft', label: 'Draft' },
-  { value: 'pending_review', label: 'Pending Review' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'rejected', label: 'Rejected' },
-];
 
 export default function TeacherQuestionsPage() {
   const { user } = useAuthStore();
@@ -125,88 +105,10 @@ export default function TeacherQuestionsPage() {
   }, [deleteQuestion, fetchQuestions, filters]);
 
   // ─── Table columns ─────────────────────────────────────────────────────
-  const questionColumns = useMemo<ColumnDef<QuestionItem>[]>(() => [
-    {
-      accessorKey: 'stem',
-      header: 'Question',
-      cell: ({ row }) => (
-        <span className="line-clamp-2 max-w-xl">{row.original.stem}</span>
-      ),
-    },
-    {
-      accessorKey: 'type',
-      header: 'Type',
-      cell: ({ row }) => (
-        <Badge variant="outline" className="capitalize text-xs">
-          {row.original.type.replace(/_/g, ' ')}
-        </Badge>
-      ),
-    },
-    {
-      id: 'capsLevel',
-      header: 'CAPS',
-      accessorFn: (row) => row.cognitiveLevel?.caps ?? '',
-      cell: ({ getValue }) => (
-        <span className="text-xs capitalize">
-          {String(getValue() ?? '').replace(/_/g, ' ')}
-        </span>
-      ),
-    },
-    { accessorKey: 'marks', header: 'Marks' },
-    { accessorKey: 'difficulty', header: 'Diff.' },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => {
-        const status = row.original.status;
-        const variant: 'default' | 'secondary' | 'outline' | 'destructive' =
-          status === 'approved' ? 'default'
-            : status === 'rejected' ? 'destructive'
-              : status === 'pending_review' ? 'secondary' : 'outline';
-        return (
-          <Badge variant={variant} className="capitalize text-xs">
-            {status.replace(/_/g, ' ')}
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: 'source',
-      header: 'Source',
-      cell: ({ row }) => (
-        <span className="text-xs text-muted-foreground capitalize">
-          {row.original.source.replace(/_/g, ' ')}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'usageCount',
-      header: 'Used',
-      cell: ({ row }) => (
-        <span className="text-xs text-muted-foreground">
-          {row.original.usageCount}×
-        </span>
-      ),
-    },
-    {
-      id: 'actions',
-      header: '',
-      enableSorting: false,
-      cell: ({ row }) => (
-        <Button
-          size="sm"
-          variant="ghost"
-          aria-label="Delete question"
-          onClick={(e) => {
-            e.stopPropagation();
-            setPendingDelete(row.original);
-          }}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
-      ),
-    },
-  ], []);
+  const questionColumns = useMemo<ColumnDef<QuestionItem>[]>(
+    () => buildQuestionColumns(setPendingDelete),
+    [],
+  );
 
   const handleUpdate = useCallback(async (id: string, payload: UpdateQuestionPayload) => {
     try {
@@ -275,71 +177,20 @@ export default function TeacherQuestionsPage() {
       </p>
 
       {/* ─── Filters ──────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-          <Input
-            placeholder="Search questions..."
-            value={search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-            className="pl-9 w-full"
-          />
-        </div>
-
-        <Select value={typeFilter} onValueChange={(v: unknown) => setTypeFilter(v as string)}>
-          <SelectTrigger className="w-full sm:w-44">
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            {QUESTION_TYPES.map((qt) => (
-              <SelectItem key={qt.value} value={qt.value}>{qt.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={capsFilter} onValueChange={(v: unknown) => setCapsFilter(v as string)}>
-          <SelectTrigger className="w-full sm:w-44">
-            <SelectValue placeholder="CAPS Level" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All CAPS Levels</SelectItem>
-            {CAPS_LEVELS.map((cl) => (
-              <SelectItem key={cl.value} value={cl.value}>{cl.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={diffFilter} onValueChange={(v: unknown) => setDiffFilter(v as string)}>
-          <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="Difficulty" />
-          </SelectTrigger>
-          <SelectContent>
-            {DIFFICULTY_OPTIONS.map((d) => (
-              <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={statusFilter} onValueChange={(v: unknown) => setStatusFilter(v as string)}>
-          <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map((s) => (
-              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Button
-          variant={mineOnly ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setMineOnly((prev) => !prev)}
-        >
-          Mine
-        </Button>
-      </div>
+      <QuestionFilterBar
+        search={search}
+        setSearch={setSearch}
+        typeFilter={typeFilter}
+        setTypeFilter={setTypeFilter}
+        capsFilter={capsFilter}
+        setCapsFilter={setCapsFilter}
+        diffFilter={diffFilter}
+        setDiffFilter={setDiffFilter}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        mineOnly={mineOnly}
+        toggleMineOnly={() => setMineOnly((prev) => !prev)}
+      />
 
       {/* ─── Curriculum Node Picker ───────────────────────────────────────── */}
       {frameworks.length > 0 && (

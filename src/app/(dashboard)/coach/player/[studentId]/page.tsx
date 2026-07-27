@@ -22,15 +22,17 @@ import { PersonalBestTable } from '@/components/sport/PersonalBestTable';
 import { RecordPersonalBestDialog } from '@/components/sport/RecordPersonalBestDialog';
 import { AIReportGenerator } from '@/components/sport/AIReportGenerator';
 import { AIReportView } from '@/components/sport/AIReportView';
-import { PlayerFitnessQuickAdd } from '@/components/sport/PlayerFitnessQuickAdd';
-import { PlayerBiometricQuickAdd } from '@/components/sport/PlayerBiometricQuickAdd';
 import { BenchmarkScoreBar } from '@/components/sport/BenchmarkScoreBar';
+import {
+  PlayerFitnessTab,
+  PlayerBiometricsTab,
+  PlayerMatchesTab,
+} from '@/components/sport/PlayerDataTabs';
 import { useSportStats } from '@/hooks/useSportStats';
 import { useAISports } from '@/hooks/useAISports';
 import { usePlayerSnapshot, useStudent, useBenchmarks } from '@/hooks/usePlayerProfile';
-import { useFitnessTests, useBiometrics, deleteFitnessTest, deleteBiometric } from '@/hooks/useFitness';
-import { Trash2 } from 'lucide-react';
-import type { CareerStats, StudentMatchEntry, RecordPersonalBestPayload } from '@/types/sport';
+import { useFitnessTests, useBiometrics } from '@/hooks/useFitness';
+import type { StudentMatchEntry, RecordPersonalBestPayload } from '@/types/sport';
 import type { AIPerformanceReport } from '@/types/ai-sports';
 
 function calcAge(dob?: string | null): number | null {
@@ -65,7 +67,7 @@ function CoachPlayerDetailContent() {
   const {
     playerCard, personalBests, sportConfigs, loading,
     loadPlayerCard, loadPersonalBests, loadSportConfigs,
-    recordPersonalBest, recalculateCard, getPlayerCareerStats, getStudentMatchHistory,
+    recordPersonalBest, recalculateCard, getStudentMatchHistory,
   } = useSportStats();
 
   const [activeSport, setActiveSport] = useState(initialSport);
@@ -73,7 +75,6 @@ function CoachPlayerDetailContent() {
   const [recalculating, setRecalculating] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [latestAIReport, setLatestAIReport] = useState<AIPerformanceReport | null>(null);
-  const [careerStats, setCareerStats] = useState<CareerStats | null>(null);
   const [matches, setMatches] = useState<StudentMatchEntry[]>([]);
 
   const { snapshot, refetch: refetchSnapshot } = usePlayerSnapshot(studentId, activeSport);
@@ -99,12 +100,10 @@ function CoachPlayerDetailContent() {
     loadPersonalBests(studentId, activeSport);
     loadAIReports(studentId, activeSport);
     (async () => {
-      const cs = await getPlayerCareerStats(studentId, activeSport);
-      setCareerStats(cs);
       const ms = await getStudentMatchHistory(studentId, activeSport);
       setMatches(ms);
     })();
-  }, [studentId, activeSport, loadPlayerCard, loadPersonalBests, loadAIReports, getPlayerCareerStats, getStudentMatchHistory]);
+  }, [studentId, activeSport, loadPlayerCard, loadPersonalBests, loadAIReports, getStudentMatchHistory]);
 
   useEffect(() => {
     if (!activeSport && sportConfigs.length > 0) {
@@ -295,113 +294,27 @@ function CoachPlayerDetailContent() {
 
         {/* FITNESS */}
         <TabsContent value="fitness" className="mt-4 space-y-4">
-          <PlayerFitnessQuickAdd
+          <PlayerFitnessTab
             studentId={studentId}
             sportCode={activeSport}
             teamId={teamId}
-            onAdded={handleAfterDataChange}
+            tests={tests}
+            onDataChange={handleAfterDataChange}
           />
-
-          {tests.length === 0 ? (
-            <EmptyState
-              icon={Activity}
-              title="No fitness tests recorded"
-              description="Use the form above to log a test. The card recalculates automatically."
-            />
-          ) : (
-            <div className="grid gap-2">
-              {tests.map((t) => (
-                <Card key={t.id}>
-                  <CardContent className="flex items-center justify-between gap-3 p-3">
-                    <div className="min-w-0 space-y-0.5">
-                      <p className="text-sm">
-                        <span className="font-mono">{t.testType}</span>
-                        <span className="ml-2 font-semibold">{t.value}</span>
-                        <span className="ml-1 text-muted-foreground">{t.unit}</span>
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(t.date).toLocaleDateString()}
-                        {t.notes && ` · ${t.notes}`}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost" size="sm"
-                      onClick={async () => {
-                        if (!confirm('Delete this test?')) return;
-                        await deleteFitnessTest(t.id);
-                        await handleAfterDataChange();
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
         </TabsContent>
 
         {/* BIOMETRICS */}
         <TabsContent value="biometrics" className="mt-4 space-y-4">
-          <PlayerBiometricQuickAdd
+          <PlayerBiometricsTab
             studentId={studentId}
-            onAdded={handleAfterDataChange}
+            measurements={measurements}
+            onDataChange={handleAfterDataChange}
           />
-          {measurements.length === 0 ? (
-            <EmptyState icon={HeartPulse} title="No measurements" description="Log weight, height, body fat, or resting HR above." />
-          ) : (
-            <div className="grid gap-2">
-              {measurements.map((m) => (
-                <Card key={m.id}>
-                  <CardContent className="flex items-center justify-between gap-3 p-3">
-                    <div className="min-w-0 space-y-0.5">
-                      <div className="flex flex-wrap gap-x-3 text-sm">
-                        {m.weightKg != null && <span><span className="font-semibold">{m.weightKg}</span> kg</span>}
-                        {m.heightCm != null && <span><span className="font-semibold">{m.heightCm}</span> cm</span>}
-                        {m.bodyFatPct != null && <span><span className="font-semibold">{m.bodyFatPct}</span>% BF</span>}
-                        {m.restingHrBpm != null && <span><span className="font-semibold">{m.restingHrBpm}</span> bpm</span>}
-                      </div>
-                      <p className="text-xs text-muted-foreground">{new Date(m.date).toLocaleDateString()}</p>
-                    </div>
-                    <Button
-                      variant="ghost" size="sm"
-                      onClick={async () => {
-                        if (!confirm('Delete this measurement?')) return;
-                        await deleteBiometric(m.id);
-                        await handleAfterDataChange();
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
         </TabsContent>
 
         {/* MATCHES */}
         <TabsContent value="matches" className="mt-4">
-          {matches.length === 0 ? (
-            <EmptyState icon={Calendar} title="No match history" description="Match data appears here once stats are recorded." />
-          ) : (
-            <div className="grid gap-2">
-              {matches.map((mat, idx) => (
-                <Card key={idx}>
-                  <CardContent className="space-y-1 p-4">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium">vs {mat.opponent}</p>
-                      <Badge variant="outline">{mat.result ?? '—'}</Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(mat.date).toLocaleDateString()} · {mat.venue}
-                      {mat.rating != null && ` · Rating ${mat.rating}`}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+          <PlayerMatchesTab matches={matches} />
         </TabsContent>
 
         {/* PERSONAL BESTS */}
