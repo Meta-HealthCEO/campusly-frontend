@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useConferences } from '@/hooks/useConferences';
+import { useCurrentParent } from '@/hooks/useCurrentParent';
+import { getStudentDisplayName } from '@/lib/student-helpers';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -39,12 +41,16 @@ export default function ParentConferencesPage() {
   const [bookDialogOpen, setBookDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // TODO: In production, fetch actual children from /students filtered by parent
-  // For now, use a placeholder that won't crash — the parent's own user info
-  const children: ChildRecord[] = useMemo(() => {
-    if (!user) return [];
-    return [{ id: user.id, firstName: user.firstName ?? 'My', lastName: user.lastName ?? 'Child' }];
-  }, [user]);
+  // Real linked children — bookings must carry the Student id, not the
+  // parent's user id, or the teacher sees the wrong learner on the slot.
+  const { children: linkedChildren } = useCurrentParent();
+  const children: ChildRecord[] = useMemo(
+    () => linkedChildren.map((child) => {
+      const { first, last } = getStudentDisplayName(child);
+      return { id: child.id, firstName: first, lastName: last };
+    }),
+    [linkedChildren],
+  );
 
   useEffect(() => {
     if (schoolId) fetchEvents({ schoolId, status: 'published' });
