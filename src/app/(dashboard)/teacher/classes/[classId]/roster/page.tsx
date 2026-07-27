@@ -3,10 +3,9 @@
 import { use, useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { ArrowRight, ChevronLeft, Download, KeyRound, Mail, Pencil, Plus, Search, Trash2, Users } from 'lucide-react';
+import { ArrowRight, ChevronLeft, Download, Plus, Search, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -15,12 +14,13 @@ import { StudentAddDialog } from '@/components/classes/StudentAddDialog';
 import { AssignStudentDialog } from '@/components/classes/AssignStudentDialog';
 import { InviteStudentDialog } from '@/components/classes/InviteStudentDialog';
 import { RegenerateCredentialsDialog } from '@/components/classes/RegenerateCredentialsDialog';
+import { RosterStudentRow } from '@/components/classes/RosterStudentRow';
+import { getClassDisplayName } from '@/components/classes/class-display';
 import { StudentProfileDialog } from '@/components/students/StudentProfileDialog';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import type { TeacherClassEntry } from '@/hooks/useTeacherClasses';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { resolveId, extractErrorMessage } from '@/lib/api-helpers';
-import { getInitials } from '@/lib/utils';
 import { getStudentDisplayName, isPortalStudent } from '@/lib/student-helpers';
 import type { Student } from '@/types';
 
@@ -28,23 +28,6 @@ interface RegenerateTarget {
   id: string;
   name: string;
   email: string;
-}
-
-function getGradeName(entry: TeacherClassEntry): string {
-  const runtimeGradeId = (entry.class as { gradeId?: unknown }).gradeId;
-  const gradeFromId = typeof runtimeGradeId === 'object' && runtimeGradeId !== null
-    ? runtimeGradeId as { name?: string }
-    : null;
-  return entry.class.grade?.name ?? entry.class.gradeName ?? gradeFromId?.name ?? '';
-}
-
-function getClassDisplayName(entry: TeacherClassEntry): string {
-  const gradeName = getGradeName(entry).trim();
-  const className = entry.class.name.trim();
-  if (!gradeName || className.toLowerCase().includes(gradeName.toLowerCase())) {
-    return className;
-  }
-  return `${gradeName} ${className}`.trim();
 }
 
 export default function TeacherClassRosterPage({
@@ -277,72 +260,20 @@ export default function TeacherClassRosterPage({
               No {learnerLabelPlural.toLowerCase()} match &quot;{studentSearch}&quot;.
             </p>
           ) : (
-            filteredStudents.map((student: Student, index: number) => {
-              const { first, last } = getStudentDisplayName(student);
-              const portal = isPortalStudent(student);
-              return (
-                <div key={student.id} className="flex items-center gap-3 rounded-lg border p-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                    {getInitials(first, last)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{first} {last}</p>
-                    <p className="text-xs text-muted-foreground truncate">{student.admissionNumber}</p>
-                  </div>
-                  {portal ? (
-                    <Badge variant="default" className="shrink-0">Portal</Badge>
-                  ) : (
-                    <Badge variant="secondary" className="shrink-0">Roster</Badge>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setProfileStudentId(student.id)}
-                    aria-label="Edit student profile"
-                    className="shrink-0"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  {!portal && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled={invitingId === student.id}
-                      onClick={() => setInviteTarget(student)}
-                      aria-label={`Invite ${learnerLabel.toLowerCase()} to portal`}
-                    >
-                      <Mail className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {portal && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setRegenStudent({
-                        id: student.id,
-                        name: getStudentDisplayName(student).full,
-                        email: student.user?.email ?? '',
-                      })}
-                      aria-label="Regenerate credentials"
-                      title="Regenerate credentials"
-                      className="shrink-0"
-                    >
-                      <KeyRound className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRemoveStudent(student.id)}
-                    aria-label={`Remove ${learnerLabel.toLowerCase()}`}
-                    className="shrink-0"
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                  <span className="text-xs text-muted-foreground">#{index + 1}</span>
-                </div>
-              );
-            })
+            filteredStudents.map((student: Student, index: number) => (
+              <RosterStudentRow
+                key={student.id}
+                student={student}
+                index={index}
+                learnerLabel={learnerLabel}
+                isPortal={isPortalStudent(student)}
+                inviting={invitingId === student.id}
+                onEditProfile={setProfileStudentId}
+                onInvite={setInviteTarget}
+                onRegenerate={setRegenStudent}
+                onRemove={handleRemoveStudent}
+              />
+            ))
           )}
         </div>
       </section>
