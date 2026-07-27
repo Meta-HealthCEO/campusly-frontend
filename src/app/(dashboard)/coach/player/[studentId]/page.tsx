@@ -9,9 +9,7 @@ import {
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
@@ -22,8 +20,8 @@ import { PersonalBestTable } from '@/components/sport/PersonalBestTable';
 import { RecordPersonalBestDialog } from '@/components/sport/RecordPersonalBestDialog';
 import { AIReportGenerator } from '@/components/sport/AIReportGenerator';
 import { AIReportView } from '@/components/sport/AIReportView';
-import { BenchmarkScoreBar } from '@/components/sport/BenchmarkScoreBar';
 import {
+  PlayerBenchmarksCard,
   PlayerFitnessTab,
   PlayerBiometricsTab,
   PlayerMatchesTab,
@@ -252,43 +250,10 @@ function CoachPlayerDetailContent() {
             </div>
 
             {/* Benchmark scores */}
-            <Card className="lg:col-span-2">
-              <CardContent className="space-y-3 p-4 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">Fitness benchmarks</h3>
-                  {snapshot?.ageGroup && (
-                    <Badge variant="outline">Age group: {snapshot.ageGroup}</Badge>
-                  )}
-                </div>
-                {!snapshot || Object.keys(snapshot.scores).length === 0 ? (
-                  <EmptyState
-                    icon={Activity}
-                    title="No benchmarked tests yet"
-                    description="Add fitness test results in the Fitness tab — they'll be scored against age-group benchmarks here."
-                  />
-                ) : (
-                  <div className="space-y-3">
-                    {Object.entries(snapshot.scores).map(([testType, score]) => {
-                      const latest = snapshot.latest[testType];
-                      const bench = benchmarkByTest.get(testType);
-                      const summary = bench
-                        ? `${bench.ageGroup} ${bench.sportCode}: elite ${bench.eliteValue}${bench.unit} · gold ${bench.goldValue} · silver ${bench.silverValue} · bronze ${bench.bronzeValue}`
-                        : undefined;
-                      return (
-                        <BenchmarkScoreBar
-                          key={testType}
-                          testType={testType}
-                          value={latest?.value ?? 0}
-                          unit={latest?.unit ?? ''}
-                          score={score}
-                          benchmarkSummary={summary}
-                        />
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <PlayerBenchmarksCard
+              snapshot={snapshot}
+              benchmarkByTest={benchmarkByTest}
+            />
           </div>
         </TabsContent>
 

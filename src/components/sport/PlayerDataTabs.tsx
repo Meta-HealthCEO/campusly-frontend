@@ -7,8 +7,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { PlayerFitnessQuickAdd } from '@/components/sport/PlayerFitnessQuickAdd';
 import { PlayerBiometricQuickAdd } from '@/components/sport/PlayerBiometricQuickAdd';
+import { BenchmarkScoreBar } from '@/components/sport/BenchmarkScoreBar';
 import { deleteFitnessTest, deleteBiometric } from '@/hooks/useFitness';
-import type { FitnessTestResult, BiometricMeasurement } from '@/types/fitness';
+import type {
+  AgeGroupBenchmark,
+  BiometricMeasurement,
+  FitnessSnapshot,
+  FitnessTestResult,
+} from '@/types/fitness';
 import type { StudentMatchEntry } from '@/types/sport';
 
 interface FitnessTabProps {
@@ -145,5 +151,53 @@ export function PlayerMatchesTab({ matches }: { matches: StudentMatchEntry[] }) 
         </Card>
       ))}
     </div>
+  );
+}
+
+interface PlayerBenchmarksCardProps {
+  snapshot: FitnessSnapshot | null;
+  benchmarkByTest: Map<string, AgeGroupBenchmark>;
+}
+
+/** Overview card scoring the player's latest tests against age-group benchmarks. */
+export function PlayerBenchmarksCard({ snapshot, benchmarkByTest }: PlayerBenchmarksCardProps) {
+  return (
+    <Card className="lg:col-span-2">
+      <CardContent className="space-y-3 p-4 sm:p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">Fitness benchmarks</h3>
+          {snapshot?.ageGroup && (
+            <Badge variant="outline">Age group: {snapshot.ageGroup}</Badge>
+          )}
+        </div>
+        {!snapshot || Object.keys(snapshot.scores).length === 0 ? (
+          <EmptyState
+            icon={Activity}
+            title="No benchmarked tests yet"
+            description="Add fitness test results in the Fitness tab — they'll be scored against age-group benchmarks here."
+          />
+        ) : (
+          <div className="space-y-3">
+            {Object.entries(snapshot.scores).map(([testType, score]) => {
+              const latest = snapshot.latest[testType];
+              const bench = benchmarkByTest.get(testType);
+              const summary = bench
+                ? `${bench.ageGroup} ${bench.sportCode}: elite ${bench.eliteValue}${bench.unit} · gold ${bench.goldValue} · silver ${bench.silverValue} · bronze ${bench.bronzeValue}`
+                : undefined;
+              return (
+                <BenchmarkScoreBar
+                  key={testType}
+                  testType={testType}
+                  value={latest?.value ?? 0}
+                  unit={latest?.unit ?? ''}
+                  score={score}
+                  benchmarkSummary={summary}
+                />
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
