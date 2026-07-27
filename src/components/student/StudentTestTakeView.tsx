@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { ArrowLeft, Send, Save, CheckCircle2 } from 'lucide-react';
 import { useStudentTestTake } from '@/hooks/useStudentTests';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
+import { EquationText } from '@/components/shared/EquationText';
+import { TestCountdown } from '@/components/student/TestCountdown';
 import type { SubmissionAnswer } from '@/types/papers';
 
 const AUTOSAVE_INTERVAL_MS = 25_000;
@@ -74,6 +77,15 @@ export function StudentTestTakeView({ paperId }: { paperId: string }) {
     }
   }, [save, submit, orderedAnswers, router, backHref]);
 
+  // Time's up: submit whatever is answered. The server stamped startedAt,
+  // so a page refresh can't buy more time; it also refuses saves past a
+  // grace window as a backstop.
+  const handleTimeExpired = useCallback(() => {
+    toast.warning("Time's up — submitting your answers.");
+    setConfirmOpen(false);
+    void handleSubmit();
+  }, [handleSubmit]);
+
   if (loading) return <LoadingSpinner />;
   if (!paper || !submission) {
     return (
@@ -109,6 +121,14 @@ export function StudentTestTakeView({ paperId }: { paperId: string }) {
         ].filter(Boolean).join(' \u00B7 ')}
       >
         <div className="flex items-center gap-2">
+          {!isFinal && (
+            <TestCountdown
+              startedAt={submission.startedAt}
+              durationMinutes={paper.duration}
+              onExpire={handleTimeExpired}
+              active={!isFinal}
+            />
+          )}
           <Badge variant="outline" className="text-xs">
             {filledCount}/{totalQuestions} answered
           </Badge>
@@ -130,7 +150,9 @@ export function StudentTestTakeView({ paperId }: { paperId: string }) {
           <div>
             <h2 className="text-lg font-semibold">{section.title}</h2>
             {section.instructions && (
-              <p className="text-sm text-muted-foreground">{section.instructions}</p>
+              <p className="text-sm text-muted-foreground">
+                <EquationText text={section.instructions} />
+              </p>
             )}
           </div>
 
@@ -151,7 +173,9 @@ export function StudentTestTakeView({ paperId }: { paperId: string }) {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <p className="text-sm whitespace-pre-wrap">{q.questionText}</p>
+                  <p className="text-sm whitespace-pre-wrap">
+                    <EquationText text={q.questionText} />
+                  </p>
                   {q.diagramSvgUrl && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -192,7 +216,10 @@ export function StudentTestTakeView({ paperId }: { paperId: string }) {
                               }}
                               className="mt-1"
                             />
-                            <span><strong>{opt.label}.</strong> {opt.text}</span>
+                            <span>
+                              <strong>{opt.label}.</strong>{' '}
+                              <EquationText text={opt.text} />
+                            </span>
                           </label>
                         );
                       })}

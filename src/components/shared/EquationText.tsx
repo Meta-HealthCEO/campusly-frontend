@@ -8,6 +8,11 @@ interface EquationTextProps {
   className?: string;
 }
 
+/**
+ * Renders inline text with KaTeX math support. Recognises `$...$`,
+ * `$$...$$`, and plain-text shorthand (x^2, sqrt(), frac()). Plain
+ * segments are HTML-escaped by `renderEquations` before injection.
+ */
 export function EquationText({ text, className }: EquationTextProps) {
   if (!containsMath(text)) {
     return <span className={className}>{text}</span>;

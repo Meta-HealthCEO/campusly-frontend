@@ -51,25 +51,27 @@ export function renderSingleExpression(expression: string, displayMode = false):
   }
 }
 
+/** Test a global regex without leaking `lastIndex` state between calls. */
+function matches(regex: RegExp, text: string): boolean {
+  regex.lastIndex = 0;
+  const result = regex.test(text);
+  regex.lastIndex = 0;
+  return result;
+}
+
 /**
  * Check whether a string contains any recognisable mathematical notation.
  */
 export function containsMath(text: string): boolean {
-  if (DISPLAY_MATH_REGEX.test(text)) return true;
-  DISPLAY_MATH_REGEX.lastIndex = 0;
-  if (INLINE_MATH_REGEX.test(text)) return true;
-  INLINE_MATH_REGEX.lastIndex = 0;
-  if (SUPERSCRIPT_REGEX.test(text)) return true;
-  SUPERSCRIPT_REGEX.lastIndex = 0;
-  if (SUBSCRIPT_REGEX.test(text)) return true;
-  SUBSCRIPT_REGEX.lastIndex = 0;
-  if (SQRT_REGEX.test(text)) return true;
-  SQRT_REGEX.lastIndex = 0;
-  if (FRAC_REGEX.test(text)) return true;
-  FRAC_REGEX.lastIndex = 0;
-  if (VARIABLE_EXPR_REGEX.test(text)) return true;
-  VARIABLE_EXPR_REGEX.lastIndex = 0;
-  return false;
+  return (
+    matches(DISPLAY_MATH_REGEX, text) ||
+    matches(INLINE_MATH_REGEX, text) ||
+    matches(SUPERSCRIPT_REGEX, text) ||
+    matches(SUBSCRIPT_REGEX, text) ||
+    matches(SQRT_REGEX, text) ||
+    matches(FRAC_REGEX, text) ||
+    matches(VARIABLE_EXPR_REGEX, text)
+  );
 }
 
 /**

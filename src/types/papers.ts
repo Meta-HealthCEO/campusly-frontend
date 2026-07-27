@@ -206,6 +206,8 @@ export interface SubmissionResult {
   status: Exclude<SubmissionStatus, 'not_started'>;
   answers: SubmissionAnswer[];
   markingId: string | null;
+  /** ISO timestamp stamped by the server when the submission was created. */
+  startedAt: string | null;
 }
 
 export interface SubmissionSummary {

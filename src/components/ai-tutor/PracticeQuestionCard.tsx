@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 import { AuraMarkdown } from './AuraMarkdown';
+import { EquationText } from '@/components/shared/EquationText';
 import type { PracticeQuestion } from '@/types';
 
 interface PracticeQuestionCardProps {
@@ -87,7 +88,7 @@ export function PracticeQuestionCard({
                     <RadioGroupItem value={opt} id={`q${index}-opt${i}`} className="mt-0.5" />
                     <span className="flex-1">
                       <span className="mr-2 font-semibold">{String.fromCharCode(65 + i)}.</span>
-                      {opt}
+                      <EquationText text={opt} />
                     </span>
                   </label>
                 );
@@ -153,11 +154,16 @@ export function PracticeQuestionCard({
             </p>
             {!question.isCorrect && (
               <p className="mt-2 font-medium">
-                Correct answer: <span className="text-emerald-700 dark:text-emerald-300">{question.correctAnswer}</span>
+                Correct answer:{' '}
+                <span className="text-emerald-700 dark:text-emerald-300">
+                  <EquationText text={question.correctAnswer} />
+                </span>
               </p>
             )}
             {question.feedback && (
-              <p className="mt-2 text-foreground">{question.feedback}</p>
+              <p className="mt-2 text-foreground">
+                <EquationText text={question.feedback} />
+              </p>
             )}
             <div className="mt-3 border-t pt-3 text-muted-foreground">
               <AuraMarkdown content={question.explanation} />
