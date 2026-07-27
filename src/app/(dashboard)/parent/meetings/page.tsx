@@ -114,7 +114,7 @@ export default function ParentMeetingsPage() {
             open={bookDialogOpen}
             onOpenChange={setBookDialogOpen}
             slot={bookingSlot}
-            children={children}
+            childOptions={children}
             onConfirm={handleConfirmBooking}
           />
         </>

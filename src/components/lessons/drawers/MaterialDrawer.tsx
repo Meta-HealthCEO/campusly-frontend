@@ -140,7 +140,7 @@ export function MaterialDrawer({
               The AI is composing your material. This usually takes 30-60 seconds.
             </p>
             <p className="text-xs text-muted-foreground mt-3">
-              Don't navigate away — we'll close this when it's done.
+              Don&apos;t navigate away — we&apos;ll close this when it&apos;s done.
             </p>
           </div>
         </DialogContent>

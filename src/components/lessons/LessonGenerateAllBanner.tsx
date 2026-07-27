@@ -195,7 +195,7 @@ export function LessonGenerateAllBanner({
               Filling in {autoItems.length} {autoNoun}. This usually takes 1-2 minutes.
             </p>
             <p className="text-xs text-muted-foreground mt-3">
-              Don't navigate away — we'll close this when it's done.
+              Don&apos;t navigate away — we&apos;ll close this when it&apos;s done.
             </p>
           </div>
         </DialogContent>

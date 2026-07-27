@@ -225,7 +225,7 @@ export default function ParentConferencesPage() {
           onOpenChange={setBookDialogOpen}
           slot={selectedSlot}
           teacherName={selectedTeacher ? `${selectedTeacher.teacherId.firstName} ${selectedTeacher.teacherId.lastName}` : ''}
-          children={children}
+          childOptions={children}
           onConfirm={handleConfirmBooking}
           saving={saving}
         />

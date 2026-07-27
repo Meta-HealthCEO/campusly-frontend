@@ -110,7 +110,7 @@ function displayValue(
   return String(value)
 }
 
-function Select<Value = any, Multiple extends boolean | undefined = false>({
+function Select<Value = unknown, Multiple extends boolean | undefined = false>({
   children,
   items,
   ...props

@@ -13,6 +13,15 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // The React Compiler lint wants data loading out of effects, but this
+      // codebase's sanctioned hook recipe (CLAUDE.md "Data Fetching Pattern")
+      // fetches inside useEffect. Keep the signal visible without failing
+      // the build; revisit if/when the compiler is enabled.
+      "react-hooks/set-state-in-effect": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;

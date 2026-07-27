@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuthStore } from '@/stores/useAuthStore';
 
 const ENTITLED_STATUSES = new Set(['trialing', 'active', 'past_due']);
@@ -7,6 +7,8 @@ export function useEntitlement(feature: string): boolean {
   const user = useAuthStore((s) => s.user);
   const subscription = useAuthStore((s) => s.subscription);
   const plan = useAuthStore((s) => s.plan);
+  // Per-mount snapshot — the cancellation grace check doesn't need live time.
+  const [nowMs] = useState(() => Date.now());
 
   return useMemo(() => {
     // Pro-feature gating currently applies only to standalone teachers.
@@ -20,7 +22,7 @@ export function useEntitlement(feature: string): boolean {
     if (
       status === 'canceled' &&
       subscription.currentPeriodEnd &&
-      new Date(subscription.currentPeriodEnd).getTime() > Date.now()
+      new Date(subscription.currentPeriodEnd).getTime() > nowMs
     ) {
       entitled = true;
     }
@@ -28,5 +30,5 @@ export function useEntitlement(feature: string): boolean {
 
     if (!entitled) return false;
     return plan.entitlements[feature] === true;
-  }, [user, subscription, plan, feature]);
+  }, [user, subscription, plan, feature, nowMs]);
 }

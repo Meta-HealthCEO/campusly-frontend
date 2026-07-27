@@ -133,7 +133,7 @@ export function TopicChip({
             </p>
           ) : filtered.length === 0 ? (
             <p className="px-3 py-3 text-xs text-muted-foreground">
-              No topics match "{query}". Try a different word or type your own below.
+              No topics match &quot;{query}&quot;. Try a different word or type your own below.
             </p>
           ) : (
             filtered.map((topic) => {

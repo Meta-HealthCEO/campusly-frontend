@@ -1,30 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
-import { extractErrorMessage, resolveField, resolveId, unwrapList, unwrapResponse } from '@/lib/api-helpers';
+import { extractErrorMessage, resolveId, unwrapList, unwrapResponse } from '@/lib/api-helpers';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import type {
   AssessmentPlan,
-  AssessmentPlanType,
   CurriculumTopic,
   DateClash,
   PlannedAssessment,
-  SchoolClass,
-  Subject,
   WeightingInfo,
 } from '@/types';
 import {
   getClassLabel,
   getClassGradeLevel,
   normalizeSubject,
-  normalizeAssessment,
   normalizePlan,
-  sumWeights,
   normalizeWeighting,
   type PlannerClassOption,
-  type RawPlannedAssessment,
   type RawWeightSummary,
-  type SubjectOption,
 } from '@/lib/term-planner-helpers';
 
 export function useTermPlanner() {

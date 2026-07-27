@@ -32,7 +32,8 @@ export function useResourceBlockAttempts(
   const [interactions, setInteractions] = useState<Map<string, BlockInteractionState>>(
     () => new Map(),
   );
-  const openedAtRef = useRef<number>(Date.now());
+  // Stamped lazily on the first attempt (render must stay pure).
+  const openedAtRef = useRef<number | null>(null);
   const localAttemptCountsRef = useRef<Map<string, number>>(new Map());
 
   const getInteraction = useCallback(
@@ -55,6 +56,7 @@ export function useResourceBlockAttempts(
 
   const submitBlockAttempt = useCallback(
     async (block: ContentBlockItem, response: string): Promise<AttemptResult> => {
+      if (openedAtRef.current === null) openedAtRef.current = Date.now();
       const timeSpentSeconds = Math.min(
         MAX_TIME_SPENT_SECONDS,
         Math.max(0, Math.round((Date.now() - openedAtRef.current) / 1000)),

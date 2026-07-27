@@ -17,15 +17,15 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   slot: MeetingSlot | null;
-  children: Student[];
+  childOptions: Student[];
   onConfirm: (slotId: string, studentId: string, studentName: string) => Promise<void>;
 }
 
-export function BookSlotDialog({ open, onOpenChange, slot, children, onConfirm }: Props) {
+export function BookSlotDialog({ open, onOpenChange, slot, childOptions, onConfirm }: Props) {
   const [selectedChildId, setSelectedChildId] = useState('');
   const [booking, setBooking] = useState(false);
 
-  const selectedChild = children.find((c) => c.id === selectedChildId);
+  const selectedChild = childOptions.find((c) => c.id === selectedChildId);
 
   const handleConfirm = async () => {
     if (!slot || !selectedChild) return;
@@ -69,7 +69,7 @@ export function BookSlotDialog({ open, onOpenChange, slot, children, onConfirm }
             <Select value={selectedChildId} onValueChange={(val: unknown) => setSelectedChildId(val as string)}>
               <SelectTrigger className="w-full"><SelectValue placeholder="Select child" /></SelectTrigger>
               <SelectContent>
-                {children.map((child) => (
+                {childOptions.map((child) => (
                   <SelectItem key={child.id} value={child.id}>
                     {child.firstName} {child.lastName}
                   </SelectItem>

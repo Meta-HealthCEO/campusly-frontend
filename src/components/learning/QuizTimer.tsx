@@ -13,7 +13,9 @@ export function QuizTimer({ timeLimit, onTimeUp, started }: QuizTimerProps) {
   const [timeLeft, setTimeLeft] = useState(timeLimit * 60);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onTimeUpRef = useRef(onTimeUp);
-  onTimeUpRef.current = onTimeUp;
+  useEffect(() => {
+    onTimeUpRef.current = onTimeUp;
+  }, [onTimeUp]);
 
   useEffect(() => {
     if (!started) return;

@@ -4,18 +4,13 @@ import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { toast } from 'sonner';
 import {
-  mapTemplate, mapBulkMessage, mapDeliveryStat, mapMessageLog, mapId, extractArray,
+  mapBulkMessage, mapDeliveryStat, mapMessageLog, extractArray,
 } from '@/components/communication/mappers';
 import type {
-  MessageTemplate,
   BulkMessage,
   DeliveryStatEntry,
   MessageLogEntry,
-  CreateTemplateInput,
   SendBulkMessageInput,
-  GradeOption,
-  ClassOption,
-  ParentOption,
 } from '@/components/communication/types';
 
 // Template + option-list hooks moved to useCommunicationLookups.ts.

@@ -23,7 +23,7 @@ interface BookingDialogProps {
   onOpenChange: (open: boolean) => void;
   slot: TimeSlot | null;
   teacherName: string;
-  children: Child[];
+  childOptions: Child[];
   onConfirm: (data: { slotId: string; studentId: string; notes: string }) => Promise<void>;
   saving: boolean;
 }
@@ -33,7 +33,7 @@ export function BookingDialog({
   onOpenChange,
   slot,
   teacherName,
-  children,
+  childOptions,
   onConfirm,
   saving,
 }: BookingDialogProps) {
@@ -42,10 +42,10 @@ export function BookingDialog({
 
   useEffect(() => {
     if (open) {
-      setStudentId(children.length === 1 ? children[0].id : '');
+      setStudentId(childOptions.length === 1 ? childOptions[0].id : '');
       setNotes('');
     }
-  }, [open, children]);
+  }, [open, childOptions]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +79,7 @@ export function BookingDialog({
                 <SelectValue placeholder="Select child" />
               </SelectTrigger>
               <SelectContent>
-                {children.map((c) => (
+                {childOptions.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.firstName} {c.lastName}
                   </SelectItem>

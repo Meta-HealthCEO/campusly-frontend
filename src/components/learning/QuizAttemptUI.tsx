@@ -28,8 +28,9 @@ function shuffleArray<T>(arr: T[]): T[] {
 
 export function QuizAttemptUI({ quiz, onSubmit, onRetry, canRetry = false, leaderboard = [] }: QuizAttemptUIProps) {
   const [started, setStarted] = useState(false);
-  const [startedAt] = useState(new Date().toISOString());
-  const startTimeRef = useRef<number>(Date.now());
+  const [startedAt] = useState(() => new Date().toISOString());
+  // Stamped when the quiz starts (render must stay pure).
+  const startTimeRef = useRef<number>(0);
   const [answers, setAnswers] = useState<Map<number, QuizAnswer>>(new Map());
   const [submitted, setSubmitted] = useState(false);
   const [result, setResult] = useState<QuizAttempt | null>(null);
