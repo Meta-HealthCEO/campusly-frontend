@@ -173,3 +173,36 @@ export function resolveClassName(student: unknown, classInfo?: unknown): string 
   }
   return '';
 }
+
+/**
+ * Trim + prune a form object into an API payload: drops empty strings and
+ * empty arrays, converts a yyyy-mm-dd `dateOfBirth` into a UTC ISO string.
+ */
+export function normaliseStudentPayload<T extends object>(
+  form: Partial<T>,
+): Partial<T> {
+  const payload: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(form)) {
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) continue;
+
+      payload[key] = key === 'dateOfBirth' && /^\d{4}-\d{2}-\d{2}$/.test(trimmed)
+        ? new Date(`${trimmed}T00:00:00.000Z`).toISOString()
+        : trimmed;
+      continue;
+    }
+
+    if (Array.isArray(value)) {
+      if (value.length > 0) payload[key] = value;
+      continue;
+    }
+
+    if (value !== undefined && value !== null) {
+      payload[key] = value;
+    }
+  }
+
+  return payload as Partial<T>;
+}

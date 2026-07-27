@@ -18,6 +18,7 @@ import { getStudentDisplayName } from '@/lib/student-helpers';
 import { writeSlip, clearSlip } from '@/lib/student-slip-storage';
 import { useSchoolStore } from '@/stores/useSchoolStore';
 import type { StudentProfileFormData } from '@/hooks/useStudentEditor';
+import { normaliseStudentPayload } from '@/lib/student-helpers';
 import type { AddStudentResult } from '@/hooks/useTeacherClasses';
 import { StudentDeliveryModeToggle, type DeliveryMode } from './StudentDeliveryModeToggle';
 import { StudentAddCredentialsResults } from './StudentAddCredentialsResults';
@@ -46,33 +47,6 @@ const EMPTY_FORM: Partial<StudentProfileFormData> = {
   lastName: '',
   admissionNumber: '',
 };
-
-function normaliseStudentPayload(form: Partial<StudentProfileFormData>): Partial<StudentProfileFormData> {
-  const payload: Record<string, unknown> = {};
-
-  for (const [key, value] of Object.entries(form)) {
-    if (typeof value === 'string') {
-      const trimmed = value.trim();
-      if (!trimmed) continue;
-
-      payload[key] = key === 'dateOfBirth' && /^\d{4}-\d{2}-\d{2}$/.test(trimmed)
-        ? new Date(`${trimmed}T00:00:00.000Z`).toISOString()
-        : trimmed;
-      continue;
-    }
-
-    if (Array.isArray(value)) {
-      if (value.length > 0) payload[key] = value;
-      continue;
-    }
-
-    if (value !== undefined && value !== null) {
-      payload[key] = value;
-    }
-  }
-
-  return payload as Partial<StudentProfileFormData>;
-}
 
 export function StudentAddDialog({
   open,

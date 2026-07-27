@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { DetailRow, ThemeOption } from '@/components/student/ProfileBits';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import {
@@ -337,50 +337,5 @@ export default function StudentProfilePage() {
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-interface DetailRowProps {
-  icon: ReactNode;
-  label: string;
-  value: ReactNode;
-}
-
-function DetailRow({ icon, label, value }: DetailRowProps) {
-  return (
-    <div className="flex items-center justify-between gap-4 py-3">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        {icon}
-        <span>{label}</span>
-      </div>
-      <div className="max-w-[60%] truncate text-right text-sm font-medium">
-        {value}
-      </div>
-    </div>
-  );
-}
-
-interface ThemeOptionProps {
-  icon: ReactNode;
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}
-
-function ThemeOption({ icon, label, active, onClick }: ThemeOptionProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
-        active
-          ? 'border-primary bg-primary/10 font-medium text-primary'
-          : 'border-input text-muted-foreground hover:bg-muted hover:text-foreground'
-      }`}
-      aria-pressed={active}
-    >
-      {icon}
-      <span>{label}</span>
-    </button>
   );
 }
