@@ -5,13 +5,9 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import {
   BookOpen,
   GraduationCap,
-  History,
   Lightbulb,
-  MessageSquarePlus,
-  MoreHorizontal,
   Sparkles,
   Target,
-  type LucideIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAITutor } from '@/hooks/useAITutor';
@@ -23,22 +19,8 @@ import { useStudentClasses } from '@/hooks/useStudentClasses';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ChatInterface } from '@/components/ai-tutor/ChatInterface';
-import { ConversationList } from '@/components/ai-tutor/ConversationList';
-import { SubjectChip, ModeChip, TopicChip, type TopicOption } from '@/components/ai-tutor/TutorChips';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+import { AuraHeader, type AuraModeOption } from '@/components/ai-tutor/AuraHeader';
+import { type TopicOption } from '@/components/ai-tutor/TutorChips';
 import {
   buildTutorSubjects,
   curriculumSubjectsToTutorSubjects,
@@ -51,13 +33,7 @@ import type {
   TutorMode,
 } from '@/types';
 
-const MODE_OPTIONS: Array<{
-  id: TutorMode;
-  label: string;
-  shortLabel: string;
-  description: string;
-  icon: LucideIcon;
-}> = [
+const MODE_OPTIONS: AuraModeOption[] = [
   {
     id: 'chat',
     label: 'Explain',
@@ -284,99 +260,32 @@ export default function StudentAITutorPage() {
 
   return (
     <div className="mx-auto flex h-[calc(100vh-6rem)] max-w-4xl flex-col">
-      {/* Slim header — Aura mark + two chips on the left, overflow on the right */}
-      <header className="flex items-center justify-between gap-2 border-b px-3 py-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <div className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold">
-            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            <span className="hidden sm:inline">Aura</span>
-          </div>
-          <SubjectChip
-            subjects={tutorSubjects}
-            selectedId={effectiveSubjectId}
-            selectedName={effectiveSubjectName}
-            grade={grade}
-            onSelect={handleSwitchSubject}
-            disabled={tutorSubjects.length === 0}
-          />
-          <TopicChip
-            topics={topicOptions}
-            selectedId={selectedTopicId}
-            selectedTitle={selectedTopicTitle}
-            customTitle={customTopic}
-            onSelectTopic={handleSelectTopic}
-            onSelectCustom={handleSelectCustomTopic}
-            onClear={handleClearTopic}
-            disabled={!effectiveSubjectId}
-            loading={topicsLoading}
-          />
-          <ModeChip
-            options={MODE_OPTIONS}
-            selectedId={activeMode}
-            onSelect={handleSwitchMode}
-          />
-        </div>
-
-        <div className="flex shrink-0 items-center gap-1">
-          {/* New session — visible on desktop, in overflow on mobile */}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleNewConversation}
-            className="hidden sm:inline-flex"
-            aria-label="New session"
-          >
-            <MessageSquarePlus className="h-4 w-4" />
-            <span className="hidden md:inline">New</span>
-          </Button>
-
-          {/* History drawer trigger */}
-          <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
-            <SheetTrigger render={<Button variant="ghost" size="sm" aria-label="History" />}>
-              <History className="h-4 w-4" />
-              <span className="hidden md:inline">History</span>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-85 p-0">
-              <SheetHeader className="border-b p-4">
-                <SheetTitle>Recent sessions</SheetTitle>
-              </SheetHeader>
-              <ConversationList
-                conversations={conversations}
-                activeId={currentConversation?.id}
-                onSelect={handleSelectConversation}
-                onNew={() => {
-                  handleNewConversation();
-                  setHistoryOpen(false);
-                }}
-              />
-            </SheetContent>
-          </Sheet>
-
-          {/* Overflow — mobile-only New + Practice link */}
-          <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant="ghost" size="sm" aria-label="More" />}>
-              <MoreHorizontal className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={handleNewConversation} className="sm:hidden">
-                <MessageSquarePlus className="h-4 w-4" />
-                New session
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push(practiceHref)}>
-                <Target className="h-4 w-4" />
-                Practice drill
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push('/student/ai-tutor/practice/history')}>
-                <History className="h-4 w-4" />
-                Practice history
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </header>
+      <AuraHeader
+        subjects={tutorSubjects}
+        effectiveSubjectId={effectiveSubjectId}
+        effectiveSubjectName={effectiveSubjectName}
+        grade={grade}
+        onSwitchSubject={handleSwitchSubject}
+        topicOptions={topicOptions}
+        selectedTopicId={selectedTopicId}
+        selectedTopicTitle={selectedTopicTitle}
+        customTopic={customTopic}
+        onSelectTopic={handleSelectTopic}
+        onSelectCustomTopic={handleSelectCustomTopic}
+        onClearTopic={handleClearTopic}
+        topicsLoading={topicsLoading}
+        modeOptions={MODE_OPTIONS}
+        activeMode={activeMode}
+        onSwitchMode={handleSwitchMode}
+        onNewConversation={handleNewConversation}
+        historyOpen={historyOpen}
+        setHistoryOpen={setHistoryOpen}
+        conversations={conversations}
+        activeConversationId={currentConversation?.id}
+        onSelectConversation={handleSelectConversation}
+        practiceHref={practiceHref}
+        onNavigate={(href) => router.push(href)}
+      />
 
       {/* Chat fills the rest of the screen */}
       <div className="flex flex-1 min-h-0 flex-col">

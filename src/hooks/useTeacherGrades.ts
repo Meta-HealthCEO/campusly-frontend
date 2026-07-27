@@ -5,64 +5,22 @@ import {
   unwrapResponse,
   extractErrorMessage,
   resolveId,
-  resolveField,
 } from '@/lib/api-helpers';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/useAuthStore';
+import {
+  buildMarkEntries,
+  computeClassStats,
+  mapStudentHistory,
+  validateMarkEntries,
+  type ClassStats,
+  type CreateAssessmentPayload,
+  type MarkEntry,
+  type MarkValidationError,
+  type StudentMark,
+  type UpdateAssessmentPayload,
+} from '@/lib/gradebook-helpers';
 import type { SchoolClass, Assessment, Subject } from '@/types';
-
-interface MarkEntry {
-  studentId: string;
-  firstName: string;
-  lastName: string;
-  admissionNumber: string;
-  mark: string;
-  existingMark: number | null;
-}
-
-interface ClassStats {
-  average: number;
-  highest: number;
-  lowest: number;
-  passCount: number;
-  totalWithMarks: number;
-}
-
-interface CreateAssessmentPayload {
-  name: string;
-  subjectId: string;
-  classId: string;
-  type: Assessment['type'];
-  totalMarks: number;
-  weight: number;
-  term: number;
-  date: string;
-}
-
-interface UpdateAssessmentPayload {
-  name?: string;
-  subjectId?: string;
-  type?: Assessment['type'];
-  totalMarks?: number;
-  weight?: number;
-  term?: number;
-  date?: string;
-}
-
-interface MarkValidationError {
-  studentId: string;
-  message: string;
-}
-
-interface StudentMark {
-  id: string;
-  assessmentName: string;
-  subjectName: string;
-  mark: number;
-  total: number;
-  percentage: number;
-  date: string;
-}
 
 export function useTeacherGrades() {
   const { user } = useAuthStore();
@@ -188,39 +146,7 @@ export function useTeacherGrades() {
         }
       }
 
-      const classStudents = students.filter((s) => {
-        const cid = resolveId(
-          s.classId as string | { id?: string; _id?: string } | undefined,
-        );
-        return cid === selectedClass;
-      });
-
-      setMarkEntries(
-        classStudents.map((s) => {
-          const id = (s.id as string) ?? (s._id as string) ?? '';
-          // A student's name may live on either `user` (populated) or
-          // `userId` (populated under a different key) or directly on the
-          // student root. `resolveField` walks these safely.
-          const userObj = s.user ?? s.userId ?? s;
-          return {
-            studentId: id,
-            firstName:
-              resolveField<string>(userObj, 'firstName')
-              ?? resolveField<string>(s, 'firstName')
-              ?? '',
-            lastName:
-              resolveField<string>(userObj, 'lastName')
-              ?? resolveField<string>(s, 'lastName')
-              ?? '',
-            admissionNumber: (s.admissionNumber as string) ?? '',
-            mark:
-              existingMarks[id] !== undefined
-                ? String(existingMarks[id])
-                : '',
-            existingMark: existingMarks[id] ?? null,
-          };
-        }),
-      );
+      setMarkEntries(buildMarkEntries(students, existingMarks, selectedClass));
       // Reset dirty state whenever a fresh snapshot loads.
       setIsDirty(false);
     } catch (err: unknown) {
@@ -239,22 +165,7 @@ export function useTeacherGrades() {
   // Mark validation
   const markValidationErrors = useMemo((): MarkValidationError[] => {
     if (!currentAssessment) return [];
-    const errors: MarkValidationError[] = [];
-    for (const entry of markEntries) {
-      if (entry.mark === '') continue;
-      const num = Number(entry.mark);
-      if (isNaN(num)) {
-        errors.push({ studentId: entry.studentId, message: 'Must be a number' });
-      } else if (num < 0) {
-        errors.push({ studentId: entry.studentId, message: 'Cannot be negative' });
-      } else if (num > currentAssessment.totalMarks) {
-        errors.push({
-          studentId: entry.studentId,
-          message: `Exceeds total (${currentAssessment.totalMarks})`,
-        });
-      }
-    }
-    return errors;
+    return validateMarkEntries(markEntries, currentAssessment.totalMarks);
   }, [markEntries, currentAssessment]);
 
   const hasValidationErrors = markValidationErrors.length > 0;
@@ -268,25 +179,8 @@ export function useTeacherGrades() {
 
   // Class stats
   const classStats = useMemo((): ClassStats | null => {
-    if (!currentAssessment || markEntries.length === 0) return null;
-    const validMarks = markEntries
-      .filter((e) => e.mark !== '')
-      .map((e) => Number(e.mark))
-      .filter((n) => !isNaN(n));
-
-    if (validMarks.length === 0) return null;
-
-    const total = currentAssessment.totalMarks;
-    const percentages = validMarks.map((m) => (m / total) * 100);
-    const avg = percentages.reduce((sum, p) => sum + p, 0) / percentages.length;
-
-    return {
-      average: Math.round(avg * 10) / 10,
-      highest: Math.max(...validMarks),
-      lowest: Math.min(...validMarks),
-      passCount: percentages.filter((p) => p >= 50).length,
-      totalWithMarks: validMarks.length,
-    };
+    if (!currentAssessment) return null;
+    return computeClassStats(markEntries, currentAssessment.totalMarks);
   }, [markEntries, currentAssessment]);
 
   const handleMarkChange = useCallback(
@@ -395,22 +289,7 @@ export function useTeacherGrades() {
     try {
       const res = await apiClient.get(`/academic/marks/student/${studentId}`);
       const raw = unwrapList<Record<string, unknown>>(res);
-      const history: StudentMark[] = raw.map((m) => {
-        const assessment = m.assessmentId ?? m.assessment;
-        const subject = m.subjectId ?? m.subject;
-        const mark = (m.mark as number) ?? 0;
-        const total = (m.total as number) ?? 0;
-        return {
-          id: (m.id as string) ?? (m._id as string) ?? '',
-          assessmentName: resolveField<string>(assessment, 'name') ?? '',
-          subjectName: resolveField<string>(subject, 'name') ?? '',
-          mark,
-          total,
-          percentage: total > 0 ? Math.round((mark / total) * 100) : 0,
-          date: (m.createdAt as string) ?? '',
-        };
-      });
-      setStudentHistory(history);
+      setStudentHistory(mapStudentHistory(raw));
     } catch (err: unknown) {
       console.error('Failed to load student history', err);
       toast.error('Could not load student history.');
@@ -452,11 +331,12 @@ export function useTeacherGrades() {
   };
 }
 
+// Re-export the gradebook model types for existing importers.
 export type {
-  MarkEntry,
-  ClassStats,
   CreateAssessmentPayload,
   UpdateAssessmentPayload,
+  MarkEntry,
+  ClassStats,
   MarkValidationError,
   StudentMark,
-};
+} from '@/lib/gradebook-helpers';
