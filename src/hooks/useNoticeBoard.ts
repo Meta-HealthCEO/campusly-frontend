@@ -98,13 +98,12 @@ export function useNoticeBoardPosts(scope: string, scopeId: string) {
 // ─── Mutations hook ────────────────────────────────────────────────────────
 
 export function useNoticeBoardMutations() {
-  const user = useAuthStore((s) => s.user);
 
   const createPost = async (data: CreateNoticeBoardPostInput) => {
-    const res = await apiClient.post('/notice-board', {
-      ...data,
-      _authorName: user ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() : '',
-    });
+    // Do NOT send _authorName: the backend schema is .strict() and rejected
+    // the whole request with "Unrecognized key". The author's display name is
+    // now resolved server-side from the authenticated user.
+    const res = await apiClient.post('/notice-board', data);
     return mapPost(unwrapResponse(res) as Record<string, unknown>);
   };
 
