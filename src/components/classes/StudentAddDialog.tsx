@@ -174,8 +174,12 @@ export function StudentAddDialog({
     try {
       for (let i = 0; i < parsed.length; i++) {
         try {
-          // Bulk CSV is Phase-1 email-default per spec.
-          const result = await onAddStudent({ ...parsed[i], deliveryMethod: 'email' });
+          // The CSV format is firstName,lastName,optionalAdmissionNumber — it
+          // carries no email address. Sending deliveryMethod 'email' made the
+          // backend's superRefine reject every single row ("Email is required
+          // when delivery method is email-invite"), so bulk import failed 100%
+          // of the time. Printed slips are the correct channel here.
+          const result = await onAddStudent({ ...parsed[i], deliveryMethod: 'slip' });
           if (result?.credentials) importedResults.push(result);
         } catch (err: unknown) {
           importErrors.push(`${parsed[i].firstName} ${parsed[i].lastName}: ${extractErrorMessage(err, 'Failed to add student')}`);

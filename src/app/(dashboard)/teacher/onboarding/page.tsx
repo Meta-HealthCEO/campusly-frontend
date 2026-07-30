@@ -123,11 +123,21 @@ export default function TeacherOnboardingPage() {
       const payload = pendingStudents.map(({ firstName, lastName, gradeId }) => ({
         firstName, lastName, gradeId,
       }));
-      const created = await bulkCreateStudentsForSelectedGrades(payload);
-      toast.success(`${created} student(s) added successfully`);
+      const { created, failed, failures } = await bulkCreateStudentsForSelectedGrades(payload);
+      if (created > 0) {
+        toast.success(`${created} student(s) added successfully`);
+      }
+      if (failed > 0) {
+        // Previously every student could 400 and the page still showed
+        // "0 student(s) added successfully" before navigating away.
+        toast.error(
+          `${failed} student(s) could not be added. ${failures[0] ?? ''}`.trim(),
+        );
+        return;
+      }
       handleFinish();
     } catch {
-      toast.error('Failed to add some students');
+      toast.error('Failed to add students');
     } finally {
       setSubmitting(false);
     }

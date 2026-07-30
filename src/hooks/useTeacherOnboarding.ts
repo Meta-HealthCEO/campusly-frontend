@@ -1,8 +1,15 @@
 import { useCallback } from 'react';
 import apiClient from '@/lib/api-client';
-import { unwrapResponse } from '@/lib/api-helpers';
+import { unwrapResponse, extractErrorMessage } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { Grade, Subject, SchoolClass } from '@/types';
+
+export interface BulkCreateResult {
+  created: number;
+  failed: number;
+  /** One human-readable line per failed learner, for honest UI feedback. */
+  failures: string[];
+}
 
 interface CreateStudentPayload {
   firstName: string;
@@ -71,22 +78,32 @@ export function useTeacherOnboarding() {
       schoolId,
       email: `${admissionNumber.toLowerCase()}@students.campusly.local`,
       admissionNumber,
+      // Required by the backend's .strict() createStudentSchema — omitting it
+      // 400'd every student during onboarding. 'slip' (printed credentials) is
+      // correct here because the address above is synthetic and unroutable, so
+      // an email invite would silently bounce.
+      deliveryMethod: 'slip' as const,
     });
     return unwrapResponse(res);
   }, [schoolId]);
 
-  const bulkCreateStudents = useCallback(async (students: CreateStudentPayload[]): Promise<number> => {
-    let created = 0;
-    for (const student of students) {
-      try {
-        await createStudent(student);
-        created++;
-      } catch {
-        console.error(`Failed to create student: ${student.firstName} ${student.lastName}`);
+  const bulkCreateStudents = useCallback(
+    async (students: CreateStudentPayload[]): Promise<BulkCreateResult> => {
+      let created = 0;
+      const failures: string[] = [];
+      for (const student of students) {
+        const name = `${student.firstName} ${student.lastName}`.trim();
+        try {
+          await createStudent(student);
+          created++;
+        } catch (err: unknown) {
+          failures.push(`${name}: ${extractErrorMessage(err, 'could not be added')}`);
+        }
       }
-    }
-    return created;
-  }, [createStudent]);
+      return { created, failed: failures.length, failures };
+    },
+    [createStudent],
+  );
 
   return { updateSchool, createGrade, createSubject, createClass, createStudent, bulkCreateStudents };
 }
