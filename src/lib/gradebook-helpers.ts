@@ -171,3 +171,12 @@ export function mapStudentHistory(raw: Record<string, unknown>[]): StudentMark[]
     };
   });
 }
+
+/**
+ * The term filter to show after adding an assessment: the current one if it
+ * already includes the new assessment's term, otherwise that term.
+ */
+export function termViewShowing(selectedTerm: string, term: number): string {
+  if (selectedTerm === 'year' || selectedTerm === String(term)) return selectedTerm;
+  return String(term);
+}

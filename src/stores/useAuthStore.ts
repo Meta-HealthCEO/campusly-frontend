@@ -33,6 +33,8 @@ interface AuthState {
   /** Optimistically count one free AI paper as used after a successful generation. */
   consumeFreePaperGeneration: () => void;
   login: (user: User, tokens: AuthTokens, subscription?: Subscription | null, plan?: Plan | null) => void;
+  /** Re-read plan and free allowance from /auth/me (sign-in and sign-up responses don't carry them). */
+  refreshAccount: () => Promise<void>;
   logout: () => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   setLoading: (loading: boolean) => void;
@@ -85,6 +87,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const perms = parsePermissions(user as unknown as Record<string, unknown>);
     set({ user, tokens, permissions: perms, subscription, plan, isAuthenticated: true, isLoading: false });
     scheduleTokenRefresh();
+  },
+  refreshAccount: async () => {
+    try {
+      const raw = unwrapResponse<Record<string, unknown>>(await apiClient.get('/auth/me'));
+      set({
+        subscription: (raw.subscription as Subscription | null) ?? null,
+        plan: (raw.plan as Plan | null) ?? null,
+        freeAllowance: (raw.freeAllowance as FreeAllowance | null) ?? null,
+      });
+    } catch {
+      // Not fatal: the user stays signed in and AuthProvider re-reads these on the next load.
+      console.warn('Failed to load account plan details');
+    }
   },
   logout: () => {
     cancelTokenRefresh();

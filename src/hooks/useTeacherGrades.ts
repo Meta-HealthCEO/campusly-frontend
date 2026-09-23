@@ -12,6 +12,7 @@ import {
   buildMarkEntries,
   computeClassStats,
   mapStudentHistory,
+  termViewShowing,
   validateMarkEntries,
   type ClassStats,
   type CreateAssessmentPayload,
@@ -248,6 +249,7 @@ export function useTeacherGrades() {
       const created = unwrapResponse<Assessment>(res);
       toast.success('Assessment added — enter the marks below');
       await refreshAssessments(payload.classId, payload.subjectId);
+      setSelectedTerm((current: string) => termViewShowing(current, created.term));
       setSelectedAssessment(created.id);
       return created;
     } catch (err: unknown) {

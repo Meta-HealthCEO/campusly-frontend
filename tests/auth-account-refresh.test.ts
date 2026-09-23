@@ -1,0 +1,47 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const get = vi.fn();
+vi.mock('@/lib/api-client', () => ({ default: { get, post: vi.fn() } }));
+vi.mock('@/lib/token-refresh', () => ({ scheduleTokenRefresh: vi.fn(), cancelTokenRefresh: vi.fn() }));
+
+const { useAuthStore } = await import('../src/stores/useAuthStore');
+
+const teacher = {
+  id: 't1', email: 'new@teacher.test', firstName: 'New', lastName: 'Teacher', role: 'teacher' as const,
+  phone: '', schoolId: 's1', isActive: true, isStandaloneTeacher: true, createdAt: '', updatedAt: '',
+};
+const plan = { id: 'p1', key: 'free', name: 'Free' };
+const subscription = { id: 'sub1', status: 'active' };
+const freeAllowance = { paperGenerations: { limit: 3, used: 0, remaining: 3 } };
+
+describe('refreshAccount', () => {
+  beforeEach(() => {
+    get.mockReset();
+    useAuthStore.getState().logout();
+  });
+
+  it('gives a teacher who just signed up their plan and free AI papers without a page reload', async () => {
+    useAuthStore.getState().login(teacher, { accessToken: 'a', refreshToken: 'r' });
+    get.mockResolvedValue({ data: { data: { user: teacher, subscription, plan, freeAllowance } } });
+
+    await useAuthStore.getState().refreshAccount();
+
+    expect(get).toHaveBeenCalledWith('/auth/me');
+    const state = useAuthStore.getState();
+    expect(state.freeAllowance).toEqual(freeAllowance);
+    expect(state.subscription).toEqual(subscription);
+    expect(state.plan).toEqual(plan);
+    expect(state.user?.email).toBe('new@teacher.test');
+  });
+
+  it("keeps the teacher signed in when the account details can't be fetched", async () => {
+    useAuthStore.getState().login(teacher, { accessToken: 'a', refreshToken: 'r' });
+    get.mockRejectedValue(new Error('network down'));
+
+    await expect(useAuthStore.getState().refreshAccount()).resolves.toBeUndefined();
+
+    const state = useAuthStore.getState();
+    expect(state.isAuthenticated).toBe(true);
+    expect(state.freeAllowance).toBeNull();
+  });
+});

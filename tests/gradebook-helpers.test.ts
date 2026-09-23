@@ -4,6 +4,7 @@ import {
   computeClassStats,
   buildMarkEntries,
   mapStudentHistory,
+  termViewShowing,
   type MarkEntry,
 } from '../src/lib/gradebook-helpers';
 
@@ -123,5 +124,19 @@ describe('mapStudentHistory', () => {
 
   it('guards divide-by-zero totals', () => {
     expect(mapStudentHistory([{ mark: 5, total: 0 }])[0].percentage).toBe(0);
+  });
+});
+
+describe('termViewShowing', () => {
+  it('keeps the whole-year view, which already shows every term', () => {
+    expect(termViewShowing('year', 2)).toBe('year');
+  });
+
+  it('keeps the term view when the new assessment is in that term', () => {
+    expect(termViewShowing('3', 3)).toBe('3');
+  });
+
+  it("switches to the new assessment's term so it doesn't vanish from the list", () => {
+    expect(termViewShowing('3', 2)).toBe('2');
   });
 });

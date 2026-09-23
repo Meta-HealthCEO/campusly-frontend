@@ -39,7 +39,7 @@ export interface ResetPasswordPayload {
 
 export function useAuth() {
   const router = useRouter();
-  const { login: storeLogin, logout: storeLogout, user, isAuthenticated } = useAuthStore();
+  const { login: storeLogin, logout: storeLogout, refreshAccount, user, isAuthenticated } = useAuthStore();
 
   const login = async (credentials: LoginCredentials) => {
     const response = await apiClient.post('/auth/login', credentials);
@@ -70,6 +70,7 @@ export function useAuth() {
       updatedAt: userData.updatedAt ?? '',
     };
     storeLogin(authUser, { accessToken, refreshToken: refreshToken ?? '' });
+    void refreshAccount();
     router.push(getRoleDashboardPath(role));
   };
 
@@ -115,6 +116,7 @@ export function useAuth() {
       updatedAt: userData.updatedAt ?? '',
     };
     storeLogin(authUser, { accessToken, refreshToken: refreshToken ?? '' });
+    void refreshAccount();
     router.push('/teacher/onboarding');
   };
 
