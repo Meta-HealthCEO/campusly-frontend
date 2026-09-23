@@ -3,7 +3,7 @@ import { scheduleTokenRefresh, cancelTokenRefresh } from '@/lib/token-refresh';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import type { User, UserRole, AuthTokens, UserPermissions, PermissionFlag } from '@/types';
-import type { Subscription, Plan } from '@/types/subscription';
+import type { Subscription, Plan, FreeAllowance } from '@/types/subscription';
 
 const DEFAULT_PERMISSIONS: UserPermissions = {
   isSchoolPrincipal: false,
@@ -22,11 +22,16 @@ interface AuthState {
   permissions: UserPermissions;
   subscription: Subscription | null;
   plan: Plan | null;
+  /** Free AI papers left for a free-plan standalone teacher (from /auth/me). */
+  freeAllowance: FreeAllowance | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   setUser: (user: User) => void;
   setTokens: (tokens: AuthTokens) => void;
   setSubscription: (sub: Subscription | null, plan: Plan | null) => void;
+  setFreeAllowance: (allowance: FreeAllowance | null) => void;
+  /** Optimistically count one free AI paper as used after a successful generation. */
+  consumeFreePaperGeneration: () => void;
   login: (user: User, tokens: AuthTokens, subscription?: Subscription | null, plan?: Plan | null) => void;
   logout: () => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
@@ -55,6 +60,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   permissions: DEFAULT_PERMISSIONS,
   subscription: null,
   plan: null,
+  freeAllowance: null,
   isAuthenticated: false,
   isLoading: true,
   setUser: (user) => {
@@ -63,6 +69,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   setTokens: (tokens) => set({ tokens }),
   setSubscription: (subscription, plan) => set({ subscription, plan }),
+  setFreeAllowance: (freeAllowance) => set({ freeAllowance }),
+  consumeFreePaperGeneration: () => {
+    const current = get().freeAllowance;
+    if (!current) return;
+    const { limit, used } = current.paperGenerations;
+    const nextUsed = used + 1;
+    set({ freeAllowance: { paperGenerations: { limit, used: nextUsed, remaining: Math.max(0, limit - nextUsed) } } });
+  },
   login: (user, tokens, subscription = null, plan = null) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('accessToken', tokens.accessToken);
@@ -78,7 +92,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
     }
-    set({ user: null, tokens: null, permissions: DEFAULT_PERMISSIONS, subscription: null, plan: null, isAuthenticated: false, isLoading: false });
+    set({ user: null, tokens: null, permissions: DEFAULT_PERMISSIONS, subscription: null, plan: null, freeAllowance: null, isAuthenticated: false, isLoading: false });
   },
   changePassword: async (currentPassword: string, newPassword: string) => {
     await apiClient.post('/auth/change-password', { currentPassword, newPassword });

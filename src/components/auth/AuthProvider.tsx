@@ -8,7 +8,7 @@ import { scheduleTokenRefresh } from '@/lib/token-refresh';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import type { User } from '@/types';
-import type { Subscription, Plan } from '@/types/subscription';
+import type { Subscription, Plan, FreeAllowance } from '@/types/subscription';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -16,7 +16,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
-    const { setUser, setTokens, setLoading, setSubscription } = useAuthStore.getState();
+    const { setUser, setTokens, setLoading, setSubscription, setFreeAllowance } = useAuthStore.getState();
 
     const tokens = getStoredTokens();
     if (!tokens) {
@@ -55,6 +55,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(user);
         setTokens(tokens);
         setSubscription(subscription, plan);
+        setFreeAllowance((raw.freeAllowance as FreeAllowance | null) ?? null);
         setLoading(false);
         scheduleTokenRefresh();
       })

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import apiClient from '@/lib/api-client';
 import { extractErrorMessage, unwrapResponse } from '@/lib/api-helpers';
 import { toast } from 'sonner';
+import { useAuthStore } from '@/stores/useAuthStore';
 import type {
   Paper,
   PaperMemo,
@@ -89,6 +90,8 @@ export function useTeacherPapers(autoFetch = true): UseTeacherPapersResult {
       const res = await apiClient.post(`${API_PREFIX}/generate`, input);
       const data = unwrapResponse<{ paperId?: string; _id?: string }>(res);
       const paperId = data.paperId ?? data._id ?? '';
+      // A free-plan teacher just used one of their free AI papers.
+      useAuthStore.getState().consumeFreePaperGeneration();
       toast.success('Paper generated');
       return { paperId };
     } catch (err: unknown) {

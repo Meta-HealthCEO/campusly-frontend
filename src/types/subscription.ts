@@ -18,6 +18,11 @@ export interface Plan {
   displayOrder: number;
 }
 
+/** Free-plan allowances from GET /auth/me (standalone teachers only). */
+export interface FreeAllowance {
+  paperGenerations: { limit: number; used: number; remaining: number };
+}
+
 export interface Subscription {
   id: string;
   schoolId: string;
