@@ -124,6 +124,9 @@ export default function HomePage() {
             <a href="#pricing" className="text-sm font-medium text-gray-600 hover:text-gray-900">
               Pricing
             </a>
+            <Link href="/teachers" className="text-sm font-medium text-gray-600 hover:text-gray-900">
+              For teachers
+            </Link>
           </nav>
           <div className="flex items-center gap-3">
             <Link href="/login">
@@ -172,6 +175,12 @@ export default function HomePage() {
                 </Button>
               </Link>
             </div>
+            <p className="mt-8 text-sm text-blue-100">
+              A teacher on your own?{' '}
+              <Link href="/teachers" className="font-semibold text-white underline underline-offset-4 hover:no-underline">
+                Mark, set papers and plan lessons with AI — free to start
+              </Link>
+            </p>
           </div>
         </div>
       </section>
