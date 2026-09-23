@@ -42,9 +42,12 @@ export function CurriculumTreeBrowser({
     useCurriculumTree(frameworkId);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [scopedRoots, setScopedRoots] = useState<CurriculumNodeItem[] | null>(null);
+  // False when none of the saved scope grades exist in this framework (stale
+  // scope) — then show the whole tree rather than an empty one.
+  const [scopeUsable, setScopeUsable] = useState(true);
 
   const scopeGradeKey = scope?.grades.join(',') ?? '';
-  const isScoped = scopeGradeKey.length > 0;
+  const isScoped = scopeGradeKey.length > 0 && scopeUsable;
 
   const handleSelect = useCallback(
     async (node: CurriculumNodeItem) => {
@@ -61,7 +64,8 @@ export function CurriculumTreeBrowser({
   useEffect(() => {
     if (!frameworkId) return;
     setExpanded(new Set());
-    if (!isScoped) {
+    setScopeUsable(true);
+    if (scopeGradeKey.length === 0) {
       setScopedRoots(null);
       void fetchChildren(null);
       return;
@@ -70,7 +74,16 @@ export function CurriculumTreeBrowser({
     setScopedRoots(null);
     void Promise.all(scopeGradeKey.split(',').map((id: string) => fetchNode(id))).then(
       (nodes: Array<CurriculumNodeItem | undefined>) => {
-        if (!cancelled) setScopedRoots(nodes.filter((n): n is CurriculumNodeItem => n !== undefined));
+        if (cancelled) return;
+        const roots = nodes.filter(
+          (n): n is CurriculumNodeItem => n !== undefined && n.frameworkId === frameworkId,
+        );
+        if (roots.length === 0) {
+          setScopeUsable(false);
+          void fetchChildren(null);
+          return;
+        }
+        setScopedRoots(roots);
       },
     );
     return () => { cancelled = true; };
@@ -128,6 +141,12 @@ export function CurriculumTreeBrowser({
 
   return (
     <div className="overflow-x-auto">
+      {scopeGradeKey.length > 0 && !scopeUsable ? (
+        <p className="px-3 py-2 text-xs text-muted-foreground">
+          Your saved grades aren&apos;t in this curriculum any more, so everything is shown.
+          Update them in Settings.
+        </p>
+      ) : null}
       <div className="min-w-[320px] space-y-0.5">
         {sortSiblingsDesc(rootNodes).map((node: CurriculumNodeItem) => (
           <TreeNodeRow

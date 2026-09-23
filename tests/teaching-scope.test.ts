@@ -72,6 +72,12 @@ describe('filterChildrenToScope (topic tree)', () => {
     expect(filterChildrenToScope('m10', terms, scope)).toEqual(terms);
   });
 
+  it('falls back to every subject when the saved ones no longer exist (stale scope)', () => {
+    const stale = { grades: ['g10'], subjectsByGrade: [{ gradeId: 'g10', subjectIds: ['gone'] }] };
+
+    expect(filterChildrenToScope('g10', subjectsByGradeId.g10, stale)).toEqual(subjectsByGradeId.g10);
+  });
+
   it('shows all subjects for a grade the teacher picked without subjects', () => {
     const gradeOnly = { grades: ['g11'], subjectsByGrade: [{ gradeId: 'g11', subjectIds: [] }] };
 

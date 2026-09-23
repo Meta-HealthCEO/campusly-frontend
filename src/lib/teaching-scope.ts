@@ -34,7 +34,9 @@ export function buildTeachingScope(
 
 /**
  * Under a scoped grade, keep only the teacher's subjects. A grade saved with
- * no subjects means "all subjects"; every other level passes through.
+ * no subjects means "all subjects"; every other level passes through. If the
+ * saved subjects no longer match anything (stale scope), show them all rather
+ * than an empty grade that looks like it has no curriculum.
  */
 export function filterChildrenToScope(
   parentId: string,
@@ -43,7 +45,8 @@ export function filterChildrenToScope(
 ): CurriculumNodeItem[] {
   const entry = scope.subjectsByGrade.find((s) => s.gradeId === parentId);
   if (!entry || entry.subjectIds.length === 0) return children;
-  return children.filter((child) => entry.subjectIds.includes(child.id));
+  const scoped = children.filter((child) => entry.subjectIds.includes(child.id));
+  return scoped.length > 0 ? scoped : children;
 }
 
 function gradeRank(node: CurriculumNodeItem): number {
