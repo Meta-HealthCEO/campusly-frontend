@@ -17,6 +17,7 @@ import { displayNodeTitle } from '@/lib/curriculum-display';
 import { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
 import { useCurriculumPreparation, extractCurriculumContext, contextsMatch } from '@/hooks/useCurriculumPreparation';
 import { useTeacherPapers } from '@/hooks/useTeacherPapers';
+import { useTeachingScope } from '@/hooks/useTeachingScope';
 import { useSubjectPaperDefaults } from '@/hooks/useSubjectPaperDefaults';
 import {
   PAPER_TYPES, PAPER_DIFFICULTIES, buildPaperSections, paperTypeLabel,
@@ -35,6 +36,7 @@ export function PapersNewWizard() {
     frameworks, selectedFramework, searchNodes, loadNode, resolveAncestors,
   } = useCurriculumStructure();
   const { generatePaperWithAI } = useTeacherPapers(false);
+  const { scope: teachingScope } = useTeachingScope();
   const prep = useCurriculumPreparation();
 
   const [step, setStep] = useState(1);
@@ -211,6 +213,7 @@ export function PapersNewWizard() {
           onRemoveNode={handleRemoveNode}
           searchNodes={searchNodes}
           loadNode={loadNode}
+          scope={teachingScope}
         />
       )}
 

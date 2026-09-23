@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
+import { compareGradeNodes } from '@/lib/teaching-scope';
 import type { CurriculumFrameworkItem, CurriculumNodeItem } from '@/types';
 
 export interface CapsGradeWithSubjects {
@@ -29,7 +30,7 @@ export function useCapsGrades() {
         params: { frameworkId: defaultFw.id, type: 'grade', limit: 50 },
       });
       const result = unwrapResponse<{ nodes: CurriculumNodeItem[] }>(nodesRes);
-      const sorted = [...result.nodes].sort((a, b) => a.order - b.order);
+      const sorted = [...result.nodes].sort(compareGradeNodes);
       setGrades(sorted);
     } catch (err: unknown) {
       console.error('Failed to load CAPS grades', err);

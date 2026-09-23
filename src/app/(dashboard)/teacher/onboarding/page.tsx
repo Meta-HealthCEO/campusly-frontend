@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useTeacherOnboarding } from '@/hooks/useTeacherOnboarding';
 import { useClasses, useGrades } from '@/hooks/useAcademics';
+import { useTeachingScope } from '@/hooks/useTeachingScope';
 import { SchoolSetupStep } from '@/components/onboarding/SchoolSetupStep';
 import type { SchoolSetupData } from '@/components/onboarding/SchoolSetupStep';
 import { GradesSubjectsStep } from '@/components/onboarding/GradesSubjectsStep';
@@ -24,6 +25,7 @@ export default function TeacherOnboardingPage() {
     useTeacherOnboarding();
   const { grades, loading: gradesLoading, refetch: refetchGrades } = useGrades();
   const { classes, loading: classesLoading, refetch: refetchClasses } = useClasses();
+  const { saveFromNames: saveScopeFromNames } = useTeachingScope();
 
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -85,6 +87,9 @@ export default function TeacherOnboardingPage() {
       setClassByGradeId(nextClassByGradeId);
       await refetchGrades();
       await refetchClasses();
+      // Also the teaching scope, so the curriculum pickers and AI tools start
+      // at these grades/subjects. Best-effort: never blocks onboarding.
+      await saveScopeFromNames(selectedGrades, selectedSubjects);
       toast.success(`Created ${newGrades.length} grades, ${selectedSubjects.length} subjects, and ${newGrades.length} classes`);
       setStep(3);
     } catch {
@@ -92,7 +97,7 @@ export default function TeacherOnboardingPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedGrades, selectedSubjects, createClass, createGrade, createSubject, refetchClasses, refetchGrades]);
+  }, [selectedGrades, selectedSubjects, createClass, createGrade, createSubject, refetchClasses, refetchGrades, saveScopeFromNames]);
 
   const bulkCreateStudentsForSelectedGrades = useCallback(
     async (students: { firstName: string; lastName: string; gradeId: string }[]) => {

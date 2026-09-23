@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,7 +13,7 @@ import { displayNodeTitle } from '@/lib/curriculum-display';
 import { ContextBadge } from './_indicators';
 import type { useCurriculumPreparation } from '@/hooks/useCurriculumPreparation';
 import type { useCurriculumStructure } from '@/hooks/useCurriculumStructure';
-import type { CurriculumNodeItem } from '@/types';
+import type { CurriculumNodeItem, TeachingScope } from '@/types';
 
 interface StepTopicsProps {
   prep: ReturnType<typeof useCurriculumPreparation>;
@@ -23,13 +24,18 @@ interface StepTopicsProps {
   onRemoveNode: (nodeId: string) => void;
   searchNodes: ReturnType<typeof useCurriculumStructure>['searchNodes'];
   loadNode: ReturnType<typeof useCurriculumStructure>['loadNode'];
+  /** The teacher's grades/subjects; the tree starts there unless "Show all". */
+  scope?: TeachingScope;
 }
 
 /** Step 1 of the paper wizard: curriculum tree left, topic cart right. */
 export function StepTopics({
   prep, selectedFramework, frameworkName, selectedNodes,
-  onTopicSelect, onRemoveNode, searchNodes, loadNode,
+  onTopicSelect, onRemoveNode, searchNodes, loadNode, scope,
 }: StepTopicsProps) {
+  const [showAll, setShowAll] = useState(false);
+  const hasScope = Boolean(scope && scope.grades.length > 0);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -51,13 +57,28 @@ export function StepTopics({
           <CardContent className="space-y-4">
             <Tabs defaultValue="browse">
               <TabsList><TabsTrigger value="browse">Browse</TabsTrigger><TabsTrigger value="search">Search</TabsTrigger></TabsList>
-              <TabsContent value="browse" className="mt-3">
+              <TabsContent value="browse" className="mt-3 space-y-2">
+                {hasScope && (
+                  <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                    <span className="truncate">
+                      {showAll ? 'Showing the full curriculum' : 'Showing your grades and subjects'}
+                    </span>
+                    <button
+                      type="button"
+                      className="shrink-0 font-medium text-primary hover:underline"
+                      onClick={() => setShowAll((prev: boolean) => !prev)}
+                    >
+                      {showAll ? 'Only mine' : 'Show all'}
+                    </button>
+                  </div>
+                )}
                 <div className="max-h-[64vh] min-h-96 overflow-y-auto rounded-md border p-1">
                   <CurriculumTreeBrowser
                     frameworkId={selectedFramework}
                     selectedNodeId={prep.selectedNode?.id ?? null}
                     selectedNodeIds={selectedNodes.map((n) => n.id)}
                     onSelect={(node, ctx) => onTopicSelect(node, ctx)}
+                    scope={hasScope && !showAll ? scope : undefined}
                   />
                 </div>
               </TabsContent>
