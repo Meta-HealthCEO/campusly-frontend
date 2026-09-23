@@ -4,12 +4,13 @@ import { DashboardSkeleton } from '@/components/shared/skeletons';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSchoolStore } from '@/stores/useSchoolStore';
 import { useTeacherDashboard } from '@/hooks/useTeacherDashboard';
+import { useTeacherToday } from '@/hooks/useTeacherToday';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 import { useTeachingScope } from '@/hooks/useTeachingScope';
 import { AIQuickMakeHero } from '@/components/teacher-home/AIQuickMakeHero';
 import { GettingStartedCard } from '@/components/teacher-home/GettingStartedCard';
-import { TodayZone } from '@/components/teacher-home/TodayZone';
-import { GradingZone } from '@/components/teacher-home/GradingZone';
+import { YourDayCard } from '@/components/teacher-home/YourDayCard';
+import { NeedsYouCard } from '@/components/teacher-home/NeedsYouCard';
 import { DraftsZone } from '@/components/teacher-home/DraftsZone';
 
 function salutationForHour(hour: number): string {
@@ -18,10 +19,13 @@ function salutationForHour(hour: number): string {
   return 'Good evening, ';
 }
 
+const FADE_IN = 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-300';
+
 export default function TeacherHomePage() {
   const user = useAuthStore((s) => s.user);
   const school = useSchoolStore((s) => s.school);
   const dashboard = useTeacherDashboard();
+  const today = useTeacherToday();
   const { status: onboarding, loading: onboardingLoading } = useOnboardingStatus();
   const { isEmpty: scopeEmpty, loading: scopeLoading } = useTeachingScope();
 
@@ -42,8 +46,19 @@ export default function TeacherHomePage() {
     checklistReady &&
     !(scopeSet && onboarding.hasClass && onboarding.hasFirstContent && onboarding.hasStudent);
 
-  const anyZoneHasContent =
-    dashboard.todayTotal > 0 || dashboard.gradingTotal > 0 || dashboard.draftsTotal > 0;
+  // Independent teachers rarely keep a timetable here — don't show them an
+  // empty day every morning.
+  const showDay = !isStandaloneTeacher || today.periods.length > 0;
+  const loading = today.loading || dashboard.loading;
+
+  const needsYou = (
+    <NeedsYouCard
+      marking={today.marking}
+      gradingFallback={dashboard.gradingTotal}
+      homeworkDueToday={dashboard.homeworkDueToday}
+      unreadMessages={today.unreadMessages}
+    />
+  );
 
   return (
     <div className="space-y-8 bg-background bg-linear-to-b from-muted/40 to-background bg-no-repeat bg-size-[100%_200px] dark:from-background">
@@ -51,15 +66,16 @@ export default function TeacherHomePage() {
         <h1 className="text-3xl font-semibold tracking-tight">
           {salutation}{firstName}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">{dateLabel}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {dateLabel}
+          {!loading && today.summary.length > 0 ? (
+            <span className="text-foreground/80"> · {today.summary.join(' · ')}</span>
+          ) : null}
+        </p>
       </header>
 
-      <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-300 motion-safe:delay-[80ms]">
-        <AIQuickMakeHero />
-      </div>
-
       {showChecklist ? (
-        <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1 motion-safe:duration-300 motion-safe:delay-[160ms]">
+        <div className={FADE_IN}>
           <GettingStartedCard
             scopeSet={scopeSet}
             hasClass={onboarding.hasClass}
@@ -70,21 +86,33 @@ export default function TeacherHomePage() {
         </div>
       ) : null}
 
-      {dashboard.loading ? (
+      {loading ? (
         <DashboardSkeleton />
-      ) : anyZoneHasContent ? (
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1.5 motion-safe:duration-300 motion-safe:delay-[240ms]">
-            <TodayZone items={dashboard.today} total={dashboard.todayTotal} />
-          </div>
-          <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1.5 motion-safe:duration-300 motion-safe:delay-[290ms]">
-            <GradingZone items={dashboard.grading} total={dashboard.gradingTotal} />
-          </div>
-          <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-1.5 motion-safe:duration-300 motion-safe:delay-[340ms]">
+      ) : (
+        <div className={`grid grid-cols-1 gap-6 lg:grid-cols-3 ${FADE_IN}`}>
+          {showDay ? (
+            <div className="lg:col-span-2">
+              <YourDayCard
+                periods={today.periods}
+                lessonsByClass={today.lessonsByClass}
+                isWeekend={today.isWeekend}
+                showTimetableLink={!isStandaloneTeacher}
+              />
+            </div>
+          ) : null}
+          {needsYou}
+          {!showDay || dashboard.draftsTotal > 0 ? (
             <DraftsZone items={dashboard.drafts} total={dashboard.draftsTotal} />
-          </div>
+          ) : null}
         </div>
-      ) : null}
+      )}
+
+      <section aria-labelledby="create-with-ai" className={FADE_IN}>
+        <h2 id="create-with-ai" className="mb-3 text-sm font-medium text-muted-foreground">
+          Create with AI
+        </h2>
+        <AIQuickMakeHero />
+      </section>
     </div>
   );
 }

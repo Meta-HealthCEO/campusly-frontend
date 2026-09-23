@@ -39,7 +39,10 @@ export default function TeacherAttendancePage() {
   const [view, setView] = useState<AttendanceView>(initialTab);
   const [historyRange, setHistoryRange] = useState(initialHistoryRange);
 
-  const hook = useTeacherAttendance({ classId: initialClassId });
+  const periodParam = Number(searchParams.get('period'));
+  const initialPeriod = Number.isInteger(periodParam) && periodParam > 0 ? periodParam : undefined;
+
+  const hook = useTeacherAttendance({ classId: initialClassId, initialPeriod });
 
   // Sync URL when class or tab changes — replace (no history entries).
   useEffect(() => {

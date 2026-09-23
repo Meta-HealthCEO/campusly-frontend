@@ -15,6 +15,8 @@ import type {
 interface DashboardData {
   today: TodayItem[];
   todayTotal: number;
+  /** Homework due today, counted before `today` is trimmed to three items. */
+  homeworkDueToday: number;
   grading: GradingItem[];
   gradingTotal: number;
   drafts: DraftItem[];
@@ -37,6 +39,7 @@ export function useTeacherDashboard(): DashboardData {
   const { user } = useAuthStore();
   const [today, setToday] = useState<TodayItem[]>([]);
   const [todayTotal, setTodayTotal] = useState(0);
+  const [homeworkDueToday, setHomeworkDueToday] = useState(0);
   const [grading, setGrading] = useState<GradingItem[]>([]);
   const [gradingTotal, setGradingTotal] = useState(0);
   const [drafts, setDrafts] = useState<DraftItem[]>([]);
@@ -128,6 +131,7 @@ export function useTeacherDashboard(): DashboardData {
         return new Date(ta).getTime() - new Date(tb).getTime();
       });
       setTodayTotal(todayItems.length);
+      setHomeworkDueToday(todayItems.filter((item: TodayItem) => item.kind === 'homework').length);
       setToday(todayItems.slice(0, 3));
 
       // ── Grading (homework only, per spec) ────────────────────────────────
@@ -226,6 +230,7 @@ export function useTeacherDashboard(): DashboardData {
   return {
     today,
     todayTotal,
+    homeworkDueToday,
     grading,
     gradingTotal,
     drafts,
