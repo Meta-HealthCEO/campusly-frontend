@@ -34,7 +34,8 @@ function RegisterAction({ period }: { period: AnnotatedPeriod }) {
   return (
     <Link
       href={registerHref(period)}
-      className={cn(buttonVariants({ variant: due ? 'default' : 'outline', size: 'sm' }), 'shrink-0')}
+      // 44px touch target on phones (taking the register is a phone task); compact on desktop.
+      className={cn(buttonVariants({ variant: due ? 'default' : 'outline' }), 'h-11 shrink-0 sm:h-8')}
     >
       Take register
     </Link>
