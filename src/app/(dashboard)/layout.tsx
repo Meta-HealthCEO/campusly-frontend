@@ -22,6 +22,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { TrialBanner } from '@/components/subscription/TrialBanner';
 import { DunningBanner } from '@/components/subscription/DunningBanner';
 import { composeNav } from './nav-config';
+import { isStandaloneTeacherPathAllowed } from '@/lib/standalone-teacher-paths';
 import { useNotificationPoller } from '@/hooks/useNotificationPoller';
 import type { UserRole, PermissionFlag } from '@/types';
 
@@ -67,32 +68,6 @@ function filterByPermission(
   });
 }
 
-function isStandaloneTeacherPathAllowed(pathname: string): boolean {
-  if (pathname === '/teacher') return true;
-
-  const allowedPrefixes = [
-    '/teacher/onboarding',
-    '/teacher/classes',
-    '/teacher/students',
-    '/teacher/curriculum/textbooks',
-    '/teacher/curriculum/content',
-    '/teacher/curriculum/preview',
-    '/teacher/curriculum/mark-papers',
-    '/teacher/lesson-plans',
-    '/teacher/lessons',
-    '/teacher/quick-make',
-    '/teacher/papers',
-    '/teacher/grades',
-    '/teacher/homework',
-    '/teacher/assignments',
-    '/teacher/curriculum/import',
-    '/teacher/settings',
-    '/my/billing',
-    '/subscription',
-  ];
-
-  return allowedPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
-}
 
 export default function DashboardLayout({
   children,

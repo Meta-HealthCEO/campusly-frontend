@@ -1,8 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ClipboardCheck, AlertCircle, Clock, ListChecks } from 'lucide-react';
+import { ClipboardCheck, AlertCircle, Clock, ListChecks, Sparkles } from 'lucide-react';
+import { buttonVariants } from '@/components/ui/button';
+import { ROUTES } from '@/lib/routes';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCard } from '@/components/shared/StatCard';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -55,9 +58,14 @@ export default function MarkingHubPage() {
   return (
     <div className="space-y-6 p-4 sm:p-6">
       <PageHeader
-        title="Marking Hub"
-        description="Track and manage all pending marking tasks"
-      />
+        title="Marking"
+        description="Everything waiting to be marked. Photograph handwritten scripts and let AI mark them against your memo."
+      >
+        <Link href={ROUTES.TEACHER_CURRICULUM_MARK_PAPERS} className={buttonVariants()}>
+          <Sparkles className="h-4 w-4" />
+          Mark papers with AI
+        </Link>
+      </PageHeader>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
@@ -66,7 +74,7 @@ export default function MarkingHubPage() {
           icon={ListChecks}
         />
         <StatCard
-          title="Overdue (High Priority)"
+          title="Overdue"
           value={String(overdueCount)}
           icon={AlertCircle}
         />

@@ -9,7 +9,7 @@ import {
   Compass, Target, Clipboard, Newspaper,
   CalendarCheck, CalendarCog, Crown, DoorOpen, UserPlus,
   AlertTriangle, Calculator,
-  CheckSquare, Video, PlayCircle, ScrollText,
+  CheckSquare, Video, PlayCircle, ScrollText, ClipboardCheck,
   User,
   type LucideIcon
 } from 'lucide-react';
@@ -245,6 +245,13 @@ export const TEACHER_NAV: NavItem[] = [
   { label: 'Test Papers', href: '/teacher/papers', icon: FileText, badge: 'AI' },
   { label: 'Assignments', href: '/teacher/assignments', icon: ScrollText, badge: 'AI' },
   { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
+  {
+    label: 'Marking',
+    href: ROUTES.TEACHER_WORKBENCH_MARKING_HUB,
+    icon: ClipboardCheck,
+    badge: 'AI',
+    module: 'teacher_workbench',
+  },
   { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
   {
     label: 'Courses',
@@ -307,6 +314,13 @@ export const STANDALONE_TEACHER_NAV: NavItem[] = [
   { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
   { label: 'Assignments', href: '/teacher/assignments', icon: ScrollText, badge: 'AI' },
   { label: 'Test Papers', href: '/teacher/papers', icon: FileText, badge: 'AI' },
+  {
+    label: 'Marking',
+    href: ROUTES.TEACHER_WORKBENCH_MARKING_HUB,
+    icon: ClipboardCheck,
+    badge: 'AI',
+    module: 'teacher_workbench',
+  },
   { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
   { label: 'Billing', href: '/my/billing', icon: CreditCard },
   { label: 'Settings', href: '/teacher/settings', icon: Settings },
