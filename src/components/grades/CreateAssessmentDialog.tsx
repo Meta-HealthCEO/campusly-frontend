@@ -20,7 +20,7 @@ const ASSESSMENT_TYPES: { value: Assessment['type']; label: string }[] = [
   { value: 'test', label: 'Test' },
   { value: 'exam', label: 'Exam' },
   { value: 'assignment', label: 'Assignment' },
-  { value: 'practical', label: 'Practical' },
+  { value: 'practical', label: 'Practical / oral' },
   { value: 'project', label: 'Project' },
 ];
 
@@ -42,6 +42,8 @@ interface CreateAssessmentDialogProps {
   subjects: Subject[];
   selectedClassId: string;
   selectedSubjectId: string;
+  /** Term the form starts on (the page's term filter, or the current term). */
+  defaultTerm?: number;
   onCreateAssessment: (payload: CreateAssessmentPayload) => Promise<Assessment>;
 }
 
@@ -49,6 +51,7 @@ export function CreateAssessmentDialog({
   subjects,
   selectedClassId,
   selectedSubjectId,
+  defaultTerm = 1,
   onCreateAssessment,
 }: CreateAssessmentDialogProps) {
   const [open, setOpen] = useState(false);
@@ -69,11 +72,11 @@ export function CreateAssessmentDialog({
       setType('test');
       setTotalMarks('');
       setWeight('');
-      setTerm('1');
+      setTerm(String(defaultTerm));
       setDate(toLocalISODate(new Date()));
       setSubjectId(selectedSubjectId || (subjects.length > 0 ? subjects[0].id : ''));
     }
-  }, [open, selectedSubjectId, subjects]);
+  }, [open, selectedSubjectId, subjects, defaultTerm]);
 
   const handleSubmit = async () => {
     if (!name.trim()) {

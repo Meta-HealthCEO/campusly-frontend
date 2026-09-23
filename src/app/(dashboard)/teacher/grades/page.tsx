@@ -15,12 +15,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TermSummaryTab } from '@/components/grades/TermSummaryTab';
 import { useTeacherGrades } from '@/hooks/useTeacherGrades';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
-// Assessment creation now goes through the Papers builder.
+import { CreateAssessmentDialog } from '@/components/grades/CreateAssessmentDialog';
 import { EditAssessmentDialog } from '@/components/grades/EditAssessmentDialog';
 import { StudentHistoryDialog } from '@/components/grades/StudentHistoryDialog';
 import { ClassStatsBar } from '@/components/grades/ClassStatsBar';
 import { AssessmentInfoCard } from '@/components/grades/AssessmentInfoCard';
-import type { Assessment } from '@/types';
 import { getSubjectName, getPaperId, TERM_OPTIONS, resolveTermScope } from '@/components/grades/grades-page-helpers';
 
 export default function TeacherGradesPage() {
@@ -32,8 +31,9 @@ export default function TeacherGradesPage() {
     studentHistory, selectedStudent,
     setSelectedClass, setSelectedSubject, setSelectedAssessment, setSelectedTerm,
     setSelectedStudent, handleMarkChange, saveMarks,
-    updateAssessment, deleteAssessment, fetchStudentHistory,
+    createAssessment, updateAssessment, deleteAssessment, fetchStudentHistory,
   } = useTeacherGrades();
+  const termScope = resolveTermScope(selectedTerm);
 
   const [editOpen, setEditOpen] = useState(false);
 
@@ -289,6 +289,11 @@ export default function TeacherGradesPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                <CreateAssessmentDialog
+                  subjects={subjects} selectedClassId={selectedClass} selectedSubjectId={selectedSubject}
+                  defaultTerm={termScope === 'year' ? Math.min(4, Math.floor(new Date().getMonth() / 3) + 1) : termScope}
+                  onCreateAssessment={createAssessment}
+                />
               </CardContent>
             </Card>
 
@@ -296,7 +301,7 @@ export default function TeacherGradesPage() {
               <EmptyState
                 icon={BookOpen}
                 title="No assessments for this term yet"
-                description="Marks will appear here once a paper is finalised and assigned. Manage papers from the Test Papers section."
+                description="Add one with Create Assessment — an oral, a practical, a test set on paper — or finalise a paper in Test Papers."
               />
             )}
 

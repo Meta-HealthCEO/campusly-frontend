@@ -240,22 +240,21 @@ export function useTeacherGrades() {
     setAllAssessments(unwrapList<Assessment>(refreshRes));
   }, []);
 
+  // Teachers record their own assessments (oral, practical, a paper set outside
+  // Campusly…) for classes they teach; the school comes from the login.
   const createAssessment = useCallback(async (payload: CreateAssessmentPayload) => {
     try {
-      const res = await apiClient.post('/academic/assessments', {
-        ...payload,
-        schoolId,
-        academicYear: new Date().getFullYear(),
-      });
+      const res = await apiClient.post('/academic/assessments/mine', payload);
       const created = unwrapResponse<Assessment>(res);
-      toast.success('Assessment created successfully');
+      toast.success('Assessment added — enter the marks below');
       await refreshAssessments(payload.classId, payload.subjectId);
+      setSelectedAssessment(created.id);
       return created;
     } catch (err: unknown) {
       toast.error(extractErrorMessage(err, 'Failed to create assessment'));
       throw err;
     }
-  }, [schoolId, refreshAssessments]);
+  }, [refreshAssessments]);
 
   const updateAssessment = useCallback(async (id: string, payload: UpdateAssessmentPayload) => {
     try {
