@@ -11,10 +11,13 @@ import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { JoinClassCard } from '@/components/student/JoinClassCard';
 import { RecommendedWidget } from '@/components/student/RecommendedWidget';
 import { MasteryWidget } from '@/components/student/MasteryWidget';
+import { ResumeUnitCard } from '@/components/learner/ResumeUnitCard';
+import { courseIdOf, courseOf, useStudentUnits } from '@/hooks/useStudentUnits';
 
 export default function StudentDashboard() {
   const { dashboard, loading, refresh } = useStudentDashboard();
   const { student } = useCurrentStudent();
+  const { current: currentUnit } = useStudentUnits();
   if (loading || !dashboard) return <LoadingSpinner />;
 
   const firstName =
@@ -32,6 +35,15 @@ export default function StudentDashboard() {
       />
 
       <JoinClassCard onJoined={refresh} />
+
+      {currentUnit ? (
+        <ResumeUnitCard
+          enrolmentId={currentUnit.id}
+          courseId={courseIdOf(currentUnit)}
+          unitTitle={courseOf(currentUnit)?.title ?? 'Unit'}
+          progressPercent={currentUnit.progressPercent}
+        />
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>

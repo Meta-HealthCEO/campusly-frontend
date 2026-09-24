@@ -179,6 +179,7 @@ export const STUDENT_NAV: NavItem[] = [
   // Phase 1 (always visible)
   { label: 'Dashboard', href: ROUTES.STUDENT_DASHBOARD, icon: Home },
   { label: 'Lessons',   href: '/student/lessons',        icon: BookOpen },
+  { label: 'Courses',   href: '/student/courses',        icon: GraduationCap, module: 'courses' },
   { label: 'Homework',  href: ROUTES.STUDENT_HOMEWORK,   icon: ClipboardList, module: 'homework' },
   { label: 'Assignments', href: '/student/assignments',  icon: ScrollText, module: 'homework' },
   { label: 'Tests',     href: '/student/tests',          icon: FileText },

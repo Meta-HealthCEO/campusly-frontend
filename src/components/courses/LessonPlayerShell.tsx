@@ -44,7 +44,9 @@ export function LessonPlayerShell({
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col lg:flex-row">
+    // Fits inside the dashboard main: top bar 4rem, plus its padding (p-4 pb-20 on phones, p-6 on desktop)
+    // so the Previous / Next bar clears the phone bottom nav.
+    <div className="flex h-[calc(100dvh-10rem)] flex-col lg:h-[calc(100dvh-7rem)] lg:flex-row">
       {/* Mobile: outline trigger button + sheet drawer */}
       <div className="border-b px-4 py-2 lg:hidden">
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

@@ -124,6 +124,9 @@ export const ROUTES = {
 
   // Student
   STUDENT_DASHBOARD: '/student',
+  STUDENT_COURSES: '/student/courses',
+  STUDENT_COURSE_HOME: (courseId: string) => `/student/courses/${courseId}`,
+  STUDENT_LESSON_PLAYER: (courseId: string, lessonId: string) => `/student/courses/${courseId}/learn/${lessonId}`,
   STUDENT_CLASSES: '/student/classes',
   STUDENT_HOMEWORK: '/student/homework',
   STUDENT_TIMETABLE: '/student/timetable',
