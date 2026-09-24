@@ -3,7 +3,7 @@
 import { AlertTriangle, CheckCircle2, CircleHelp, Users } from 'lucide-react';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { lastSeenLabel, stuckLabel, type InsightLearner, type MissedQuestion, type UnitInsight as Insight } from '@/lib/unit-insight';
+import { learnerStatusLine, stuckLabel, type InsightLearner, type MissedQuestion, type UnitInsight as Insight } from '@/lib/unit-insight';
 
 function LearnerRow({ learner }: { learner: InsightLearner }) {
   const stuck = stuckLabel(learner.stuck);
@@ -12,10 +12,7 @@ function LearnerRow({ learner }: { learner: InsightLearner }) {
     <li className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{learner.name}</p>
-        <p className="truncate text-xs text-muted-foreground">
-          {done ? 'Finished the unit' : learner.currentItem ? `On: ${learner.currentItem.title}` : 'Not started'}
-          {' · '}{lastSeenLabel(learner.lastActivityAt)}
-        </p>
+        <p className="truncate text-xs text-muted-foreground">{learnerStatusLine(learner)}</p>
         {stuck ? (
           <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-attention-soft px-2 py-0.5 text-xs font-medium text-attention">
             <AlertTriangle className="h-3 w-3" aria-hidden /> {stuck}

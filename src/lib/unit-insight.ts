@@ -46,3 +46,11 @@ export function lastSeenLabel(iso: string | null, now: Date = new Date()): strin
   if (days === 1) return 'Yesterday';
   return `${days} days ago`;
 }
+
+/** One line on where a learner is: "Not started", "On: <item> · Yesterday", "Finished the unit · Today". */
+export function learnerStatusLine(learner: InsightLearner, now: Date = new Date()): string {
+  if (!learner.lastActivityAt) return 'Not started';
+  const seen = lastSeenLabel(learner.lastActivityAt, now);
+  if (learner.status === 'completed') return `Finished the unit · ${seen}`;
+  return learner.currentItem ? `On: ${learner.currentItem.title} · ${seen}` : `Working through it · ${seen}`;
+}
