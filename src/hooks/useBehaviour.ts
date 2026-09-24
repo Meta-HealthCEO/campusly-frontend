@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { extractErrorMessage, unwrapResponse } from '@/lib/api-helpers';
-import type { BehaviourKind, Severity } from '@/lib/behaviour';
+import type { BehaviourKind, Severity, TimelineItem } from '@/lib/behaviour';
 
 export interface BehaviourSummary { merits: number; demerits: number; incidents: number; net: number }
 
@@ -96,4 +96,31 @@ export function useBehaviourActions() {
   }, []);
 
   return { log, undo, logging, logError, clearLogError: () => setLogError(null) };
+}
+
+/** A learner's behaviour timeline (with the referrals the teacher made) and summary. */
+export function useLearnerBehaviour(studentId: string) {
+  const [items, setItems] = useState<TimelineItem[]>([]);
+  const [summary, setSummary] = useState<BehaviourSummary>(EMPTY);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async (): Promise<void> => {
+    if (!studentId) return;
+    try {
+      const data = unwrapResponse<{ items: TimelineItem[]; summary: BehaviourSummary }>(await apiClient.get(`/behaviour/student/${studentId}`));
+      setItems(data.items ?? []);
+      setSummary(data.summary ?? EMPTY);
+      setError(null);
+    } catch (err: unknown) {
+      console.error('Learner behaviour failed', err);
+      setError(extractErrorMessage(err, "Couldn't load this learner's behaviour."));
+    } finally {
+      setLoading(false);
+    }
+  }, [studentId]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  return { items, summary, loading, error, refresh: load };
 }

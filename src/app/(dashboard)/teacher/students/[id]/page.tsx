@@ -17,6 +17,9 @@ import { LearnerActions } from '@/components/students/LearnerActions';
 import { MessageParentDialog } from '@/components/students/MessageParentDialog';
 import { ReferralCreateDialog } from '@/components/pastoral/ReferralCreateDialog';
 import { useLearnerActions } from '@/hooks/useLearnerActions';
+import { useLearnerBehaviour } from '@/hooks/useBehaviour';
+import { LogBehaviourButton } from '@/components/behaviour/LogBehaviourButton';
+import { BehaviourTimelineCard } from '@/components/behaviour/BehaviourTimelineCard';
 import { useLearnerProfile } from '@/hooks/useLearnerProfile';
 import { learnerClassLabel } from '@/lib/learner-profile';
 import { ROUTES } from '@/lib/routes';
@@ -28,6 +31,7 @@ export default function LearnerProfilePage() {
   const { profile, loading, error, loadProfile } = useLearnerProfile();
   const router = useRouter();
   const actions = useLearnerActions();
+  const behaviour = useLearnerBehaviour(studentId);
   const [messaging, setMessaging] = useState(false);
   const [referring, setReferring] = useState(false);
 
@@ -69,7 +73,11 @@ export default function LearnerProfilePage() {
         title={`${student.firstName} ${student.lastName}`}
         description={`${learnerClassLabel(student.gradeName, student.className)} · ${student.admissionNumber}`}
       >
-        <LearnerActions onMessageParent={() => { actions.clearSendError(); setMessaging(true); }} onRefer={() => setReferring(true)} />
+        <LearnerActions
+          onMessageParent={() => { actions.clearSendError(); setMessaging(true); }}
+          onRefer={() => setReferring(true)}
+          logBehaviour={<LogBehaviourButton learner={{ id: student.id, name: `${student.firstName} ${student.lastName}`.trim() }} source="profile" variant="full" onLogged={() => void behaviour.refresh()} />}
+        />
         {back}
       </PageHeader>
       <LearnerQuickStats profile={profile} />
@@ -77,7 +85,10 @@ export default function LearnerProfilePage() {
         <AcademicSummaryCard academic={profile.academic} />
         <AttendanceSummaryCard attendance={profile.attendance} />
       </div>
-      <RecentActivityCard achievements={profile.achievements} behaviour={profile.behaviour} sports={profile.sports} />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <BehaviourTimelineCard items={behaviour.items} summary={behaviour.summary} loading={behaviour.loading} error={behaviour.error} />
+        <RecentActivityCard achievements={profile.achievements} sports={profile.sports} />
+      </div>
 
       {messaging ? (
         <MessageParentDialog

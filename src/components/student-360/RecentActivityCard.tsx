@@ -9,7 +9,8 @@ import type { FullStudent360Data } from '@/types/student-360';
 
 interface RecentActivityCardProps {
   achievements: FullStudent360Data['achievements'];
-  behaviour: FullStudent360Data['behaviour'];
+  /** Left out on the teacher's profile, which shows the behaviour timeline instead. */
+  behaviour?: FullStudent360Data['behaviour'];
   sports: FullStudent360Data['sports'];
 }
 
@@ -37,7 +38,7 @@ export function RecentActivityCard({ achievements, behaviour, sports }: RecentAc
       });
     }
 
-    for (const i of behaviour.recentIncidents) {
+    for (const i of behaviour?.recentIncidents ?? []) {
       list.push({
         id: `inc-${i.type}-${i.date}`,
         icon: 'incident',

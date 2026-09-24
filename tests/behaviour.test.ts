@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { BEHAVIOUR_CATEGORIES, entryLabel, logProblem, pointsLabel } from '../src/lib/behaviour';
+import { BEHAVIOUR_CATEGORIES, entryLabel, logProblem, pointsLabel, summaryLine, timelineTone } from '../src/lib/behaviour';
 
 describe('behaviour wording', () => {
   it('shows points signed, as the server stores them', () => {
@@ -27,5 +27,17 @@ describe('logProblem', () => {
     expect(logProblem({ studentId: 's1', kind: 'merit', category: '', note: '' })).toBe('Pick what the merit is for.');
     expect(logProblem({ studentId: 's1', kind: 'demerit', category: 'late', note: ' ' })).toBe('Say briefly what happened.');
     expect(logProblem({ studentId: 's1', kind: 'merit', category: 'effort', note: '' })).toBeNull();
+  });
+});
+
+describe('the profile behaviour card', () => {
+  it('sums up a learner in one line', () => {
+    expect(summaryLine({ merits: 2, demerits: 1, incidents: 0, net: 1 })).toBe('2 merits · 1 demerit · no incidents');
+    expect(summaryLine({ merits: 0, demerits: 0, incidents: 0, net: 0 })).toBe('Nothing logged yet');
+  });
+
+  it('colours a referral apart from behaviour', () => {
+    expect(timelineTone('merit')).toBe('bg-success-soft text-success');
+    expect(timelineTone('referral')).toBe('bg-info-soft text-info');
   });
 });

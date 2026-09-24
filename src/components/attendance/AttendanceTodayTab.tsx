@@ -205,6 +205,7 @@ export function AttendanceTodayTab(props: AttendanceTodayTabProps) {
             return (
               <StudentRow
                 linkName={!dirty}
+                logBehaviour
                 key={student.id}
                 student={student}
                 status={entry?.status ?? 'present'}

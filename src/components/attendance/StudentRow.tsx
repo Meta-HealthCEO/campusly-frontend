@@ -8,6 +8,7 @@ import type { AttendanceStatus } from '@/hooks/useTeacherAttendance';
 import type { AttendanceEditHistoryEntry } from '@/types/attendance';
 import type { Student } from '@/types';
 import { LearnerLink } from '@/components/students/LearnerLink';
+import { LogBehaviourButton } from '@/components/behaviour/LogBehaviourButton';
 
 export interface StudentRowProps {
   student: Student;
@@ -18,6 +19,8 @@ export interface StudentRowProps {
   onNoteChange: (studentId: string, note: string) => void;
   /** Link the name to the learner's profile; off while there are unsaved marks, so leaving can't lose them. */
   linkName?: boolean;
+  /** Offer "Log behaviour" beside the name (the register; logging doesn't leave the page). */
+  logBehaviour?: boolean;
 }
 
 function dotClass(status: AttendanceStatus): string {
@@ -35,6 +38,7 @@ export function StudentRow({
   onUpdate,
   onNoteChange,
   linkName = true,
+  logBehaviour = false,
 }: StudentRowProps) {
   const name = getStudentDisplayName(student);
   const [noteOpen, setNoteOpen] = useState<boolean>(Boolean(note));
@@ -50,6 +54,7 @@ export function StudentRow({
             {linkName
               ? <LearnerLink studentId={student.id} name={name.full} className="text-sm font-medium truncate" />
               : <p className="text-sm font-medium truncate">{name.full}</p>}
+            {logBehaviour ? <LogBehaviourButton learner={{ id: student.id, name: name.full }} source="register" /> : null}
             {hasHistory && editHistory && (
               <Popover>
                 <PopoverTrigger

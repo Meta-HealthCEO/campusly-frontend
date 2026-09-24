@@ -81,3 +81,25 @@ export function logProblem(form: LogForm): string | null {
   if (form.kind !== 'merit' && !form.note.trim()) return 'Say briefly what happened.';
   return null;
 }
+
+/** One item on a learner's behaviour timeline (GET /behaviour/student/:id). */
+export interface TimelineItem {
+  id: string;
+  kind: BehaviourKind | 'referral';
+  at: string;
+  label: string;
+  detail: string;
+  by: string | null;
+}
+
+export function timelineTone(kind: TimelineItem['kind']): string {
+  return kind === 'referral' ? 'bg-info-soft text-info' : KIND_TONE[kind];
+}
+
+const count = (n: number, one: string, many: string): string => (n === 0 ? `no ${many}` : n === 1 ? `1 ${one}` : `${n} ${many}`);
+
+/** "2 merits · 1 demerit · no incidents" */
+export function summaryLine(s: { merits: number; demerits: number; incidents: number; net?: number }): string {
+  if (s.merits + s.demerits + s.incidents === 0) return 'Nothing logged yet';
+  return [count(s.merits, 'merit', 'merits'), count(s.demerits, 'demerit', 'demerits'), count(s.incidents, 'incident', 'incidents')].join(' · ');
+}

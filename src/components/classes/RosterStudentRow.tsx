@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { getStudentDisplayName } from '@/lib/student-helpers';
 import { getInitials } from '@/lib/utils';
 import type { Student } from '@/types';
+import { LogBehaviourButton } from '@/components/behaviour/LogBehaviourButton';
 
 export interface RegenTarget {
   id: string;
@@ -42,6 +43,7 @@ export function RosterStudentRow({
         <p className="text-sm font-medium truncate">{first} {last}</p>
         <p className="text-xs text-muted-foreground truncate">{student.admissionNumber}</p>
       </Link>
+      <LogBehaviourButton learner={{ id: student.id, name: `${first} ${last}`.trim() }} source="roster" />
       {isPortal ? (
         <Badge variant="default" className="shrink-0">Portal</Badge>
       ) : (
