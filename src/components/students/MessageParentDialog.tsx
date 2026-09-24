@@ -56,7 +56,7 @@ export function MessageParentDialog({ open, onOpenChange, firstName, parents, se
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="parent-message">Message</Label>
-                <Textarea id="parent-message" value={message} onChange={(e) => setMessage(e.target.value)} rows={5} maxLength={5000} />
+                <Textarea id="parent-message" value={message} onChange={(e) => setMessage(e.target.value)} rows={5} maxLength={4000} />
               </div>
             </>
           )}

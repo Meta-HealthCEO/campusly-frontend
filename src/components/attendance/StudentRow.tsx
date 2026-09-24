@@ -16,6 +16,8 @@ export interface StudentRowProps {
   editHistory?: AttendanceEditHistoryEntry[];
   onUpdate: (studentId: string, status: AttendanceStatus) => void;
   onNoteChange: (studentId: string, note: string) => void;
+  /** Link the name to the learner's profile; off while there are unsaved marks, so leaving can't lose them. */
+  linkName?: boolean;
 }
 
 function dotClass(status: AttendanceStatus): string {
@@ -32,6 +34,7 @@ export function StudentRow({
   editHistory,
   onUpdate,
   onNoteChange,
+  linkName = true,
 }: StudentRowProps) {
   const name = getStudentDisplayName(student);
   const [noteOpen, setNoteOpen] = useState<boolean>(Boolean(note));
@@ -44,7 +47,9 @@ export function StudentRow({
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${dotClass(status)}`} />
           <div className="min-w-0 flex items-center gap-1">
-            <LearnerLink studentId={student.id} name={name.full} className="text-sm font-medium truncate" />
+            {linkName
+              ? <LearnerLink studentId={student.id} name={name.full} className="text-sm font-medium truncate" />
+              : <p className="text-sm font-medium truncate">{name.full}</p>}
             {hasHistory && editHistory && (
               <Popover>
                 <PopoverTrigger

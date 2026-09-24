@@ -23,6 +23,8 @@ interface AttendanceTodayTabProps {
   loadError: boolean;
   saving: boolean;
   saved: boolean;
+  /** Unsaved marks or notes: names don't link away until the register is saved. */
+  dirty?: boolean;
   onChangeDate: (date: string) => void | Promise<void>;
   onSetPeriod: (period: number) => void;
   onUpdateStatus: (studentId: string, status: AttendanceStatus) => void;
@@ -34,7 +36,7 @@ interface AttendanceTodayTabProps {
 export function AttendanceTodayTab(props: AttendanceTodayTabProps) {
   const {
     students, selectedDate, period, attendance,
-    existingLoaded, loadError, saving, saved,
+    existingLoaded, loadError, saving, saved, dirty = false,
     onChangeDate, onSetPeriod, onUpdateStatus, onUpdateNote, onMarkAll, onSave,
   } = props;
 
@@ -202,6 +204,7 @@ export function AttendanceTodayTab(props: AttendanceTodayTabProps) {
             const entry = attendance.get(student.id);
             return (
               <StudentRow
+                linkName={!dirty}
                 key={student.id}
                 student={student}
                 status={entry?.status ?? 'present'}

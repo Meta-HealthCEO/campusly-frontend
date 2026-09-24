@@ -52,6 +52,7 @@ export function AttendanceDayEditDialog({
                 const e = entries.get(s.id);
                 return (
                   <StudentRow
+                    linkName={false}
                     key={s.id}
                     student={s}
                     status={e?.status ?? 'present'}

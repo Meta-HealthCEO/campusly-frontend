@@ -96,6 +96,8 @@ export function useTeacherAttendance(options: UseTeacherAttendanceOptions = {}) 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  // Marks or notes changed since the register was loaded or saved.
+  const [dirty, setDirty] = useState(false);
 
   const selectedClass = classes.find((c) => c.id === selectedClassId) ?? null;
 
@@ -179,6 +181,7 @@ export function useTeacherAttendance(options: UseTeacherAttendanceOptions = {}) 
       setSelectedClassId(nextClassId);
       setStudents(target.students);
       setSaved(false);
+      setDirty(false);
       setExistingLoaded(false);
       await loadExistingAttendance(nextClassId, selectedDate, target.students);
     },
@@ -189,6 +192,7 @@ export function useTeacherAttendance(options: UseTeacherAttendanceOptions = {}) 
     async (date: string) => {
       setSelectedDate(date);
       setSaved(false);
+      setDirty(false);
       setExistingLoaded(false);
       if (selectedClass) {
         await loadExistingAttendance(selectedClass.id, date, students);
@@ -201,6 +205,7 @@ export function useTeacherAttendance(options: UseTeacherAttendanceOptions = {}) 
     (nextPeriod: number) => {
       setPeriodState(nextPeriod);
       setSaved(false);
+      setDirty(false);
       const filtered = allRecords.filter((record) => (record.period ?? 1) === nextPeriod);
       if (filtered.length > 0) {
         setAttendance(recordsToAttendanceMap(filtered));
@@ -225,6 +230,7 @@ export function useTeacherAttendance(options: UseTeacherAttendanceOptions = {}) 
       return next;
     });
     setSaved(false);
+    setDirty(true);
   }, []);
 
   const updateNote = useCallback((studentId: string, note: string) => {
@@ -239,6 +245,7 @@ export function useTeacherAttendance(options: UseTeacherAttendanceOptions = {}) 
       return next;
     });
     setSaved(false);
+    setDirty(true);
   }, []);
 
   const markAll = useCallback((status: AttendanceStatus) => {
@@ -255,6 +262,7 @@ export function useTeacherAttendance(options: UseTeacherAttendanceOptions = {}) 
       return next;
     });
     setSaved(false);
+    setDirty(true);
   }, [students]);
 
   const saveAttendance = useCallback(async () => {
@@ -296,6 +304,7 @@ export function useTeacherAttendance(options: UseTeacherAttendanceOptions = {}) 
       ]);
       setLoadError(false);
       setSaved(true);
+      setDirty(false);
       setExistingLoaded(true);
       toast.success(isUpdate
         ? `Attendance updated for ${selectedDate}`
@@ -318,6 +327,7 @@ export function useTeacherAttendance(options: UseTeacherAttendanceOptions = {}) 
     loadError,
     saving,
     saved,
+    dirty,
     loading,
     changeClass,
     changeDate,

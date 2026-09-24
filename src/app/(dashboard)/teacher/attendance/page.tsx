@@ -146,6 +146,7 @@ export default function TeacherAttendancePage() {
             loadError={hook.loadError}
             saving={hook.saving}
             saved={hook.saved}
+            dirty={hook.dirty}
             onChangeDate={hook.changeDate}
             onSetPeriod={hook.setPeriod}
             onUpdateStatus={hook.updateStatus}
