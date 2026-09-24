@@ -16,7 +16,7 @@ export function StudentAddCredentialsResults({ batch, deliveryMode }: StudentAdd
   return (
     <div className="space-y-4 rounded-xl border-2 border-primary/30 bg-primary/5 p-4">
       <div className="flex items-start gap-3">
-        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />
         <div className="flex-1">
           <h3 className="text-base font-semibold">
             {count === 1 ? 'Login details ready' : `Login details ready for ${count} students`}

@@ -4,6 +4,7 @@ import {
   assignLessonsToPeriods,
   lessonsByClassForDay,
   nowLinePlacement,
+  timelineRows,
   summariseToday,
   type TodayPeriod,
 } from '../src/lib/teacher-today';
@@ -138,5 +139,72 @@ describe('assignLessonsToPeriods', () => {
       { id: 'L4', title: 'Tomorrow', assignedClasses: [{ classId: 'c1', scheduledDate: new Date(2026, 8, 25, 8, 30).toISOString() }] },
     ], day);
     expect(map.size).toBe(0);
+  });
+});
+
+describe('assignLessonsToPeriods for a class taught several subjects', () => {
+  const day = new Date(2026, 8, 24, 6, 0);
+  const midnight = new Date(2026, 8, 24).toISOString();
+  const withSubject = (p: TodayPeriod, subjectName: string): TodayPeriod => ({ ...p, classId: 'c1', subjectName });
+  const periods = annotatePeriods([
+    withSubject(period(1, '07:45', '08:30'), 'English'),
+    withSubject(period(2, '08:30', '09:15'), 'Mathematics'),
+    withSubject(period(3, '09:15', '10:00'), 'English'),
+  ], day);
+  const lesson = (id: string, title: string, subject?: string) => ({
+    id, title, subjectId: subject ? { id: `s-${subject}`, name: subject } : undefined,
+    assignedClasses: [{ classId: 'c1', scheduledDate: midnight }],
+  });
+
+  it('puts an untimed lesson on a period of its own subject', () => {
+    const map = assignLessonsToPeriods(periods, [lesson('M', 'Number line', 'Mathematics'), lesson('E', 'Phonics', 'English')], day);
+    expect(map.get('t1')?.title).toBe('Phonics');
+    expect(map.get('t2')?.title).toBe('Number line');
+  });
+
+  it("fills the subject's next free period with a second untimed lesson", () => {
+    const map = assignLessonsToPeriods(periods, [lesson('E1', 'Phonics', 'English'), lesson('E2', 'Reading', 'English')], day);
+    expect(map.get('t1')?.title).toBe('Phonics');
+    expect(map.get('t3')?.title).toBe('Reading');
+    expect(map.has('t2')).toBe(false);
+  });
+
+  it('lets a timed lesson keep its period ahead of an untimed one', () => {
+    const map = assignLessonsToPeriods(periods, [
+      lesson('E1', 'Phonics', 'English'),
+      { id: 'E2', title: 'Spelling test', subjectId: { name: 'English' }, assignedClasses: [{ classId: 'c1', scheduledDate: new Date(2026, 8, 24, 7, 45).toISOString() }] },
+    ], day);
+    expect(map.get('t1')?.title).toBe('Spelling test');
+    expect(map.get('t3')?.title).toBe('Phonics');
+  });
+
+  it('puts an untimed lesson with no subject on the first free period', () => {
+    const map = assignLessonsToPeriods(periods, [lesson('X', 'Assembly prep')], day);
+    expect(map.get('t1')?.title).toBe('Assembly prep');
+  });
+});
+
+describe('timelineRows', () => {
+  const rows = (ps: ReturnType<typeof annotatePeriods>, now: Date) =>
+    timelineRows(ps, nowLinePlacement(ps, now)).map((r) => (r.kind === 'now' ? 'now' : `p${r.period.period}`));
+
+  it('draws the line under the last period while it is under way', () => {
+    const ps = annotatePeriods(day, at(11, 20));
+    expect(rows(ps, at(11, 20))).toEqual(['p1', 'p2', 'p3', 'now']);
+  });
+
+  it('draws the line on a day with one period', () => {
+    const one = annotatePeriods([period(1, '08:00', '08:45')], at(8, 10));
+    expect(rows(one, at(8, 10))).toEqual(['p1', 'now']);
+  });
+
+  it('puts the line before the next period in a gap', () => {
+    const ps = annotatePeriods(day, at(9, 30));
+    expect(rows(ps, at(9, 30))).toEqual(['p1', 'now', 'p2', 'p3']);
+  });
+
+  it('has no line outside school hours', () => {
+    const ps = annotatePeriods(day, at(13, 0));
+    expect(rows(ps, at(13, 0))).toEqual(['p1', 'p2', 'p3']);
   });
 });

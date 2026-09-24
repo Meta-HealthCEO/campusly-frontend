@@ -22,6 +22,7 @@ import { StudentHistoryDialog } from '@/components/grades/StudentHistoryDialog';
 import { ClassStatsBar } from '@/components/grades/ClassStatsBar';
 import { AssessmentInfoCard } from '@/components/grades/AssessmentInfoCard';
 import { getSubjectName, getPaperId, TERM_OPTIONS, resolveTermScope } from '@/components/grades/grades-page-helpers';
+import { gradeColor } from '@/lib/grade-bands';
 
 export default function TeacherGradesPage() {
   const {
@@ -161,7 +162,7 @@ export default function TeacherGradesPage() {
                         </td>
                         <td className="py-3">
                           {percentage !== null && !isNaN(percentage) ? (
-                            <span className={`text-sm font-semibold ${percentage >= 80 ? 'text-primary' : percentage >= 50 ? 'text-info' : 'text-destructive'}`}>
+                            <span className={`font-mono text-sm font-semibold tabular-nums ${gradeColor(percentage)}`}>
                               {percentage}%
                             </span>
                           ) : (

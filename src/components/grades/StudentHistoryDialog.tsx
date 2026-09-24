@@ -6,6 +6,7 @@ import {
 } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import type { MarkEntry, StudentMark } from '@/hooks/useTeacherGrades';
+import { gradeColor } from '@/lib/grade-bands';
 
 interface StudentHistoryDialogProps {
   student: MarkEntry | null;
@@ -85,13 +86,7 @@ export function StudentHistoryDialog({
                         <td className="py-2">{m.total}</td>
                         <td className="py-2">
                           <span
-                            className={
-                              m.percentage >= 80
-                                ? 'font-semibold text-primary'
-                                : m.percentage >= 50
-                                ? 'font-semibold text-info'
-                                : 'font-semibold text-destructive'
-                            }
+                            className={`font-mono font-semibold tabular-nums ${gradeColor(m.percentage)}`}
                           >
                             {m.percentage}%
                           </span>

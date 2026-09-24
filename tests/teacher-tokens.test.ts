@@ -58,7 +58,10 @@ describe.each([
 });
 
 describe('tokens outside the teacher portal', () => {
-  it.each([[':root'], ['.dark']])('%s keeps the trend green other portals had (#059669)', (selector) => {
-    expect(block(selector).success).toBe('#059669');
+  it('keeps other portals within one shade of their old greens, and readable (§2)', () => {
+    // Old trend/chip green was emerald-600/700; one shade either way, AA on the soft green.
+    expect(block(':root').success).toBe('#047857');
+    expect(block('.dark').success).toBe('#10b981');
+    expect(contrast(parse('#047857'), over(parse(block(':root')['success-soft']), parse('#ffffff')))).toBeGreaterThanOrEqual(4.5);
   });
 });

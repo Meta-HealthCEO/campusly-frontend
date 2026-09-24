@@ -214,7 +214,7 @@ export function LessonMaterialCard({
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="text-primary hover:underline font-medium flex items-center gap-1"
+            className="text-accent-foreground hover:underline font-medium flex items-center gap-1"
             aria-expanded={expanded}
           >
             {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
@@ -227,7 +227,7 @@ export function LessonMaterialCard({
           className={
             isPlaceholder
               ? 'inline-flex items-center gap-1 rounded-md border border-attention/40 bg-card px-2 py-1 text-attention font-medium hover:bg-attention/10'
-              : 'text-primary hover:underline'
+              : 'text-accent-foreground hover:underline'
           }
         >
           {isPlaceholder ? 'Generate now' : 'Edit'}

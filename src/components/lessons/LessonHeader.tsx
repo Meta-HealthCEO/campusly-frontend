@@ -215,7 +215,7 @@ export function LessonHeader({
             onClick={onOpenActions}
             className="w-full sm:w-auto"
           >
-            <Sparkles className="mr-2 h-4 w-4 text-primary" />
+            <Sparkles className="mr-2 h-4 w-4 text-accent-foreground" />
             Actions
           </Button>
         </div>

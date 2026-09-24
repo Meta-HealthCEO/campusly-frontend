@@ -92,7 +92,7 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  --success: #059669;
+  --success: #047857;
   --success-soft: #e7f8f1;
   --attention: #b45309;
   --attention-soft: #fdf3e1;
@@ -135,7 +135,7 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-  --success: #059669;
+  --success: #10b981;
   --success-soft: rgba(52, 211, 153, 0.12);
   --attention: #fcd34d;
   --attention-soft: rgba(251, 191, 36, 0.12);

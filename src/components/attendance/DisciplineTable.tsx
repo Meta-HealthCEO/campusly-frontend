@@ -1,5 +1,6 @@
 'use client';
 
+import { DISCIPLINE_SEVERITY_STYLES, DISCIPLINE_STATUS_STYLES } from '@/lib/discipline-styles';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -44,19 +45,8 @@ interface DisciplineTableProps {
   onStatusChange?: (id: string, status: string) => void;
 }
 
-const SEVERITY_STYLES: Record<string, string> = {
-  minor: 'bg-muted text-foreground',
-  moderate: 'bg-attention-soft text-attention',
-  serious: 'bg-attention-soft text-attention ring-1 ring-inset ring-attention/40',
-  critical: 'bg-destructive-soft text-destructive',
-};
-
-const STATUS_STYLES: Record<string, string> = {
-  reported: 'bg-info-soft text-info',
-  investigating: 'bg-attention-soft text-attention',
-  resolved: 'bg-success-soft text-success',
-  escalated: 'bg-destructive-soft text-destructive',
-};
+const SEVERITY_STYLES = DISCIPLINE_SEVERITY_STYLES;
+const STATUS_STYLES = DISCIPLINE_STATUS_STYLES;
 
 function getStudentName(record: DisciplineRecord): string {
   if (typeof record.studentId === 'object' && record.studentId !== null) {

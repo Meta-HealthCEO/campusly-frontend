@@ -127,7 +127,7 @@ export function LessonGenerateAllBanner({
     <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4 min-w-0">
-          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-foreground">
             <Sparkles className="h-5 w-5" />
           </span>
           <div className="min-w-0 space-y-1.5">
@@ -186,7 +186,7 @@ export function LessonGenerateAllBanner({
           showCloseButton={false}
           className="max-w-md flex flex-col items-center text-center gap-4 py-8"
         >
-          <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
+          <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent-foreground">
             <Loader2 className="h-6 w-6 animate-spin" />
           </span>
           <div>

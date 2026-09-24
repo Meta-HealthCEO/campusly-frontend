@@ -48,6 +48,8 @@ export interface LessonForDayInput {
   id?: string;
   _id?: string;
   title: string;
+  /** Populated by /lessons; used to put an untimed lesson on a period of its own subject. */
+  subjectId?: string | { id?: string; _id?: string; name?: string };
   assignedClasses?: Array<{ classId: string | ClassRef; scheduledDate: string }>;
 }
 
@@ -116,9 +118,10 @@ export function nowLinePlacement(periods: AnnotatedPeriod[], now: Date): { index
 
 /**
  * timetableId → the lesson for that period. A lesson scheduled at a time goes
- * on the period of its class that the time falls in; a lesson with no time
- * (midnight) goes on its class's first period of the day. Each lesson is used
- * once, so a class taught twice a day doesn't show one lesson twice.
+ * on the period of its class that the time falls in. A lesson with no time
+ * (midnight, which is how the lesson page schedules) goes on its class's next
+ * free period of the same subject, or the next free period when the lesson has
+ * no subject. Timed lessons are placed first, and each lesson is used once.
  */
 export function assignLessonsToPeriods(
   periods: readonly AnnotatedPeriod[],
@@ -126,16 +129,20 @@ export function assignLessonsToPeriods(
   day: Date,
 ): Map<string, LessonLink> {
   const target = toISODate(day);
-  const entries: Array<{ classId: string; minutes: number | null; link: LessonLink; used: boolean }> = [];
+  const entries: Array<{ classId: string; subject: string | null; minutes: number | null; link: LessonLink; used: boolean }> = [];
   for (const lesson of lessons) {
     const lessonId = lesson.id ?? lesson._id ?? '';
+    const subjectRef = lesson.subjectId;
+    const subjectName = typeof subjectRef === 'object' && subjectRef?.name ? normalise(subjectRef.name) : null;
     for (const assignment of lesson.assignedClasses ?? []) {
       const scheduled = new Date(assignment.scheduledDate);
       if (Number.isNaN(scheduled.getTime()) || toISODate(scheduled) !== target) continue;
       const ref = assignment.classId;
       const classId = typeof ref === 'string' ? ref : ref.id ?? ref._id ?? '';
       const minutes = scheduled.getHours() * 60 + scheduled.getMinutes();
-      if (classId) entries.push({ classId, minutes: minutes === 0 ? null : minutes, link: { lessonId, title: lesson.title }, used: false });
+      if (classId) {
+        entries.push({ classId, subject: subjectName, minutes: minutes === 0 ? null : minutes, link: { lessonId, title: lesson.title }, used: false });
+      }
     }
   }
   const result = new Map<string, LessonLink>();
@@ -149,10 +156,30 @@ export function assignLessonsToPeriods(
     const start = minutesOf(period.startTime);
     const end = minutesOf(period.endTime);
     const timed = take((e) => e.classId === period.classId && e.minutes !== null && e.minutes >= start && e.minutes < end);
-    if (timed) { result.set(period.timetableId, timed); continue; }
-    const firstOfClass = periods.find((p) => p.classId === period.classId)?.timetableId === period.timetableId;
-    const untimed = firstOfClass ? take((e) => e.classId === period.classId && e.minutes === null) : null;
+    if (timed) result.set(period.timetableId, timed);
+  }
+  for (const period of periods) {
+    if (result.has(period.timetableId)) continue;
+    const subject = normalise(period.subjectName);
+    const untimed = take((e) => e.classId === period.classId && e.minutes === null && (e.subject === null || e.subject === subject));
     if (untimed) result.set(period.timetableId, untimed);
   }
   return result;
+}
+
+function normalise(name: string): string {
+  return name.trim().toLowerCase();
+}
+
+export type TimelineRow = { kind: 'now'; label: string } | { kind: 'period'; period: AnnotatedPeriod };
+
+/** The day's rows in order, with the "now" line slotted in, including after the last period while it's under way. */
+export function timelineRows(periods: readonly AnnotatedPeriod[], line: { index: number; label: string } | null): TimelineRow[] {
+  const rows: TimelineRow[] = [];
+  periods.forEach((period: AnnotatedPeriod, i: number) => {
+    if (line && line.index === i) rows.push({ kind: 'now', label: line.label });
+    rows.push({ kind: 'period', period });
+  });
+  if (line && line.index >= periods.length) rows.push({ kind: 'now', label: line.label });
+  return rows;
 }

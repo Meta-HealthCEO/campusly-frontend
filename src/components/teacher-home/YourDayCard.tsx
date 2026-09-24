@@ -1,4 +1,3 @@
-import { Fragment } from 'react';
 import Link from 'next/link';
 import { CalendarClock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +5,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { StatusChip } from '@/components/shared/StatusChip';
 import { ROUTES } from '@/lib/routes';
 import { cn } from '@/lib/utils';
-import { nowLinePlacement, type AnnotatedPeriod, type LessonLink } from '@/lib/teacher-today';
+import { nowLinePlacement, timelineRows, type AnnotatedPeriod, type LessonLink, type TimelineRow } from '@/lib/teacher-today';
 
 interface YourDayCardProps {
   periods: AnnotatedPeriod[];
@@ -95,7 +94,7 @@ function NowLine({ label }: { label: string }) {
 
 /** Today's timetable as a timeline, with the register and lesson for each period and a live "now" line. */
 export function YourDayCard({ periods, lessonsByPeriod, isWeekend, showTimetableLink, now }: YourDayCardProps) {
-  const line = nowLinePlacement(periods, now);
+  const rows = timelineRows(periods, nowLinePlacement(periods, now));
   return (
     <Card>
       <CardHeader className="flex flex-row items-baseline justify-between gap-2 pb-2">
@@ -116,12 +115,9 @@ export function YourDayCard({ periods, lessonsByPeriod, isWeekend, showTimetable
           </div>
         ) : (
           <ol>
-            {periods.map((period: AnnotatedPeriod, i: number) => (
-              <Fragment key={period.timetableId}>
-                {line && line.index === i ? <NowLine label={line.label} /> : null}
-                <PeriodRow period={period} lesson={lessonsByPeriod.get(period.timetableId)} />
-              </Fragment>
-            ))}
+            {rows.map((row: TimelineRow) => (row.kind === 'now'
+              ? <NowLine key="now" label={row.label} />
+              : <PeriodRow key={row.period.timetableId} period={row.period} lesson={lessonsByPeriod.get(row.period.timetableId)} />))}
           </ol>
         )}
       </CardContent>
