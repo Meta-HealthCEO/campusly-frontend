@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { ModuleOffState } from '@/components/shared/ModuleOffState';
 import { ReportCardPanel } from '@/components/reports/ReportCardPanel';
 import { ReportCommentGenerator } from '@/components/ai-tutor/ReportCommentGenerator';
@@ -14,36 +15,56 @@ interface Props {
   term: string;
 }
 
+type PendingAction = { kind: 'regenerate' | 'delete'; id: string } | null;
+
 function ReportComments() {
   const comments = useReportComments();
   const { classes, students } = useTeacherClasses();
   const { subjects } = useSubjects();
   const { regenerateComment, deleteComment } = comments;
+  const [pending, setPending] = useState<PendingAction>(null);
 
   const handleRegenerate = useCallback((id: string, wasEdited: boolean) => {
-    if (wasEdited && !window.confirm('This will replace your edits with a new AI-generated comment. Continue?')) return;
-    void regenerateComment(id);
+    if (wasEdited) setPending({ kind: 'regenerate', id });
+    else void regenerateComment(id);
   }, [regenerateComment]);
 
-  const handleDelete = useCallback((id: string) => {
-    if (!window.confirm('Delete this report comment? This cannot be undone.')) return;
-    void deleteComment(id);
-  }, [deleteComment]);
+  const handleDelete = useCallback((id: string) => setPending({ kind: 'delete', id }), []);
+
+  const confirm = async (): Promise<void> => {
+    if (!pending) return;
+    if (pending.kind === 'regenerate') await regenerateComment(pending.id);
+    else await deleteComment(pending.id);
+    setPending(null);
+  };
 
   return (
-    <ReportCommentGenerator
-      onGenerate={comments.generateComments}
-      onLoadComments={comments.loadComments}
-      onUpdateComment={comments.updateComment}
-      onUpdateCommentLocal={comments.updateCommentLocal}
-      onRegenerate={handleRegenerate}
-      onDelete={handleDelete}
-      comments={comments.comments}
-      generating={comments.generating}
-      classes={classes}
-      subjects={subjects}
-      students={students}
-    />
+    <>
+      <ReportCommentGenerator
+        onGenerate={comments.generateComments}
+        onLoadComments={comments.loadComments}
+        onUpdateComment={comments.updateComment}
+        onUpdateCommentLocal={comments.updateCommentLocal}
+        onRegenerate={handleRegenerate}
+        onDelete={handleDelete}
+        comments={comments.comments}
+        generating={comments.generating}
+        classes={classes}
+        subjects={subjects}
+        students={students}
+      />
+      <ConfirmDialog
+        open={pending !== null}
+        onOpenChange={(open) => { if (!open) setPending(null); }}
+        title={pending?.kind === 'delete' ? 'Delete this comment?' : 'Replace your edits?'}
+        description={pending?.kind === 'delete'
+          ? 'The report comment is deleted. This cannot be undone.'
+          : 'A new AI comment replaces the one you edited.'}
+        confirmLabel={pending?.kind === 'delete' ? 'Delete comment' : 'Write a new comment'}
+        variant={pending?.kind === 'delete' ? 'destructive' : 'default'}
+        onConfirm={confirm}
+      />
+    </>
   );
 }
 
