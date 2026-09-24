@@ -49,7 +49,6 @@ export function HomeworkListFilters({ value, onChange, classes }: Props) {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All types</SelectItem>
-          <SelectItem value="quiz">Quiz</SelectItem>
           <SelectItem value="reading">Reading</SelectItem>
           <SelectItem value="exercise">Exercise</SelectItem>
         </SelectContent>

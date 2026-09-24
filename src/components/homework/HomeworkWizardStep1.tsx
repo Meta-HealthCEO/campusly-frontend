@@ -8,35 +8,15 @@ import { useTeacherHomeworkWizardStore } from '@/stores/useTeacherHomeworkWizard
 import type { HomeworkWizardType, HomeworkWizardState } from '@/stores/useTeacherHomeworkWizardStore';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import { useCurriculumTopics } from '@/hooks/useCurriculumTopics';
-import { ClipboardList, BookOpen, Target } from 'lucide-react';
+import { BookOpen, Target } from 'lucide-react';
+import { WIZARD_HOMEWORK_TYPES } from '@/lib/homework-types';
 import { getClassGradeId, type ClassLike } from '@/lib/teacher-labels';
 import type { Subject } from '@/types';
 
-const TYPE_OPTIONS: Array<{
-  value: HomeworkWizardType;
-  label: string;
-  description: string;
-  icon: typeof ClipboardList;
-}> = [
-  {
-    value: 'quiz',
-    label: 'Quiz',
-    description: 'Pick a quiz from the Learning module',
-    icon: ClipboardList,
-  },
-  {
-    value: 'reading',
-    label: 'Reading',
-    description: 'Pick a content resource; AI generates comprehension questions',
-    icon: BookOpen,
-  },
-  {
-    value: 'exercise',
-    label: 'Exercise',
-    description: 'Build a focused practice set',
-    icon: Target,
-  },
-];
+// One quiz system: quiz homework is now an exercise from the question bank.
+const TYPE_ICON: Record<'exercise' | 'reading', typeof Target> = { exercise: Target, reading: BookOpen };
+const TYPE_OPTIONS: Array<{ value: HomeworkWizardType; label: string; description: string; icon: typeof Target }> =
+  WIZARD_HOMEWORK_TYPES.map((t) => ({ ...t, icon: TYPE_ICON[t.value] }));
 
 export function HomeworkWizardStep1() {
   const state = useTeacherHomeworkWizardStore();

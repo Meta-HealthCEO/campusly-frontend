@@ -14,8 +14,9 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { useLearningStore } from '@/stores/useLearningStore';
 import { useLearningApi } from '@/hooks/useLearningApi';
 import { useLearningAcademicData } from '@/hooks/useLearningAcademicData';
+import { QUIZZES_MOVED } from '@/lib/homework-types';
 import {
-  MaterialUploadDialog, QuizBuilderDialog, RubricEditorDialog,
+  MaterialUploadDialog, RubricEditorDialog,
   QuizResultsView, getMaterialColumns, getQuizColumns, getRubricColumns,
 } from '@/components/learning';
 import type { Rubric, StudyMaterial } from '@/components/learning/types';
@@ -27,14 +28,13 @@ export default function LearningPage() {
   const { materials, materialsLoading, quizzes, quizzesLoading, rubrics, rubricsLoading } = useLearningStore();
   const {
     fetchMaterials, uploadMaterial, deleteMaterial, recordDownload,
-    fetchQuizzes, createQuiz, publishQuiz, deleteQuiz,
+    fetchQuizzes, publishQuiz, deleteQuiz,
     fetchRubrics, createRubric, updateRubric, deleteRubric,
   } = useLearningApi();
 
-  const { subjects, classes, grades, fetchAcademicData } = useLearningAcademicData();
+  const { subjects, grades, fetchAcademicData } = useLearningAcademicData();
 
   const [materialDialogOpen, setMaterialDialogOpen] = useState(false);
-  const [quizDialogOpen, setQuizDialogOpen] = useState(false);
   const [rubricDialogOpen, setRubricDialogOpen] = useState(false);
   const [editingRubric, setEditingRubric] = useState<Rubric | null>(null);
   const [resultsQuizId, setResultsQuizId] = useState<string | null>(null);
@@ -123,11 +123,7 @@ export default function LearningPage() {
         </TabsContent>
 
         <TabsContent value="quizzes">
-          <div className="mb-4 flex justify-end">
-            <Button onClick={() => setQuizDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" /> Create Quiz
-            </Button>
-          </div>
+          <p className="mb-4 rounded-md bg-info-soft px-3 py-2 text-sm text-info">{QUIZZES_MOVED}</p>
           <DataTable columns={quizColumns} data={quizzes} searchKey="title" searchPlaceholder="Search quizzes..." />
         </TabsContent>
 
@@ -148,15 +144,6 @@ export default function LearningPage() {
         grades={grades}
         schoolId={schoolId}
         onSubmit={async (data) => { await uploadMaterial(data); fetchMaterials(); }}
-      />
-
-      <QuizBuilderDialog
-        open={quizDialogOpen}
-        onOpenChange={setQuizDialogOpen}
-        subjects={subjects}
-        classes={classes}
-        schoolId={schoolId}
-        onSubmit={async (data) => { await createQuiz(data); fetchQuizzes(); }}
       />
 
       <RubricEditorDialog

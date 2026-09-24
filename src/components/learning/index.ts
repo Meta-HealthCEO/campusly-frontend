@@ -1,5 +1,4 @@
 export { MaterialUploadDialog } from './MaterialUploadDialog';
-export { QuizBuilderDialog } from './QuizBuilderDialog';
 export { RubricEditorDialog } from './RubricEditorDialog';
 export { QuizResultsView } from './QuizResultsView';
 export { SubmissionViewer } from './SubmissionViewer';
