@@ -35,6 +35,7 @@ export default function UnitPage() {
   const view = useUnitView(courseId);
   const { entries, loading: classesLoading } = useTeacherClasses();
   const [confirmRedraft, setConfirmRedraft] = useState(false);
+  const [confirmReplaceHandBuilt, setConfirmReplaceHandBuilt] = useState(false);
   const [releaseOpen, setReleaseOpen] = useState(false);
   const { course, stage } = view;
   const user = useAuthStore((s) => s.user);
@@ -137,8 +138,8 @@ export default function UnitPage() {
 
           {showHandBuiltDraftOffer(course.outlineStatus ?? 'none', hasOutline) ? (
             <div className="flex flex-col gap-3 rounded-xl border border-border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-muted-foreground">This unit&apos;s modules were built by hand. The AI can still draft a CAPS outline from its topics.</p>
-              <Button onClick={() => void view.draft()} disabled={view.busy !== null} className="min-h-11 shrink-0 gap-1.5 sm:min-h-9">
+              <p className="text-sm text-muted-foreground">This unit&apos;s modules were built by hand. The AI can draft a CAPS outline from its topics instead.</p>
+              <Button onClick={() => setConfirmReplaceHandBuilt(true)} disabled={view.busy !== null} className="min-h-11 shrink-0 gap-1.5 sm:min-h-9">
                 <Sparkles className="h-4 w-4" aria-hidden /> {view.busy === 'draft' ? 'Drafting your outline…' : view.draftError ? 'Try again' : 'Draft the outline'}
               </Button>
             </div>
@@ -196,6 +197,14 @@ export default function UnitPage() {
         title="Redraft the outline?"
         description="The AI writes a new outline from the same CAPS topics. This one, and any items you removed, is replaced."
         confirmLabel="Redraft"
+        onConfirm={async () => { await view.draft(); }}
+      />
+      <ConfirmDialog
+        open={confirmReplaceHandBuilt}
+        onOpenChange={setConfirmReplaceHandBuilt}
+        title="Replace your modules with an AI outline?"
+        description="The AI drafts an outline from this unit's CAPS topics. It replaces the modules and items you built by hand, and you can't undo this."
+        confirmLabel="Replace with AI outline"
         onConfirm={async () => { await view.draft(); }}
       />
       {copier.target ? (

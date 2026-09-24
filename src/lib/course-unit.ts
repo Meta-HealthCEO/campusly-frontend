@@ -80,8 +80,9 @@ export function defaultUnitTitle(subjectName: string, gradeName: string, termNum
 
 /**
  * A unit whose modules were hand-built in the course builder never got an AI
- * outline drafted. It still shows its outline (the hand-built modules), so it
- * needs its own "Draft the outline" offer alongside them, not instead of them.
+ * outline drafted. It still shows its outline (the hand-built modules), plus an
+ * offer to draft one. Drafting replaces the hand-built modules and items, so
+ * the page asks the teacher to confirm first.
  */
 export function showHandBuiltDraftOffer(outlineStatus: OutlineStatus, hasOutline: boolean): boolean {
   return outlineStatus === 'none' && hasOutline;
