@@ -22,7 +22,10 @@ export interface UnitScope {
   subjectId: string;
   termNumber: number;
   topicNodeIds: string[];
+  /** Classes the unit has actually been released to. */
   classIds: string[];
+  /** The class this unit (or copy) was made for, before any release — only used to pre-tick the release dialog. */
+  builtForClassId: string | null;
 }
 
 export interface GenerationState {

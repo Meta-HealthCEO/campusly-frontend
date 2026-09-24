@@ -202,7 +202,7 @@ export default function UnitPage() {
           open={releaseOpen}
           onOpenChange={setReleaseOpen}
           classes={classOptions}
-          defaultClassIds={course.scope?.classIds ?? []}
+          defaultClassIds={course.scope?.classIds.length ? course.scope.classIds : course.scope?.builtForClassId ? [course.scope.builtForClassId] : []}
           releasing={view.busy === 'release'}
           onRelease={(ids) => void view.release(ids).then((ok) => { if (ok) setReleaseOpen(false); })}
         />

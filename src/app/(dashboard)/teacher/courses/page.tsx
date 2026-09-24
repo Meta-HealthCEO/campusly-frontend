@@ -24,6 +24,8 @@ import { CopyUnitDialog } from '@/components/courses/unit/CopyUnitDialog';
 import { useTeacherCourses } from '@/hooks/useTeacherCourses';
 import { useUnitLibrary } from '@/hooks/useUnitLibrary';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
+import { useGrades } from '@/hooks/useAcademics';
+import { useAcademicLookups } from '@/hooks/useAcademicLookups';
 import { copyClassOptions } from '@/lib/unit-library';
 import { useCopyUnit } from '@/hooks/useCopyUnit';
 import { ROUTES } from '@/lib/constants';
@@ -51,6 +53,8 @@ export default function TeacherCoursesPage() {
   const [pendingDelete, setPendingDelete] = useState<Course | null>(null);
   const [tab, setTab] = useState<'mine' | 'library'>('mine');
   const library = useUnitLibrary(tab === 'library');
+  const { grades } = useGrades();
+  const { subjects } = useAcademicLookups();
   const { entries: classEntries, loading: classesLoading } = useTeacherClasses();
   const classes = useMemo(() => copyClassOptions(classEntries), [classEntries]);
   const copier = useCopyUnit();
@@ -90,7 +94,14 @@ export default function TeacherCoursesPage() {
           <UnitLibrary
             entries={library.entries}
             loading={library.loading}
+            loadingMore={library.loadingMore}
+            hasMore={library.hasMore}
             error={library.error}
+            filters={library.filters}
+            grades={grades.map((g) => ({ id: g.id, name: g.name }))}
+            subjects={subjects.map((s) => ({ id: s.id ?? s._id, name: s.name }))}
+            onFiltersChange={library.setFilters}
+            onLoadMore={library.loadMore}
             onOpen={(e) => router.push(`/teacher/courses/${e.id}`)}
             onCopy={(e) => copier.start({ courseId: e.id, title: e.title, gradeId: e.gradeId, gradeName: e.gradeName, termNumber: e.termNumber ?? 1 })}
           />
