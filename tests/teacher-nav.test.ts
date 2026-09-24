@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NAV_SECTIONS, STANDALONE_TEACHER_NAV, TEACHER_NAV, type NavItem } from '../src/lib/constants';
+import { ADMIN_NAV, NAV_SECTIONS, PARENT_NAV, STANDALONE_TEACHER_NAV, STUDENT_NAV, TEACHER_NAV, type NavItem } from '../src/lib/constants';
 import { ROUTES } from '../src/lib/routes';
 import { isStandaloneTeacherPathAllowed } from '../src/lib/standalone-teacher-paths';
 
@@ -114,5 +114,23 @@ describe('one behaviour log in the Class section', () => {
     const labels = flatten(TEACHER_NAV).filter((item) => !item.unlessModule).map((item) => item.label);
     expect(labels).toContain('Behaviour');
     for (const gone of ['Discipline', 'Merits', 'Incidents', 'Refer to counsellor']) expect(labels).not.toContain(gone);
+  });
+});
+
+describe('Talk', () => {
+  it('shows Messages, Class notices and Parent meetings, in that order', () => {
+    const talk = TEACHER_NAV.filter((i) => i.section === 'Talk').map((i) => i.label);
+    expect(talk).toEqual(['Messages', 'Class notices', 'Parent meetings']);
+    expect(TEACHER_NAV.find((i) => i.label === 'Parent meetings')?.module).toBe('conference_booking');
+  });
+
+  it('links nobody to the retired Meetings pages', () => {
+    for (const nav of [TEACHER_NAV, ADMIN_NAV, PARENT_NAV]) {
+      expect(flatten(nav).map((i) => i.href).filter((h) => h.includes('/meetings'))).toEqual([]);
+    }
+  });
+
+  it('gives learners their class notice board', () => {
+    expect(flatten(STUDENT_NAV).find((i) => i.label === 'Notice board')?.href).toBe('/student/notice-board');
   });
 });

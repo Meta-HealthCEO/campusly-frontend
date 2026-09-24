@@ -10,6 +10,10 @@ export const LEGACY_TEACHER_REDIRECTS: { source: string; destination: string; pe
   // One behaviour log replaces Discipline and Merits.
   { source: '/teacher/discipline', destination: '/teacher/behaviour', permanent: true },
   { source: '/teacher/merits', destination: '/teacher/behaviour', permanent: true },
+  // Parent meetings run on Conferences; the old Meetings pages (teacher, parent, admin) go there.
+  { source: '/teacher/meetings', destination: '/teacher/conferences', permanent: true },
+  { source: '/parent/meetings', destination: '/parent/conferences', permanent: true },
+  { source: '/admin/meetings', destination: '/admin/conferences', permanent: true },
   { source: '/teacher/lesson-plans/:id', destination: '/teacher/lessons/:id', permanent: true },
   { source: '/teacher/quick-make', destination: '/teacher/lessons', permanent: true },
   { source: '/teacher/ai-tools/grading', destination: '/teacher/curriculum/mark-papers', permanent: true },

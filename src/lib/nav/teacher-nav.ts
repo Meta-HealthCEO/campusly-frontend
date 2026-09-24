@@ -1,7 +1,7 @@
 import {
-  AlertTriangle, BarChart3, BookMarked, BookOpen, CalendarCheck, CalendarDays, CheckSquare,
+  AlertTriangle, BarChart3, BookMarked, BookOpen, CalendarDays, CheckSquare,
   Clipboard, ClipboardCheck, ClipboardList, Clock, CreditCard, FileText, GraduationCap, Heart,
-  Library, Megaphone, MessageSquare, PlayCircle, Repeat, ScrollText, Settings,
+  Library, MessageSquare, PlayCircle, Repeat, ScrollText, Settings,
   Shield, Sunrise, Users, Video,
 } from 'lucide-react';
 import type { NavItem } from '../constants';
@@ -39,10 +39,10 @@ export const TEACHER_NAV: NavItem[] = [
   { section: 'Class', label: 'Pastoral Care', href: ROUTES.TEACHER_PASTORAL, icon: Heart, permission: 'isCounselor' },
 
   { section: 'Talk', label: 'Messages', href: ROUTES.TEACHER_MESSAGES, icon: MessageSquare, countKey: 'messages' },
-  { section: 'Talk', label: 'Announcements', href: ROUTES.TEACHER_COMMUNICATION, icon: Megaphone, module: 'communication' },
-  { section: 'Talk', label: 'Notice Board', href: ROUTES.TEACHER_NOTICE_BOARD, icon: Clipboard },
-  { section: 'Talk', label: 'Meetings', href: ROUTES.TEACHER_MEETINGS, icon: CalendarCheck },
-  { section: 'Talk', label: 'Conferences', href: ROUTES.TEACHER_CONFERENCES, icon: Users, module: 'conference_booking' },
+  // Class notices tell a class's learners and parents; email/SMS to parents opens from there.
+  { section: 'Talk', label: 'Class notices', href: ROUTES.TEACHER_NOTICE_BOARD, icon: Clipboard },
+  // One parent-evening engine (Conferences); the old Meetings pages redirect here.
+  { section: 'Talk', label: 'Parent meetings', href: ROUTES.TEACHER_CONFERENCES, icon: Users, module: 'conference_booking' },
 
   { section: 'Me', label: 'My Leave', href: ROUTES.TEACHER_LEAVE, icon: CalendarDays, module: 'staff_leave' },
   { section: 'Me', label: 'Substitutes', href: ROUTES.TEACHER_SUBSTITUTES, icon: Repeat, module: 'attendance' },

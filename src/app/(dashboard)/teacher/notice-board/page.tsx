@@ -3,12 +3,16 @@
 import { useState, useCallback, useMemo } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { NoticeBoardFeed } from '@/components/notice-board/NoticeBoardFeed';
 import { CreatePostDialog } from '@/components/notice-board/CreatePostDialog';
 import { useNoticeBoardFeed, useNoticeBoardMutations } from '@/hooks/useNoticeBoard';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
-import { Plus } from 'lucide-react';
+import Link from 'next/link';
+import { Mail, Plus } from 'lucide-react';
+import { useModule } from '@/hooks/useModule';
+import { ROUTES } from '@/lib/routes';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { NoticeBoardPost, CreateNoticeBoardPostInput, PostScope } from '@/types';
 
@@ -16,6 +20,7 @@ export default function TeacherNoticeBoardPage() {
   const { posts, loading, fetchFeed } = useNoticeBoardFeed();
   const { createPost, updatePost, deletePost, togglePin } = useNoticeBoardMutations();
   const { classes } = useTeacherClasses();
+  const { isModuleEnabled } = useModule();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editPost, setEditPost] = useState<NoticeBoardPost | null>(null);
@@ -25,7 +30,7 @@ export default function TeacherNoticeBoardPage() {
     const options: Array<{ id: string; name: string; scope: PostScope }> = [];
     classes.forEach((c) => {
       const classId = c.id ?? '';
-      options.push({ id: classId, name: `Class: ${c.name}`, scope: 'class' });
+      options.push({ id: classId, name: c.name, scope: 'class' });
     });
     return options;
   }, [classes]);
@@ -83,13 +88,19 @@ export default function TeacherNoticeBoardPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Notice Board" description="Post notices to the classes you teach.">
+      <PageHeader title="Class notices" description="Tell a class something. Its learners and their parents are notified.">
+        {isModuleEnabled('communication') ? (
+          <Link href={ROUTES.TEACHER_COMMUNICATION} className={cn(buttonVariants({ variant: 'outline' }), 'min-h-11 gap-1.5 sm:min-h-9')}>
+            <Mail className="h-4 w-4" aria-hidden /> Email or SMS parents
+          </Link>
+        ) : null}
         <Button
+          className="min-h-11 sm:min-h-9"
           disabled={scopeOptions.length === 0}
           onClick={() => { setEditPost(null); setDialogOpen(true); }}
         >
           <Plus className="h-4 w-4 mr-2" />
-          New Notice
+          New notice
         </Button>
       </PageHeader>
 

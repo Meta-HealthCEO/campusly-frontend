@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { noticeReachLine } from '@/lib/notice-board';
 import { Switch } from '@/components/ui/switch';
 import type { NoticeBoardPost, CreateNoticeBoardPostInput, PostScope } from '@/types';
 
@@ -43,6 +44,8 @@ export function CreatePostDialog({
   });
 
   const pinned = watch('pinned');
+  const chosen = scopeOptions.find((o) => `${o.scope}:${o.id}` === watch('scopeKey'));
+  const reachLine = noticeReachLine(chosen?.scope ?? null, chosen?.name ?? '');
   const hasBoard = Boolean(editPost) || scopeOptions.length > 0;
 
   useEffect(() => {
@@ -107,6 +110,7 @@ export function CreatePostDialog({
                     )}
                   </SelectContent>
                 </Select>
+                {reachLine ? <p className="text-xs text-muted-foreground">{reachLine}</p> : null}
               </div>
             )}
 

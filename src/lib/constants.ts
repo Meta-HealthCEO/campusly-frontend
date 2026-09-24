@@ -5,7 +5,7 @@ import {
   BookMarked, Shield, Home, CreditCard, Receipt, Megaphone, Ticket,
   Building2, HeadphonesIcon, PlusCircle, PackageSearch, Heart,
   Upload, Shirt, Trophy, Sparkles, Compass, Target, Clipboard,
-  Newspaper, CalendarCheck, CalendarCog, Crown, DoorOpen, UserPlus,
+  Newspaper, CalendarCog, Crown, DoorOpen, UserPlus,
   AlertTriangle, Calculator, CheckSquare, Video, ScrollText, User,
   type LucideIcon
 } from 'lucide-react';
@@ -106,9 +106,8 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Incidents', href: ROUTES.ADMIN_INCIDENTS, icon: AlertTriangle, module: 'incident_wellbeing' },
   { label: 'Wellbeing', href: ROUTES.ADMIN_WELLBEING, icon: Heart, module: 'incident_wellbeing' },
   { label: 'Consent', href: ROUTES.ADMIN_CONSENT, icon: Shield, module: 'consent' },
-  { label: 'Meetings', href: ROUTES.ADMIN_MEETINGS, icon: CalendarCheck },
   { label: 'Staff Leave', href: ROUTES.ADMIN_LEAVE, icon: CalendarDays, module: 'staff_leave' },
-  { label: 'Conferences', href: ROUTES.ADMIN_CONFERENCES, icon: Users, module: 'conference_booking' },
+  { label: 'Parent meetings', href: ROUTES.ADMIN_CONFERENCES, icon: Users, module: 'conference_booking' },
   {
     label: 'Career Guidance', href: ROUTES.ADMIN_CAREERS_UNIVERSITIES, icon: Compass, module: 'careers',
     children: [
@@ -162,8 +161,7 @@ export const PARENT_NAV: NavItem[] = [
   { label: 'Library', href: ROUTES.PARENT_LIBRARY, icon: BookMarked, module: 'library' },
   { label: 'Sports', href: ROUTES.PARENT_SPORTS, icon: Trophy, module: 'sport' },
   { label: 'Admissions', href: ROUTES.PARENT_ADMISSIONS, icon: UserPlus, module: 'admissions' },
-  { label: 'Meetings', href: ROUTES.PARENT_MEETINGS, icon: CalendarCheck },
-  { label: 'Conferences', href: ROUTES.PARENT_CONFERENCES, icon: Users, module: 'conference_booking' },
+  { label: 'Parent meetings', href: ROUTES.PARENT_CONFERENCES, icon: Users, module: 'conference_booking' },
   { label: 'Settings', href: ROUTES.PARENT_SETTINGS, icon: Bell },
   { label: 'AI Assistant', href: ROUTES.PARENT_AI_ASSISTANT, icon: Sparkles, module: 'ai_tools' },
   {
@@ -186,6 +184,7 @@ export const STUDENT_NAV: NavItem[] = [
   { label: 'Assignments', href: '/student/assignments',  icon: ScrollText, module: 'homework' },
   { label: 'Tests',     href: '/student/tests',          icon: FileText },
   { label: 'AI Tutor',  href: ROUTES.STUDENT_AI_TUTOR,   icon: Sparkles, module: 'ai_tools' },
+  { label: 'Notice board', href: ROUTES.STUDENT_NOTICE_BOARD, icon: Clipboard },
   { label: 'Profile',   href: '/student/profile',        icon: User },
 
   // Phase 2 (module-gated)
