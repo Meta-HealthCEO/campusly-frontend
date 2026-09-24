@@ -103,16 +103,6 @@ export function useLearningApi() {
     }
   }, [setQuizzes, setQuizzesLoading]);
 
-  const createQuiz = useCallback(async (data: CreateQuizInput) => {
-    try {
-      await apiClient.post('/learning/quizzes', data);
-      toast.success('Quiz created successfully');
-    } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to create quiz'));
-      throw new Error('create failed');
-    }
-  }, []);
-
   const updateQuiz = useCallback(async (id: string, data: Partial<CreateQuizInput>) => {
     try {
       await apiClient.put(`/learning/quizzes/${id}`, data);
@@ -338,7 +328,7 @@ export function useLearningApi() {
 
   return {
     fetchMaterials, uploadMaterial, updateMaterial, deleteMaterial, recordDownload,
-    fetchQuizzes, createQuiz, updateQuiz, publishQuiz, deleteQuiz,
+    fetchQuizzes, updateQuiz, publishQuiz, deleteQuiz,
     fetchQuizResults, startQuizAttempt, submitQuizAttempt, fetchQuizLeaderboard,
     fetchRubrics, createRubric, updateRubric, deleteRubric,
     fetchSubmissions, saveDraft, submitFinal,

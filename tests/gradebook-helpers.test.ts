@@ -7,6 +7,7 @@ import {
   termViewShowing,
   subjectChipOpens,
   weightingAction,
+  resolveInitialClass,
   type MarkEntry,
 } from '../src/lib/gradebook-helpers';
 import { gradeColor } from '../src/lib/grade-bands';
@@ -176,5 +177,33 @@ describe('weightingAction', () => {
   });
   it('sends everyone else to the read-only Weightings tab, not a Save that fails', () => {
     expect(weightingAction(false)).toBe('tab');
+  });
+});
+
+describe('resolveInitialClass', () => {
+  const classes = [{ id: 'c1' }, { id: 'c2' }];
+
+  it('has nothing to land on when the teacher has no classes', () => {
+    expect(resolveInitialClass([], undefined)).toEqual({
+      classId: '', matchedWanted: false, forcedClassMissing: false,
+    });
+  });
+
+  it('lands on the first class when nothing was requested', () => {
+    expect(resolveInitialClass(classes, undefined)).toEqual({
+      classId: 'c1', matchedWanted: false, forcedClassMissing: false,
+    });
+  });
+
+  it('lands on the requested class when the teacher still teaches it', () => {
+    expect(resolveInitialClass(classes, 'c2')).toEqual({
+      classId: 'c2', matchedWanted: true, forcedClassMissing: false,
+    });
+  });
+
+  it("falls back to the first class, flagged, when the requested class isn't in the teaching load", () => {
+    expect(resolveInitialClass(classes, 'not-mine')).toEqual({
+      classId: 'c1', matchedWanted: false, forcedClassMissing: true,
+    });
   });
 });

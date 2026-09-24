@@ -7,11 +7,9 @@ export function HomeworkWizardStep3() {
   const state = useTeacherHomeworkWizardStore();
 
   const itemCount =
-    state.type === 'quiz'
-      ? 1
-      : state.type === 'reading'
-        ? state.comprehensionQuestionIds.length
-        : state.exerciseQuestionIds.length;
+    state.type === 'reading'
+      ? state.comprehensionQuestionIds.length
+      : state.exerciseQuestionIds.length;
 
   return (
     <div className="space-y-4">
@@ -42,7 +40,7 @@ export function HomeworkWizardStep3() {
           />
           <Row
             label="Items"
-            value={`${itemCount} ${state.type === 'quiz' ? 'quiz' : 'question'}${itemCount === 1 ? '' : 's'}`}
+            value={`${itemCount} question${itemCount === 1 ? '' : 's'}`}
           />
         </CardContent>
       </Card>

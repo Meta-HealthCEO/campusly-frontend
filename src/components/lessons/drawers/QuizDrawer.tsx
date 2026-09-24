@@ -19,6 +19,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { useLessonWorkspaceStore } from '@/stores/useLessonWorkspaceStore';
 import { useQuizzesPicker } from '@/hooks/useLessonResourcePickers';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { QUIZZES_MOVED } from '@/lib/homework-types';
 import type { QuizMaterial } from '@/types/lesson';
 
 interface Props {
@@ -96,7 +97,7 @@ export function QuizDrawer({ onSubmit, existing }: Props) {
       <EmptyState
         icon={ListChecks}
         title="No quizzes available"
-        description="Create a quiz in the Learning module first, then come back here to link it."
+        description={QUIZZES_MOVED}
         action={
           <Link href="/teacher/learning">
             <Button>Go to Learning</Button>

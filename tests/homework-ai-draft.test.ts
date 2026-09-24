@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { draftBlockedReason, draftRequest, keptSummary, toDraftQuestion, DRAFT_TYPE_LABELS, draftFailure, unsavedDrafts } from '../src/lib/homework-ai-draft';
+import { draftBlockedReason, draftRequest, keepResult, keptSummary, toDraftQuestion, DRAFT_TYPE_LABELS, draftFailure, unsavedDrafts } from '../src/lib/homework-ai-draft';
+
+function settled(...statuses: Array<'fulfilled' | 'rejected'>): PromiseSettledResult<unknown>[] {
+  return statuses.map((status) =>
+    status === 'fulfilled'
+      ? { status: 'fulfilled', value: undefined }
+      : { status: 'rejected', reason: new Error('save failed') });
+}
 
 const scope = { subjectId: 's1', gradeId: 'g1', curriculumNodeId: 'n1' };
 
@@ -74,5 +81,21 @@ describe('review fixes', () => {
   it('keeps the drafts that could not be saved, so the teacher can try adding them again', () => {
     const drafts = [{ id: 'a' }, { id: 'b' }, { id: 'c' }].map((d) => toDraftQuestion({ _id: d.id, stem: d.id }));
     expect(unsavedDrafts(drafts, ['a', 'c']).map((d) => d.id)).toEqual(['b']);
+  });
+});
+
+describe('keepResult', () => {
+  it('reports every id kept when every save succeeds', () => {
+    expect(keepResult(['a', 'b'], settled('fulfilled', 'fulfilled'), false)).toEqual({ keptIds: ['a', 'b'], failed: 0 });
+  });
+
+  it('separates the ids that saved from the ones that failed', () => {
+    expect(keepResult(['a', 'b', 'c'], settled('fulfilled', 'rejected', 'fulfilled'), false))
+      .toEqual({ keptIds: ['a', 'c'], failed: 1 });
+  });
+
+  it("is null when cancelled — the caller must not read that as 'added 0, failed 0'", () => {
+    expect(keepResult(['a', 'b'], settled('fulfilled', 'fulfilled'), true)).toBeNull();
+    expect(keepResult(['a', 'b'], settled('rejected', 'rejected'), true)).toBeNull();
   });
 });

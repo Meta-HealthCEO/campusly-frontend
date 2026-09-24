@@ -190,3 +190,38 @@ export function subjectChipOpens(missingWeighting: boolean): 'weightings' | 'tre
 export function weightingAction(canEdit: boolean): 'dialog' | 'tab' {
   return canEdit ? 'dialog' : 'tab';
 }
+
+export interface InitialClassResolution {
+  /** The class to land the gradebook on. Empty when the teacher has none. */
+  classId: string;
+  /** A class was requested and the teacher still teaches it. */
+  matchedWanted: boolean;
+  /** A class was requested but isn't in the teacher's list — the caller
+   * should tell the teacher rather than silently landing elsewhere. */
+  forcedClassMissing: boolean;
+}
+
+/**
+ * Which class the gradebook should open on: a requested class (e.g. from a
+ * "View in gradebook" link) when the teacher still teaches it, otherwise the
+ * first class in their list. `forcedClassMissing` distinguishes "nothing was
+ * requested" from "something was requested but isn't available" so the
+ * caller can flag the latter instead of silently substituting a class.
+ */
+export function resolveInitialClass(
+  classes: Array<{ id: string }>,
+  wantedClassId: string | undefined,
+): InitialClassResolution {
+  if (classes.length === 0) {
+    return { classId: '', matchedWanted: false, forcedClassMissing: false };
+  }
+  const matchedWanted = wantedClassId !== undefined && classes.some((c) => c.id === wantedClassId);
+  if (matchedWanted) {
+    return { classId: wantedClassId as string, matchedWanted: true, forcedClassMissing: false };
+  }
+  return {
+    classId: classes[0].id,
+    matchedWanted: false,
+    forcedClassMissing: wantedClassId !== undefined,
+  };
+}

@@ -2,6 +2,7 @@
 
 import { Check } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import type { DraftOption, DraftQuestion } from '@/lib/homework-ai-draft';
 
 interface Props {
@@ -13,10 +14,13 @@ interface Props {
 
 /** One drafted question as pupils will see it: text, any diagram, the options, and the answer to check. */
 export function DraftQuestionItem({ question: d, index, checked, onToggle }: Props) {
+  const checkboxId = `draft-question-${d.id}`;
   return (
     <li className="flex items-start gap-3 rounded-lg border border-border p-3">
-      <Checkbox checked={checked} onCheckedChange={onToggle} aria-label={`Keep question ${index + 1}`} className="mt-0.5" />
-      <div className="min-w-0 flex-1 space-y-1.5 text-sm">
+      <Checkbox id={checkboxId} checked={checked} onCheckedChange={onToggle} aria-label={`Keep question ${index + 1}`} className="mt-0.5" />
+      {/* The whole row (not just the checkbox hitbox) toggles it — a native
+          label delegates its click to the checkbox it names. */}
+      <Label htmlFor={checkboxId} className="block min-w-0 flex-1 cursor-pointer space-y-1.5 text-sm font-normal">
         <p className="font-medium">{d.questionText}</p>
         {d.diagram?.svgUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- a rendered SVG from the question bank
@@ -38,7 +42,7 @@ export function DraftQuestionItem({ question: d, index, checked, onToggle }: Pro
           <p className="text-muted-foreground">Answer: <span className="text-foreground">{d.answer}</span></p>
         ) : null}
         <p className="font-mono text-xs text-muted-foreground tabular-nums">{d.marks} mark{d.marks === 1 ? '' : 's'}</p>
-      </div>
+      </Label>
     </li>
   );
 }

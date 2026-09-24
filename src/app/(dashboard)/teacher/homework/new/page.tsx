@@ -45,23 +45,21 @@ export default function TeacherHomeworkNewPage() {
       gradebookAutoPublish: state.gradebookAutoPublish,
     };
     const payload =
-      state.type === 'quiz'
-        ? { ...base, type: 'quiz' as const, quizId: state.quizId }
-        : state.type === 'reading'
-          ? {
-              ...base,
-              type: 'reading' as const,
-              contentResourceId: state.contentResourceId,
-              ...(state.pageRange ? { pageRange: state.pageRange } : {}),
-              ...(state.comprehensionQuestionIds.length
-                ? { comprehensionQuestionIds: state.comprehensionQuestionIds }
-                : {}),
-            }
-          : {
-              ...base,
-              type: 'exercise' as const,
-              exerciseQuestionIds: state.exerciseQuestionIds,
-            };
+      state.type === 'reading'
+        ? {
+            ...base,
+            type: 'reading' as const,
+            contentResourceId: state.contentResourceId,
+            ...(state.pageRange ? { pageRange: state.pageRange } : {}),
+            ...(state.comprehensionQuestionIds.length
+              ? { comprehensionQuestionIds: state.comprehensionQuestionIds }
+              : {}),
+          }
+        : {
+            ...base,
+            type: 'exercise' as const,
+            exerciseQuestionIds: state.exerciseQuestionIds,
+          };
     const result = await createHomework(payload);
     if (result) {
       toast.success('Homework assigned');

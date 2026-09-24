@@ -51,12 +51,13 @@ export function HomeworkWizardStep1() {
     return Array.from(map.values());
   }, [entries]);
 
-  const needsTopic = state.type === 'reading' || state.type === 'exercise';
+  // Both remaining homework types (exercise, reading) need a CAPS topic —
+  // it's only optional before a type is even picked.
+  const needsTopic = state.type !== null;
 
   const handleTypeChange = (type: HomeworkWizardType) => {
     state.set({
       type,
-      quizId: '',
       contentResourceId: '',
       comprehensionQuestionIds: [],
       exerciseQuestionIds: [],
@@ -70,7 +71,7 @@ export function HomeworkWizardStep1() {
       gradeId,
       subjectId: '',
       curriculumNodeId: '',
-      quizId: '',
+      curriculumNodeName: '',
       contentResourceId: '',
       comprehensionQuestionIds: [],
       exerciseQuestionIds: [],
@@ -81,18 +82,24 @@ export function HomeworkWizardStep1() {
     state.set({
       subjectId,
       curriculumNodeId: '',
-      quizId: '',
+      curriculumNodeName: '',
       contentResourceId: '',
       comprehensionQuestionIds: [],
       exerciseQuestionIds: [],
     });
   };
 
+  const handleTopicIdsChange = (ids: string[]): void => {
+    const id = ids[0] ?? '';
+    const topic = topics.find((t) => t._id === id);
+    state.set({ curriculumNodeId: id, curriculumNodeName: topic?.title ?? '' });
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-3">
         <Label>What are you assigning? <span className="text-destructive">*</span></Label>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           {TYPE_OPTIONS.map((opt) => {
             const Icon = opt.icon;
             const selected = state.type === opt.value;
@@ -126,13 +133,13 @@ export function HomeworkWizardStep1() {
           selectedTopicIds={state.curriculumNodeId ? [state.curriculumNodeId] : []}
           onClassChange={handleClassChange}
           onSubjectChange={handleSubjectChange}
-          onTopicIdsChange={(ids) => state.set({ curriculumNodeId: ids[0] ?? '' })}
+          onTopicIdsChange={handleTopicIdsChange}
           requireTopic={needsTopic}
           topicLabel="CAPS Topic"
           topicHelpText={
             needsTopic
               ? 'Homework generation should be anchored to one CAPS topic.'
-              : 'Optional for quiz homework.'
+              : 'Pick a homework type above first.'
           }
           topicEmptyText="No CAPS topics found for this class and subject."
         />

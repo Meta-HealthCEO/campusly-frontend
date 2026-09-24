@@ -19,6 +19,22 @@ export function weightingLines(terms: TermBuckets[]): WeightingLine[] {
   });
 }
 
+/**
+ * The chip for a subject's current-term weighting row. A fetch failure
+ * always reads as "Couldn't load" — distinct from "Not set", which means
+ * the fetch succeeded and no weighting was ever configured. Without this
+ * distinction a network error looks identical to "nobody has set this up
+ * yet" and a teacher has no way to tell the two apart.
+ */
+export function weightingChip(
+  current: WeightingLine | undefined,
+  failedToLoad: boolean,
+): { status: 'absent' | 'due'; label: string } | null {
+  if (failedToLoad) return { status: 'absent', label: "Couldn't load" };
+  if (current && !current.set) return { status: 'due', label: 'Not set' };
+  return null;
+}
+
 type GradeRef = string | { id?: string; _id?: string };
 
 /** The subjects taught in a class's grade; every subject when none list that grade. The API populates gradeIds. */
