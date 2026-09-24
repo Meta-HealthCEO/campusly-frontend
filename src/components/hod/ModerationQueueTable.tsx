@@ -12,6 +12,8 @@ interface ModerationQueueTableProps {
   items: ModerationItem[];
   onApprove: (paperId: string) => void;
   onRequestChanges: (paperId: string) => void;
+  /** A review is in flight: stop double submits. */
+  busy?: boolean;
 }
 
 function statusBadge(status: string) {
@@ -31,6 +33,7 @@ export function ModerationQueueTable({
   items,
   onApprove,
   onRequestChanges,
+  busy = false,
 }: ModerationQueueTableProps) {
   const columns = useMemo<ColumnDef<ModerationItem, unknown>[]>(() => [
     { accessorKey: 'paperTitle', header: 'Paper' },
@@ -58,13 +61,15 @@ export function ModerationQueueTable({
         return (
           <div className="flex gap-2">
             <button
-              className="text-xs font-medium text-emerald-600 hover:underline"
+              className="min-h-11 text-xs font-medium text-success hover:underline disabled:opacity-50 sm:min-h-0"
+              disabled={busy}
               onClick={() => onApprove(row.original.paperId)}
             >
               Approve
             </button>
             <button
-              className="text-xs font-medium text-destructive hover:underline"
+              className="min-h-11 text-xs font-medium text-destructive hover:underline disabled:opacity-50 sm:min-h-0"
+              disabled={busy}
               onClick={() => onRequestChanges(row.original.paperId)}
             >
               Request Changes
@@ -73,7 +78,7 @@ export function ModerationQueueTable({
         );
       },
     },
-  ], [onApprove, onRequestChanges]);
+  ], [onApprove, onRequestChanges, busy]);
 
   if (items.length === 0) {
     return (

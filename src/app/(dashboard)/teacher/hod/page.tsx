@@ -15,7 +15,6 @@ import {
   ObservationTable, ObservationForm, CommonAssessmentChart,
   CurriculumPacingList, ScheduleObservationDialog, RequestChangesDialog,
 } from '@/components/hod';
-import { usePaperModeration } from '@/hooks/usePaperModeration';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import type { TeacherObservation, UpdateObservationPayload, CreateObservationPayload } from '@/types';
@@ -26,7 +25,7 @@ export default function HODDashboardPage() {
 
   const {
     performance, pacing, workload, moderation, loading,
-    fetchPerformance, fetchPacing, fetchWorkload, fetchModeration,
+    fetchPerformance, fetchPacing, fetchWorkload, fetchModeration, reviewDepartmentPaper,
   } = useHODDashboard(departmentId);
 
   const {
@@ -53,8 +52,20 @@ export default function HODDashboardPage() {
   }, [activeTab, departmentId, fetchPerformance, fetchPacing, fetchWorkload, fetchModeration, fetchObservations, fetchCommonAssessments]);
 
   // ─── Handlers ─────────────────────────────────────────────────────────
-  const { reviewPaper, submitting: reviewing } = usePaperModeration();
+  const [reviewing, setReviewing] = useState(false);
   const [changesFor, setChangesFor] = useState<string | null>(null);
+
+  const reviewPaper = useCallback(async (
+    paperId: string, status: 'approved' | 'changes_requested', comments: string,
+  ): Promise<boolean> => {
+    if (!departmentId) return false;
+    setReviewing(true);
+    try {
+      return await reviewDepartmentPaper(departmentId, paperId, status, comments);
+    } finally {
+      setReviewing(false);
+    }
+  }, [departmentId, reviewDepartmentPaper]);
 
   const refreshModeration = useCallback(async () => {
     if (departmentId) await fetchModeration(departmentId);
@@ -156,6 +167,7 @@ export default function HODDashboardPage() {
             items={moderation?.items ?? []}
             onApprove={handleApprove}
             onRequestChanges={handleRequestChanges}
+            busy={reviewing}
           />
         </TabsContent>
 

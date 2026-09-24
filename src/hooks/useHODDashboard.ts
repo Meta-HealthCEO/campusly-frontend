@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
-import { unwrapResponse, unwrapList } from '@/lib/api-helpers';
+import { unwrapResponse, unwrapList, extractErrorMessage } from '@/lib/api-helpers';
+import { toast } from 'sonner';
 import type {
   Department,
   DepartmentPerformance,
@@ -105,6 +106,23 @@ export function useHODDashboard(departmentId: string | null) {
     }
   }, []);
 
+  /** HOD decision on a paper from their department. True when it went through. */
+  const reviewDepartmentPaper = useCallback(async (
+    id: string,
+    paperId: string,
+    status: 'approved' | 'changes_requested',
+    comments: string,
+  ): Promise<boolean> => {
+    try {
+      await apiClient.post(`/departments/${id}/moderation/${paperId}/review`, { status, comments });
+      toast.success(status === 'approved' ? 'Paper approved' : 'Changes requested');
+      return true;
+    } catch (err: unknown) {
+      toast.error(extractErrorMessage(err, "Couldn't submit the review. Try again."));
+      return false;
+    }
+  }, []);
+
   // Initial load
   useEffect(() => {
     if (!departmentId) {
@@ -127,5 +145,6 @@ export function useHODDashboard(departmentId: string | null) {
     fetchPacing,
     fetchWorkload,
     fetchModeration,
+    reviewDepartmentPaper,
   };
 }
