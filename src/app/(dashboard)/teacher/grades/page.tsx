@@ -17,6 +17,7 @@ import { Save, BookOpen, Download, FileText, AlertCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GradebookPickers } from '@/components/grades/GradebookPickers';
 import { GradebookWeightingsTab } from '@/components/grades/GradebookWeightingsTab';
+import { GradebookReportsTab } from '@/components/grades/GradebookReportsTab';
 import { useCan } from '@/hooks/useCan';
 import { resolveId } from '@/lib/api-helpers';
 import { TermSummaryTab } from '@/components/grades/TermSummaryTab';
@@ -210,7 +211,7 @@ export default function TeacherGradesPage() {
       onSaved={() => setSummaryKey((k: number) => k + 1)}
     />
   );
-  const reportsTab = null;
+  const reportsTab = <GradebookReportsTab classId={selectedClass} term={selectedTerm} />;
 
   return (
     <div className="space-y-6">

@@ -35,7 +35,8 @@ function getStudentName(student: Student): string {
   return `${firstName} ${lastName}`.trim() || student.admissionNumber || 'Unknown student';
 }
 
-export function useTeacherReportData() {
+/** The teacher's classes and learners for report cards. `forcedClassId` (e.g. the gradebook's class) wins when the teacher has it. */
+export function useTeacherReportData(forcedClassId?: string) {
   const { entries, loading } = useTeacherClasses();
   const [selectedClassOverride, setSelectedClass] = useState('');
 
@@ -68,11 +69,12 @@ export function useTeacherReportData() {
 
   const selectedClass = useMemo(() => {
     if (classes.length === 0) return '';
+    if (forcedClassId && classes.some((classInfo) => classInfo.id === forcedClassId)) return forcedClassId;
     if (selectedClassOverride && classes.some((classInfo) => classInfo.id === selectedClassOverride)) {
       return selectedClassOverride;
     }
     return classes[0].id;
-  }, [classes, selectedClassOverride]);
+  }, [classes, selectedClassOverride, forcedClassId]);
 
   const students = useMemo<StudentOption[]>(() => {
     if (!selectedClass) return [];
