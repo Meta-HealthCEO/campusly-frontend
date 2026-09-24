@@ -8,6 +8,8 @@
 // no paperVersion, different question fields).
 // ============================================================
 
+import type { GradebookLink } from '@/lib/gradebook-link';
+
 export interface PaperMarkingImage {
   filename: string;
   mimeType: string;
@@ -41,6 +43,8 @@ export interface PaperMarking {
   paperType: PaperMarkingType;
   paperVersion: number;
   studentName: string;
+  /** Where the mark landed once issued (from the issue endpoint). */
+  gradebook?: GradebookLink | null;
   studentId?: string | null;
   classId?: string | null;
   batchId?: string | null;

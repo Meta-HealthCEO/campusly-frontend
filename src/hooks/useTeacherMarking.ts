@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { extractErrorMessage, unwrapResponse, unwrapList } from '@/lib/api-helpers';
+import { issuedMessage } from '@/lib/issue-toast';
 
 interface MarkingQuestion {
   questionNumber: string;
@@ -93,6 +95,7 @@ function mapAssessmentPaper(raw: Record<string, unknown>): MarkingPaperOption | 
 }
 
 export function useTeacherMarking() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [markings, setMarkings] = useState<PaperMarking[]>([]);
   const [currentMarking, setCurrentMarking] = useState<PaperMarking | null>(null);
@@ -211,14 +214,18 @@ export function useTeacherMarking() {
       const updated = unwrapResponse<PaperMarking>(res);
       setCurrentMarking(updated);
       setMarkings((prev) => prev.map((m) => (m.id === id ? updated : m)));
-      toast.success('Marking issued');
+      const msg = issuedMessage(updated);
+      toast.success(msg.title, {
+        description: msg.description,
+        action: msg.href ? { label: 'View in gradebook', onClick: () => router.push(msg.href as string) } : undefined,
+      });
       return updated;
     } catch (err: unknown) {
       console.error('Failed to issue marking', err);
       toast.error(extractErrorMessage(err, 'Failed to issue marking.'));
       return null;
     }
-  }, []);
+  }, [router]);
 
   const fetchPapers = useCallback(async () => {
     setPapersLoading(true);
