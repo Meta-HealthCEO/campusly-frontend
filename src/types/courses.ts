@@ -10,6 +10,31 @@ export type LessonType = 'content' | 'chapter' | 'homework' | 'quiz';
 export type EnrolmentStatus = 'active' | 'completed' | 'dropped';
 export type LessonProgressStatus = 'locked' | 'available' | 'in_progress' | 'completed';
 
+// Class units: a teacher's unit of work for their own classes (AI course builder).
+export type CourseKind = 'catalogue' | 'class_unit';
+export type OutlineStatus = 'none' | 'drafted' | 'approved';
+export type GenerationStatus = 'idle' | 'queued' | 'running' | 'done' | 'failed';
+export type ItemKind = 'notes' | 'worked_example' | 'quick_check';
+export type ItemGenStatus = 'pending' | 'generating' | 'ready' | 'failed';
+
+export interface UnitScope {
+  gradeId: string;
+  subjectId: string;
+  termNumber: number;
+  topicNodeIds: string[];
+  classIds: string[];
+}
+
+export interface GenerationState {
+  status: GenerationStatus;
+  total: number;
+  done: number;
+  failed: number;
+  message: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+}
+
 export interface Course {
   id: string;
   schoolId: string;
@@ -28,6 +53,11 @@ export interface Course {
   reviewNotes: string;
   passMarkPercent: number;
   certificateEnabled: boolean;
+  kind?: CourseKind;
+  scope?: UnitScope | null;
+  outlineStatus?: OutlineStatus;
+  generation?: GenerationState;
+  aiGenerated?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,6 +68,9 @@ export interface CourseModule {
   courseId: string;
   title: string;
   orderIndex: number;
+  objectives?: string[];
+  curriculumNodeId?: string | null;
+  weekNumbers?: number[];
   createdAt: string;
   updatedAt: string;
 }
@@ -59,6 +92,14 @@ export interface CourseLesson {
   passMarkPercent: number;
   isRequiredToAdvance: boolean;
   maxAttempts: number | null;
+  itemKind?: ItemKind | null;
+  minutes?: number | null;
+  objectives?: string[];
+  capsRef?: string;
+  brief?: string;
+  genStatus?: ItemGenStatus | null;
+  genError?: string;
+  teacherEdited?: boolean;
   createdAt: string;
   updatedAt: string;
 }

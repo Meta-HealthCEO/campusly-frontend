@@ -21,6 +21,8 @@ export interface Plan {
 /** Free-plan allowances from GET /auth/me (standalone teachers only). */
 export interface FreeAllowance {
   paperGenerations: { limit: number; used: number; remaining: number };
+  /** Free AI class units (course builder); absent from older servers. */
+  courseUnits?: { limit: number; used: number; remaining: number };
 }
 
 export interface Subscription {
