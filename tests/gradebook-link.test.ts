@@ -46,3 +46,11 @@ describe('resolveLinkedAssessment', () => {
     expect(resolveLinkedAssessment([], undefined)).toEqual({ pick: null, fetchWanted: false });
   });
 });
+
+describe('gradebook tabs', () => {
+  it('opens the weightings and reports tabs from a link', () => {
+    expect(readGradebookParams(new URLSearchParams('tab=weightings')).tab).toBe('weightings');
+    expect(readGradebookParams(new URLSearchParams('tab=reports')).tab).toBe('reports');
+    expect(readGradebookParams(new URLSearchParams('tab=admin')).tab).toBeUndefined();
+  });
+});

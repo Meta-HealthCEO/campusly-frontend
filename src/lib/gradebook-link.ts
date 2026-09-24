@@ -7,7 +7,7 @@ export interface GradebookLink {
   academicYear: number;
 }
 
-export type GradebookTab = 'overview' | 'capture';
+export type GradebookTab = 'overview' | 'capture' | 'weightings' | 'reports';
 
 export interface GradebookParams {
   classId?: string;
@@ -18,7 +18,7 @@ export interface GradebookParams {
 }
 
 const TERMS = new Set(['1', '2', '3', '4', 'year']);
-const TABS = new Set<string>(['overview', 'capture']);
+const TABS = new Set<string>(['overview', 'capture', 'weightings', 'reports']);
 
 /** A gradebook link that opens Enter marks on exactly where a mark landed. */
 export function gradebookHref(link: GradebookLink): string {

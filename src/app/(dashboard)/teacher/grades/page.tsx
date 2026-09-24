@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { readGradebookParams, type GradebookTab } from '@/lib/gradebook-link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { Save, BookOpen, Download, FileText, AlertCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { GradebookPickers } from '@/components/grades/GradebookPickers';
 import { TermSummaryTab } from '@/components/grades/TermSummaryTab';
 import { useTeacherGrades } from '@/hooks/useTeacherGrades';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
@@ -41,6 +42,14 @@ export default function TeacherGradesPage() {
     createAssessment, updateAssessment, deleteAssessment, fetchStudentHistory,
   } = useTeacherGrades(linkParams);
   const [tab, setTab] = useState<GradebookTab>(linkParams.tab ?? 'overview');
+  const router = useRouter();
+  const changeTab = (value: unknown): void => {
+    const next = readGradebookParams({ get: (name: string) => (name === 'tab' && typeof value === 'string' ? value : null) }).tab ?? 'overview';
+    setTab(next);
+    const query = new URLSearchParams(searchParams.toString());
+    query.set('tab', next);
+    router.replace(`/teacher/grades?${query.toString()}`, { scroll: false });
+  };
   const termScope = resolveTermScope(selectedTerm);
 
   const [editOpen, setEditOpen] = useState(false);
@@ -187,6 +196,9 @@ export default function TeacherGradesPage() {
     </>
   );
 
+  const weightingsTab = null;
+  const reportsTab = null;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -194,42 +206,24 @@ export default function TeacherGradesPage() {
         title="Gradebook"
         description="Track class performance and capture marks"
       >
-        <div className="flex items-center gap-2">
-          <Select
-            value={selectedClass}
-            onValueChange={(val: unknown) => setSelectedClass(val as string)}
-          >
-            <SelectTrigger className="w-64">
-              <SelectValue placeholder="Pick class">
-                {selectedClass ? classDisplayName : 'Pick class'}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {classes.map((cls) => (
-                <SelectItem key={cls.id} value={cls.id}>
-                  {cls.grade?.name ?? (cls as unknown as Record<string, unknown>).gradeName ?? ''} {cls.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={selectedTerm} onValueChange={(val: unknown) => setSelectedTerm(val as string)}>
-            <SelectTrigger className="w-32">
-              <SelectValue>{selectedTermLabel}</SelectValue>
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              {TERM_OPTIONS.map((t) => (
-                <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <GradebookPickers
+          classes={classes}
+          selectedClass={selectedClass}
+          classLabel={classDisplayName}
+          onClassChange={setSelectedClass}
+          selectedTerm={selectedTerm}
+          termLabel={selectedTermLabel}
+          onTermChange={setSelectedTerm}
+        />
       </PageHeader>
 
       {selectedClass ? (
-        <Tabs value={tab} onValueChange={(value: unknown) => setTab(value === 'capture' ? 'capture' : 'overview')}>
+        <Tabs value={tab} onValueChange={changeTab}>
           <TabsList>
             <TabsTrigger value="overview">Class overview</TabsTrigger>
             <TabsTrigger value="capture">Enter marks</TabsTrigger>
+            <TabsTrigger value="weightings">Weightings</TabsTrigger>
+            <TabsTrigger value="reports">Reports</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-4">
@@ -308,6 +302,8 @@ export default function TeacherGradesPage() {
             )}
             {captureContent}
           </TabsContent>
+          <TabsContent value="weightings" className="mt-4">{weightingsTab}</TabsContent>
+          <TabsContent value="reports" className="mt-4">{reportsTab}</TabsContent>
         </Tabs>
       ) : (
         <EmptyState
