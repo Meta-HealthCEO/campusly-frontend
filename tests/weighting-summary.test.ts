@@ -33,3 +33,13 @@ describe('classSubjects', () => {
     expect(classSubjects(subjects, null).map((s) => s.id)).toEqual(['eng', 'phys', 'art']);
   });
 });
+
+describe('classSubjects with subjects as the API sends them', () => {
+  it('matches populated grade entries, so a class only lists its own grade\'s subjects', () => {
+    const subjects = [
+      { id: 'ns', gradeIds: [{ id: 'g8', _id: 'g8', name: 'Grade 8' }] },
+      { id: 'ps', gradeIds: [{ id: 'g10', _id: 'g10', name: 'Grade 10' }] },
+    ];
+    expect(classSubjects(subjects, 'g8').map((s) => s.id)).toEqual(['ns']);
+  });
+});

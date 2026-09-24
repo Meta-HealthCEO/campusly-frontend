@@ -1,3 +1,4 @@
+import { resolveId } from '@/lib/api-helpers';
 import { ASSESSMENT_TYPE_LABELS, ASSESSMENT_TYPES, type TermBuckets } from '@/hooks/useSubjectWeightings';
 
 export interface WeightingLine {
@@ -18,9 +19,11 @@ export function weightingLines(terms: TermBuckets[]): WeightingLine[] {
   });
 }
 
-/** The subjects taught in a class's grade; every subject when none list that grade. */
-export function classSubjects<S extends { id: string; gradeIds?: string[] }>(subjects: S[], gradeId: string | null): S[] {
+type GradeRef = string | { id?: string; _id?: string };
+
+/** The subjects taught in a class's grade; every subject when none list that grade. The API populates gradeIds. */
+export function classSubjects<S extends { id: string; gradeIds?: readonly GradeRef[] }>(subjects: S[], gradeId: string | null): S[] {
   if (!gradeId) return subjects;
-  const inGrade = subjects.filter((s: S) => s.gradeIds?.includes(gradeId));
+  const inGrade = subjects.filter((s: S) => s.gradeIds?.some((g: GradeRef) => resolveId(g) === gradeId));
   return inGrade.length > 0 ? inGrade : subjects;
 }
