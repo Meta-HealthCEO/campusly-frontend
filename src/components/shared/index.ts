@@ -13,3 +13,4 @@ export {
   TableSkeleton,
 } from './skeletons';
 export { StatCard } from './StatCard';
+export { StatusChip } from './StatusChip';
