@@ -14,6 +14,8 @@ import { UnitSteps } from '@/components/courses/unit/UnitSteps';
 import { UnitGenerationBanner } from '@/components/courses/unit/UnitGenerationBanner';
 import { UnitItemPreview } from '@/components/courses/unit/UnitItemPreview';
 import { ReleaseUnitDialog } from '@/components/courses/unit/ReleaseUnitDialog';
+import { UnitInsight } from '@/components/courses/unit/UnitInsight';
+import { useUnitInsight } from '@/hooks/useUnitInsight';
 import { useUnitView } from '@/hooks/useUnitView';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import { resolveId } from '@/lib/api-helpers';
@@ -30,6 +32,7 @@ export default function UnitPage() {
   const [confirmRedraft, setConfirmRedraft] = useState(false);
   const [releaseOpen, setReleaseOpen] = useState(false);
   const { course, stage } = view;
+  const insight = useUnitInsight(courseId, stage === 'released');
 
   // Catalogue courses keep the course builder.
   useEffect(() => {
@@ -91,6 +94,8 @@ export default function UnitPage() {
               Released to {releasedTo.length > 0 ? releasedTo.map((c) => c.name).join(', ') : 'your class'}. Learners can start on any phone.
             </p>
           ) : null}
+          {stage === 'released' ? <UnitInsight insight={insight.insight} error={insight.error} /> : null}
+          {stage === 'released' ? <h2 className="pt-2 text-lg font-semibold">The unit</h2> : null}
           {stage === 'writing' || stage === 'release' ? <UnitGenerationBanner generation={course.generation} /> : null}
           {stage === 'release' && blocker ? <p className="text-sm text-muted-foreground">{blocker}.</p> : null}
           {stage === 'outline' && course.outlineStatus === 'drafted' ? (
