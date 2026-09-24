@@ -8,6 +8,7 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { BlockRenderer } from '@/components/content/renderers/BlockRenderer';
 import { RewriteMenu } from '@/components/courses/unit/RewriteMenu';
 import { UnitItemEditor, type ItemEdit } from '@/components/courses/unit/UnitItemEditor';
+import { previewSheetState } from '@/lib/course-unit';
 import type { ItemPreview, PreviewQuestion } from '@/hooks/useClassUnit';
 import type { RewriteAction } from '@/lib/item-editing';
 import type { AttemptResult, BlockInteractionState } from '@/types';
@@ -25,6 +26,9 @@ interface Props {
   item: CourseLesson | null;
   preview: ItemPreview | null;
   loading: boolean;
+  /** Why the preview couldn't be loaded, if it failed. */
+  loadError: string | null;
+  onRetryLoad: () => void;
   /** Saving or rewriting this item is in progress. */
   busy: boolean;
   /** Another item is being saved or rewritten. */
@@ -56,9 +60,10 @@ function Questions({ questions }: { questions: PreviewQuestion[] }) {
 }
 
 /** An item as learners will get it, with Edit and Rewrite for the teacher. */
-export function UnitItemPreview({ open, onOpenChange, item, preview, loading, busy, blocked = false, error, onSave, onRewrite }: Props) {
+export function UnitItemPreview({ open, onOpenChange, item, preview, loading, loadError, onRetryLoad, busy, blocked = false, error, onSave, onRewrite }: Props) {
   const [editing, setEditing] = useState(false);
-  const ready = !loading && preview && preview.kind !== 'not_ready' && item?.itemKind;
+  const sheetState = previewSheetState(loading, loadError !== null);
+  const ready = sheetState === 'ready' && preview && preview.kind !== 'not_ready' && item?.itemKind;
   const close = (next: boolean): void => {
     if (!next) setEditing(false);
     onOpenChange(next);
@@ -95,14 +100,20 @@ export function UnitItemPreview({ open, onOpenChange, item, preview, loading, bu
           />
         ) : (
           <div className="flex-1 overflow-y-auto px-4 py-4">
-            {loading || !preview ? <LoadingSpinner /> : null}
-            {!loading && preview?.kind === 'content' ? (
+            {sheetState === 'loading' ? <LoadingSpinner /> : null}
+            {sheetState === 'error' ? (
+              <div className="space-y-3">
+                <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{loadError}</p>
+                <Button variant="outline" size="sm" onClick={onRetryLoad} className="min-h-11 sm:min-h-8">Try again</Button>
+              </div>
+            ) : null}
+            {sheetState === 'ready' && preview?.kind === 'content' ? (
               <div className="space-y-4">
                 {preview.blocks.map((block) => <BlockRenderer key={block.blockId} block={block} onAttempt={previewAttempt} interaction={idle(block.blockId)} />)}
               </div>
             ) : null}
-            {!loading && preview?.kind === 'quiz' ? <Questions questions={preview.questions} /> : null}
-            {!loading && preview?.kind === 'not_ready' ? <p className="text-sm text-muted-foreground">This item hasn&apos;t been written yet.</p> : null}
+            {sheetState === 'ready' && preview?.kind === 'quiz' ? <Questions questions={preview.questions} /> : null}
+            {sheetState === 'ready' && preview?.kind === 'not_ready' ? <p className="text-sm text-muted-foreground">This item hasn&apos;t been written yet.</p> : null}
           </div>
         )}
       </SheetContent>

@@ -14,6 +14,11 @@ interface EnrolmentDetail {
   course: CourseTree;
 }
 
+export type FetchLessonResult =
+  | { ok: true; lesson: LessonWithSource }
+  /** locked: the previous item isn't done yet. error: a network/server failure — not the same thing to a learner. */
+  | { ok: false; reason: 'locked' | 'error'; message: string };
+
 interface ProgressWriteBody {
   interactionsDone?: number;
   scrolledToEnd?: boolean;
@@ -57,6 +62,7 @@ interface QuizSubmitResponse {
 export function useLessonPlayer(enrolmentId: string) {
   const [enrolmentDetail, setEnrolmentDetail] = useState<EnrolmentDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchEnrolment = useCallback(async () => {
     if (!enrolmentId) {
@@ -67,9 +73,12 @@ export function useLessonPlayer(enrolmentId: string) {
       const res = await apiClient.get(`/enrolments/${enrolmentId}`);
       const data = unwrapResponse<EnrolmentDetail>(res);
       setEnrolmentDetail(data);
+      setError(null);
     } catch (err: unknown) {
       console.error('Failed to load enrolment', err);
-      toast.error(extractErrorMessage(err, 'Could not load course. Please refresh.'));
+      const message = extractErrorMessage(err, 'Could not load this unit. Please try again.');
+      toast.error(message);
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -80,21 +89,24 @@ export function useLessonPlayer(enrolmentId: string) {
   }, [fetchEnrolment]);
 
   const fetchLesson = useCallback(
-    async (lessonId: string): Promise<LessonWithSource | null> => {
+    async (lessonId: string): Promise<FetchLessonResult | null> => {
       if (!enrolmentId || !lessonId) return null;
       try {
         const res = await apiClient.get(`/enrolments/${enrolmentId}/lessons/${lessonId}`);
-        return unwrapResponse<LessonWithSource>(res);
+        return { ok: true, lesson: unwrapResponse<LessonWithSource>(res) };
       } catch (err: unknown) {
-        // Distinguish a locked lesson (403) from a missing one (404).
-        // Both result in returning null, but the toast copy differs.
+        // A locked lesson (403, or a missing one, 404 — both mean "not
+        // reachable yet") reads differently to a learner than a genuine
+        // network or server failure.
         const status = (err as { response?: { status?: number } })?.response?.status;
-        if (status === 403) {
-          toast.error('Complete the previous lesson first.');
-        } else {
-          toast.error(extractErrorMessage(err, 'Could not load lesson.'));
+        if (status === 403 || status === 404) {
+          const message = 'Complete the previous lesson first.';
+          toast.error(message);
+          return { ok: false, reason: 'locked', message };
         }
-        return null;
+        const message = extractErrorMessage(err, 'Could not load lesson.');
+        toast.error(message);
+        return { ok: false, reason: 'error', message };
       }
     },
     [enrolmentId],
@@ -200,6 +212,7 @@ export function useLessonPlayer(enrolmentId: string) {
   return {
     enrolmentDetail,
     loading,
+    error,
     fetchLesson,
     writeProgress,
     submitQuiz,

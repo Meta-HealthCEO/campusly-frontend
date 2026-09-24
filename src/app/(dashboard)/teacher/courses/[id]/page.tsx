@@ -22,7 +22,8 @@ import { useUnitInsight } from '@/hooks/useUnitInsight';
 import { useUnitView } from '@/hooks/useUnitView';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import { resolveId } from '@/lib/api-helpers';
-import { releaseBlocker } from '@/lib/course-unit';
+import { canViewUnitInsight, releaseBlocker, showHandBuiltDraftOffer } from '@/lib/course-unit';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { copyClassOptions } from '@/lib/unit-library';
 import { ROUTES } from '@/lib/routes';
 import type { PopulatedId } from '@/types';
@@ -36,7 +37,9 @@ export default function UnitPage() {
   const [confirmRedraft, setConfirmRedraft] = useState(false);
   const [releaseOpen, setReleaseOpen] = useState(false);
   const { course, stage } = view;
-  const insight = useUnitInsight(courseId, stage === 'released');
+  const user = useAuthStore((s) => s.user);
+  const canSeeInsight = !!course && canViewUnitInsight(course.createdBy, user);
+  const insight = useUnitInsight(courseId, stage === 'released' && canSeeInsight);
   const copier = useCopyUnit();
 
   // Catalogue courses keep the course builder.
@@ -109,14 +112,14 @@ export default function UnitPage() {
               Released to {releasedTo.length > 0 ? releasedTo.map((c) => c.name).join(', ') : 'your class'}. Learners can start on any phone.
             </p>
           ) : null}
-          {stage === 'released' ? (
+          {stage === 'released' && canSeeInsight ? (
             <UnitInsight
               insight={insight.insight}
               error={insight.error}
               revision={{
                 busyItemId: typeof view.busy === 'string' && view.busy.startsWith('revision-') ? view.busy.slice('revision-'.length) : null,
                 error: view.revisionError,
-                onAdd: (t) => void view.addRevision(t),
+                onAdd: (t) => void view.addRevision(t).then((ok) => { if (ok) insight.refresh(); }),
               }}
             />
           ) : null}
@@ -132,6 +135,14 @@ export default function UnitPage() {
             <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{view.draftError}</div>
           ) : null}
 
+          {showHandBuiltDraftOffer(course.outlineStatus ?? 'none', hasOutline) ? (
+            <div className="flex flex-col gap-3 rounded-xl border border-border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-muted-foreground">This unit&apos;s modules were built by hand. The AI can still draft a CAPS outline from its topics.</p>
+              <Button onClick={() => void view.draft()} disabled={view.busy !== null} className="min-h-11 shrink-0 gap-1.5 sm:min-h-9">
+                <Sparkles className="h-4 w-4" aria-hidden /> {view.busy === 'draft' ? 'Drafting your outline…' : view.draftError ? 'Try again' : 'Draft the outline'}
+              </Button>
+            </div>
+          ) : null}
           {hasOutline ? (
             <UnitOutline
               course={course}
@@ -170,7 +181,9 @@ export default function UnitPage() {
         onOpenChange={view.setPreviewOpen}
         item={view.openItem}
         preview={view.preview}
-        loading={view.previewOpen && view.preview === null}
+        loading={view.previewLoading}
+        loadError={view.previewError}
+        onRetryLoad={view.retryPreview}
         busy={view.editBusy}
         blocked={view.otherBusy}
         error={view.editError}

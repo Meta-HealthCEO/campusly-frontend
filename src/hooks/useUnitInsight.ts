@@ -21,16 +21,10 @@ export function useUnitInsight(courseId: string, enabled: boolean) {
   }, [courseId]);
 
   useEffect(() => {
-    if (!enabled || !courseId) return undefined;
-    let active = true;
-    apiClient.get(`/courses/${courseId}/insight`)
-      .then((res) => { if (active) { setInsight(unwrapResponse<UnitInsight>(res)); setError(null); } })
-      .catch((err: unknown) => {
-        console.error('Unit insight failed', err);
-        if (active) setError(extractErrorMessage(err, "Couldn't load your class's progress. Refresh to try again."));
-      });
-    return () => { active = false; };
-  }, [courseId, enabled]);
+    if (!enabled || !courseId) return;
+    void load();
+  }, [courseId, enabled, load]);
+
 
   return { insight: enabled ? insight : null, error, refresh: load };
 }

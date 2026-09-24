@@ -25,6 +25,15 @@ export function formatMinutes(minutes: number): string {
   return m === 0 ? `${h} h` : `${h} h ${m} min`;
 }
 
+export type PreviewSheetState = 'loading' | 'error' | 'ready';
+
+/** What the item preview sheet's body should show: a spinner never outlasts loading — a failed load shows its error instead. */
+export function previewSheetState(loading: boolean, hasError: boolean): PreviewSheetState {
+  if (loading) return 'loading';
+  if (hasError) return 'error';
+  return 'ready';
+}
+
 export interface GenerationSummary {
   label: string;
   percent: number;
@@ -60,8 +69,22 @@ export function releaseBlocker(course: CourseTree): string | null {
   return null;
 }
 
+/** The free-units counter only means something to a free-plan standalone teacher; Pro teachers have no limit to show. */
+export function shouldShowFreeUnitsBanner(entitled: boolean, freeUnits: { remaining: number; limit: number } | null): boolean {
+  return !entitled && freeUnits !== null;
+}
+
 export function defaultUnitTitle(subjectName: string, gradeName: string, termNumber: number): string {
   return [subjectName, gradeName, `Term ${termNumber}`].filter(Boolean).join(' · ');
+}
+
+/**
+ * A unit whose modules were hand-built in the course builder never got an AI
+ * outline drafted. It still shows its outline (the hand-built modules), so it
+ * needs its own "Draft the outline" offer alongside them, not instead of them.
+ */
+export function showHandBuiltDraftOffer(outlineStatus: OutlineStatus, hasOutline: boolean): boolean {
+  return outlineStatus === 'none' && hasOutline;
 }
 
 /** The school term a date falls in (South African terms run roughly by quarter); a form default only. */
@@ -121,6 +144,24 @@ export const STALE_WRITING_MS = 10 * 60 * 1000;
 export function isStuckWriting(item: { genStatus?: ItemGenStatus | null; updatedAt?: string }, now: Date = new Date()): boolean {
   if (item.genStatus !== 'generating' || !item.updatedAt) return false;
   return now.getTime() - new Date(item.updatedAt).getTime() > STALE_WRITING_MS;
+}
+
+type CourseCreator = string | { id?: string; _id?: string } | null | undefined;
+
+/**
+ * Whether this user may see a unit's insight (who is stuck, what the class
+ * gets wrong): its author, or a school admin, HOD or principal — the same
+ * rule the server enforces for editing the course. Asking for it as anyone
+ * else just gets a 403 back.
+ */
+export function canViewUnitInsight(
+  createdBy: CourseCreator,
+  user: { id: string; role: string; isSchoolPrincipal?: boolean; isHOD?: boolean } | null | undefined,
+): boolean {
+  if (!user) return false;
+  if (['admin', 'school_admin', 'super_admin'].includes(user.role) || user.isSchoolPrincipal || user.isHOD) return true;
+  const authorId = typeof createdBy === 'string' ? createdBy : createdBy?._id ?? createdBy?.id ?? '';
+  return !!authorId && authorId === user.id;
 }
 
 /** The unit as the latest progress poll has it (a new tree; the original is left alone). */

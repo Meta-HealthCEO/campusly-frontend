@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { LEARNER_KIND_LABEL, moduleProgress, resumeTarget, unitDone, type LearnerItem, type LearnerUnit } from '../src/lib/learner-unit';
+import { LEARNER_KIND_LABEL, currentEnrolment, learnerItemLabel, moduleProgress, resumeTarget, unitDone, type LearnerItem, type LearnerUnit } from '../src/lib/learner-unit';
 
 const item = (id: string, unlockStatus: LearnerItem['unlockStatus'], extra: Partial<LearnerItem> = {}): LearnerItem => ({
   id, title: id, orderIndex: 0, itemKind: 'notes', minutes: 6, unlockStatus, ...extra,
@@ -42,6 +42,24 @@ describe('moduleProgress and unitDone', () => {
   });
 });
 
+describe('learnerItemLabel', () => {
+  it('labels an AI-generated item by its itemKind', () => {
+    expect(learnerItemLabel({ itemKind: 'quick_check' })).toBe('Quick check');
+    expect(learnerItemLabel({ itemKind: 'worked_example' })).toBe('Worked example');
+  });
+
+  it("labels a hand-built item by its type, not as 'Read' just because itemKind is missing", () => {
+    expect(learnerItemLabel({ itemKind: undefined, type: 'quiz' })).toBe('Quiz');
+    expect(learnerItemLabel({ itemKind: undefined, type: 'homework' })).toBe('Homework');
+    expect(learnerItemLabel({ itemKind: undefined, type: 'content' })).toBe('Read');
+    expect(learnerItemLabel({ itemKind: undefined, type: 'chapter' })).toBe('Read');
+  });
+
+  it('falls back to Read for an unrecognised or missing type', () => {
+    expect(learnerItemLabel({ itemKind: undefined, type: undefined })).toBe('Read');
+  });
+});
+
 describe('optional revision items', () => {
   it('never become the next item or count toward the unit', () => {
     const unit = tree({ title: 'M', items: [
@@ -55,5 +73,34 @@ describe('optional revision items', () => {
 
   it('a unit is done without its optional items', () => {
     expect(unitDone(tree({ title: 'M', items: [item('a', 'completed'), item('r', 'available', { optional: true })] }))).toBe(true);
+  });
+});
+
+describe('currentEnrolment', () => {
+  const enrolment = (id: string, o: Partial<{ status: string; progressPercent: number; enrolledAt: string }> = {}) => (
+    { id, status: 'active', progressPercent: 0, enrolledAt: '2026-01-01T00:00:00Z', ...o }
+  );
+
+  it('picks the unit the learner is actually partway through, not just the newest active one', () => {
+    const notStartedButNewest = enrolment('a', { progressPercent: 0, enrolledAt: '2026-09-20T00:00:00Z' });
+    const inProgress = enrolment('b', { progressPercent: 40, enrolledAt: '2026-09-01T00:00:00Z' });
+    expect(currentEnrolment([notStartedButNewest, inProgress])?.id).toBe('b');
+  });
+
+  it('falls back to the newest active enrolment when nothing has been started yet', () => {
+    const older = enrolment('a', { enrolledAt: '2026-09-01T00:00:00Z' });
+    const newer = enrolment('b', { enrolledAt: '2026-09-20T00:00:00Z' });
+    expect(currentEnrolment([older, newer])?.id).toBe('b');
+  });
+
+  it('among several in-progress units, picks the most recently active', () => {
+    const older = enrolment('a', { progressPercent: 20, enrolledAt: '2026-09-01T00:00:00Z' });
+    const newer = enrolment('b', { progressPercent: 60, enrolledAt: '2026-09-15T00:00:00Z' });
+    expect(currentEnrolment([older, newer])?.id).toBe('b');
+  });
+
+  it('ignores completed or dropped enrolments, and is null with nothing active', () => {
+    expect(currentEnrolment([enrolment('a', { status: 'completed', progressPercent: 100 })])).toBeNull();
+    expect(currentEnrolment([])).toBeNull();
   });
 });

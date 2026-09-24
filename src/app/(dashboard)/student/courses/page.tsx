@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { GraduationCap } from 'lucide-react';
+import { AlertTriangle, GraduationCap } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { CardGridSkeleton } from '@/components/shared/skeletons';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -28,12 +28,14 @@ function UnitRow({ enrolment }: { enrolment: Enrolment }) {
 }
 
 export default function StudentCoursesPage() {
-  const { enrolments, current, loading } = useStudentUnits();
+  const { enrolments, current, loading, failed } = useStudentUnits();
   const currentCourse = current ? courseOf(current) : null;
   return (
     <div className="space-y-6">
       <PageHeader title="Courses" description="Units your teachers released to your class. Short items you can do on your phone." />
-      {loading ? <CardGridSkeleton count={2} /> : enrolments.length === 0 ? (
+      {loading ? <CardGridSkeleton count={2} /> : failed ? (
+        <EmptyState icon={AlertTriangle} title="Couldn't load your units" description="Check your connection and refresh to try again." />
+      ) : enrolments.length === 0 ? (
         <EmptyState icon={GraduationCap} title="No units yet" description="When your teacher releases a unit to your class, it appears here." />
       ) : (
         <>

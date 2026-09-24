@@ -74,9 +74,15 @@ export interface RegenerateCredentialsResult {
   credentials: StudentPortalCredentials;
 }
 
-export function useTeacherClasses() {
+/**
+ * The teacher's full teaching load (classes, subjects, students).
+ * `enabled` (default true) defers the fetch — pass false for a page where
+ * this is only needed once some other UI opens (a dialog, a tab), so it
+ * isn't loaded on every visit whether or not it's used.
+ */
+export function useTeacherClasses(enabled: boolean = true) {
   const [entries, setEntries] = useState<TeacherClassEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const refetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -88,6 +94,10 @@ export function useTeacherClasses() {
   }, []);
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      return undefined;
+    }
     const controller = new AbortController();
     async function fetchTeachingLoad() {
       try {
@@ -129,7 +139,7 @@ export function useTeacherClasses() {
     }
     fetchTeachingLoad();
     return () => controller.abort();
-  }, [refreshKey]);
+  }, [refreshKey, enabled]);
 
   /** Deduplicated list of classes (backward compat). */
   const classes = useMemo(() => {

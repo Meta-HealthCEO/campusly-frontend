@@ -1,14 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import {
   ITEM_KIND_LABEL,
+  canViewUnitInsight,
   defaultUnitTitle,
   formatMinutes,
   generationSummary,
   isStuckWriting,
   liveGeneration,
   moduleMinutes,
+  previewSheetState,
   releaseBlocker,
   schoolTermFor,
+  shouldShowFreeUnitsBanner,
+  showHandBuiltDraftOffer,
   unitChip,
   unitMinutes,
   unitStage,
@@ -133,6 +137,63 @@ describe('withPolledStatus', () => {
     expect(next.modules[0].lessons.map((l) => [l.genStatus, l.genError ?? ''])).toEqual([['ready', ''], ['failed', 'timeout']]);
     expect(tree.modules[0].lessons[0].genStatus).toBe('pending');
     expect(withPolledStatus(tree, null)).toBe(tree);
+  });
+});
+
+describe('shouldShowFreeUnitsBanner', () => {
+  it('hides the free-units counter from Pro teachers', () => {
+    expect(shouldShowFreeUnitsBanner(true, { remaining: 2, limit: 3 })).toBe(false);
+  });
+
+  it('shows it to a free teacher who has an allowance', () => {
+    expect(shouldShowFreeUnitsBanner(false, { remaining: 2, limit: 3 })).toBe(true);
+  });
+
+  it('hides it when there is no allowance data (e.g. school-tier users)', () => {
+    expect(shouldShowFreeUnitsBanner(false, null)).toBe(false);
+  });
+});
+
+describe('showHandBuiltDraftOffer', () => {
+  it('offers to draft an outline for hand-built modules that never had one', () => {
+    expect(showHandBuiltDraftOffer('none', true)).toBe(true);
+  });
+
+  it('does not offer it when there is nothing built yet, or an outline already exists', () => {
+    expect(showHandBuiltDraftOffer('none', false)).toBe(false);
+    expect(showHandBuiltDraftOffer('drafted', true)).toBe(false);
+    expect(showHandBuiltDraftOffer('approved', true)).toBe(false);
+  });
+});
+
+describe('previewSheetState', () => {
+  it('never spins forever: a load failure shows its error once loading stops', () => {
+    expect(previewSheetState(true, false)).toBe('loading');
+    expect(previewSheetState(true, true)).toBe('loading');
+    expect(previewSheetState(false, true)).toBe('error');
+    expect(previewSheetState(false, false)).toBe('ready');
+  });
+});
+
+describe('canViewUnitInsight', () => {
+  const author = { _id: 'u1', firstName: 'A', lastName: 'B' };
+
+  it('lets the author see it', () => {
+    expect(canViewUnitInsight(author, { id: 'u1', role: 'teacher' })).toBe(true);
+  });
+
+  it('blocks a colleague who is a regular teacher', () => {
+    expect(canViewUnitInsight(author, { id: 'u2', role: 'teacher' })).toBe(false);
+  });
+
+  it('lets admins, HODs and principals see any unit in the school', () => {
+    expect(canViewUnitInsight(author, { id: 'u2', role: 'school_admin' })).toBe(true);
+    expect(canViewUnitInsight(author, { id: 'u2', role: 'teacher', isHOD: true })).toBe(true);
+    expect(canViewUnitInsight(author, { id: 'u2', role: 'teacher', isSchoolPrincipal: true })).toBe(true);
+  });
+
+  it('blocks when there is no signed-in user', () => {
+    expect(canViewUnitInsight(author, null)).toBe(false);
   });
 });
 

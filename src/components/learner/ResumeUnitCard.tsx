@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight, GraduationCap } from 'lucide-react';
 import { useLessonPlayer } from '@/hooks/useLessonPlayer';
-import { resumeTarget, type LearnerUnit } from '@/lib/learner-unit';
+import { resumeTarget } from '@/lib/learner-unit';
 import { ROUTES } from '@/lib/routes';
 
 interface Props {
@@ -16,7 +16,7 @@ interface Props {
 /** "Continue: What makes a pattern · Item 4 of 6 · 7 min": straight back to where the learner stopped. */
 export function ResumeUnitCard({ enrolmentId, courseId, unitTitle, progressPercent }: Props) {
   const { enrolmentDetail } = useLessonPlayer(enrolmentId);
-  const target = enrolmentDetail ? resumeTarget(enrolmentDetail.course as unknown as LearnerUnit) : null;
+  const target = enrolmentDetail ? resumeTarget(enrolmentDetail.course) : null;
   const href = target ? ROUTES.STUDENT_LESSON_PLAYER(courseId, target.lessonId) : ROUTES.STUDENT_COURSE_HOME(courseId);
 
   return (
@@ -31,11 +31,12 @@ export function ResumeUnitCard({ enrolmentId, courseId, unitTitle, progressPerce
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium uppercase tracking-wide text-accent-foreground">{target?.started === false ? 'Start' : 'Continue'}</p>
           <p className="truncate text-base font-semibold">{target?.title ?? unitTitle}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {target
-              ? [unitTitle, target.position, target.minutes ? `${target.minutes} min` : ''].filter(Boolean).join(' · ')
-              : unitTitle}
-          </p>
+          {/* While the unit is still loading, target is null and the line above already reads unitTitle — don't repeat it here. */}
+          {target ? (
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {[unitTitle, target.position, target.minutes ? `${target.minutes} min` : ''].filter(Boolean).join(' · ')}
+            </p>
+          ) : null}
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-background" aria-hidden>
             <div className="h-full rounded-full bg-accent-foreground" style={{ width: `${progressPercent}%` }} />
           </div>

@@ -44,7 +44,7 @@ export function BlockRenderer({ block, onAttempt, interaction }: BlockRendererPr
       return <OrderingBlock block={block} onSubmit={handleSubmit} interaction={interaction} />;
 
     case 'step_reveal':
-      return <StepRevealBlock block={block} />;
+      return <StepRevealBlock block={block} onAllRevealed={() => void handleSubmit('revealed')} />;
 
     case 'code':
       return <CodeBlock block={block} />;
