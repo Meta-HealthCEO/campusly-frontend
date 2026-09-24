@@ -42,12 +42,23 @@ export function UnitItemEditor({ itemKind, preview, saving, error, onSave, onCan
     : null;
   const problem = edit.kind === 'questions' ? questionsProblem(edit.questions) : null;
   const [showProblem, setShowProblem] = useState(false);
+  // `error` is the last save/rewrite failure for this item; it can predate
+  // this editor session (e.g. a rewrite that failed before Edit was
+  // clicked). Only show it once this session has actually tried to save.
+  const [attempted, setAttempted] = useState(false);
+
+  const change = (next: ItemEdit): void => {
+    setEdit(next);
+    setShowProblem(false);
+    setAttempted(false);
+  };
 
   const save = (): void => {
     if (problem) {
       setShowProblem(true);
       return;
     }
+    setAttempted(true);
     onSave(edit);
   };
 
@@ -55,12 +66,12 @@ export function UnitItemEditor({ itemKind, preview, saving, error, onSave, onCan
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {kept ? <p className="rounded-md bg-info-soft px-3 py-2 text-xs text-info">{kept}</p> : null}
-        {edit.kind === 'blocks' ? <NotesEditor blocks={edit.blocks} onChange={(blocks) => setEdit({ kind: 'blocks', blocks })} /> : null}
-        {edit.kind === 'steps' ? <StepsEditor steps={edit.steps.length > 0 ? edit.steps : [{ title: '', content: '' }]} onChange={(steps) => setEdit({ kind: 'steps', steps })} /> : null}
-        {edit.kind === 'questions' ? <QuestionsEditor questions={edit.questions} onChange={(questions) => { setEdit({ kind: 'questions', questions }); setShowProblem(false); }} /> : null}
+        {edit.kind === 'blocks' ? <NotesEditor blocks={edit.blocks} onChange={(blocks) => change({ kind: 'blocks', blocks })} /> : null}
+        {edit.kind === 'steps' ? <StepsEditor steps={edit.steps.length > 0 ? edit.steps : [{ title: '', content: '' }]} onChange={(steps) => change({ kind: 'steps', steps })} /> : null}
+        {edit.kind === 'questions' ? <QuestionsEditor questions={edit.questions} onChange={(questions) => change({ kind: 'questions', questions })} /> : null}
       </div>
       <div className="space-y-2 border-t border-border px-4 py-3">
-        {(showProblem && problem) || error ? (
+        {(showProblem && problem) || (attempted && error) ? (
           <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{showProblem && problem ? problem : error}</p>
         ) : null}
         <div className="flex justify-end gap-2">

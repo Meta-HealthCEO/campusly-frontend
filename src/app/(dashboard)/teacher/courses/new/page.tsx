@@ -9,12 +9,18 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { UnitScopeForm } from '@/components/courses/unit/UnitScopeForm';
 import { UnitSteps } from '@/components/courses/unit/UnitSteps';
 import { useClassUnit, type CreateUnitInput } from '@/hooks/useClassUnit';
+import { useEntitlement } from '@/hooks/useEntitlement';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { shouldShowFreeUnitsBanner } from '@/lib/course-unit';
 
 export default function NewUnitPage() {
   const router = useRouter();
   const { createUnit, draftOutline } = useClassUnit();
   const freeUnits = useAuthStore((s) => s.freeAllowance?.courseUnits ?? null);
+  const refreshAccount = useAuthStore((s) => s.refreshAccount);
+  // The Pro AI-generation switch is the same paperGeneration entitlement the
+  // server checks for building a unit (assertCourseGenerationAccess).
+  const entitled = useEntitlement('paperGeneration');
   const [busy, setBusy] = useState(false);
   // Once the unit exists, a failed draft is retried on it (no second unit).
   const [unitId, setUnitId] = useState<string | null>(null);
@@ -39,6 +45,8 @@ export default function NewUnitPage() {
       setError(failure);
       return;
     }
+    // A free-plan teacher just used one of their free AI units.
+    void refreshAccount();
     router.push(`/teacher/courses/${id}`);
   };
 
@@ -67,7 +75,7 @@ export default function NewUnitPage() {
         </section>
         <aside className="space-y-4">
           <UnitSteps current="scope" />
-          {freeUnits ? (
+          {shouldShowFreeUnitsBanner(entitled, freeUnits) && freeUnits ? (
             <p className="rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground">
               <span className="font-mono tabular-nums text-foreground">{freeUnits.remaining}</span> of {freeUnits.limit} free AI units left on your plan.
             </p>

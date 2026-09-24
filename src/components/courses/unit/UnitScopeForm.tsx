@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import { useTeacherSubjects } from '@/hooks/useTeacherSubjects';
-import { topicWeeks, useUnitTopics, type UnitTopic } from '@/hooks/useUnitTopics';
+import { selectedTopics, topicWeeks, useUnitTopics, type UnitTopic } from '@/hooks/useUnitTopics';
 import { resolveId } from '@/lib/api-helpers';
 import type { PopulatedId } from '@/types';
 import { defaultUnitTitle, schoolTermFor } from '@/lib/course-unit';
@@ -61,7 +61,8 @@ export function UnitScopeForm({ busy, submitLabel, onSubmit, locked = false }: P
   const { subjects } = useTeacherSubjects(cls?.gradeId || undefined);
   const subject = subjects.find((s) => s.id === subjectId) ?? null;
   const { topics, loading: topicsLoading } = useUnitTopics(subjectId, cls?.gradeId ?? '', term);
-  const chosen = topics.filter((t: UnitTopic) => !unticked.has(t.id)).slice(0, MAX_TOPICS);
+  const chosen = selectedTopics(topics, unticked, MAX_TOPICS);
+  const chosenIds = useMemo(() => new Set(chosen.map((t) => t.id)), [chosen]);
   const shownTitle = title ?? defaultUnitTitle(subject?.name ?? '', cls?.gradeName ?? '', term);
   const ready = !!cls && !!subject && chosen.length > 0 && !busy;
 
@@ -135,7 +136,7 @@ export function UnitScopeForm({ busy, submitLabel, onSubmit, locked = false }: P
         ) : (
           <ul className="grid grid-cols-1 gap-2 md:grid-cols-2">
             {topics.map((t: UnitTopic) => {
-              const on = !unticked.has(t.id);
+              const on = chosenIds.has(t.id);
               return (
                 <li key={t.id}>
                   <label className={`flex h-full cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${on ? 'border-accent-foreground/40 bg-accent' : 'border-border hover:bg-muted/50'}`}>

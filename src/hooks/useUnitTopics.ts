@@ -45,3 +45,12 @@ export function topicWeeks(topic: UnitTopic): string {
   const last = Math.max(...weeks);
   return first === last ? `Week ${first}` : `Weeks ${first}–${last}`;
 }
+
+/**
+ * The ticked topics that will actually be sent: a unit covers at most `max`
+ * topics, so once that many are ticked, later ones in the list don't count
+ * even though nothing unticked them.
+ */
+export function selectedTopics(topics: UnitTopic[], unticked: Set<string>, max: number): UnitTopic[] {
+  return topics.filter((t) => !unticked.has(t.id)).slice(0, max);
+}

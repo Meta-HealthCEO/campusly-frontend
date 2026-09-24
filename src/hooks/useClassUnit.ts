@@ -37,10 +37,10 @@ export interface ReleaseResult {
   classes: Array<{ classId: string; name: string; newEnrolments: number }>;
 }
 
-/** Class units: create, outline with AI, approve, retry, preview and release. */
 export interface CopyUnitInput { classId: string; termNumber: number; title?: string }
 export type CopyUnitResult = { ok: true; id: string } | { ok: false; message: string };
 
+/** Class units: create, outline with AI, approve, retry, preview and release. */
 export function useClassUnit() {
   const createUnit = useCallback(async (input: CreateUnitInput): Promise<Course | null> => {
     try {

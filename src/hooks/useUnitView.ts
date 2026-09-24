@@ -32,6 +32,8 @@ export function useUnitView(courseId: string) {
   const [busy, setBusy] = useState<Busy>(null);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [preview, setPreview] = useState<ItemPreview | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [openItem, setOpenItem] = useState<CourseLesson | null>(null);
   // A save or rewrite can outlive the sheet it started in: its result applies only to that item.
@@ -66,11 +68,22 @@ export function useUnitView(courseId: string) {
   const open = useCallback(async (item: CourseLesson): Promise<void> => {
     openIdRef.current = item.id;
     setPreview(null);
+    setPreviewError(null);
+    setPreviewLoading(true);
     setOpenItem(item);
     setPreviewOpen(true);
     const next = await actions.previewItem(courseId, item.id);
-    if (openIdRef.current === item.id) setPreview(next);
+    if (openIdRef.current === item.id) {
+      setPreview(next);
+      setPreviewError(next ? null : "Couldn't load this item. Try again.");
+      setPreviewLoading(false);
+    }
   }, [actions, courseId]);
+
+  /** Retries the currently-open item's preview after a load failure. */
+  const retryPreview = useCallback((): void => {
+    if (openItem) void open(openItem);
+  }, [open, openItem]);
 
   /** Runs a save or rewrite on the open item, then shows the new version. */
   const change = useCallback(async (task: (lessonId: string) => Promise<string | null>): Promise<boolean> => {
@@ -99,12 +112,17 @@ export function useUnitView(courseId: string) {
 
   const setSequential = useCallback((sequential: boolean) => run('settings', () => actions.updateSettings(courseId, sequential)), [run, actions, courseId]);
 
-  /** Adds a revision item after a check, on the questions the class got wrong there. */
-  const addRevision = useCallback((target: RevisionTarget) => run(`revision-${target.itemId}`, async () => {
-    setRevisionError(null);
-    const failure = await actions.addRevision(courseId, target.itemId, target.questionIds);
-    if (failure) setRevisionError({ itemId: target.itemId, message: failure });
-  }), [run, actions, courseId]);
+  /** Adds a revision item after a check, on the questions the class got wrong there. Resolves true once it's added. */
+  const addRevision = useCallback(async (target: RevisionTarget): Promise<boolean> => {
+    let ok = false;
+    await run(`revision-${target.itemId}`, async () => {
+      setRevisionError(null);
+      const failure = await actions.addRevision(courseId, target.itemId, target.questionIds);
+      if (failure) setRevisionError({ itemId: target.itemId, message: failure });
+      else ok = true;
+    });
+    return ok;
+  }, [run, actions, courseId]);
 
   return {
     course,
@@ -118,6 +136,9 @@ export function useUnitView(courseId: string) {
     remove,
     release,
     preview,
+    previewLoading,
+    previewError,
+    retryPreview,
     previewOpen,
     setPreviewOpen,
     open,
