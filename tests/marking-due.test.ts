@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { summariseMarkingDue } from '../src/lib/marking-due';
+import { summariseMarkingDue, submissionsToMark } from '../src/lib/marking-due';
 
 // Mid-morning local time on 23 September 2026.
 const now = new Date(2026, 8, 23, 10, 0);
@@ -35,5 +35,15 @@ describe('summariseMarkingDue', () => {
     const result = summariseMarkingDue([item(''), item('not-a-date')], now);
 
     expect(result).toEqual({ dueToday: 0, overdue: 0 });
+  });
+});
+
+describe('submissionsToMark', () => {
+  it('counts submissions, not tasks, so every count of marking agrees', () => {
+    expect(submissionsToMark([{ pendingCount: 3 }, { pendingCount: 2 }, { pendingCount: 2 }])).toBe(7);
+  });
+
+  it('is zero with nothing waiting', () => {
+    expect(submissionsToMark([])).toBe(0);
   });
 });

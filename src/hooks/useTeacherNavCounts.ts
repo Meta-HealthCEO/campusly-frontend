@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { submissionsToMark } from '@/lib/marking-due';
 import apiClient from '@/lib/api-client';
 import { unwrapList, unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -27,7 +28,7 @@ export function useTeacherNavCounts(enabled: boolean): NavCounts {
       if (cancelled) return;
       setCounts({
         marking: marking.status === 'fulfilled'
-          ? unwrapList<MarkingItem>(marking.value).reduce((sum: number, item: MarkingItem) => sum + item.pendingCount, 0)
+          ? submissionsToMark(unwrapList<MarkingItem>(marking.value))
           : null,
         messages: messages.status === 'fulfilled'
           ? unwrapResponse<{ totalUnread?: number }>(messages.value).totalUnread ?? 0

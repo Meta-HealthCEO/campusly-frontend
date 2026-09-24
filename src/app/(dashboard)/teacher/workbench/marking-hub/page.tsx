@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { MarkingItemCard } from '@/components/workbench/marking-hub/MarkingItemCard';
 import { MarkingFilters } from '@/components/workbench/marking-hub/MarkingFilters';
 import { useMarkingHub } from '@/hooks/useMarkingHub';
+import { submissionsToMark } from '@/lib/marking-due';
 import type { MarkingItemType, MarkingPriority, MarkingItem } from '@/types';
 
 interface Filters {
@@ -70,14 +71,16 @@ export default function MarkingHubPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
-          title="Total Pending"
-          value={String(items.length)}
+          title="Submissions to mark"
+          value={String(submissionsToMark(items))}
+          description={`Across ${items.length} task${items.length === 1 ? '' : 's'}`}
           icon={ListChecks}
         />
         <StatCard
           title="Overdue"
           value={String(overdueCount)}
           icon={AlertCircle}
+          tone={overdueCount > 0 ? 'attention' : 'default'}
         />
         <StatCard
           title="Due Today"

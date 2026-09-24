@@ -68,10 +68,10 @@ export function MarkingPaperSelect({ papers, loading, error, onRetry, onSelect }
         <div className="space-y-2">
           <Label>Paper</Label>
           <Select
-            value={selectedId || 'placeholder'}
+            value={selectedId || null}
             onValueChange={(v: unknown) => {
               const val = v as string;
-              if (val !== 'placeholder') setSelectedId(val);
+              if (val) setSelectedId(val);
             }}
           >
             <SelectTrigger className="w-full">

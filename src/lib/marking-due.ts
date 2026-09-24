@@ -27,3 +27,8 @@ export function summariseMarkingDue(
     { dueToday: 0, overdue: 0 },
   );
 }
+
+/** Submissions waiting across all marking tasks: the one number Today, the nav badge and the Marking page all show. */
+export function submissionsToMark(items: ReadonlyArray<{ pendingCount: number }>): number {
+  return items.reduce((sum: number, item: { pendingCount: number }) => sum + item.pendingCount, 0);
+}

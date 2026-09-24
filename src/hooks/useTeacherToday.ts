@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapList, unwrapResponse } from '@/lib/api-helpers';
 import { toISODate } from '@/lib/utils';
-import { summariseMarkingDue } from '@/lib/marking-due';
+import { submissionsToMark, summariseMarkingDue } from '@/lib/marking-due';
 import {
   annotatePeriods,
   assignLessonsToPeriods,
@@ -112,7 +112,7 @@ export function useTeacherToday(): TeacherToday {
   const marking = useMemo<TodayMarking>(() => {
     if (!markingItems) return { available: false, pending: 0, overdue: 0, dueToday: 0 };
     const due = summariseMarkingDue(markingItems, now);
-    const pending = markingItems.reduce((sum: number, item: MarkingItem) => sum + item.pendingCount, 0);
+    const pending = submissionsToMark(markingItems);
     return { available: true, pending, overdue: due.overdue, dueToday: due.dueToday };
   }, [markingItems, now]);
 
