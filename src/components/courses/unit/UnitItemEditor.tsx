@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { NotesEditor } from '@/components/courses/unit/NotesEditor';
 import { StepsEditor } from '@/components/courses/unit/StepsEditor';
 import { QuestionsEditor } from '@/components/courses/unit/QuestionsEditor';
-import { questionsProblem, stepsFromBlocks, textBlocksOf, type EditableBlock, type EditableQuestion, type EditableStep } from '@/lib/item-editing';
+import { keptBlocksNote, questionsProblem, stepsFromBlocks, textBlocksOf, type EditableBlock, type EditableQuestion, type EditableStep } from '@/lib/item-editing';
 import type { ItemPreview } from '@/hooks/useClassUnit';
 import type { ItemKind } from '@/types/courses';
 
@@ -26,7 +26,7 @@ interface Props {
 
 function initialEdit(itemKind: ItemKind, preview: ItemPreview): ItemEdit {
   if (preview.kind === 'quiz') {
-    return { kind: 'questions', questions: preview.questions.map((q) => ({ stem: q.stem, options: q.options.map((o) => ({ text: o.text, isCorrect: o.isCorrect })) })) };
+    return { kind: 'questions', questions: preview.questions.map((q) => ({ id: q.id, stem: q.stem, options: q.options.map((o) => ({ text: o.text, isCorrect: o.isCorrect })) })) };
   }
   const blocks = preview.kind === 'content' ? preview.blocks.map((b) => ({ blockId: b.blockId, type: b.type, content: b.content })) : [];
   return itemKind === 'worked_example'
@@ -37,6 +37,9 @@ function initialEdit(itemKind: ItemKind, preview: ItemPreview): ItemEdit {
 /** Edit an item in place: notes text, worked-example steps, or quick-check questions. */
 export function UnitItemEditor({ itemKind, preview, saving, error, onSave, onCancel }: Props) {
   const [edit, setEdit] = useState<ItemEdit>(() => initialEdit(itemKind, preview));
+  const kept = preview.kind === 'content' && itemKind !== 'quick_check'
+    ? keptBlocksNote(itemKind, preview.blocks.map((b) => ({ blockId: b.blockId, type: b.type, content: b.content })))
+    : null;
   const problem = edit.kind === 'questions' ? questionsProblem(edit.questions) : null;
   const [showProblem, setShowProblem] = useState(false);
 
@@ -50,7 +53,8 @@ export function UnitItemEditor({ itemKind, preview, saving, error, onSave, onCan
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+        {kept ? <p className="rounded-md bg-info-soft px-3 py-2 text-xs text-info">{kept}</p> : null}
         {edit.kind === 'blocks' ? <NotesEditor blocks={edit.blocks} onChange={(blocks) => setEdit({ kind: 'blocks', blocks })} /> : null}
         {edit.kind === 'steps' ? <StepsEditor steps={edit.steps.length > 0 ? edit.steps : [{ title: '', content: '' }]} onChange={(steps) => setEdit({ kind: 'steps', steps })} /> : null}
         {edit.kind === 'questions' ? <QuestionsEditor questions={edit.questions} onChange={(questions) => { setEdit({ kind: 'questions', questions }); setShowProblem(false); }} /> : null}

@@ -62,7 +62,7 @@ function RevisionActions({ missed, busyItemId, error, onAdd }: RevisionProps & {
           {error?.itemId === t.itemId ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{error.message}</p> : null}
         </div>
       ))}
-      <p className="text-xs text-muted-foreground">The AI re-teaches these questions with fresh examples. It goes in right after the check, and nobody who is past the check has to do it.</p>
+      <p className="text-xs text-muted-foreground">The AI re-teaches these questions with fresh examples. It goes in right after the check as optional practice: it never holds anyone back.</p>
     </div>
   );
 }

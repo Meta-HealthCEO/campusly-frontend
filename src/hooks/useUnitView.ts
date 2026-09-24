@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useCourseBuilder } from '@/hooks/useCourseBuilder';
 import { useClassUnit, useUnitGeneration, type ItemPreview } from '@/hooks/useClassUnit';
 import { liveGeneration, unitStage, withPolledStatus } from '@/lib/course-unit';
@@ -34,8 +34,10 @@ export function useUnitView(courseId: string) {
   const [preview, setPreview] = useState<ItemPreview | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [openItem, setOpenItem] = useState<CourseLesson | null>(null);
-  const [editBusy, setEditBusy] = useState(false);
-  const [editError, setEditError] = useState<string | null>(null);
+  // A save or rewrite can outlive the sheet it started in: its result applies only to that item.
+  const openIdRef = useRef<string | null>(null);
+  const [editBusyId, setEditBusyId] = useState<string | null>(null);
+  const [editError, setEditError] = useState<{ lessonId: string; message: string } | null>(null);
   const [revisionError, setRevisionError] = useState<{ itemId: string; message: string } | null>(null);
 
   const run = useCallback(async (key: Busy, task: () => Promise<unknown>): Promise<void> => {
@@ -62,25 +64,28 @@ export function useUnitView(courseId: string) {
   }, [run, actions, courseId]);
 
   const open = useCallback(async (item: CourseLesson): Promise<void> => {
+    openIdRef.current = item.id;
     setPreview(null);
     setOpenItem(item);
-    setEditError(null);
     setPreviewOpen(true);
-    setPreview(await actions.previewItem(courseId, item.id));
+    const next = await actions.previewItem(courseId, item.id);
+    if (openIdRef.current === item.id) setPreview(next);
   }, [actions, courseId]);
 
   /** Runs a save or rewrite on the open item, then shows the new version. */
   const change = useCallback(async (task: (lessonId: string) => Promise<string | null>): Promise<boolean> => {
     if (!openItem) return false;
-    setEditBusy(true);
+    const lessonId = openItem.id;
+    setEditBusyId(lessonId);
     setEditError(null);
-    const failure = await task(openItem.id);
+    const failure = await task(lessonId);
     if (!failure) {
-      setPreview(await actions.previewItem(courseId, openItem.id));
+      const next = await actions.previewItem(courseId, lessonId);
+      if (openIdRef.current === lessonId) setPreview(next);
       await refresh();
     }
-    setEditError(failure);
-    setEditBusy(false);
+    setEditError(failure ? { lessonId, message: failure } : null);
+    setEditBusyId(null);
     return failure === null;
   }, [openItem, actions, courseId, refresh]);
 
@@ -117,8 +122,11 @@ export function useUnitView(courseId: string) {
     setPreviewOpen,
     open,
     openItem,
-    editBusy,
-    editError,
+    /** This item is being saved or rewritten. */
+    editBusy: editBusyId !== null && editBusyId === openItem?.id,
+    /** Another item is being saved or rewritten: one change at a time. */
+    otherBusy: editBusyId !== null && editBusyId !== openItem?.id,
+    editError: editError && editError.lessonId === openItem?.id ? editError.message : null,
     saveItem,
     rewriteItem,
     setSequential,

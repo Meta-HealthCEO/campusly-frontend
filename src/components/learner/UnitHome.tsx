@@ -31,7 +31,7 @@ function ItemRow({ item, onOpen }: { item: LearnerItem; onOpen: () => void }) {
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-medium">{item.title}</span>
           <span className="block text-xs text-muted-foreground">
-            {LEARNER_KIND_LABEL[item.itemKind ?? 'notes']}{item.minutes ? ` · ${item.minutes} min` : ''}
+            {LEARNER_KIND_LABEL[item.itemKind ?? 'notes']}{item.minutes ? ` · ${item.minutes} min` : ''}{item.optional ? ' · Optional' : ''}
           </span>
         </span>
         {done ? <CheckCircle2 className="h-5 w-5 shrink-0 text-success" aria-label="Done" />

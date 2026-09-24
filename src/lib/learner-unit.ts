@@ -9,6 +9,8 @@ export interface LearnerItem {
   minutes?: number | null;
   type?: string;
   unlockStatus?: LessonProgressStatus;
+  /** Extra practice (a revision item): open to do, never required. */
+  optional?: boolean;
 }
 
 export interface LearnerModule {
@@ -47,30 +49,32 @@ function ordered(unit: LearnerUnit): Array<{ item: LearnerItem; module: LearnerM
     .flatMap((module) => [...module.lessons].sort((a, b) => a.orderIndex - b.orderIndex).map((item) => ({ item, module })));
 }
 
-/** Where the learner picks up: the first item still to do. Null once the unit is done. */
+/** Where the learner picks up: the first required item still to do. Null once the unit is done. */
 export function resumeTarget(unit: LearnerUnit): ResumeTarget | null {
   const all = ordered(unit);
-  const index = all.findIndex(({ item }) => item.unlockStatus === 'available' || item.unlockStatus === 'in_progress');
+  const required = all.filter(({ item }) => !item.optional);
+  const index = required.findIndex(({ item }) => item.unlockStatus === 'available' || item.unlockStatus === 'in_progress');
   if (index === -1) return null;
-  const { item, module } = all[index];
+  const { item, module } = required[index];
   const started = item.unlockStatus === 'in_progress' || all.some(({ item: i }) => i.unlockStatus === 'completed');
   return {
     lessonId: item.id,
     title: item.title,
     moduleTitle: module.title,
-    position: `Item ${index + 1} of ${all.length}`,
+    position: `Item ${index + 1} of ${required.length}`,
     minutes: item.minutes ?? null,
     started,
   };
 }
 
 export function moduleProgress(module: { lessons: LearnerItem[] }): { done: number; total: number; percent: number } {
-  const total = module.lessons.length;
-  const done = module.lessons.filter((l) => l.unlockStatus === 'completed').length;
+  const required = module.lessons.filter((l) => !l.optional);
+  const total = required.length;
+  const done = required.filter((l) => l.unlockStatus === 'completed').length;
   return { done, total, percent: total === 0 ? 0 : Math.round((done / total) * 100) };
 }
 
 export function unitDone(unit: LearnerUnit): boolean {
-  const all = ordered(unit);
-  return all.length > 0 && all.every(({ item }) => item.unlockStatus === 'completed');
+  const required = ordered(unit).filter(({ item }) => !item.optional);
+  return required.length > 0 && required.every(({ item }) => item.unlockStatus === 'completed');
 }

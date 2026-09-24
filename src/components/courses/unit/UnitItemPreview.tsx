@@ -25,8 +25,10 @@ interface Props {
   item: CourseLesson | null;
   preview: ItemPreview | null;
   loading: boolean;
-  /** Saving or rewriting is in progress. */
+  /** Saving or rewriting this item is in progress. */
   busy: boolean;
+  /** Another item is being saved or rewritten. */
+  blocked?: boolean;
   /** Why the last save or rewrite failed. */
   error: string | null;
   onSave: (edit: ItemEdit) => Promise<boolean>;
@@ -54,7 +56,7 @@ function Questions({ questions }: { questions: PreviewQuestion[] }) {
 }
 
 /** An item as learners will get it, with Edit and Rewrite for the teacher. */
-export function UnitItemPreview({ open, onOpenChange, item, preview, loading, busy, error, onSave, onRewrite }: Props) {
+export function UnitItemPreview({ open, onOpenChange, item, preview, loading, busy, blocked = false, error, onSave, onRewrite }: Props) {
   const [editing, setEditing] = useState(false);
   const ready = !loading && preview && preview.kind !== 'not_ready' && item?.itemKind;
   const close = (next: boolean): void => {
@@ -72,12 +74,13 @@ export function UnitItemPreview({ open, onOpenChange, item, preview, loading, bu
           </SheetDescription>
           {ready && !editing ? (
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => setEditing(true)} disabled={busy} className="min-h-11 gap-1.5 sm:min-h-8">
+              <Button variant="outline" size="sm" onClick={() => setEditing(true)} disabled={busy || blocked} className="min-h-11 gap-1.5 sm:min-h-8">
                 <Pencil className="h-4 w-4" aria-hidden /> Edit
               </Button>
-              <RewriteMenu busy={busy} onRewrite={onRewrite} />
+              <RewriteMenu busy={busy} disabled={blocked} onRewrite={onRewrite} />
             </div>
           ) : null}
+          {blocked && !editing ? <p className="text-xs text-muted-foreground">Another item is being rewritten. You can change this one when it&apos;s done.</p> : null}
           {error && !editing ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{error}</p> : null}
         </SheetHeader>
         {editing && ready && preview && item?.itemKind ? (

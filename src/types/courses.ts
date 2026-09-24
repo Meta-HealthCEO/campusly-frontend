@@ -102,6 +102,8 @@ export interface CourseLesson {
   genStatus?: ItemGenStatus | null;
   genError?: string;
   teacherEdited?: boolean;
+  /** Extra practice (a revision item): never locks what follows, not needed to finish. */
+  optional?: boolean;
   createdAt: string;
   updatedAt: string;
 }

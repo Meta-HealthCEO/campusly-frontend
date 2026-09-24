@@ -41,3 +41,19 @@ describe('moduleProgress and unitDone', () => {
     expect(LEARNER_KIND_LABEL).toEqual({ notes: 'Read', worked_example: 'Worked example', quick_check: 'Quick check' });
   });
 });
+
+describe('optional revision items', () => {
+  it('never become the next item or count toward the unit', () => {
+    const unit = tree({ title: 'M', items: [
+      item('a', 'completed', { orderIndex: 0 }),
+      item('Revision: counting', 'available', { orderIndex: 1, optional: true }),
+      item('b', 'available', { orderIndex: 2 }),
+    ] });
+    expect(resumeTarget(unit)).toMatchObject({ lessonId: 'b', position: 'Item 2 of 2' });
+    expect(moduleProgress(unit.modules[0])).toEqual({ done: 1, total: 2, percent: 50 });
+  });
+
+  it('a unit is done without its optional items', () => {
+    expect(unitDone(tree({ title: 'M', items: [item('a', 'completed'), item('r', 'available', { optional: true })] }))).toBe(true);
+  });
+});

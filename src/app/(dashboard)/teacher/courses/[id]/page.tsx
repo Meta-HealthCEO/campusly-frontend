@@ -158,6 +158,7 @@ export default function UnitPage() {
         preview={view.preview}
         loading={view.previewOpen && view.preview === null}
         busy={view.editBusy}
+        blocked={view.otherBusy}
         error={view.editError}
         onSave={view.saveItem}
         onRewrite={view.rewriteItem}

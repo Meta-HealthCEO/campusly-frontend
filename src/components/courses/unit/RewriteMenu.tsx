@@ -18,14 +18,15 @@ import { LANGUAGE_OPTIONS, REWRITE_OPTIONS, type RewriteAction } from '@/lib/ite
 
 interface Props {
   busy: boolean;
+  disabled?: boolean;
   onRewrite: (action: RewriteAction, language?: string) => void;
 }
 
 /** Ask the AI for another version of the item: easier, harder, shorter, simpler, translated, or new. */
-export function RewriteMenu({ busy, onRewrite }: Props) {
+export function RewriteMenu({ busy, disabled = false, onRewrite }: Props) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="outline" size="sm" disabled={busy} className="min-h-11 gap-1.5 sm:min-h-8" />}>
+      <DropdownMenuTrigger render={<Button variant="outline" size="sm" disabled={busy || disabled} className="min-h-11 gap-1.5 sm:min-h-8" />}>
         {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Wand2 className="h-4 w-4" aria-hidden />}
         {busy ? 'Rewriting…' : 'Rewrite'}
       </DropdownMenuTrigger>

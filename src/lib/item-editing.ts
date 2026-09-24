@@ -19,7 +19,12 @@ export const LANGUAGE_OPTIONS: Array<{ code: string; label: string }> = [
 
 export interface EditableBlock { blockId: string; type: string; content: string }
 export interface EditableStep { title: string; content: string }
-export interface EditableQuestion { stem: string; options: Array<{ text: string; isCorrect: boolean }> }
+export interface EditableQuestion {
+  /** The saved question this came from; unchanged questions keep it, so their history stays. */
+  id?: string;
+  stem: string;
+  options: Array<{ text: string; isCorrect: boolean }>;
+}
 
 /** A worked example's steps (from its step-reveal block). */
 export function stepsFromBlocks(blocks: EditableBlock[]): EditableStep[] {
@@ -56,4 +61,14 @@ export function questionsProblem(questions: EditableQuestion[]): string | null {
 
 export function emptyQuestion(): EditableQuestion {
   return { stem: '', options: [{ text: '', isCorrect: true }, { text: '', isCorrect: false }] };
+}
+
+/** What the editor leaves alone (a problem, practice, pictures), said once so the teacher knows it stays. */
+export function keptBlocksNote(itemKind: 'notes' | 'worked_example', blocks: EditableBlock[]): string | null {
+  const editable = itemKind === 'worked_example' ? 'step_reveal' : 'text';
+  const others = blocks.filter((b) => b.type !== editable).length;
+  if (others === 0) return null;
+  return others === 1
+    ? "This item also has 1 part the editor doesn't show. Saving keeps it as it is."
+    : `This item also has ${others} parts the editor doesn't show. Saving keeps them as they are.`;
 }

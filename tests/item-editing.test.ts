@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { LANGUAGE_OPTIONS, REWRITE_OPTIONS, emptyQuestion, questionsProblem, stepsFromBlocks, textBlocksOf } from '../src/lib/item-editing';
+import { LANGUAGE_OPTIONS, REWRITE_OPTIONS, emptyQuestion, keptBlocksNote, questionsProblem, stepsFromBlocks, textBlocksOf } from '../src/lib/item-editing';
 
 describe('rewrite and language options', () => {
   it('offers the rewrites and the South African languages the server accepts', () => {
@@ -30,5 +30,19 @@ describe('questionsProblem', () => {
 
   it('starts a new question with two choices, the first marked right', () => {
     expect(emptyQuestion()).toEqual({ stem: '', options: [{ text: '', isCorrect: true }, { text: '', isCorrect: false }] });
+  });
+});
+
+describe('keptBlocksNote', () => {
+  const block = (type: string) => ({ blockId: type, type, content: '' });
+
+  it('tells the teacher what the editor leaves alone', () => {
+    expect(keptBlocksNote('notes', [block('text'), block('quiz'), block('image')])).toBe("This item also has 2 parts the editor doesn't show. Saving keeps them as they are.");
+    expect(keptBlocksNote('worked_example', [block('text'), block('step_reveal')])).toBe("This item also has 1 part the editor doesn't show. Saving keeps it as it is.");
+  });
+
+  it('says nothing when the editor shows everything', () => {
+    expect(keptBlocksNote('notes', [block('text')])).toBeNull();
+    expect(keptBlocksNote('worked_example', [block('step_reveal')])).toBeNull();
   });
 });
