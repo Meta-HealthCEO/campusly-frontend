@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Menu, LogOut, User, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -14,9 +14,18 @@ import { getInitials } from '@/lib/utils';
 import { getRoleLabel, getRoleProfilePath, getRoleSettingsPath } from '@/lib/auth';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { navContextFor } from '@/lib/nav-context';
+import type { NavItem } from '@/lib/constants';
 
-export function TopBar() {
+interface TopBarProps {
+  /** Nav items to name the current page from (teacher portal); other portals show the role. */
+  items?: NavItem[];
+}
+
+export function TopBar({ items }: TopBarProps = {}) {
   const router = useRouter();
+  const pathname = usePathname() ?? '';
+  const context = items ? navContextFor(pathname, items) : null;
   const { toggleSidebar } = useUIStore();
   const { user } = useAuthStore();
   const { logout } = useAuth();
@@ -31,7 +40,11 @@ export function TopBar() {
         </Button>
         <div className="hidden sm:block">
           <h2 className="text-sm font-medium text-muted-foreground">
-            {user ? getRoleLabel(user.role) : 'Dashboard'}
+            {context ? (
+              <span className="font-mono text-[11px] uppercase tracking-[0.1em]">
+                {context.section && context.section !== context.label ? `${context.section} · ` : ''}{context.label}
+              </span>
+            ) : user ? getRoleLabel(user.role) : 'Dashboard'}
           </h2>
         </div>
       </div>

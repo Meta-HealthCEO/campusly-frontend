@@ -131,7 +131,7 @@ export default function DashboardLayout({
       >
         <Sidebar items={navItems} />
         <div className="flex flex-1 flex-col overflow-hidden">
-          <TopBar />
+          <TopBar items={portal ? navItems : undefined} />
           <TrialBanner />
           <DunningBanner />
           <main className="flex-1 overflow-y-auto p-4 pb-20 lg:p-6 lg:pb-6">
