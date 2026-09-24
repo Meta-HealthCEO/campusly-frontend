@@ -25,8 +25,8 @@ export interface DayCell {
 export type CalendarView = 'month' | 'week';
 
 export const STATUS_CHIP: Record<LessonAssignmentStatus, string> = {
-  planned: 'bg-blue-500/15 text-blue-700 border-blue-500/30',
-  taught: 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30',
+  planned: 'bg-info-soft text-info border-info/30',
+  taught: 'bg-success-soft text-success border-success/30',
 };
 
 export const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

@@ -45,13 +45,13 @@ function QuestionCard({ q, index }: { q: QuestionItem; index: number }) {
               key={i}
               className={
                 'flex items-start gap-2 text-sm rounded px-2 py-1.5 ' +
-                (opt.isCorrect ? 'bg-emerald-50 text-emerald-900' : 'bg-muted/40')
+                (opt.isCorrect ? 'bg-success-soft text-success' : 'bg-muted/40')
               }
             >
               <span className="font-medium shrink-0">{opt.label}.</span>
               <span className="flex-1">{opt.text}</span>
               {opt.isCorrect && (
-                <Check className="h-4 w-4 text-emerald-600 shrink-0" />
+                <Check className="h-4 w-4 text-success shrink-0" />
               )}
             </li>
           ))}
@@ -61,7 +61,7 @@ function QuestionCard({ q, index }: { q: QuestionItem; index: number }) {
       {type === 'true_false' && q.answer && (
         <div className="text-sm">
           <span className="text-muted-foreground">Answer: </span>
-          <span className="font-medium capitalize text-emerald-700">{q.answer}</span>
+          <span className="font-medium capitalize text-success">{q.answer}</span>
         </div>
       )}
 

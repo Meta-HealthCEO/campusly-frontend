@@ -18,6 +18,13 @@ const MIGRATED = [
   'src/components/teacher-home/NeedsYouCard.tsx',
   'src/components/teacher-home/AIQuickMakeHero.tsx',
   'src/app/(dashboard)/teacher/page.tsx',
+  'src/components/lessons/LessonMaterialCard.tsx',
+  'src/components/lessons/lesson-calendar.utils.ts',
+  'src/components/lessons/LessonAssignedClasses.tsx',
+  'src/components/lessons/LessonGenerateAllBanner.tsx',
+  'src/components/lessons/LessonHeader.tsx',
+  'src/components/homework/ExerciseQuestionsList.tsx',
+  'src/app/(dashboard)/teacher/assignments/new/_StepSetup.tsx',
 ];
 
 const RAW = /\b(?:bg|text|border|ring|from|to|via|fill|stroke|outline|divide|decoration)-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)-\d{2,3}\b/g;

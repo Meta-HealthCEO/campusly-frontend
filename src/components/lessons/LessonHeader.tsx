@@ -222,7 +222,7 @@ export function LessonHeader({
       </div>
 
       {isPublished && publishedDateLabel && (
-        <div className="-mt-3 inline-flex items-center gap-1.5 text-xs text-emerald-700">
+        <div className="-mt-3 inline-flex items-center gap-1.5 text-xs text-success">
           <CheckCircle2 className="h-3.5 w-3.5" />
           Published on {publishedDateLabel}
         </div>

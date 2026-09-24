@@ -145,7 +145,7 @@ export function LessonGenerateAllBanner({
               <ul className="text-xs text-muted-foreground space-y-0.5">
                 {autoItems.map((m) => (
                   <li key={m._id} className="truncate">
-                    <span className="text-emerald-700">●</span> {m.title}
+                    <span className="text-success">●</span> {m.title}
                   </li>
                 ))}
               </ul>
@@ -154,7 +154,7 @@ export function LessonGenerateAllBanner({
               <ul className="text-xs text-muted-foreground space-y-0.5 pt-1">
                 {manualItems.map(({ material, reason }) => (
                   <li key={material._id} className="truncate">
-                    <span className="text-amber-700">●</span> {material.title}
+                    <span className="text-attention">●</span> {material.title}
                     {' '}<span className="italic">— {reason}</span>
                   </li>
                 ))}

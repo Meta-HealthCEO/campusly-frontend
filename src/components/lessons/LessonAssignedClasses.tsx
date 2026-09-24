@@ -253,8 +253,8 @@ function AssignmentChip({ assignment, classNameById, onUpdate, onUnassign }: Chi
 
   const statusBadge =
     assignment.status === 'taught'
-      ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/30'
-      : 'bg-blue-500/15 text-blue-700 border-blue-500/30';
+      ? 'bg-success-soft text-success border-success/30'
+      : 'bg-info-soft text-info border-info/30';
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>

@@ -139,7 +139,7 @@ export function LessonMaterialCard({
       style={style}
       className={
         isPlaceholder
-          ? 'p-4 border-amber-500/40 bg-amber-500/5 hover:border-amber-500/60 transition-colors'
+          ? 'p-4 border-attention/40 bg-attention-soft hover:border-attention/60 transition-colors'
           : 'p-4 hover:border-primary/30 transition-colors'
       }
     >
@@ -191,7 +191,7 @@ export function LessonMaterialCard({
             variant={isPlaceholder ? 'secondary' : 'default'}
             className={
               isPlaceholder
-                ? 'text-xs bg-amber-500/15 text-amber-700 border-amber-500/30'
+                ? 'text-xs bg-attention-soft text-attention border-attention/30'
                 : 'text-xs'
             }
           >
@@ -226,7 +226,7 @@ export function LessonMaterialCard({
           onClick={() => onOpenDrawer(material.kind, material._id)}
           className={
             isPlaceholder
-              ? 'inline-flex items-center gap-1 rounded-md bg-amber-500/20 px-2 py-1 text-amber-800 font-medium hover:bg-amber-500/30'
+              ? 'inline-flex items-center gap-1 rounded-md border border-attention/40 bg-card px-2 py-1 text-attention font-medium hover:bg-attention/10'
               : 'text-primary hover:underline'
           }
         >

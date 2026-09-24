@@ -211,11 +211,11 @@ export function StepSetup({
             </div>
 
             {blocker && (
-              <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-xs">
-                <p className="font-medium text-amber-900 dark:text-amber-200">
+              <div className="rounded-md border border-attention/40 bg-attention-soft px-3 py-2 text-xs">
+                <p className="font-medium text-attention">
                   Before generating
                 </p>
-                <p className="mt-0.5 text-amber-800 dark:text-amber-300">{blocker}</p>
+                <p className="mt-0.5 text-attention">{blocker}</p>
               </div>
             )}
           </CardContent>
