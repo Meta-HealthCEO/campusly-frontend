@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse, extractErrorMessage } from '@/lib/api-helpers';
+import { toLeaveReportSummary, type LeaveReportResponse } from '@/lib/leave-report';
 import type { LeavePolicy, LeaveReportSummary } from '@/types';
 
 interface ReportParams {
@@ -46,7 +47,7 @@ export function useLeaveAdmin() {
       const response = await apiClient.get('/leave/reports/summary', {
         params,
       });
-      const data = unwrapResponse<LeaveReportSummary>(response);
+      const data = toLeaveReportSummary(unwrapResponse<LeaveReportResponse>(response));
       setReport(data);
     } catch (err: unknown) {
       console.error('Failed to fetch leave report:', extractErrorMessage(err));
