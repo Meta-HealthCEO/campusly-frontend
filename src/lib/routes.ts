@@ -221,7 +221,6 @@ export const ROUTES = {
   // Teacher Workbench
   TEACHER_WORKBENCH: '/teacher/workbench',
   TEACHER_WORKBENCH_CURRICULUM: '/teacher/workbench/curriculum',
-  TEACHER_WORKBENCH_QUESTION_BANK: '/teacher/workbench/question-bank',
   TEACHER_WORKBENCH_PAPER_BUILDER: '/teacher/workbench/papers/builder',
   TEACHER_WORKBENCH_MODERATION: '/teacher/workbench/papers/moderation',
   TEACHER_WORKBENCH_MARKING_HUB: '/teacher/workbench/marking-hub',
