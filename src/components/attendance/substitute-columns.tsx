@@ -26,6 +26,9 @@ function getClassNames(classIds: SubstituteTeacher['classIds']): string {
     .join(', ') || '-';
 }
 
+/** Column the substitutes table's search box filters on. */
+export const SUBSTITUTE_SEARCH_KEY = 'reason';
+
 export interface SubstituteRowActions {
   onApprove: (id: string) => void;
   onDecline: (sub: SubstituteTeacher) => void;
@@ -68,6 +71,13 @@ export function buildSubstituteColumns(
       header: 'Classes',
       cell: ({ row }) => (
         <span className="text-sm truncate">{getClassNames(row.original.classIds)}</span>
+      ),
+    },
+    {
+      accessorKey: SUBSTITUTE_SEARCH_KEY,
+      header: 'Reason',
+      cell: ({ row }) => (
+        <span className="block max-w-48 truncate text-sm">{row.original.reason || '-'}</span>
       ),
     },
     {

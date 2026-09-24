@@ -13,7 +13,7 @@ import {
   SubstituteForm,
   SubstituteDeclineDialog,
 } from '@/components/attendance';
-import { buildSubstituteColumns } from '@/components/attendance/substitute-columns';
+import { buildSubstituteColumns, SUBSTITUTE_SEARCH_KEY } from '@/components/attendance/substitute-columns';
 import { useSubstitutes } from '@/hooks/useSubstitutes';
 import type { SubstituteTeacher, SubstituteStatus } from '@/types';
 
@@ -161,7 +161,7 @@ function AdminSubstitutesPageInner() {
           <DataTable
             columns={columns}
             data={filtered}
-            searchKey="reason"
+            searchKey={SUBSTITUTE_SEARCH_KEY}
             searchPlaceholder="Search by reason..."
           />
         </TabsContent>
