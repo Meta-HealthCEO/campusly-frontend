@@ -7,6 +7,7 @@ import { extractErrorMessage, unwrapResponse } from '@/lib/api-helpers';
 import type { Course, ItemGenStatus } from '@/types/courses';
 import type { PolledState } from '@/lib/course-unit';
 import type { ContentBlockItem } from '@/types';
+import type { EditableBlock, EditableQuestion, EditableStep, RewriteAction } from '@/lib/item-editing';
 
 export interface CreateUnitInput {
   classId: string;
@@ -99,7 +100,62 @@ export function useClassUnit() {
     }
   }, []);
 
-  return { createUnit, draftOutline, approveOutline, retryItem, previewItem, releaseUnit };
+  /** Each returns null when done, or the reason it couldn't be (shown where the teacher is editing). */
+  const saveContent = useCallback(async (courseId: string, lessonId: string, body: { blocks?: EditableBlock[]; steps?: EditableStep[] }): Promise<string | null> => {
+    try {
+      await apiClient.put(`/courses/${courseId}/lessons/${lessonId}/content`, body);
+      toast.success('Saved');
+      return null;
+    } catch (err: unknown) {
+      return extractErrorMessage(err, 'Could not save. Try again.');
+    }
+  }, []);
+
+  const saveQuestions = useCallback(async (courseId: string, lessonId: string, questions: EditableQuestion[]): Promise<string | null> => {
+    try {
+      await apiClient.put(`/courses/${courseId}/lessons/${lessonId}/questions`, { questions });
+      toast.success('Saved');
+      return null;
+    } catch (err: unknown) {
+      return extractErrorMessage(err, 'Could not save. Try again.');
+    }
+  }, []);
+
+  const rewriteItem = useCallback(async (courseId: string, lessonId: string, action: RewriteAction, language?: string): Promise<string | null> => {
+    try {
+      await apiClient.post(`/courses/${courseId}/lessons/${lessonId}/rewrite`, { action, ...(language ? { language } : {}) });
+      toast.success('Rewritten. Check the new version.');
+      return null;
+    } catch (err: unknown) {
+      return extractErrorMessage(err, 'The AI could not rewrite this just now. Try again in a moment.');
+    }
+  }, []);
+
+  const updateSettings = useCallback(async (courseId: string, sequential: boolean): Promise<boolean> => {
+    try {
+      await apiClient.patch(`/courses/${courseId}/settings`, { sequential });
+      toast.success(sequential ? 'Learners go in order' : 'Learners can open items in any order');
+      return true;
+    } catch (err: unknown) {
+      toast.error(extractErrorMessage(err, 'Could not save the setting.'));
+      return false;
+    }
+  }, []);
+
+  const addRevision = useCallback(async (courseId: string, afterLessonId: string, questionIds: string[]): Promise<string | null> => {
+    try {
+      await apiClient.post(`/courses/${courseId}/revision`, { afterLessonId, questionIds });
+      toast.success('Revision item added after the check');
+      return null;
+    } catch (err: unknown) {
+      return extractErrorMessage(err, 'The AI could not write a revision item just now. Try again in a moment.');
+    }
+  }, []);
+
+  return {
+    createUnit, draftOutline, approveOutline, retryItem, previewItem, releaseUnit,
+    saveContent, saveQuestions, rewriteItem, updateSettings, addRevision,
+  };
 }
 
 const POLL_MS = 3000;

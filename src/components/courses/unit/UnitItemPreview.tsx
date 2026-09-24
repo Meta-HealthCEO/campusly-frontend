@@ -1,11 +1,17 @@
 'use client';
 
-import { Check } from 'lucide-react';
+import { useState } from 'react';
+import { Check, Pencil } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { BlockRenderer } from '@/components/content/renderers/BlockRenderer';
+import { RewriteMenu } from '@/components/courses/unit/RewriteMenu';
+import { UnitItemEditor, type ItemEdit } from '@/components/courses/unit/UnitItemEditor';
 import type { ItemPreview, PreviewQuestion } from '@/hooks/useClassUnit';
+import type { RewriteAction } from '@/lib/item-editing';
 import type { AttemptResult, BlockInteractionState } from '@/types';
+import type { CourseLesson } from '@/types/courses';
 
 // A preview is read-only: interactive blocks render but don't record attempts.
 const previewAttempt = async (): Promise<AttemptResult> => ({ id: 'preview', correct: false, score: 0, maxScore: 1, attemptNumber: 1 });
@@ -16,8 +22,15 @@ const idle = (blockId: string): BlockInteractionState => ({
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  item: CourseLesson | null;
   preview: ItemPreview | null;
   loading: boolean;
+  /** Saving or rewriting is in progress. */
+  busy: boolean;
+  /** Why the last save or rewrite failed. */
+  error: string | null;
+  onSave: (edit: ItemEdit) => Promise<boolean>;
+  onRewrite: (action: RewriteAction, language?: string) => void;
 }
 
 function Questions({ questions }: { questions: PreviewQuestion[] }) {
@@ -40,29 +53,55 @@ function Questions({ questions }: { questions: PreviewQuestion[] }) {
   );
 }
 
-/** An item as learners will get it: the teacher reads it here before releasing. */
-export function UnitItemPreview({ open, onOpenChange, preview, loading }: Props) {
+/** An item as learners will get it, with Edit and Rewrite for the teacher. */
+export function UnitItemPreview({ open, onOpenChange, item, preview, loading, busy, error, onSave, onRewrite }: Props) {
+  const [editing, setEditing] = useState(false);
+  const ready = !loading && preview && preview.kind !== 'not_ready' && item?.itemKind;
+  const close = (next: boolean): void => {
+    if (!next) setEditing(false);
+    onOpenChange(next);
+  };
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={close}>
       <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
-        <SheetHeader className="border-b border-border px-4 py-3">
-          <SheetTitle>{preview?.title ?? 'Item'}</SheetTitle>
+        <SheetHeader className="space-y-2 border-b border-border px-4 py-3">
+          <SheetTitle className="pr-8">{preview?.title ?? item?.title ?? 'Item'}</SheetTitle>
           <SheetDescription>
-            {preview?.kind === 'quiz' ? 'Quick check: marked straight away, with the right answers ticked here.' : 'As your learners will see it.'}
+            {editing ? 'Editing. Learners see your version once you save.' : preview?.kind === 'quiz' ? 'Quick check: marked straight away, with the right answers ticked here.' : 'As your learners will see it.'}
           </SheetDescription>
-        </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-4 py-4">
-          {loading || !preview ? <LoadingSpinner /> : null}
-          {!loading && preview?.kind === 'content' ? (
-            <div className="space-y-4">
-              {preview.blocks.map((block) => <BlockRenderer key={block.blockId} block={block} onAttempt={previewAttempt} interaction={idle(block.blockId)} />)}
+          {ready && !editing ? (
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => setEditing(true)} disabled={busy} className="min-h-11 gap-1.5 sm:min-h-8">
+                <Pencil className="h-4 w-4" aria-hidden /> Edit
+              </Button>
+              <RewriteMenu busy={busy} onRewrite={onRewrite} />
             </div>
           ) : null}
-          {!loading && preview?.kind === 'quiz' ? <Questions questions={preview.questions} /> : null}
-          {!loading && preview?.kind === 'not_ready' ? (
-            <p className="text-sm text-muted-foreground">This item hasn&apos;t been written yet.</p>
-          ) : null}
-        </div>
+          {error && !editing ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{error}</p> : null}
+        </SheetHeader>
+        {editing && ready && preview && item?.itemKind ? (
+          <UnitItemEditor
+            key={`${item.id}-${preview.kind}`}
+            itemKind={item.itemKind}
+            preview={preview}
+            saving={busy}
+            error={error}
+            onSave={(edit) => void onSave(edit).then((ok) => { if (ok) setEditing(false); })}
+            onCancel={() => setEditing(false)}
+          />
+        ) : (
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            {loading || !preview ? <LoadingSpinner /> : null}
+            {!loading && preview?.kind === 'content' ? (
+              <div className="space-y-4">
+                {preview.blocks.map((block) => <BlockRenderer key={block.blockId} block={block} onAttempt={previewAttempt} interaction={idle(block.blockId)} />)}
+              </div>
+            ) : null}
+            {!loading && preview?.kind === 'quiz' ? <Questions questions={preview.questions} /> : null}
+            {!loading && preview?.kind === 'not_ready' ? <p className="text-sm text-muted-foreground">This item hasn&apos;t been written yet.</p> : null}
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

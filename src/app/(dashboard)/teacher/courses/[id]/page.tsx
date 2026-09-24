@@ -139,7 +139,17 @@ export default function UnitPage() {
         </aside>
       </div>
 
-      <UnitItemPreview open={view.previewOpen} onOpenChange={view.setPreviewOpen} preview={view.preview} loading={view.previewOpen && view.preview === null} />
+      <UnitItemPreview
+        open={view.previewOpen}
+        onOpenChange={view.setPreviewOpen}
+        item={view.openItem}
+        preview={view.preview}
+        loading={view.previewOpen && view.preview === null}
+        busy={view.editBusy}
+        error={view.editError}
+        onSave={view.saveItem}
+        onRewrite={view.rewriteItem}
+      />
       <ConfirmDialog
         open={confirmRedraft}
         onOpenChange={setConfirmRedraft}
