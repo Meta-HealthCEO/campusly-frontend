@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/useUIStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useModule } from '@/hooks/useModule';
+import { visibleNavItems } from '@/lib/nav-visibility';
 import { ChevronLeft, ChevronDown, GraduationCap } from 'lucide-react';
 import type { NavItem } from '@/lib/constants';
 
@@ -20,22 +21,7 @@ export function Sidebar({ items }: SidebarProps) {
   const { isModuleEnabled } = useModule();
   const hasPermission = useAuthStore((s) => s.hasPermission);
 
-  const isItemVisible = (item: NavItem) => {
-    if (item.module && !isModuleEnabled(item.module)) return false;
-    if (item.permission && !hasPermission(item.permission)) return false;
-    return true;
-  };
-
-  const filteredItems = items
-    .filter(isItemVisible)
-    .map((item) => {
-      if (!item.children) return item;
-      const visibleChildren = item.children.filter(isItemVisible);
-      // If a parent group ends up with zero visible children, hide the whole group.
-      if (visibleChildren.length === 0) return null;
-      return { ...item, children: visibleChildren };
-    })
-    .filter((item): item is NavItem => item !== null);
+  const filteredItems = visibleNavItems(items, { isModuleEnabled, hasPermission });
 
   const isItemActive = (item: NavItem) =>
     pathname === item.href ||
