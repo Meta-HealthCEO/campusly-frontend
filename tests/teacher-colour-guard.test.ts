@@ -25,6 +25,14 @@ const MIGRATED = [
   'src/components/lessons/LessonHeader.tsx',
   'src/components/homework/ExerciseQuestionsList.tsx',
   'src/app/(dashboard)/teacher/assignments/new/_StepSetup.tsx',
+  'src/components/attendance/AttendanceTodayTab.tsx',
+  'src/components/attendance/StatusButton.tsx',
+  'src/components/attendance/AttendanceStatusBadge.tsx',
+  'src/components/attendance/AttendanceHistoryTab.tsx',
+  'src/components/attendance/DisciplineTable.tsx',
+  'src/components/attendance/StudentRow.tsx',
+  'src/components/attendance/ChronicAbsenteeTable.tsx',
+  'src/components/attendance/AttendanceBulkMarkMenu.tsx',
 ];
 
 const RAW = /\b(?:bg|text|border|ring|from|to|via|fill|stroke|outline|divide|decoration)-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)-\d{2,3}\b/g;

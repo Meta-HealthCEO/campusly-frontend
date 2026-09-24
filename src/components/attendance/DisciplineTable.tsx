@@ -45,17 +45,17 @@ interface DisciplineTableProps {
 }
 
 const SEVERITY_STYLES: Record<string, string> = {
-  minor: 'bg-slate-100 text-slate-700',
-  moderate: 'bg-amber-100 text-amber-700',
-  serious: 'bg-orange-100 text-orange-700',
-  critical: 'bg-destructive/10 text-destructive',
+  minor: 'bg-muted text-foreground',
+  moderate: 'bg-attention-soft text-attention',
+  serious: 'bg-attention-soft text-attention ring-1 ring-inset ring-attention/40',
+  critical: 'bg-destructive-soft text-destructive',
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  reported: 'bg-blue-100 text-blue-700',
-  investigating: 'bg-amber-100 text-amber-700',
-  resolved: 'bg-emerald-100 text-emerald-700',
-  escalated: 'bg-destructive/10 text-destructive',
+  reported: 'bg-info-soft text-info',
+  investigating: 'bg-attention-soft text-attention',
+  resolved: 'bg-success-soft text-success',
+  escalated: 'bg-destructive-soft text-destructive',
 };
 
 function getStudentName(record: DisciplineRecord): string {

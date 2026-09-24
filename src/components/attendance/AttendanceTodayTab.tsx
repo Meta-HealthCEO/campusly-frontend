@@ -123,20 +123,20 @@ export function AttendanceTodayTab(props: AttendanceTodayTabProps) {
             </span>
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            <span className="text-emerald-700 dark:text-emerald-400 font-medium">{stats.present} Present</span>
+            <span className="h-2 w-2 rounded-full bg-success" />
+            <span className="text-success font-medium">{stats.present} Present</span>
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-destructive" />
             <span className="text-destructive font-medium">{stats.absent} Absent</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-amber-500" />
-            <span className="text-amber-700 dark:text-amber-400 font-medium">{stats.late} Late</span>
+            <span className="h-2 w-2 rounded-full bg-attention" />
+            <span className="text-attention font-medium">{stats.late} Late</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-blue-500" />
-            <span className="text-blue-700 dark:text-blue-400 font-medium">{stats.excused} Excused</span>
+            <span className="h-2 w-2 rounded-full bg-info" />
+            <span className="text-info font-medium">{stats.excused} Excused</span>
           </span>
         </div>
       </div>
@@ -151,9 +151,9 @@ export function AttendanceTodayTab(props: AttendanceTodayTabProps) {
       ) : null}
 
       {existingLoaded ? (
-        <Alert className="border-sky-300 bg-sky-50 dark:border-sky-700 dark:bg-sky-950/30">
-          <Info className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-          <AlertDescription className="text-sky-800 dark:text-sky-300">
+        <Alert className="border-info/30 bg-info-soft">
+          <Info className="h-4 w-4 text-info" />
+          <AlertDescription className="text-info">
             {isPastDate
               ? `Viewing attendance for ${selectedDate}. You can update individual records.`
               : `Attendance already recorded for today. You can update individual records.`}

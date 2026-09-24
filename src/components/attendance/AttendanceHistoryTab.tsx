@@ -25,10 +25,10 @@ const STATUS_LETTER: Record<HistoryStatus, string> = {
   present: '✓', absent: 'A', late: 'L', excused: 'E',
 };
 const STATUS_COLOUR: Record<HistoryStatus, string> = {
-  present: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/30',
+  present: 'text-success bg-success-soft',
   absent: 'text-destructive bg-destructive/10',
-  late: 'text-amber-700 bg-amber-50 dark:bg-amber-950/30',
-  excused: 'text-blue-700 bg-blue-50 dark:bg-blue-950/30',
+  late: 'text-attention bg-attention-soft',
+  excused: 'text-info bg-info-soft',
 };
 
 function mondayIndex(date: Date): number {

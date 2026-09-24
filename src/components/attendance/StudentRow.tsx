@@ -18,10 +18,10 @@ export interface StudentRowProps {
 }
 
 function dotClass(status: AttendanceStatus): string {
-  if (status === 'present') return 'bg-emerald-500';
+  if (status === 'present') return 'bg-success';
   if (status === 'absent') return 'bg-destructive';
-  if (status === 'excused') return 'bg-blue-500';
-  return 'bg-amber-500';
+  if (status === 'excused') return 'bg-info';
+  return 'bg-attention';
 }
 
 export function StudentRow({
@@ -77,7 +77,8 @@ export function StudentRow({
             <p className="text-xs text-muted-foreground truncate hidden sm:block">{student.admissionNumber}</p>
           )}
         </div>
-        <div className="flex gap-2 shrink-0 flex-wrap">
+        {/* Phones: four equal status buttons and the note button on one row. */}
+        <div className="grid grid-cols-[repeat(4,minmax(0,1fr))_2.75rem] gap-2 sm:flex sm:shrink-0">
           <StatusButton status="present" current={status} onClick={() => onUpdate(student.id, 'present')} />
           <StatusButton status="absent" current={status} onClick={() => onUpdate(student.id, 'absent')} />
           <StatusButton status="late" current={status} onClick={() => onUpdate(student.id, 'late')} />

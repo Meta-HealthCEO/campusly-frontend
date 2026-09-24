@@ -20,7 +20,7 @@ export function AttendanceBulkMarkMenu({ onMarkAll, disabled }: AttendanceBulkMa
         disabled={disabled}
         className="rounded-r-none"
       >
-        <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />
+        <CheckCircle2 className="mr-2 h-4 w-4 text-success" />
         Mark all present
       </Button>
       <Button

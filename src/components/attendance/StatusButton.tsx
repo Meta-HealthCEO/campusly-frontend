@@ -1,4 +1,7 @@
 import { CheckCircle2, XCircle, Clock, ShieldCheck } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { statusButtonLabel } from '@/lib/attendance-labels';
+import { cn } from '@/lib/utils';
 import type { AttendanceStatus } from '@/hooks/useTeacherAttendance';
 
 export interface StatusButtonProps {
@@ -7,46 +10,33 @@ export interface StatusButtonProps {
   onClick: () => void;
 }
 
-const config: Record<AttendanceStatus, { label: string; icon: React.ReactNode; activeClass: string }> = {
-  present: {
-    label: 'Present',
-    icon: <CheckCircle2 className="h-4 w-4" />,
-    activeClass: 'bg-emerald-100 text-emerald-700 border-emerald-400 dark:bg-emerald-900/30 dark:text-emerald-400',
-  },
-  absent: {
-    label: 'Absent',
-    icon: <XCircle className="h-4 w-4" />,
-    activeClass: 'bg-destructive/10 text-destructive border-destructive/40',
-  },
-  late: {
-    label: 'Late',
-    icon: <Clock className="h-4 w-4" />,
-    activeClass: 'bg-amber-100 text-amber-700 border-amber-400 dark:bg-amber-900/30 dark:text-amber-400',
-  },
-  excused: {
-    label: 'Excused',
-    icon: <ShieldCheck className="h-4 w-4" />,
-    activeClass: 'bg-blue-100 text-blue-700 border-blue-400 dark:bg-blue-900/30 dark:text-blue-400',
-  },
+const config: Record<AttendanceStatus, { icon: LucideIcon; activeClass: string }> = {
+  present: { icon: CheckCircle2, activeClass: 'bg-success-soft text-success border-success/40' },
+  absent: { icon: XCircle, activeClass: 'bg-destructive-soft text-destructive border-destructive/40' },
+  late: { icon: Clock, activeClass: 'bg-attention-soft text-attention border-attention/40' },
+  excused: { icon: ShieldCheck, activeClass: 'bg-info-soft text-info border-info/40' },
 };
 
+/** A register button: icon and word at every width (stacked on phones), at least 44px tall on touch screens. */
 export function StatusButton({ status, current, onClick }: StatusButtonProps) {
   const active = current === status;
-  const { label, icon, activeClass } = config[status];
+  const { icon: Icon, activeClass } = config[status];
+  const label = statusButtonLabel(status);
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={[
-        'flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-colors min-h-[44px]',
+      className={cn(
+        'flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-md border px-1.5 py-1.5 text-[11px] font-medium transition-colors',
+        'sm:min-h-9 sm:flex-row sm:gap-1.5 sm:px-3 sm:py-2 sm:text-sm',
         active ? activeClass : 'border-border text-muted-foreground hover:bg-muted',
-      ].join(' ')}
+      )}
       aria-pressed={active}
-      aria-label={`Mark ${label.toLowerCase()}`}
+      aria-label={label}
     >
-      {icon}
-      <span className="hidden sm:inline">{label}</span>
+      <Icon className="h-4 w-4 shrink-0" aria-hidden />
+      <span className="truncate">{label}</span>
     </button>
   );
 }
