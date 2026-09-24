@@ -1,53 +1,41 @@
 import Link from 'next/link';
-import { Sparkles, FileText, ClipboardList, ChevronRight } from 'lucide-react';
+import { ArrowRight, ClipboardList, FileText, Sparkles } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 interface Tile {
   href: string;
-  icon: typeof Sparkles;
+  icon: LucideIcon;
   label: string;
   subLabel: string;
 }
 
 const TILES: Tile[] = [
-  {
-    href: '/teacher/lessons/new',
-    icon: Sparkles,
-    label: 'Make a lesson',
-    subLabel: 'Slides & explanations',
-  },
-  {
-    href: '/teacher/papers/new',
-    icon: FileText,
-    label: 'Make a paper',
-    subLabel: 'Test or exam with memo',
-  },
-  {
-    href: '/teacher/homework/new',
-    icon: ClipboardList,
-    label: 'Set homework',
-    subLabel: 'Practice tasks with auto-marking',
-  },
+  { href: '/teacher/lessons/new', icon: Sparkles, label: 'A lesson', subLabel: 'Slides and notes from a CAPS topic' },
+  { href: '/teacher/papers/new', icon: FileText, label: 'A test or exam', subLabel: 'Questions with a memo' },
+  { href: '/teacher/homework/new', icon: ClipboardList, label: 'Homework', subLabel: 'Practice that marks itself' },
 ];
 
+/** Three quick ways into the AI builders. */
 export function AIQuickMakeHero() {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      {TILES.map((tile) => (
+    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+      {TILES.map((tile: Tile) => (
         <Link
           key={tile.href}
           href={tile.href}
-          className="group flex min-h-35 flex-col justify-between rounded-xl border border-border/40 bg-card p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-border/80 hover:shadow-md"
+          className="group flex min-h-11 items-center gap-3 rounded-xl border border-border bg-card p-4 transition-[border-color,box-shadow,transform] duration-150 ease-out hover:-translate-y-px hover:border-accent-foreground/30 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:hover:translate-y-0"
         >
-          <div className="flex size-12 items-center justify-center rounded-xl bg-muted/60">
-            <tile.icon className="size-8 text-foreground" />
-          </div>
-          <div className="flex items-end justify-between gap-3">
-            <div className="space-y-0.5 min-w-0">
-              <p className="text-base font-semibold text-foreground">{tile.label}</p>
-              <p className="text-xs text-muted-foreground truncate">{tile.subLabel}</p>
-            </div>
-            <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-1" />
-          </div>
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-foreground">
+            <tile.icon className="size-5" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate font-heading text-[15px] font-semibold tracking-tight">{tile.label}</span>
+            <span className="block truncate text-[12.5px] text-muted-foreground">{tile.subLabel}</span>
+          </span>
+          <ArrowRight
+            className="size-4 shrink-0 text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-accent-foreground"
+            aria-hidden
+          />
         </Link>
       ))}
     </div>

@@ -1,6 +1,9 @@
 'use client';
 
+import Link from 'next/link';
+import { Sparkles } from 'lucide-react';
 import { DashboardSkeleton } from '@/components/shared/skeletons';
+import { buttonVariants } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSchoolStore } from '@/stores/useSchoolStore';
 import { useTeacherDashboard } from '@/hooks/useTeacherDashboard';
@@ -9,9 +12,13 @@ import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 import { useTeachingScope } from '@/hooks/useTeachingScope';
 import { AIQuickMakeHero } from '@/components/teacher-home/AIQuickMakeHero';
 import { GettingStartedCard } from '@/components/teacher-home/GettingStartedCard';
-import { YourDayCard } from '@/components/teacher-home/YourDayCard';
+import { YourDayCard, registerHref } from '@/components/teacher-home/YourDayCard';
 import { NeedsYouCard } from '@/components/teacher-home/NeedsYouCard';
 import { DraftsZone } from '@/components/teacher-home/DraftsZone';
+import { todayEyebrow, todayLede } from '@/lib/eyebrow';
+import type { AnnotatedPeriod } from '@/lib/teacher-today';
+import { ROUTES } from '@/lib/routes';
+import { cn } from '@/lib/utils';
 
 function salutationForHour(hour: number): string {
   if (hour < 12) return 'Good morning, ';
@@ -32,11 +39,6 @@ export default function TeacherHomePage() {
   const firstName = user?.firstName ?? 'Teacher';
   const now = new Date();
   const salutation = salutationForHour(now.getHours());
-  const dateLabel = now.toLocaleDateString('en-ZA', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
 
   const scopeSet = !scopeLoading && !scopeEmpty;
   const checklistReady = !onboardingLoading && !scopeLoading;
@@ -50,6 +52,8 @@ export default function TeacherHomePage() {
   // empty day every morning.
   const showDay = !isStandaloneTeacher || today.periods.length > 0;
   const loading = today.loading || dashboard.loading;
+  const lede = loading ? null : todayLede(today.periods);
+  const unrecorded = today.periods.find((period: AnnotatedPeriod) => !period.recorded);
 
   const needsYou = (
     <NeedsYouCard
@@ -61,17 +65,26 @@ export default function TeacherHomePage() {
   );
 
   return (
-    <div className="space-y-8 bg-background bg-linear-to-b from-muted/40 to-background bg-no-repeat bg-size-[100%_200px] dark:from-background">
-      <header className="motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          {salutation}{firstName}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {dateLabel}
-          {!loading && today.summary.length > 0 ? (
-            <span className="text-foreground/80"> · {today.summary.join(' · ')}</span>
+    <div className="space-y-8">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300">
+        <div className="min-w-0">
+          <p className="font-mono text-[11.5px] font-medium uppercase tracking-[0.08em] text-muted-foreground">{todayEyebrow(now)}</p>
+          <h1 className="mt-1.5 font-heading text-[28px] font-semibold leading-tight tracking-[-0.025em] text-balance sm:text-[32px]">
+            {salutation}{firstName}
+          </h1>
+          {lede ? <p className="mt-1.5 text-[15px] text-muted-foreground">{lede}</p> : null}
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:shrink-0">
+          {unrecorded ? (
+            <Link href={registerHref(unrecorded)} className={cn(buttonVariants({ variant: 'outline' }), 'h-11 sm:h-9')}>
+              Take register
+            </Link>
           ) : null}
-        </p>
+          <Link href={`${ROUTES.TEACHER_LESSONS}/new`} className={cn(buttonVariants(), 'h-11 gap-1.5 sm:h-9')}>
+            <Sparkles className="size-4" aria-hidden />
+            Make with AI
+          </Link>
+        </div>
       </header>
 
       {showChecklist ? (
@@ -108,9 +121,9 @@ export default function TeacherHomePage() {
         </div>
       )}
 
-      <section aria-labelledby="create-with-ai" className={FADE_IN}>
-        <h2 id="create-with-ai" className="mb-3 text-sm font-medium text-muted-foreground">
-          Create with AI
+      <section aria-labelledby="make-with-ai" className={FADE_IN}>
+        <h2 id="make-with-ai" className="mb-3 font-mono text-[11.5px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+          Make with AI
         </h2>
         <AIQuickMakeHero />
       </section>

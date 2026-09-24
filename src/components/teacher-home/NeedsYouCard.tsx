@@ -25,27 +25,27 @@ interface RowProps {
 }
 
 function Row({ icon: Icon, label, detail, count, href, urgent }: RowProps) {
+  const clear = count === 0;
   return (
-    <Link
-      href={href}
-      className="flex items-center gap-3 border-l-2 border-l-transparent p-3 transition-colors duration-100 ease-out hover:border-l-foreground/20 hover:bg-muted/40"
-    >
-      <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{label}</p>
-        {detail ? (
-          <p className={cn('truncate text-xs', urgent ? 'text-destructive' : 'text-muted-foreground')}>{detail}</p>
-        ) : null}
-      </div>
-      <span
-        className={cn(
-          'inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-xs font-medium tabular-nums',
-          count > 0 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground',
-        )}
+    <li>
+      <Link
+        href={href}
+        className="grid min-h-11 grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-3 rounded-md px-1 py-3 transition-colors hover:bg-muted/60"
       >
-        {count}
-      </span>
-    </Link>
+        <Icon className={cn('size-4', clear ? 'text-muted-foreground/60' : 'text-muted-foreground')} aria-hidden />
+        <span className="min-w-0">
+          <span className={cn('block truncate text-sm', clear ? 'text-muted-foreground' : 'font-medium')}>{label}</span>
+          {detail && !clear ? (
+            <span className={cn('block truncate text-xs', urgent ? 'text-attention' : 'text-muted-foreground')}>{detail}</span>
+          ) : null}
+        </span>
+        {clear ? (
+          <span className="text-[13px] font-medium text-success">All clear</span>
+        ) : (
+          <span className="font-mono text-xl font-medium tabular-nums">{count}</span>
+        )}
+      </Link>
+    </li>
   );
 }
 
@@ -58,11 +58,11 @@ export function NeedsYouCard({ marking, gradingFallback, homeworkDueToday, unrea
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base font-medium">Needs you</CardTitle>
+      <CardHeader className="pb-1">
+        <CardTitle className="font-heading text-[17px] font-semibold tracking-tight">Needs you</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-1">
-        <div className="divide-y divide-border/40">
+      <CardContent>
+        <ul className="divide-y divide-muted">
           <Row
             icon={ClipboardCheck}
             label="Submissions to mark"
@@ -85,11 +85,11 @@ export function NeedsYouCard({ marking, gradingFallback, homeworkDueToday, unrea
               href={ROUTES.TEACHER_MESSAGES}
             />
           ) : null}
-        </div>
+        </ul>
         {marking.available ? (
           <Link
             href={ROUTES.TEACHER_CURRICULUM_MARK_PAPERS}
-            className="mt-2 inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-primary hover:bg-primary/5"
+            className="mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-accent-foreground hover:bg-accent sm:min-h-9"
           >
             <Sparkles className="size-4" aria-hidden />
             Mark handwritten scripts with AI
