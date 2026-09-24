@@ -15,6 +15,7 @@ import { UnitGenerationBanner } from '@/components/courses/unit/UnitGenerationBa
 import { UnitItemPreview } from '@/components/courses/unit/UnitItemPreview';
 import { ReleaseUnitDialog } from '@/components/courses/unit/ReleaseUnitDialog';
 import { UnitInsight } from '@/components/courses/unit/UnitInsight';
+import { UnitSettings } from '@/components/courses/unit/UnitSettings';
 import { useUnitInsight } from '@/hooks/useUnitInsight';
 import { useUnitView } from '@/hooks/useUnitView';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
@@ -94,7 +95,17 @@ export default function UnitPage() {
               Released to {releasedTo.length > 0 ? releasedTo.map((c) => c.name).join(', ') : 'your class'}. Learners can start on any phone.
             </p>
           ) : null}
-          {stage === 'released' ? <UnitInsight insight={insight.insight} error={insight.error} /> : null}
+          {stage === 'released' ? (
+            <UnitInsight
+              insight={insight.insight}
+              error={insight.error}
+              revision={{
+                busyItemId: typeof view.busy === 'string' && view.busy.startsWith('revision-') ? view.busy.slice('revision-'.length) : null,
+                error: view.revisionError,
+                onAdd: (t) => void view.addRevision(t),
+              }}
+            />
+          ) : null}
           {stage === 'released' ? <h2 className="pt-2 text-lg font-semibold">The unit</h2> : null}
           {stage === 'writing' || stage === 'release' ? <UnitGenerationBanner generation={course.generation} /> : null}
           {stage === 'release' && blocker ? <p className="text-sm text-muted-foreground">{blocker}.</p> : null}
@@ -131,6 +142,7 @@ export default function UnitPage() {
         </div>
         <aside className="space-y-4">
           <UnitSteps current={stage ?? 'outline'} />
+          {hasOutline ? <UnitSettings sequential={course.sequential !== false} saving={view.busy === 'settings'} onChange={(on) => void view.setSequential(on)} /> : null}
           {stage !== 'writing' && stage !== 'released' ? (
             <p className="text-xs text-muted-foreground">
               Want to add your own items? <Link href={ROUTES.TEACHER_COURSE_EDIT(courseId)} className="underline underline-offset-2">Open the course builder</Link>, then release from here.

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { lastSeenLabel, learnerStatusLine, stuckLabel, type InsightLearner } from '../src/lib/unit-insight';
+import { lastSeenLabel, learnerStatusLine, revisionTargets, stuckLabel, type InsightLearner, type MissedQuestion } from '../src/lib/unit-insight';
 
 describe('stuckLabel', () => {
   it('says why a learner is stuck, in plain words', () => {
@@ -32,5 +32,20 @@ describe('learnerStatusLine', () => {
   it('says where a learner is and when they last worked on it', () => {
     expect(learnerStatusLine(learner({ lastActivityAt: '2026-09-23T15:00:00', progressPercent: 33 }), now)).toBe('On: Counting in tens · Yesterday');
     expect(learnerStatusLine(learner({ status: 'completed', currentItem: null, lastActivityAt: '2026-09-24T08:00:00', progressPercent: 100 }), now)).toBe('Finished the unit · Today');
+  });
+});
+
+describe('revisionTargets', () => {
+  const missed = (questionId: string, itemId: string, itemTitle: string): MissedQuestion => ({ questionId, stem: questionId, itemId, itemTitle, answered: 3, wrong: 2, wrongPercent: 67 });
+
+  it('groups the missed questions by the check they are on, worst check first', () => {
+    expect(revisionTargets([missed('a', 'c1', 'Check: counting'), missed('b', 'c2', 'Check: patterns'), missed('c', 'c1', 'Check: counting')])).toEqual([
+      { itemId: 'c1', itemTitle: 'Check: counting', questionIds: ['a', 'c'] },
+      { itemId: 'c2', itemTitle: 'Check: patterns', questionIds: ['b'] },
+    ]);
+  });
+
+  it('is empty when nothing was missed', () => {
+    expect(revisionTargets([])).toEqual([]);
   });
 });

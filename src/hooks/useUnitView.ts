@@ -6,6 +6,7 @@ import { useClassUnit, useUnitGeneration, type ItemPreview } from '@/hooks/useCl
 import { liveGeneration, unitStage, withPolledStatus } from '@/lib/course-unit';
 import type { CourseLesson } from '@/types/courses';
 import type { RewriteAction } from '@/lib/item-editing';
+import type { RevisionTarget } from '@/lib/unit-insight';
 import type { ItemEdit } from '@/components/courses/unit/UnitItemEditor';
 
 type Busy = 'draft' | 'approve' | 'release' | string | null;
@@ -35,6 +36,7 @@ export function useUnitView(courseId: string) {
   const [openItem, setOpenItem] = useState<CourseLesson | null>(null);
   const [editBusy, setEditBusy] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [revisionError, setRevisionError] = useState<{ itemId: string; message: string } | null>(null);
 
   const run = useCallback(async (key: Busy, task: () => Promise<unknown>): Promise<void> => {
     setBusy(key);
@@ -90,6 +92,15 @@ export function useUnitView(courseId: string) {
     void change((lessonId) => actions.rewriteItem(courseId, lessonId, action, language));
   }, [change, actions, courseId]);
 
+  const setSequential = useCallback((sequential: boolean) => run('settings', () => actions.updateSettings(courseId, sequential)), [run, actions, courseId]);
+
+  /** Adds a revision item after a check, on the questions the class got wrong there. */
+  const addRevision = useCallback((target: RevisionTarget) => run(`revision-${target.itemId}`, async () => {
+    setRevisionError(null);
+    const failure = await actions.addRevision(courseId, target.itemId, target.questionIds);
+    if (failure) setRevisionError({ itemId: target.itemId, message: failure });
+  }), [run, actions, courseId]);
+
   return {
     course,
     loading: builder.loading,
@@ -110,5 +121,8 @@ export function useUnitView(courseId: string) {
     editError,
     saveItem,
     rewriteItem,
+    setSequential,
+    addRevision,
+    revisionError,
   };
 }

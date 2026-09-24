@@ -1,9 +1,10 @@
 'use client';
 
-import { AlertTriangle, CheckCircle2, CircleHelp, Users } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, CircleHelp, Sparkles, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { learnerStatusLine, stuckLabel, type InsightLearner, type MissedQuestion, type UnitInsight as Insight } from '@/lib/unit-insight';
+import { learnerStatusLine, revisionTargets, stuckLabel, type InsightLearner, type MissedQuestion, type RevisionTarget, type UnitInsight as Insight } from '@/lib/unit-insight';
 
 function LearnerRow({ learner }: { learner: InsightLearner }) {
   const stuck = stuckLabel(learner.stuck);
@@ -41,8 +42,33 @@ function MissedRow({ question }: { question: MissedQuestion }) {
   );
 }
 
+interface RevisionProps {
+  /** The check a revision item is being written after, if any. */
+  busyItemId: string | null;
+  error: { itemId: string; message: string } | null;
+  onAdd: (target: RevisionTarget) => void;
+}
+
+function RevisionActions({ missed, busyItemId, error, onAdd }: RevisionProps & { missed: MissedQuestion[] }) {
+  const targets = revisionTargets(missed);
+  return (
+    <div className="space-y-2">
+      {targets.map((t) => (
+        <div key={t.itemId} className="space-y-2">
+          <Button variant="outline" size="sm" onClick={() => onAdd(t)} disabled={busyItemId !== null} className="min-h-11 gap-1.5 sm:min-h-8">
+            <Sparkles className="h-4 w-4" aria-hidden />
+            {busyItemId === t.itemId ? 'Writing the revision item…' : `Add a revision item after ${t.itemTitle}`}
+          </Button>
+          {error?.itemId === t.itemId ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{error.message}</p> : null}
+        </div>
+      ))}
+      <p className="text-xs text-muted-foreground">The AI re-teaches these questions with fresh examples. It goes in right after the check, and nobody who is past the check has to do it.</p>
+    </div>
+  );
+}
+
 /** A released unit's class view: who is stuck, who is where, and what the class gets wrong. */
-export function UnitInsight({ insight, error }: { insight: Insight | null; error: string | null }) {
+export function UnitInsight({ insight, error, revision }: { insight: Insight | null; error: string | null; revision: RevisionProps }) {
   if (error) return <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{error}</p>;
   if (!insight) return <LoadingSpinner />;
   if (insight.totals.enrolled === 0) {
@@ -71,6 +97,7 @@ export function UnitInsight({ insight, error }: { insight: Insight | null; error
             {insight.mostMissed.map((q) => <MissedRow key={q.questionId} question={q} />)}
           </ul>
         )}
+        {insight.mostMissed.length > 0 ? <RevisionActions missed={insight.mostMissed} {...revision} /> : null}
       </div>
     </section>
   );

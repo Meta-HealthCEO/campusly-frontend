@@ -58,6 +58,8 @@ export interface Course {
   outlineStatus?: OutlineStatus;
   generation?: GenerationState;
   aiGenerated?: boolean;
+  /** Learners must finish each item before the next opens (class units; on by default). */
+  sequential?: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -15,6 +15,8 @@ export interface InsightLearner {
 export interface MissedQuestion {
   questionId: string;
   stem: string;
+  /** The quick check the question is on. */
+  itemId: string;
   itemTitle: string;
   answered: number;
   wrong: number;
@@ -53,4 +55,20 @@ export function learnerStatusLine(learner: InsightLearner, now: Date = new Date(
   const seen = lastSeenLabel(learner.lastActivityAt, now);
   if (learner.status === 'completed') return `Finished the unit · ${seen}`;
   return learner.currentItem ? `On: ${learner.currentItem.title} · ${seen}` : `Working through it · ${seen}`;
+}
+
+export interface RevisionTarget {
+  itemId: string;
+  itemTitle: string;
+  questionIds: string[];
+}
+
+/** The checks a revision item can follow, each with its missed questions. The worst check comes first. */
+export function revisionTargets(missed: MissedQuestion[]): RevisionTarget[] {
+  const byItem = new Map<string, RevisionTarget>();
+  for (const q of missed) {
+    const target = byItem.get(q.itemId) ?? { itemId: q.itemId, itemTitle: q.itemTitle, questionIds: [] };
+    byItem.set(q.itemId, { ...target, questionIds: [...target.questionIds, q.questionId] });
+  }
+  return [...byItem.values()];
 }
