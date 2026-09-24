@@ -16,6 +16,8 @@ import { useCapsGrades, useCapsSubjects } from '@/hooks/useCapsGrades';
 import { useCurriculumTopicTree } from '@/hooks/useCurriculumTopics';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { useStudentClasses } from '@/hooks/useStudentClasses';
+import { useModule } from '@/hooks/useModule';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ChatInterface } from '@/components/ai-tutor/ChatInterface';
@@ -111,9 +113,11 @@ export default function StudentAITutorPage() {
   const [selectedTopicTitle, setSelectedTopicTitle] = useState('');
   const [customTopic, setCustomTopic] = useState('');
 
+  const tutorOn = useModule().isModuleEnabled('ai_tools');
+
   useEffect(() => {
-    void loadConversations();
-  }, [loadConversations]);
+    if (tutorOn) void loadConversations();
+  }, [tutorOn, loadConversations]);
 
   const tutorSubjects = useMemo(() => {
     const curriculumSubjects = curriculumSubjectsToTutorSubjects(capsSubjects);
@@ -158,13 +162,31 @@ export default function StudentAITutorPage() {
     return <LoadingSpinner />;
   }
 
+  const header = <PageHeader title="AI tutor" description="Aura explains, hints and sets practice in your subjects." />;
+
+  if (!tutorOn) {
+    return (
+      <div className="space-y-6">
+        {header}
+        <EmptyState
+          icon={Sparkles}
+          title="The AI tutor isn't switched on for your school"
+          description="Ask your school to turn it on. Everything else in Campusly works as normal."
+        />
+      </div>
+    );
+  }
+
   if (!student) {
     return (
-      <EmptyState
-        icon={Sparkles}
-        title="Student profile not found"
-        description="We could not locate your student record."
-      />
+      <div className="space-y-6">
+        {header}
+        <EmptyState
+          icon={Sparkles}
+          title="Student profile not found"
+          description="We could not locate your student record."
+        />
+      </div>
     );
   }
 
@@ -259,7 +281,8 @@ export default function StudentAITutorPage() {
     : '/student/ai-tutor/practice';
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-6rem)] max-w-4xl flex-col">
+    <div className="mx-auto flex h-[calc(100vh-6rem)] max-w-4xl flex-col gap-3">
+      {header}
       <AuraHeader
         subjects={tutorSubjects}
         effectiveSubjectId={effectiveSubjectId}
