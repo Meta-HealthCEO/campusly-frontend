@@ -65,11 +65,16 @@ export function CourseCard({ course, onClick, onDelete }: CourseCardProps) {
             </p>
           </div>
           <Badge variant={statusVariant(course.status)} className="shrink-0">
-            {STATUS_LABEL[course.status]}
+            {course.kind === 'class_unit' && course.status === 'published' ? 'Released' : STATUS_LABEL[course.status]}
           </Badge>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {course.kind === 'class_unit' && (
+            <Badge variant="outline" className="border-accent-foreground/30 bg-accent text-xs text-accent-foreground">
+              Unit{course.scope ? ` · Term ${course.scope.termNumber}` : ''}
+            </Badge>
+          )}
           {subjectName && (
             <Badge variant="outline" className="text-xs">{subjectName}</Badge>
           )}

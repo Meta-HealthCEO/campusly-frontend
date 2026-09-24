@@ -15,7 +15,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
-import { GraduationCap, Plus, Search } from 'lucide-react';
+import { GraduationCap, Plus, Search, Sparkles } from 'lucide-react';
 import { CourseCard } from '@/components/courses/CourseCard';
 import { CreateCourseDialog } from '@/components/courses/CreateCourseDialog';
 import { useTeacherCourses } from '@/hooks/useTeacherCourses';
@@ -46,17 +46,25 @@ export default function TeacherCoursesPage() {
   const handleCreated = (course: Course) => {
     router.push(ROUTES.TEACHER_COURSE_EDIT(course.id));
   };
+  // Class units have their own page (outline, progress, release); other courses keep the builder.
+  const openCourse = (course: Course) => {
+    router.push(course.kind === 'class_unit' ? `/teacher/courses/${course.id}` : ROUTES.TEACHER_COURSE_EDIT(course.id));
+  };
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Courses"
-        description="Build and publish self-paced courses for your students"
+        description="Units of work for your classes. The AI drafts them from CAPS; you check them and release them to your learners."
       >
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Course
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button onClick={() => router.push('/teacher/courses/new')} className="min-h-11 gap-1.5 sm:min-h-9">
+            <Sparkles className="h-4 w-4" aria-hidden /> New unit with AI
+          </Button>
+          <Button variant="outline" onClick={() => setCreateOpen(true)} className="min-h-11 sm:min-h-9">
+            <Plus className="mr-1 h-4 w-4" aria-hidden /> Blank course
+          </Button>
+        </div>
       </PageHeader>
 
       {/* Filter bar */}
@@ -101,12 +109,11 @@ export default function TeacherCoursesPage() {
       ) : courses.length === 0 ? (
         <EmptyState
           icon={GraduationCap}
-          title="No courses yet"
-          description="Create your first course to start building self-paced learning paths."
+          title="No units yet"
+          description="Pick a class and the CAPS topics, and the AI drafts a unit your learners can work through, week by week."
           action={
-            <Button onClick={() => setCreateOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Course
+            <Button onClick={() => router.push('/teacher/courses/new')} className="gap-1.5">
+              <Sparkles className="h-4 w-4" aria-hidden /> New unit with AI
             </Button>
           }
         />
@@ -116,7 +123,7 @@ export default function TeacherCoursesPage() {
             <CourseCard
               key={course.id}
               course={course}
-              onClick={() => router.push(ROUTES.TEACHER_COURSE_EDIT(course.id))}
+              onClick={() => openCourse(course)}
               onDelete={
                 course.status === 'draft' || course.status === 'archived'
                   ? () => setPendingDelete(course)
