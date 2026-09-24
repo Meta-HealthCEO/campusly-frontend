@@ -180,3 +180,8 @@ export function termViewShowing(selectedTerm: string, term: number): string {
   if (selectedTerm === 'year' || selectedTerm === String(term)) return selectedTerm;
   return String(term);
 }
+
+/** A subject chip that says "Set weightings" must open the weightings, not the trend chart. */
+export function subjectChipOpens(missingWeighting: boolean): 'weightings' | 'trend' {
+  return missingWeighting ? 'weightings' : 'trend';
+}

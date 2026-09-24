@@ -66,7 +66,7 @@ export default function TeacherMessagesPage() {
     return (
       <div className="space-y-4">
         <PageHeader
-          title="Direct Messages"
+          title="Messages"
           description="Private conversations with parents about their children."
         />
         <Card className="p-4">
@@ -79,7 +79,7 @@ export default function TeacherMessagesPage() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Direct Messages"
+        title="Messages"
         description="Private conversations with parents about their children."
       />
 

@@ -129,7 +129,7 @@ export default function TeacherCommunicationPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Communication" description="Send messages to parents and guardians">
+      <PageHeader title="Announcements" description="Tell parents and guardians something, by message or SMS">
         <Button onClick={() => setOpen(true)}>
           <Send className="mr-2 h-4 w-4" />
           Message Parents

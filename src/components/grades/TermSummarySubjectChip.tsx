@@ -3,6 +3,7 @@
 import { Settings2, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { gradeColor } from './TermSummaryHelpers';
+import { subjectChipOpens } from '@/lib/gradebook-helpers';
 import type { TermSummarySubjectColumn } from '@/hooks/useTermSummary';
 
 interface SubjectChipProps {
@@ -28,9 +29,9 @@ export function TermSummarySubjectChip({
     )}>
       <button
         type="button"
-        onClick={onOpenTrend}
+        onClick={subjectChipOpens(missing) === 'weightings' ? onConfigureWeightings : onOpenTrend}
         className="block w-full text-left px-3 py-2 pr-9"
-        aria-label={`View trend for ${subject.subjectName}`}
+        aria-label={missing ? `Set weightings for ${subject.subjectName}` : `View trend for ${subject.subjectName}`}
       >
         <p className="text-sm font-medium truncate">{subject.subjectName}</p>
         {missing ? (

@@ -56,7 +56,7 @@ export default function MarkingHubPage() {
   const sorted = sortItems(filtered, sortBy);
 
   return (
-    <div className="space-y-6 p-4 sm:p-6">
+    <div className="space-y-6">
       <PageHeader
         title="Marking"
         description="Everything waiting to be marked. Photograph handwritten scripts and let AI mark them against your memo."

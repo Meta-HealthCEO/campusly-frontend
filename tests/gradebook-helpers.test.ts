@@ -5,6 +5,7 @@ import {
   buildMarkEntries,
   mapStudentHistory,
   termViewShowing,
+  subjectChipOpens,
   type MarkEntry,
 } from '../src/lib/gradebook-helpers';
 
@@ -138,5 +139,15 @@ describe('termViewShowing', () => {
 
   it("switches to the new assessment's term so it doesn't vanish from the list", () => {
     expect(termViewShowing('3', 2)).toBe('2');
+  });
+});
+
+describe('subjectChipOpens', () => {
+  it('opens the weightings when the chip is asking the teacher to set them', () => {
+    expect(subjectChipOpens(true)).toBe('weightings');
+  });
+
+  it('opens the trend once weightings are set', () => {
+    expect(subjectChipOpens(false)).toBe('trend');
   });
 });
