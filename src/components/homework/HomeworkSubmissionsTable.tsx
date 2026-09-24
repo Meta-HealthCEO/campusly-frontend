@@ -15,6 +15,8 @@ import {
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { useTeacherHomeworkSubmissions } from '@/hooks/useTeacherHomeworkSubmissions';
+import { MarkSubmissionDialog, type MarkTarget } from '@/components/homework/MarkSubmissionDialog';
+import { markActionLabel } from '@/lib/homework-grading';
 import type {
   Homework,
   QuizSubmission,
@@ -58,8 +60,9 @@ function statusVariant(
 }
 
 export function HomeworkSubmissionsTable({ homework }: Props) {
-  const { submissions, loading, regradeSubmission } =
+  const { submissions, loading, regradeSubmission, gradeSubmission } =
     useTeacherHomeworkSubmissions(homework._id);
+  const [markTarget, setMarkTarget] = useState<MarkTarget | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [regrading, setRegrading] = useState<string | null>(null);
 
@@ -97,6 +100,7 @@ export function HomeworkSubmissionsTable({ homework }: Props) {
   };
 
   return (
+    <>
     <div className="overflow-x-auto rounded-lg border">
       <Table>
         <TableHeader>
@@ -112,8 +116,9 @@ export function HomeworkSubmissionsTable({ homework }: Props) {
           {(submissions as RowSubmission[]).map((s) => {
             const isOpen = expanded.has(s._id);
             const isStale = s.homeworkVersion < homework.version;
+            // Submissions made before structured answers existed have none.
             const answers: GradedAnswerBase[] =
-              s.type === 'reading' ? s.comprehensionAnswers : s.answers;
+              (s.type === 'reading' ? s.comprehensionAnswers : s.answers) ?? [];
             return (
               <Fragment key={s._id}>
                 <TableRow
@@ -146,7 +151,24 @@ export function HomeworkSubmissionsTable({ homework }: Props) {
                     <span className="font-medium">{s.mark ?? '—'}</span>
                     <span className="text-muted-foreground"> / {s.maxMarks}</span>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right whitespace-nowrap">
+                    <Button
+                      variant={s.mark === undefined || s.mark === null ? 'default' : 'outline'}
+                      size="sm"
+                      className="mr-1 min-h-11 sm:min-h-8"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMarkTarget({
+                          submissionId: s._id,
+                          studentName: resolveStudentName(s),
+                          maxMarks: s.maxMarks,
+                          mark: s.mark,
+                          feedback: s.feedback,
+                        });
+                      }}
+                    >
+                      {markActionLabel(s)}
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -176,6 +198,12 @@ export function HomeworkSubmissionsTable({ homework }: Props) {
         </TableBody>
       </Table>
     </div>
+    <MarkSubmissionDialog
+      target={markTarget}
+      onOpenChange={(open) => { if (!open) setMarkTarget(null); }}
+      onSave={gradeSubmission}
+    />
+    </>
   );
 }
 
