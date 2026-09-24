@@ -38,6 +38,7 @@ export interface UseTeacherPapersResult {
   setFilters: (f: PaperFilters) => void;
   getPaperById: (id: string) => Promise<Paper | null>;
   getMemoByPaperId: (id: string) => Promise<PaperMemo | null>;
+  buildMemo: (id: string) => Promise<PaperMemo | null>;
   generatePaperWithAI: (
     input: GeneratePaperRequest,
   ) => Promise<{ paperId: string } | null>;

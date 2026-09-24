@@ -83,6 +83,19 @@ export function useTeacherPapers(autoFetch = true): UseTeacherPapersResult {
     }
   }, []);
 
+  /** Build the memo from the paper's model answers (when it has none). */
+  const buildMemo = useCallback(async (id: string): Promise<PaperMemo | null> => {
+    try {
+      const res = await apiClient.post(`${API_PREFIX}/${id}/memo`);
+      toast.success('Memo ready. Check the expected answers.');
+      return unwrapResponse<PaperMemo>(res);
+    } catch (err: unknown) {
+      console.error('Failed to build memo', err);
+      toast.error(extractErrorMessage(err, 'Could not build the memo.'));
+      return null;
+    }
+  }, []);
+
   const generatePaperWithAI = useCallback(async (
     input: GeneratePaperRequest,
   ): Promise<{ paperId: string } | null> => {
@@ -282,6 +295,7 @@ export function useTeacherPapers(autoFetch = true): UseTeacherPapersResult {
     setFilters,
     getPaperById,
     getMemoByPaperId,
+    buildMemo,
     generatePaperWithAI,
     createPaperManual,
     updatePaperMetadata,

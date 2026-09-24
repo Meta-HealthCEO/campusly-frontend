@@ -16,6 +16,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { PaperDetailPaperTab } from '@/components/papers/PaperDetailPaperTab';
 import { PaperDetailMemoTab } from '@/components/papers/PaperDetailMemoTab';
 import { PaperDetailAssignmentsTab } from '@/components/papers/PaperDetailAssignmentsTab';
@@ -53,6 +54,7 @@ export default function PaperDetailPage({
   const {
     getPaperById,
     getMemoByPaperId,
+    buildMemo,
     finalisePaper,
     downloadPaperPdf,
     downloadMemoPdf,
@@ -198,9 +200,18 @@ export default function PaperDetailPage({
               onChanged={reload}
             />
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Memo not available yet.
-            </p>
+            <EmptyState
+              icon={FileText}
+              title="No memo yet"
+              description={paper.status === 'finalised'
+                ? 'This paper was finalised without a memo. Reopen it to add one.'
+                : "Build one from this paper's model answers, then check and edit the expected answers."}
+              action={paper.status === 'finalised' ? undefined : (
+                <Button onClick={() => void buildMemo(paper._id).then((m) => { if (m) setMemo(m); })} className="min-h-11 sm:min-h-9">
+                  Build memo from model answers
+                </Button>
+              )}
+            />
           )}
         </TabsContent>
         <TabsContent value="assignments">
