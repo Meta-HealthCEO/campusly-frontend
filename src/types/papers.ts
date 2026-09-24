@@ -138,6 +138,12 @@ export interface PaperAssignment {
 }
 
 
+export interface PaperModerationState {
+  status: 'pending' | 'approved' | 'changes_requested';
+  comments: string | null;
+  updatedAt: string | null;
+}
+
 export interface Paper {
   _id: string;
   title: string;
@@ -159,6 +165,8 @@ export interface Paper {
   createdBy: string | PopulatedCreator;
   capsCompliance?: CapsComplianceReport | null;
   assignments?: PaperAssignment[];
+  /** From the papers list: where the paper stands in moderation (null = never submitted). */
+  moderation?: PaperModerationState | null;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;

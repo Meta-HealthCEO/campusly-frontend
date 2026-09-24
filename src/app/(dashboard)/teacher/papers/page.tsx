@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Plus, FileText, Trash2, Eye, Users, ScanLine } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Plus, FileText, Trash2, Eye, Users, ScanLine, Library } from 'lucide-react';
 import { useTeacherPapers } from '@/hooks/useTeacherPapers';
 import type { Paper, PaperStatus } from '@/types/papers';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,13 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { sectionEyebrow } from '@/lib/eyebrow';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
+import { StatusChip } from '@/components/shared/StatusChip';
+import {
+  filterByModeration,
+  moderationChip,
+  moderationFilterFromParam,
+  type ModerationFilter,
+} from '@/lib/moderation-chip';
 
 function statusVariant(status: PaperStatus): 'default' | 'secondary' | 'outline' {
   if (status === 'finalised') return 'default';
@@ -47,7 +54,13 @@ export default function TeacherPapersPage() {
     total,
   } = useTeacherPapers();
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const hasActiveFilters = Boolean(filters.search || filters.status);
+  const searchParams = useSearchParams();
+  const moderation = moderationFilterFromParam(searchParams.get('moderation'));
+  const setModeration = (value: ModerationFilter): void => {
+    router.replace(value === 'all' ? '/teacher/papers' : `/teacher/papers?moderation=${value}`, { scroll: false });
+  };
+  const shown = useMemo(() => filterByModeration(papers, moderation), [papers, moderation]);
+  const hasActiveFilters = Boolean(filters.search || filters.status || moderation !== 'all');
 
   const columns = useMemo<ColumnDef<Paper>[]>(() => [
     {
@@ -84,6 +97,15 @@ export default function TeacherPapersPage() {
           {row.original.status}
         </Badge>
       ),
+    },
+    {
+      id: 'moderation',
+      header: 'Review',
+      enableSorting: false,
+      cell: ({ row }) => {
+        const chip = moderationChip(row.original.moderation);
+        return chip ? <StatusChip status={chip.status} label={chip.label} /> : <span className="text-xs text-muted-foreground">—</span>;
+      },
     },
     {
       id: 'assignments',
@@ -140,6 +162,12 @@ export default function TeacherPapersPage() {
         description="Generate, convert, edit, assign, mark, and print CAPS-aligned papers."
       >
         <div className="flex flex-wrap gap-2">
+          <Link href="/teacher/curriculum/questions" className="inline-block">
+            <Button variant="outline">
+              <Library className="mr-2 h-4 w-4" />
+              Question bank
+            </Button>
+          </Link>
           <Link href="/teacher/curriculum/import" className="inline-block">
             <Button variant="outline">
               <ScanLine className="mr-2 h-4 w-4" />
@@ -176,20 +204,34 @@ export default function TeacherPapersPage() {
             </SelectContent>
           </Select>
         </div>
+        <div className="space-y-1 sm:w-48">
+          <label className="text-xs text-muted-foreground" htmlFor="moderation-filter">Review</label>
+          <Select value={moderation} onValueChange={(value) => setModeration(moderationFilterFromParam(value as string))}>
+            <SelectTrigger id="moderation-filter" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Any review state</SelectItem>
+              <SelectItem value="pending">With your HOD</SelectItem>
+              <SelectItem value="changes_requested">Changes asked</SelectItem>
+              <SelectItem value="approved">Approved</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         {hasActiveFilters && (
           <Button
             variant="outline"
-            onClick={() => setFilters({ page: 1, limit: 100 })}
+            onClick={() => { setFilters({ page: 1, limit: 100 }); setModeration('all'); }}
           >
             Clear filters
           </Button>
         )}
         <p className="text-xs text-muted-foreground sm:ml-auto">
-          Showing {papers.length} of {total} papers
+          Showing {shown.length} of {total} papers
         </p>
       </div>
 
-      {papers.length === 0 ? (
+      {shown.length === 0 ? (
         <EmptyState
           icon={FileText}
           title={hasActiveFilters ? 'No papers found' : 'No papers yet'}
@@ -210,7 +252,7 @@ export default function TeacherPapersPage() {
       ) : (
         <DataTable
           columns={columns}
-          data={papers}
+          data={shown}
           searchKey="title"
           searchPlaceholder="Search by title..."
           onRowClick={(p) => router.push(`/teacher/papers/${p._id}`)}

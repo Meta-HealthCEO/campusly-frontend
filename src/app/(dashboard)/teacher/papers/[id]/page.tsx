@@ -17,6 +17,8 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { StatusChip } from '@/components/shared/StatusChip';
+import { moderationChip } from '@/lib/moderation-chip';
 import { PaperDetailPaperTab } from '@/components/papers/PaperDetailPaperTab';
 import { PaperDetailMemoTab } from '@/components/papers/PaperDetailMemoTab';
 import { PaperDetailAssignmentsTab } from '@/components/papers/PaperDetailAssignmentsTab';
@@ -130,11 +132,16 @@ export default function PaperDetailPage({
     const result = await finalisePaper(paper._id);
     if (result) setPaper(result);
   };
+  // Independent teachers have no HOD or admin to moderate, so they finalise directly.
   const canFinaliseDirectly = !!(
     user?.role === 'school_admin' ||
     user?.role === 'super_admin' ||
-    permissions.isSchoolPrincipal
+    permissions.isSchoolPrincipal ||
+    user?.isStandaloneTeacher === true
   );
+  const review = moderationChip(paper.moderation);
+  const withHod = paper.moderation?.status === 'pending';
+  const changesAsked = paper.moderation?.status === 'changes_requested';
 
   return (
     <div className="space-y-6">
@@ -149,19 +156,20 @@ export default function PaperDetailPage({
       <PageHeader title={paper.title} description={description}>
         <div className="flex gap-2 flex-wrap items-center">
           <Badge variant={statusVariant(paper.status)}>{paper.status}</Badge>
+          {review ? <StatusChip status={review.status} label={review.label} /> : null}
           {paper.status === 'draft' && canFinaliseDirectly && (
             <Button size="sm" onClick={handleFinalise}>
               <CheckCircle className="h-4 w-4 mr-1" /> Finalise
             </Button>
           )}
-          {paper.status === 'draft' && !canFinaliseDirectly && (
+          {paper.status === 'draft' && !canFinaliseDirectly && !withHod && (
             <Button
               size="sm"
-              onClick={() => void submitForModeration(paper._id)}
+              onClick={() => void submitForModeration(paper._id).then(() => reload())}
               disabled={submitting}
             >
               <ShieldCheck className="h-4 w-4 mr-1" />
-              {submitting ? 'Submitting...' : 'Submit for Moderation'}
+              {submitting ? 'Submitting…' : changesAsked ? 'Resubmit for moderation' : 'Submit for moderation'}
             </Button>
           )}
           <Button
@@ -180,6 +188,13 @@ export default function PaperDetailPage({
           </Button>
         </div>
       </PageHeader>
+
+      {changesAsked && paper.moderation?.comments ? (
+        <div role="note" className="rounded-lg border border-attention/30 bg-attention-soft px-4 py-3 text-sm">
+          <p className="font-medium text-attention">Your HOD asked for changes</p>
+          <p className="mt-1 whitespace-pre-line text-foreground">{paper.moderation.comments}</p>
+        </div>
+      ) : null}
 
       <Tabs value={tab} onValueChange={changeTab}>
         <TabsList>

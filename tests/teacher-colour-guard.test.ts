@@ -43,6 +43,8 @@ const MIGRATED = [
   'src/components/grades/GradebookPickers.tsx',
   'src/components/grades/GradebookReportsTab.tsx',
   'src/components/reports/ReportCardPanel.tsx',
+  'src/app/(dashboard)/teacher/papers/page.tsx',
+  'src/app/(dashboard)/teacher/papers/[id]/page.tsx',
   'src/components/grades/TermSummaryHelpers.tsx',
   'src/components/grades/StudentTermDetailDialog.tsx',
   'src/components/grades/StudentHistoryDialog.tsx',
