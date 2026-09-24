@@ -15,6 +15,8 @@ interface UseQuestionBankLibraryParams {
   gradeId?: string;
   curriculumNodeId?: string;
   q?: string;
+  /** Bump to reload (e.g. after AI drafts are approved). */
+  refreshKey?: number;
 }
 
 interface UseQuestionBankLibraryResult {
@@ -38,7 +40,7 @@ interface UseQuestionBankLibraryResult {
 export function useQuestionBankLibrary(
   params: UseQuestionBankLibraryParams,
 ): UseQuestionBankLibraryResult {
-  const { subjectId, gradeId, curriculumNodeId, q } = params;
+  const { subjectId, gradeId, curriculumNodeId, q, refreshKey = 0 } = params;
   const [questions, setQuestions] = useState<QuestionLite[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -82,7 +84,7 @@ export function useQuestionBankLibrary(
     return () => {
       cancelled = true;
     };
-  }, [subjectId, gradeId, curriculumNodeId, q]);
+  }, [subjectId, gradeId, curriculumNodeId, q, refreshKey]);
 
   return { questions, loading };
 }

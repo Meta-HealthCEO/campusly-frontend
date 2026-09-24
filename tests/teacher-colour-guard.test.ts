@@ -45,6 +45,8 @@ const MIGRATED = [
   'src/components/reports/ReportCardPanel.tsx',
   'src/app/(dashboard)/teacher/papers/page.tsx',
   'src/app/(dashboard)/teacher/papers/[id]/page.tsx',
+  'src/components/homework/HomeworkExercisePicker.tsx',
+  'src/components/homework/DraftHomeworkWithAIDialog.tsx',
   'src/components/grades/TermSummaryHelpers.tsx',
   'src/components/grades/StudentTermDetailDialog.tsx',
   'src/components/grades/StudentHistoryDialog.tsx',
