@@ -75,5 +75,7 @@ export interface StudentDashboardDto {
     homeworkDueThisWeek: number;
     testsScheduled: number;
     homeworkOverdue: number;
+    /** Tests past their due date the learner hasn't written; older servers don't send it. */
+    testsOverdue?: number;
   };
 }

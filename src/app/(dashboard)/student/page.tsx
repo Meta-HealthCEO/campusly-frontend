@@ -13,20 +13,20 @@ import { RecommendedWidget } from '@/components/student/RecommendedWidget';
 import { MasteryWidget } from '@/components/student/MasteryWidget';
 import { ResumeUnitCard } from '@/components/learner/ResumeUnitCard';
 import { courseIdOf, courseOf, useStudentUnits } from '@/hooks/useStudentUnits';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { learnerGreeting, learnerOverdue } from '@/lib/student-dashboard';
 
 export default function StudentDashboard() {
   const { dashboard, loading, refresh } = useStudentDashboard();
   const { student } = useCurrentStudent();
+  const user = useAuthStore((s) => s.user);
   const { current: currentUnit } = useStudentUnits();
   if (loading || !dashboard) return <LoadingSpinner />;
-
-  const firstName =
-    student?.user?.firstName ?? student?.firstName ?? 'Student';
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Welcome back, ${firstName}!`}
+        title={learnerGreeting(user?.firstName, student)}
         description={new Date().toLocaleDateString('en-ZA', {
           weekday: 'long',
           day: 'numeric',
@@ -146,7 +146,7 @@ export default function StudentDashboard() {
         />
         <StatCard
           title="Overdue"
-          value={String(dashboard.counts.homeworkOverdue)}
+          value={String(learnerOverdue(dashboard.counts))}
           icon={AlertTriangle}
         />
       </div>
