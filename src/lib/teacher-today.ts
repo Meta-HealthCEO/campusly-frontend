@@ -113,3 +113,46 @@ export function nowLinePlacement(periods: AnnotatedPeriod[], now: Date): { index
   const label = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   return { index: index < 0 ? periods.length : index, label };
 }
+
+/**
+ * timetableId → the lesson for that period. A lesson scheduled at a time goes
+ * on the period of its class that the time falls in; a lesson with no time
+ * (midnight) goes on its class's first period of the day. Each lesson is used
+ * once, so a class taught twice a day doesn't show one lesson twice.
+ */
+export function assignLessonsToPeriods(
+  periods: readonly AnnotatedPeriod[],
+  lessons: readonly LessonForDayInput[],
+  day: Date,
+): Map<string, LessonLink> {
+  const target = toISODate(day);
+  const entries: Array<{ classId: string; minutes: number | null; link: LessonLink; used: boolean }> = [];
+  for (const lesson of lessons) {
+    const lessonId = lesson.id ?? lesson._id ?? '';
+    for (const assignment of lesson.assignedClasses ?? []) {
+      const scheduled = new Date(assignment.scheduledDate);
+      if (Number.isNaN(scheduled.getTime()) || toISODate(scheduled) !== target) continue;
+      const ref = assignment.classId;
+      const classId = typeof ref === 'string' ? ref : ref.id ?? ref._id ?? '';
+      const minutes = scheduled.getHours() * 60 + scheduled.getMinutes();
+      if (classId) entries.push({ classId, minutes: minutes === 0 ? null : minutes, link: { lessonId, title: lesson.title }, used: false });
+    }
+  }
+  const result = new Map<string, LessonLink>();
+  const take = (match: (e: (typeof entries)[number]) => boolean): LessonLink | null => {
+    const entry = entries.find((e) => !e.used && match(e));
+    if (!entry) return null;
+    entry.used = true;
+    return entry.link;
+  };
+  for (const period of periods) {
+    const start = minutesOf(period.startTime);
+    const end = minutesOf(period.endTime);
+    const timed = take((e) => e.classId === period.classId && e.minutes !== null && e.minutes >= start && e.minutes < end);
+    if (timed) { result.set(period.timetableId, timed); continue; }
+    const firstOfClass = periods.find((p) => p.classId === period.classId)?.timetableId === period.timetableId;
+    const untimed = firstOfClass ? take((e) => e.classId === period.classId && e.minutes === null) : null;
+    if (untimed) result.set(period.timetableId, untimed);
+  }
+  return result;
+}

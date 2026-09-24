@@ -94,7 +94,7 @@ export default function TeacherHomePage() {
             <div className="lg:col-span-2">
               <YourDayCard
                 periods={today.periods}
-                lessonsByClass={today.lessonsByClass}
+                lessonsByPeriod={today.lessonsByPeriod}
                 isWeekend={today.isWeekend}
                 showTimetableLink={!isStandaloneTeacher}
                 now={now}

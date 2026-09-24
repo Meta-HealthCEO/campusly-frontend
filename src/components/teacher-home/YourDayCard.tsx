@@ -10,7 +10,8 @@ import { nowLinePlacement, type AnnotatedPeriod, type LessonLink } from '@/lib/t
 
 interface YourDayCardProps {
   periods: AnnotatedPeriod[];
-  lessonsByClass: Map<string, LessonLink>;
+  /** timetableId → the lesson planned for that period. */
+  lessonsByPeriod: Map<string, LessonLink>;
   isWeekend: boolean;
   /** School teachers have a timetable page; independent teachers don't. */
   showTimetableLink: boolean;
@@ -93,7 +94,7 @@ function NowLine({ label }: { label: string }) {
 }
 
 /** Today's timetable as a timeline, with the register and lesson for each period and a live "now" line. */
-export function YourDayCard({ periods, lessonsByClass, isWeekend, showTimetableLink, now }: YourDayCardProps) {
+export function YourDayCard({ periods, lessonsByPeriod, isWeekend, showTimetableLink, now }: YourDayCardProps) {
   const line = nowLinePlacement(periods, now);
   return (
     <Card>
@@ -118,7 +119,7 @@ export function YourDayCard({ periods, lessonsByClass, isWeekend, showTimetableL
             {periods.map((period: AnnotatedPeriod, i: number) => (
               <Fragment key={period.timetableId}>
                 {line && line.index === i ? <NowLine label={line.label} /> : null}
-                <PeriodRow period={period} lesson={lessonsByClass.get(period.classId)} />
+                <PeriodRow period={period} lesson={lessonsByPeriod.get(period.timetableId)} />
               </Fragment>
             ))}
           </ol>

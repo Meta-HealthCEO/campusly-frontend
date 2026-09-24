@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   annotatePeriods,
+  assignLessonsToPeriods,
   lessonsByClassForDay,
   nowLinePlacement,
   summariseToday,
@@ -94,5 +95,48 @@ describe('nowLinePlacement', () => {
 
   it('is hidden on a day with no periods', () => {
     expect(nowLinePlacement([], at(9, 0))).toBeNull();
+  });
+});
+
+describe('assignLessonsToPeriods', () => {
+  const day = new Date(2026, 8, 24, 6, 0);
+  const at = (hh: number, mm: number) => new Date(2026, 8, 24, hh, mm).toISOString();
+  const periods = annotatePeriods([
+    period(1, '07:45', '08:30'),
+    { ...period(2, '08:30', '09:15'), classId: 'c1' },
+    { ...period(3, '09:15', '10:00'), classId: 'c1' },
+  ].map((p) => ({ ...p, classId: p.classId === 'c1' || p.period === 1 ? 'c1' : p.classId })), day);
+
+  it('puts a timed lesson only on the period it is scheduled for', () => {
+    const map = assignLessonsToPeriods(periods, [
+      { id: 'L1', title: 'Phonics', assignedClasses: [{ classId: 'c1', scheduledDate: at(8, 30) }] },
+    ], day);
+    expect(map.get('t2')?.title).toBe('Phonics');
+    expect(map.has('t1')).toBe(false);
+    expect(map.has('t3')).toBe(false);
+  });
+
+  it("gives each of a class's periods its own lesson", () => {
+    const map = assignLessonsToPeriods(periods, [
+      { id: 'L1', title: 'Phonics', assignedClasses: [{ classId: 'c1', scheduledDate: at(8, 30) }] },
+      { id: 'L2', title: 'Number line', assignedClasses: [{ classId: 'c1', scheduledDate: at(9, 15) }] },
+    ], day);
+    expect(map.get('t2')?.title).toBe('Phonics');
+    expect(map.get('t3')?.title).toBe('Number line');
+  });
+
+  it("puts a lesson with no time on the class's first period of the day only", () => {
+    const map = assignLessonsToPeriods(periods, [
+      { id: 'L3', title: 'Reading', assignedClasses: [{ classId: 'c1', scheduledDate: new Date(2026, 8, 24).toISOString() }] },
+    ], day);
+    expect(map.get('t1')?.title).toBe('Reading');
+    expect([...map.keys()]).toEqual(['t1']);
+  });
+
+  it('ignores lessons for other days', () => {
+    const map = assignLessonsToPeriods(periods, [
+      { id: 'L4', title: 'Tomorrow', assignedClasses: [{ classId: 'c1', scheduledDate: new Date(2026, 8, 25, 8, 30).toISOString() }] },
+    ], day);
+    expect(map.size).toBe(0);
   });
 });

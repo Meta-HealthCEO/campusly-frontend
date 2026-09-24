@@ -7,7 +7,7 @@ import { toISODate } from '@/lib/utils';
 import { summariseMarkingDue } from '@/lib/marking-due';
 import {
   annotatePeriods,
-  lessonsByClassForDay,
+  assignLessonsToPeriods,
   summariseToday,
   type AnnotatedPeriod,
   type LessonForDayInput,
@@ -31,7 +31,8 @@ export interface TodayMarking {
 export interface TeacherToday {
   loading: boolean;
   periods: AnnotatedPeriod[];
-  lessonsByClass: Map<string, LessonLink>;
+  /** timetableId → the lesson for that period. */
+  lessonsByPeriod: Map<string, LessonLink>;
   marking: TodayMarking;
   /** Null for independent teachers, who have no parent messaging. */
   unreadMessages: number | null;
@@ -106,7 +107,7 @@ export function useTeacherToday(): TeacherToday {
   }, []);
 
   const periods = useMemo(() => annotatePeriods(rawPeriods, now), [rawPeriods, now]);
-  const lessonsByClass = useMemo(() => lessonsByClassForDay(lessons, now), [lessons, now]);
+  const lessonsByPeriod = useMemo(() => assignLessonsToPeriods(periods, lessons, now), [periods, lessons, now]);
 
   const marking = useMemo<TodayMarking>(() => {
     if (!markingItems) return { available: false, pending: 0, overdue: 0, dueToday: 0 };
@@ -124,7 +125,7 @@ export function useTeacherToday(): TeacherToday {
   return {
     loading,
     periods,
-    lessonsByClass,
+    lessonsByPeriod,
     marking,
     unreadMessages,
     summary,
