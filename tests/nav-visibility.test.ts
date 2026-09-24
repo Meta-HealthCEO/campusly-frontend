@@ -93,3 +93,21 @@ describe('phoneSectionLayout', () => {
     expect(phoneSectionLayout(nav)).toBeNull();
   });
 });
+
+describe('Incidents in the teacher nav', () => {
+  const labels = (on: string[]) =>
+    visibleNavItems(TEACHER_NAV, { isModuleEnabled: (m: string) => on.includes(m), hasPermission: () => false })
+      .map((i: NavItem) => i.label);
+
+  it('stays inside Behaviour when attendance is on', () => {
+    expect(labels(['attendance', 'incident_wellbeing'])).not.toContain('Incidents');
+  });
+
+  it('gets its own entry when attendance is off but incident reporting is on', () => {
+    expect(labels(['incident_wellbeing'])).toContain('Incidents');
+  });
+
+  it('is hidden when incident reporting is off', () => {
+    expect(labels([])).not.toContain('Incidents');
+  });
+});

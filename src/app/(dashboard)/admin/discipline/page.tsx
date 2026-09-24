@@ -8,11 +8,17 @@ import { Plus } from 'lucide-react';
 import { DisciplineTable } from '@/components/attendance/DisciplineTable';
 import { DisciplineForm } from '@/components/attendance/DisciplineForm';
 import { useDiscipline } from '@/hooks/useDiscipline';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SchoolBehaviourLog } from '@/components/behaviour/SchoolBehaviourLog';
+import { useBehaviourActions, useSchoolBehaviour } from '@/hooks/useBehaviour';
 
 export default function AdminDisciplinePage() {
   const [open, setOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('');
+  const [kind, setKind] = useState('');
+  const log = useSchoolBehaviour(kind);
+  const behaviourActions = useBehaviourActions();
 
   const {
     records, students, loading,
@@ -42,6 +48,7 @@ export default function AdminDisciplinePage() {
   }) => {
     await createRecord(data);
     setOpen(false);
+    void log.refresh();
   };
 
   if (loading) {
@@ -55,8 +62,8 @@ export default function AdminDisciplinePage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Discipline Management"
-        description="Manage discipline incidents across the school"
+        title="Behaviour & Discipline"
+        description="Every merit, demerit and incident teachers log, and the discipline cases the office follows up"
       >
         <Button onClick={() => setOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
@@ -64,9 +71,28 @@ export default function AdminDisciplinePage() {
         </Button>
       </PageHeader>
 
-      <div className="flex flex-wrap gap-3">
+      <Tabs defaultValue="log">
+        <TabsList>
+          <TabsTrigger value="log">Behaviour log</TabsTrigger>
+          <TabsTrigger value="cases">Discipline cases</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="log" className="pt-2">
+          <SchoolBehaviourLog
+            kind={kind}
+            onKindChange={setKind}
+            entries={log.entries}
+            summary={log.summary}
+            loading={log.loading}
+            error={log.error}
+            onUndo={(e) => void behaviourActions.undo(e.id).then((ok) => { if (ok) void log.refresh(); })}
+          />
+        </TabsContent>
+
+        <TabsContent value="cases" className="space-y-4 pt-2">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <Select value={statusFilter} onValueChange={(val: unknown) => setStatusFilter((val as string) === 'all' ? '' : val as string)}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-full sm:w-40">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -78,7 +104,7 @@ export default function AdminDisciplinePage() {
           </SelectContent>
         </Select>
         <Select value={typeFilter} onValueChange={(val: unknown) => setTypeFilter((val as string) === 'all' ? '' : val as string)}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-full sm:w-40">
             <SelectValue placeholder="Filter by type" />
           </SelectTrigger>
           <SelectContent>
@@ -97,8 +123,10 @@ export default function AdminDisciplinePage() {
       <DisciplineTable
         records={records}
         canDelete={true}
-        onDelete={deleteRecord}
+        onDelete={(id: string) => deleteRecord(id).then(() => log.refresh())}
       />
+        </TabsContent>
+      </Tabs>
 
       <DisciplineForm
         open={open}

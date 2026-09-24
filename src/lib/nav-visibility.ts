@@ -11,6 +11,7 @@ export interface NavAccess {
 export function visibleNavItems(items: NavItem[], access: NavAccess): NavItem[] {
   const isVisible = (item: NavItem): boolean =>
     (!item.module || access.isModuleEnabled(item.module)) &&
+    (!item.unlessModule || !access.isModuleEnabled(item.unlessModule)) &&
     (!item.permission || access.hasPermission(item.permission));
 
   return items.filter(isVisible).flatMap((item: NavItem) => {

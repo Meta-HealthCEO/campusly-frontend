@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { BehaviourFeed } from '@/components/behaviour/BehaviourFeed';
 import { LogBehaviourDialog } from '@/components/behaviour/LogBehaviourDialog';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
+import { useModule } from '@/hooks/useModule';
 import { useBehaviourActions, useClassBehaviour, type LogBehaviourInput } from '@/hooks/useBehaviour';
 import { resolveId } from '@/lib/api-helpers';
 import { getStudentDisplayName } from '@/lib/student-helpers';
@@ -19,6 +20,7 @@ import type { PopulatedId } from '@/types';
 /** One behaviour log for the teacher's classes: log in a few taps, see what's been noted. */
 export default function BehaviourPage() {
   const { entries: classEntries } = useTeacherClasses();
+  const { isModuleEnabled } = useModule();
   const classes = useMemo(() => {
     const seen = new Map<string, { id: string; name: string; learners: Array<{ id: string; name: string }> }>();
     for (const e of classEntries) {
@@ -77,9 +79,11 @@ export default function BehaviourPage() {
       />
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Link href={ROUTES.TEACHER_INCIDENTS} className={cn(buttonVariants({ variant: 'outline' }), 'min-h-11 gap-1.5 sm:min-h-9')}>
-          <AlertTriangle className="h-4 w-4" aria-hidden /> Report a serious incident
-        </Link>
+        {isModuleEnabled('incident_wellbeing') ? (
+          <Link href={ROUTES.TEACHER_INCIDENTS} className={cn(buttonVariants({ variant: 'outline' }), 'min-h-11 gap-1.5 sm:min-h-9')}>
+            <AlertTriangle className="h-4 w-4" aria-hidden /> Report a serious incident
+          </Link>
+        ) : null}
         <Link href={ROUTES.TEACHER_REFERRAL} className={cn(buttonVariants({ variant: 'outline' }), 'min-h-11 gap-1.5 sm:min-h-9')}>
           <HeartHandshake className="h-4 w-4" aria-hidden /> Refer to counsellor
         </Link>

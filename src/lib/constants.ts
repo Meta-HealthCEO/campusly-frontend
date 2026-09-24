@@ -24,6 +24,8 @@ export interface NavItem {
   href: string;
   icon: LucideIcon;
   module?: string;
+  /** Shown only while this module is off (a fallback entry for something that normally lives inside it). */
+  unlessModule?: string;
   badge?: string;
   permission?: PermissionFlag;
   children?: NavItem[];

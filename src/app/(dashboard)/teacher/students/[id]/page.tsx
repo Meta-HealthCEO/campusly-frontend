@@ -18,6 +18,7 @@ import { MessageParentDialog } from '@/components/students/MessageParentDialog';
 import { ReferralCreateDialog } from '@/components/pastoral/ReferralCreateDialog';
 import { useLearnerActions } from '@/hooks/useLearnerActions';
 import { useLearnerBehaviour } from '@/hooks/useBehaviour';
+import { useModule } from '@/hooks/useModule';
 import { LogBehaviourButton } from '@/components/behaviour/LogBehaviourButton';
 import { BehaviourTimelineCard } from '@/components/behaviour/BehaviourTimelineCard';
 import { useLearnerProfile } from '@/hooks/useLearnerProfile';
@@ -31,7 +32,9 @@ export default function LearnerProfilePage() {
   const { profile, loading, error, loadProfile } = useLearnerProfile();
   const router = useRouter();
   const actions = useLearnerActions();
-  const behaviour = useLearnerBehaviour(studentId);
+  const { isModuleEnabled } = useModule();
+  const behaviourOn = isModuleEnabled('attendance');
+  const behaviour = useLearnerBehaviour(behaviourOn ? studentId : '');
   const [messaging, setMessaging] = useState(false);
   const [referring, setReferring] = useState(false);
 
@@ -86,7 +89,9 @@ export default function LearnerProfilePage() {
         <AttendanceSummaryCard attendance={profile.attendance} />
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <BehaviourTimelineCard items={behaviour.items} summary={behaviour.summary} loading={behaviour.loading} error={behaviour.error} />
+        {behaviourOn ? (
+          <BehaviourTimelineCard items={behaviour.items} summary={behaviour.summary} loading={behaviour.loading} error={behaviour.error} />
+        ) : null}
         <RecentActivityCard achievements={profile.achievements} sports={profile.sports} />
       </div>
 

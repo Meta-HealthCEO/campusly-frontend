@@ -110,7 +110,8 @@ describe('isStandaloneTeacherPathAllowed', () => {
 
 describe('one behaviour log in the Class section', () => {
   it('shows Behaviour in place of Discipline, Merits, Incidents and Refer to counsellor', () => {
-    const labels = flatten(TEACHER_NAV).map((item) => item.label);
+    // Incidents comes back only as a fallback while attendance (and so Behaviour) is off.
+    const labels = flatten(TEACHER_NAV).filter((item) => !item.unlessModule).map((item) => item.label);
     expect(labels).toContain('Behaviour');
     for (const gone of ['Discipline', 'Merits', 'Incidents', 'Refer to counsellor']) expect(labels).not.toContain(gone);
   });

@@ -36,32 +36,43 @@ export interface LogBehaviourInput {
 
 const EMPTY: BehaviourSummary = { merits: 0, demerits: 0, incidents: 0, net: 0 };
 
-/** A class's recent behaviour, newest first. */
-export function useClassBehaviour(classId: string) {
+/** Recent behaviour from one feed endpoint, newest first; nothing loads while params is null. */
+function useFeed(path: string, params: Record<string, string> | null, failMessage: string) {
   const [entries, setEntries] = useState<BehaviourFeedEntry[]>([]);
   const [summary, setSummary] = useState<BehaviourSummary>(EMPTY);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const key = params ? JSON.stringify(params) : '';
 
   const load = useCallback(async (): Promise<void> => {
-    if (!classId) return;
+    if (!key) return;
     setLoading(true);
     try {
-      const data = unwrapResponse<{ entries: BehaviourFeedEntry[]; summary: BehaviourSummary }>(await apiClient.get('/behaviour', { params: { classId } }));
+      const data = unwrapResponse<{ entries: BehaviourFeedEntry[]; summary: BehaviourSummary }>(await apiClient.get(path, { params: JSON.parse(key) as Record<string, string> }));
       setEntries(data.entries ?? []);
       setSummary(data.summary ?? EMPTY);
       setError(null);
     } catch (err: unknown) {
-      console.error('Class behaviour failed', err);
-      setError(extractErrorMessage(err, "Couldn't load this class's behaviour. Refresh to try again."));
+      console.error('Behaviour feed failed', err);
+      setError(extractErrorMessage(err, failMessage));
     } finally {
       setLoading(false);
     }
-  }, [classId]);
+  }, [path, key, failMessage]);
 
   useEffect(() => { void load(); }, [load]);
 
   return { entries, summary, loading, error, refresh: load };
+}
+
+/** A class's recent behaviour, newest first. */
+export function useClassBehaviour(classId: string) {
+  return useFeed('/behaviour', classId ? { classId } : null, "Couldn't load this class's behaviour. Refresh to try again.");
+}
+
+/** The whole school's recent behaviour (admins and principals), optionally one kind. */
+export function useSchoolBehaviour(kind: string) {
+  return useFeed('/behaviour/school', kind ? { kind } : {}, "Couldn't load the school's behaviour log. Refresh to try again.");
 }
 
 /** Logging and undoing behaviour; the reason a log failed stays for the form to show. */

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { useModule } from '@/hooks/useModule';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -38,8 +39,9 @@ export function LogBehaviourDialog({ open, onOpenChange, learners, learner, sour
   const [severity, setSeverity] = useState<Severity>('low');
   const [note, setNote] = useState('');
   const [problem, setProblem] = useState<string | null>(null);
-  // One key per log: a double tap, or a retry after a dropped connection, logs once.
-  const [requestKey] = useState(() => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`));
+  const { isModuleEnabled } = useModule();
+  // One key per version of the log: a double tap or a retry of the same log saves once; a changed log gets a new key.
+  const sent = useRef<{ log: string; key: string } | null>(null);
 
   const chooseKind = (next: BehaviourKind): void => {
     setKind(next);
@@ -51,6 +53,11 @@ export function LogBehaviourDialog({ open, onOpenChange, learners, learner, sour
   const submit = (): void => {
     const missing = logProblem({ studentId, kind, category, note });
     if (missing) return setProblem(missing);
+    const log = JSON.stringify([studentId, kind, category, points, severity, note]);
+    if (sent.current?.log !== log) {
+      sent.current = { log, key: typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}` };
+    }
+    const requestKey = sent.current.key;
     onLog({
       studentId, kind, category, source, requestKey,
       ...(kind !== 'incident' ? { points } : {}),
@@ -131,7 +138,7 @@ export function LogBehaviourDialog({ open, onOpenChange, learners, learner, sour
             <Textarea id="behaviour-note" value={note} onChange={(e) => { setNote(e.target.value); setProblem(null); }} rows={3} maxLength={500} />
           </div>
 
-          {kind === 'incident' ? (
+          {kind === 'incident' && isModuleEnabled('incident_wellbeing') ? (
             <p className="text-xs text-muted-foreground">
               For something serious, also <Link href={ROUTES.TEACHER_INCIDENTS} className="underline underline-offset-2">report an incident</Link> so the school can follow it up.
             </p>

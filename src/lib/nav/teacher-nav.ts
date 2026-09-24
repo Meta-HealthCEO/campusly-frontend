@@ -1,5 +1,5 @@
 import {
-  BarChart3, BookMarked, BookOpen, CalendarCheck, CalendarDays, CheckSquare,
+  AlertTriangle, BarChart3, BookMarked, BookOpen, CalendarCheck, CalendarDays, CheckSquare,
   Clipboard, ClipboardCheck, ClipboardList, Clock, CreditCard, FileText, GraduationCap, Heart,
   Library, Megaphone, MessageSquare, PlayCircle, Repeat, ScrollText, Settings,
   Shield, Sunrise, Users, Video,
@@ -33,6 +33,8 @@ export const TEACHER_NAV: NavItem[] = [
   { section: 'Class', label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
   // One behaviour log (merits, demerits, incidents); serious incidents and referrals open from its page.
   { section: 'Class', label: 'Behaviour', href: ROUTES.TEACHER_BEHAVIOUR, icon: Shield, module: 'attendance' },
+  // Without attendance there is no Behaviour page, so incident reporting needs its own way in.
+  { section: 'Class', label: 'Incidents', href: ROUTES.TEACHER_INCIDENTS, icon: AlertTriangle, module: 'incident_wellbeing', unlessModule: 'attendance' },
   // /api/pastoral has no module gate: counsellors see this whatever modules the school has.
   { section: 'Class', label: 'Pastoral Care', href: ROUTES.TEACHER_PASTORAL, icon: Heart, permission: 'isCounselor' },
 
