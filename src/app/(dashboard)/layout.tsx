@@ -24,6 +24,10 @@ import { DunningBanner } from '@/components/subscription/DunningBanner';
 import { composeNav } from './nav-config';
 import { isStandaloneTeacherPathAllowed } from '@/lib/standalone-teacher-paths';
 import { useNotificationPoller } from '@/hooks/useNotificationPoller';
+import { usePortalScope } from '@/hooks/usePortalScope';
+import { portalForUser } from '@/lib/portal-scope';
+import { TEACHER_FONT_VARIABLES } from '@/lib/fonts/teacher-fonts';
+import { cn } from '@/lib/utils';
 import type { UserRole, PermissionFlag } from '@/types';
 
 const NAV_BY_ROLE: Record<UserRole, NavItem[]> = {
@@ -80,6 +84,9 @@ export default function DashboardLayout({
   const { fetchSchool } = useSchoolData();
   const pathname = usePathname();
   const router = useRouter();
+  const portal = portalForUser(user);
+  const portalFonts = portal === 'teacher' ? TEACHER_FONT_VARIABLES : '';
+  usePortalScope(portal, portalFonts);
 
   // Poll for unread notification count
   useNotificationPoller();
@@ -115,7 +122,13 @@ export default function DashboardLayout({
 
   return (
     <AuthGuard>
-      <div className="flex h-screen overflow-hidden bg-muted/30">
+      <div
+        data-portal={portal ?? undefined}
+        className={cn(
+          'flex h-screen overflow-hidden',
+          portal ? cn(portalFonts, 'bg-background font-sans text-foreground') : 'bg-muted/30',
+        )}
+      >
         <Sidebar items={navItems} />
         <div className="flex flex-1 flex-col overflow-hidden">
           <TopBar />
