@@ -42,7 +42,7 @@ export function UnitLibrary({ entries, loading, error, onCopy, onOpen }: Props) 
             <p className="truncate text-xs text-muted-foreground">{libraryMeta(entry)}</p>
             <p className="text-xs text-muted-foreground">{libraryByline(entry)}</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => onCopy(entry)} className="min-h-11 w-full gap-1.5 sm:min-h-8 sm:w-auto">
+          <Button variant="outline" size="sm" onClick={() => onCopy(entry)} aria-label={`Copy ${entry.title} to my class`} className="min-h-11 w-full gap-1.5 sm:min-h-8 sm:w-auto">
             <Copy className="h-4 w-4" aria-hidden /> Copy to my class
           </Button>
         </li>

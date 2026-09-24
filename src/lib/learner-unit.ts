@@ -32,6 +32,25 @@ export const LEARNER_KIND_LABEL: Record<ItemKind, string> = {
   quick_check: 'Quick check',
 };
 
+/** A hand-built item (added via the course builder) has `type`, not `itemKind` — it never went through AI generation. */
+const LEARNER_TYPE_LABEL: Record<string, string> = {
+  content: 'Read',
+  chapter: 'Read',
+  homework: 'Homework',
+  quiz: 'Quiz',
+};
+
+/**
+ * What a learner sees for an item's kind. AI-generated items carry
+ * `itemKind`; hand-built ones only carry `type` — falling back to
+ * `itemKind ?? 'notes'` mislabels a hand-built quiz or homework item as
+ * "Read".
+ */
+export function learnerItemLabel(item: Pick<LearnerItem, 'itemKind' | 'type'>): string {
+  if (item.itemKind) return LEARNER_KIND_LABEL[item.itemKind];
+  return LEARNER_TYPE_LABEL[item.type ?? ''] ?? 'Read';
+}
+
 export interface ResumeTarget {
   lessonId: string;
   title: string;
@@ -77,4 +96,24 @@ export function moduleProgress(module: { lessons: LearnerItem[] }): { done: numb
 export function unitDone(unit: LearnerUnit): boolean {
   const required = ordered(unit).filter(({ item }) => !item.optional);
   return required.length > 0 && required.every(({ item }) => item.unlockStatus === 'completed');
+}
+
+interface EnrolmentLike {
+  status: string;
+  progressPercent: number;
+  enrolledAt: string;
+}
+
+/**
+ * The unit to resume: the one the learner has actually started but not
+ * finished, not just the first (or most recently released) active
+ * enrolment — a freshly-released unit shouldn't jump the queue ahead of
+ * one they're partway through.
+ */
+export function currentEnrolment<T extends EnrolmentLike>(enrolments: T[]): T | null {
+  const active = enrolments.filter((e) => e.status === 'active');
+  const inProgress = active.filter((e) => e.progressPercent > 0);
+  const pool = inProgress.length > 0 ? inProgress : active;
+  if (pool.length === 0) return null;
+  return [...pool].sort((a, b) => new Date(b.enrolledAt).getTime() - new Date(a.enrolledAt).getTime())[0];
 }

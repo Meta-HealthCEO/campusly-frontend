@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { GraduationCap } from 'lucide-react';
+import { AlertTriangle, GraduationCap } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LessonPlayerShell } from '@/components/courses/LessonPlayerShell';
@@ -29,7 +29,7 @@ export default function LearnLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const courseId = params.id as string;
   const lessonId = params.lessonId as string;
-  const { enrolments, loading } = useStudentUnits();
+  const { enrolments, loading, failed } = useStudentUnits();
   const enrolment = enrolments.find((e) => courseIdOf(e) === courseId) ?? null;
   const player = useLessonPlayer(enrolment?.id ?? '');
   const { fetchLesson, writeProgress, submitQuiz } = player;
@@ -42,10 +42,16 @@ export default function LearnLayout({ children }: { children: React.ReactNode })
   const go = (id: string): void => router.push(ROUTES.STUDENT_LESSON_PLAYER(courseId, id));
 
   if (loading) return <LoadingSpinner />;
+  if (failed) {
+    return <EmptyState icon={AlertTriangle} title="Couldn't load your units" description="Check your connection and refresh to try again." />;
+  }
   if (!enrolment) {
     return <EmptyState icon={GraduationCap} title="This unit isn't open to you" description="Ask your teacher to release it to your class." />;
   }
-  if (player.loading || !player.enrolmentDetail) return <LoadingSpinner />;
+  if (player.loading) return <LoadingSpinner />;
+  if (player.error || !player.enrolmentDetail) {
+    return <EmptyState icon={GraduationCap} title="Couldn't load this unit" description={player.error ?? 'Try refreshing the page.'} />;
+  }
   if (index === -1) {
     return <EmptyState icon={GraduationCap} title="Item not found" description="Your teacher may have removed it from the unit." />;
   }
@@ -60,6 +66,8 @@ export default function LearnLayout({ children }: { children: React.ReactNode })
         onNext={() => { if (next) go(next.id); }}
         canGoNext={next !== null && next.unlockStatus !== undefined && next.unlockStatus !== 'locked'}
         canGoPrevious={prev !== null}
+        isLastItem={next === null}
+        onFinish={() => router.push(ROUTES.STUDENT_COURSE_HOME(courseId))}
       >
         {children}
       </LessonPlayerShell>

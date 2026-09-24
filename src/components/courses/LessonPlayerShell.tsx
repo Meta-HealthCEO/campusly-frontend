@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Menu, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { LessonOutlineSidebar } from './LessonOutlineSidebar';
 import type { CourseTree } from '@/types';
 
@@ -15,6 +15,9 @@ interface LessonPlayerShellProps {
   onNext: () => void;
   canGoNext: boolean;
   canGoPrevious: boolean;
+  /** No item comes after this one — Next has nowhere to go, so offer a way back to the unit instead. */
+  isLastItem: boolean;
+  onFinish: () => void;
   children: React.ReactNode;
 }
 
@@ -34,6 +37,8 @@ export function LessonPlayerShell({
   onNext,
   canGoNext,
   canGoPrevious,
+  isLastItem,
+  onFinish,
   children,
 }: LessonPlayerShellProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -54,7 +59,7 @@ export function LessonPlayerShell({
             render={
               <Button variant="outline" size="sm" className="min-h-11">
                 <Menu className="mr-2 h-4 w-4" />
-                Course outline
+                Unit outline
               </Button>
             }
           />
@@ -93,10 +98,17 @@ export function LessonPlayerShell({
             <ChevronLeft className="mr-2 h-4 w-4" />
             Previous
           </Button>
-          <Button onClick={onNext} disabled={!canGoNext} className="min-h-11">
-            Next
-            <ChevronRight className="ml-2 h-4 w-4" />
-          </Button>
+          {isLastItem ? (
+            <Button onClick={onFinish} className="min-h-11">
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              Back to the unit
+            </Button>
+          ) : (
+            <Button onClick={onNext} disabled={!canGoNext} className="min-h-11">
+              Next
+              <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          )}
         </div>
       </main>
     </div>

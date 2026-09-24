@@ -1,11 +1,12 @@
 'use client';
 
-import { BookOpen, CheckCircle2, ListChecks, Lock, PlayCircle, Sigma } from 'lucide-react';
+import { BookOpen, CheckCircle2, ClipboardList, HelpCircle, ListChecks, Lock, PlayCircle, Sigma } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LEARNER_KIND_LABEL, moduleProgress, resumeTarget, type LearnerItem, type LearnerUnit } from '@/lib/learner-unit';
+import { learnerItemLabel, moduleProgress, resumeTarget, unitDone, type LearnerItem, type LearnerUnit } from '@/lib/learner-unit';
 import type { ItemKind } from '@/types/courses';
 
 const KIND_ICON: Record<ItemKind, typeof BookOpen> = { notes: BookOpen, worked_example: Sigma, quick_check: ListChecks };
+const TYPE_ICON: Record<string, typeof BookOpen> = { content: BookOpen, chapter: BookOpen, homework: ClipboardList, quiz: HelpCircle };
 
 interface Props {
   unit: LearnerUnit & { description?: string };
@@ -14,7 +15,8 @@ interface Props {
 }
 
 function ItemRow({ item, onOpen }: { item: LearnerItem; onOpen: () => void }) {
-  const Icon = KIND_ICON[item.itemKind ?? 'notes'];
+  // AI-generated items carry `itemKind`; hand-built ones only carry `type`.
+  const Icon = item.itemKind ? KIND_ICON[item.itemKind] : TYPE_ICON[item.type ?? ''] ?? BookOpen;
   const locked = item.unlockStatus === 'locked' || !item.unlockStatus;
   const done = item.unlockStatus === 'completed';
   return (
@@ -31,7 +33,7 @@ function ItemRow({ item, onOpen }: { item: LearnerItem; onOpen: () => void }) {
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-medium">{item.title}</span>
           <span className="block text-xs text-muted-foreground">
-            {LEARNER_KIND_LABEL[item.itemKind ?? 'notes']}{item.minutes ? ` · ${item.minutes} min` : ''}{item.optional ? ' · Optional' : ''}
+            {learnerItemLabel(item)}{item.minutes ? ` · ${item.minutes} min` : ''}{item.optional ? ' · Optional' : ''}
           </span>
         </span>
         {done ? <CheckCircle2 className="h-5 w-5 shrink-0 text-success" aria-label="Done" />
@@ -61,11 +63,11 @@ export function UnitHome({ unit, progressPercent, onOpen }: Props) {
             <PlayCircle className="h-5 w-5 shrink-0" aria-hidden />
             <span className="min-w-0">{target.started ? 'Continue' : 'Start'}: {target.title}</span>
           </Button>
-        ) : (
+        ) : unitDone(unit) ? (
           <p className="flex items-center gap-2 rounded-lg border border-success/30 bg-success-soft px-3 py-2 text-sm text-success">
             <CheckCircle2 className="h-4 w-4" aria-hidden /> You&apos;ve finished this unit. Well done!
           </p>
-        )}
+        ) : null}
       </header>
 
       <ol className="space-y-4">
@@ -76,7 +78,7 @@ export function UnitHome({ unit, progressPercent, onOpen }: Props) {
               <div className="space-y-1.5 border-b border-border px-4 py-3">
                 <div className="flex items-baseline justify-between gap-3">
                   <h2 className="text-base font-semibold"><span className="font-mono text-xs text-muted-foreground">{i + 1}.</span> {m.title}</h2>
-                  <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">{p.done} of {p.total}</span>
+                  <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">{p.total === 0 ? 'No items yet' : `${p.done} of ${p.total}`}</span>
                 </div>
                 <div className="h-1 w-full overflow-hidden rounded-full bg-muted" aria-hidden>
                   <div className="h-full rounded-full bg-success" style={{ width: `${p.percent}%` }} />

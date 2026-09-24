@@ -51,9 +51,10 @@ export default function TeacherCoursesPage() {
   const [pendingDelete, setPendingDelete] = useState<Course | null>(null);
   const [tab, setTab] = useState<'mine' | 'library'>('mine');
   const library = useUnitLibrary(tab === 'library');
-  const { entries: classEntries, loading: classesLoading } = useTeacherClasses();
-  const classes = useMemo(() => copyClassOptions(classEntries), [classEntries]);
   const copier = useCopyUnit();
+  // The teaching load is only needed once the copy dialog is actually open.
+  const { entries: classEntries, loading: classesLoading } = useTeacherClasses(copier.target !== null);
+  const classes = useMemo(() => copyClassOptions(classEntries), [classEntries]);
 
   const handleCreated = (course: Course) => {
     router.push(ROUTES.TEACHER_COURSE_EDIT(course.id));

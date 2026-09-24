@@ -106,7 +106,7 @@ function ModuleGroup({ module, currentLessonId, onSelectLesson }: ModuleGroupPro
           ))}
           {lessons.length === 0 && (
             <p className="text-[10px] italic text-muted-foreground px-2 py-1">
-              No lessons
+              No items
             </p>
           )}
         </div>

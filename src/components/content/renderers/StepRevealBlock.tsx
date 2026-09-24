@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, CheckCircle2 } from 'lucide-react';
 import type { ContentBlockItem } from '@/types';
@@ -11,9 +11,11 @@ interface StepData {
 
 interface StepRevealBlockProps {
   block: ContentBlockItem;
+  /** Called once, the first time every step has been revealed — a worked example is "read" from here, not from opening it. */
+  onAllRevealed?: () => void;
 }
 
-export function StepRevealBlock({ block }: StepRevealBlockProps) {
+export function StepRevealBlock({ block, onAllRevealed }: StepRevealBlockProps) {
   const data = useMemo<StepData>(() => {
     try { return JSON.parse(block.content) as StepData; }
     catch { return { steps: [] }; }
@@ -23,6 +25,14 @@ export function StepRevealBlock({ block }: StepRevealBlockProps) {
 
   const revealNext = () => setRevealedCount((p) => Math.min(p + 1, data.steps.length));
   const allRevealed = revealedCount >= data.steps.length;
+
+  const notifiedRef = useRef(false);
+  useEffect(() => {
+    if (allRevealed && data.steps.length > 0 && !notifiedRef.current) {
+      notifiedRef.current = true;
+      onAllRevealed?.();
+    }
+  }, [allRevealed, data.steps.length, onAllRevealed]);
 
   return (
     <div className="space-y-3">

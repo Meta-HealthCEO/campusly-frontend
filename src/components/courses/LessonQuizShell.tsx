@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,7 @@ export function LessonQuizShell({
     passed: boolean;
     canRetry: boolean;
   } | null>(null);
+  const resultRef = useRef<HTMLDivElement | null>(null);
 
   const handleAnswerChange = (questionId: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
@@ -53,7 +54,13 @@ export function LessonQuizShell({
     }));
     const res = await onSubmit(payload);
     setSubmitting(false);
-    if (res) setResult(res);
+    if (res) {
+      setResult(res);
+      // The score and Try again render above the questions; on a phone the
+      // student was scrolled down at the submit button, so bring the
+      // result into view instead of leaving it off the top of the screen.
+      requestAnimationFrame(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
   };
 
   const handleRetry = () => {
@@ -80,7 +87,7 @@ export function LessonQuizShell({
     <div className="space-y-4">
       {/* Result banner */}
       {result && (
-        <Card>
+        <Card ref={resultRef}>
           <CardContent className="p-4 space-y-2">
             <div className="flex items-center gap-3">
               {result.passed ? (
