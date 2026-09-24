@@ -190,7 +190,7 @@ export function PeriodConfigDialog({
           )}
 
           {validationError && (
-            <div className="flex items-start gap-2 rounded-md bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300">
+            <div className="flex items-start gap-2 rounded-md bg-attention-soft p-3 text-sm text-attention">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{validationError}</span>
             </div>

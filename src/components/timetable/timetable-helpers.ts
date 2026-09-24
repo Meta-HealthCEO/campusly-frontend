@@ -18,14 +18,13 @@ export const DAY_LABELS_SHORT: Record<DayOfWeek, string> = {
   friday: 'Fri',
 };
 
+/** Subject identity colours, from the teacher chart palette (a tint, a matching edge, body text on top). */
 export const COLOR_PALETTE = [
-  'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
-  'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
-  'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200',
-  'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
-  'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200',
-  'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-200',
-  'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
+  'border bg-chart-1/15 border-chart-1/40 text-foreground',
+  'border bg-chart-3/15 border-chart-3/40 text-foreground',
+  'border bg-chart-5/15 border-chart-5/40 text-foreground',
+  'border bg-chart-4/15 border-chart-4/40 text-foreground',
+  'border bg-chart-2/20 border-chart-2/50 text-foreground',
 ];
 
 export function getSubjectId(slot: TimetableSlot): string {

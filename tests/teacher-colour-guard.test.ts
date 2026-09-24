@@ -33,6 +33,8 @@ const MIGRATED = [
   'src/components/attendance/StudentRow.tsx',
   'src/components/attendance/ChronicAbsenteeTable.tsx',
   'src/components/attendance/AttendanceBulkMarkMenu.tsx',
+  'src/components/timetable/timetable-helpers.ts',
+  'src/components/timetable/PeriodConfigDialog.tsx',
 ];
 
 const RAW = /\b(?:bg|text|border|ring|from|to|via|fill|stroke|outline|divide|decoration)-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)-\d{2,3}\b/g;
