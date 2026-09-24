@@ -63,3 +63,18 @@ export function messageSubjectFor(firstName: string): string {
 export function noParentMessage(firstName: string): string {
   return `No parent is linked to ${firstName} yet. The school office links parents to learners; ask them to add one.`;
 }
+
+/**
+ * "7 merit points" for the Recent Activity card's badge. This is a running
+ * points total, distinct from the behaviour timeline's "X merits" entry
+ * count (`summaryLine` in `lib/behaviour.ts`) — label them differently so the
+ * two numbers next to each other never look like a mismatch.
+ */
+export function meritPointsLabel(totalMerits: number): string {
+  return plural(totalMerits, 'merit point', 'merit points');
+}
+
+/** "3 demerit points" — see {@link meritPointsLabel}. */
+export function demeritPointsLabel(totalDemerits: number): string {
+  return plural(totalDemerits, 'demerit point', 'demerit points');
+}

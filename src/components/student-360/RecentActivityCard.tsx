@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, AlertTriangle, Activity } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import { anyCategoryLabel } from '@/lib/behaviour';
+import { meritPointsLabel, demeritPointsLabel } from '@/lib/learner-profile';
 import type { FullStudent360Data } from '@/types/student-360';
 
 interface RecentActivityCardProps {
@@ -42,12 +44,12 @@ export function RecentActivityCard({ achievements, behaviour, sports }: RecentAc
       list.push({
         id: `inc-${i.type}-${i.date}`,
         icon: 'incident',
-        title: i.type.replace(/_/g, ' '),
+        title: anyCategoryLabel(i.type),
         subtitle: i.description.length > 80 ? `${i.description.slice(0, 80)}...` : i.description,
         date: i.date,
         badge: {
           label: i.severity,
-          variant: i.severity === 'critical' || i.severity === 'serious' ? 'destructive' : 'outline',
+          variant: i.severity === 'critical' || i.severity === 'serious' || i.severity === 'high' ? 'destructive' : 'outline',
         },
       });
     }
@@ -67,12 +69,12 @@ export function RecentActivityCard({ achievements, behaviour, sports }: RecentAc
           <div className="flex gap-2">
             {achievements.totalMerits > 0 && (
               <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
-                {achievements.totalMerits} merits
+                {meritPointsLabel(achievements.totalMerits)}
               </Badge>
             )}
             {achievements.totalDemerits > 0 && (
               <Badge variant="secondary" className="bg-destructive/10 text-destructive">
-                {achievements.totalDemerits} demerits
+                {demeritPointsLabel(achievements.totalDemerits)}
               </Badge>
             )}
           </div>

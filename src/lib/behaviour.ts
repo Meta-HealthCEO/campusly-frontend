@@ -61,6 +61,21 @@ export function categoryLabel(kind: BehaviourKind, category: string): string {
   return BEHAVIOUR_CATEGORIES[kind].find((c) => c.value === category)?.label ?? category;
 }
 
+const ALL_CATEGORIES = [
+  ...BEHAVIOUR_CATEGORIES.merit,
+  ...BEHAVIOUR_CATEGORIES.demerit,
+  ...BEHAVIOUR_CATEGORIES.incident,
+];
+
+/**
+ * A category's human label when the kind isn't known up front (e.g. a mixed
+ * feed of demerits and incidents on the parent portal). Falls back to the
+ * raw value if it doesn't match any known category.
+ */
+export function anyCategoryLabel(category: string): string {
+  return ALL_CATEGORIES.find((c) => c.value === category)?.label ?? category;
+}
+
 /** "Merit +2 · Kindness", as the timeline words it. */
 export function entryLabel(e: { kind: BehaviourKind; category: string; points: number }): string {
   const points = pointsLabel(e.points);
