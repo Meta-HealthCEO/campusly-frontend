@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { ClipboardCheck, AlertCircle, Clock, ListChecks, Sparkles } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { ROUTES } from '@/lib/routes';
@@ -38,21 +37,10 @@ function filterItems(items: MarkingItem[], filters: Filters): MarkingItem[] {
 }
 
 export default function MarkingHubPage() {
-  const router = useRouter();
   const { items, loading, overdueCount, dueTodayCount } = useMarkingHub();
 
   const [filters, setFilters] = useState<Filters>({});
   const [sortBy, setSortBy] = useState('dueDate');
-
-  function handleCardClick(item: MarkingItem) {
-    if (item.type === 'homework') {
-      router.push(`/teacher/homework/${item.id}`);
-    } else if (item.type === 'assessment') {
-      router.push('/teacher/grades');
-    } else {
-      router.push('/teacher/curriculum/mark-papers');
-    }
-  }
 
   const filtered = filterItems(items, filters);
   const sorted = sortItems(filtered, sortBy);
@@ -77,13 +65,13 @@ export default function MarkingHubPage() {
           icon={ListChecks}
         />
         <StatCard
-          title="Overdue"
+          title="Overdue tasks"
           value={String(overdueCount)}
           icon={AlertCircle}
           tone={overdueCount > 0 ? 'attention' : 'default'}
         />
         <StatCard
-          title="Due Today"
+          title="Tasks due today"
           value={String(dueTodayCount)}
           icon={Clock}
         />
@@ -109,8 +97,7 @@ export default function MarkingHubPage() {
           {sorted.map((item) => (
             <MarkingItemCard
               key={item.id}
-              item={item}
-              onClick={() => handleCardClick(item)}
+              item={item}
             />
           ))}
         </div>

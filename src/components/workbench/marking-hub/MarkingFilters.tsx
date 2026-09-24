@@ -43,10 +43,11 @@ export function MarkingFilters({
           <SelectValue placeholder="All Types" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Types</SelectItem>
+          <SelectItem value="all">All types</SelectItem>
           <SelectItem value="homework">Homework</SelectItem>
+          <SelectItem value="paper">Test papers</SelectItem>
           <SelectItem value="assessment">Assessment</SelectItem>
-          <SelectItem value="ai_grading">AI Grading</SelectItem>
+          <SelectItem value="ai_grading">AI marking</SelectItem>
         </SelectContent>
       </Select>
 
@@ -64,7 +65,7 @@ export function MarkingFilters({
           <SelectValue placeholder="All Priority" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Priority</SelectItem>
+          <SelectItem value="all">Any priority</SelectItem>
           <SelectItem value="high">High</SelectItem>
           <SelectItem value="medium">Medium</SelectItem>
           <SelectItem value="low">Low</SelectItem>
@@ -79,8 +80,8 @@ export function MarkingFilters({
           <SelectValue placeholder="Sort By" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="dueDate">Due Date</SelectItem>
-          <SelectItem value="pendingCount">Pending Count</SelectItem>
+          <SelectItem value="dueDate">Due date</SelectItem>
+          <SelectItem value="pendingCount">Most to mark</SelectItem>
         </SelectContent>
       </Select>
     </div>

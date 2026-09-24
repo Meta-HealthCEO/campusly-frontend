@@ -49,7 +49,7 @@ export type AssessmentPlanType =
 
 export type PlanStatus = 'planned' | 'created' | 'completed';
 
-export type MarkingItemType = 'homework' | 'assessment' | 'ai_grading';
+export type MarkingItemType = 'homework' | 'paper' | 'assessment' | 'ai_grading';
 
 export type MarkingPriority = 'high' | 'medium' | 'low';
 

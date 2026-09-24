@@ -19,6 +19,10 @@ export interface MarkingItem {
   pendingCount: number;
   totalCount: number;
   priority: MarkingPriority;
+  /** Where the item opens (server-built). */
+  href?: string;
+  classId?: string;
+  paperId?: string;
 }
 
 // ------------------------------------------------------------
