@@ -1,5 +1,6 @@
 'use client';
 
+import { leaveRemaining } from '@/lib/leave-balance';
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -59,7 +60,7 @@ export function LeaveBalanceCards({ balances, staffId }: LeaveBalanceCardsProps)
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Remaining</p>
-                  <p className="font-semibold">{b.remaining} days</p>
+                  <p className="font-semibold">{leaveRemaining(b)} days</p>
                 </div>
               </div>
               <Progress value={usedPercent} className="h-2" />

@@ -74,7 +74,8 @@ export interface LeaveBalance {
     entitlement: number;
     used: number;
     pending: number;
-    remaining: number;
+    /** Not sent by the API today; see leaveRemaining. */
+    remaining?: number;
   }>;
 }
 
