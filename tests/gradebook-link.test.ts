@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gradebookHref, readGradebookParams } from '../src/lib/gradebook-link';
+import { gradebookHref, readGradebookParams, resolveLinkedAssessment } from '../src/lib/gradebook-link';
 
 const link = { assessmentId: 'a1', classId: 'c1', subjectId: 's1', term: 3, academicYear: 2026 };
 
@@ -27,5 +27,22 @@ describe('readGradebookParams', () => {
 
   it('treats empty ids as missing', () => {
     expect(readGradebookParams(new URLSearchParams('classId=&subjectId='))).toEqual({});
+  });
+});
+
+describe('resolveLinkedAssessment', () => {
+  const list = [{ id: 'newest' }, { id: 'older' }];
+
+  it('opens the linked assessment when it is in the list', () => {
+    expect(resolveLinkedAssessment(list, 'older')).toEqual({ pick: 'older', fetchWanted: false });
+  });
+
+  it('asks for the linked assessment by id when it is not in the first page, instead of guessing', () => {
+    expect(resolveLinkedAssessment(list, 'from-last-month')).toEqual({ pick: null, fetchWanted: true });
+  });
+
+  it('opens the newest assessment when nothing is linked', () => {
+    expect(resolveLinkedAssessment(list, undefined)).toEqual({ pick: 'newest', fetchWanted: false });
+    expect(resolveLinkedAssessment([], undefined)).toEqual({ pick: null, fetchWanted: false });
   });
 });

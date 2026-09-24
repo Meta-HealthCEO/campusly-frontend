@@ -20,6 +20,7 @@ import {
   type UpdateAssessmentPayload,
 } from '@/lib/gradebook-helpers';
 import type { GradebookParams } from '@/lib/gradebook-link';
+import { loadClassAssessments } from '@/hooks/gradebook-assessments';
 import { useStudentMarkHistory } from '@/hooks/useStudentMarkHistory';
 import type { SchoolClass, Assessment, Subject } from '@/types';
 
@@ -59,6 +60,8 @@ export function useTeacherGrades(initial?: GradebookParams) {
           const known = wanted !== undefined && list.some((c: SchoolClass) => c.id === wanted);
           if (!known) initialRef.current = undefined;
           setSelectedClass((prev) => prev || (known ? (wanted as string) : list[0].id));
+          // Set the linked subject in the same update, so assessments load once, already filtered.
+          if (known) setSelectedSubject(initialRef.current?.subjectId ?? '');
         }
       } catch (err: unknown) {
         console.error('Failed to load classes', err);
@@ -100,22 +103,20 @@ export function useTeacherGrades(initial?: GradebookParams) {
       setAllAssessments([]);
       return;
     }
+    // A newer class/subject choice supersedes this load; drop its late response.
+    let cancelled = false;
     async function fetchAssessments() {
       try {
-        const params: Record<string, string> = { classId: selectedClass };
-        if (selectedSubject) params.subjectId = selectedSubject;
-        const res = await apiClient.get('/academic/assessments', { params });
-        const list = unwrapList<Assessment>(res);
+        const linked = initialRef.current;
+        const wanted = linked?.classId === selectedClass ? linked.assessmentId : undefined;
+        const { list, chosen } = await loadClassAssessments(selectedClass, selectedSubject, wanted);
+        if (cancelled) return;
+        // The link has done its job once its class has loaded.
+        if (linked?.classId === selectedClass) initialRef.current = undefined;
         setAllAssessments(list);
-        // Auto-select the most recently created assessment so a fresh publish
-        // is immediately visible. Backend default sort is `-createdAt`.
-        if (list.length > 0) {
-          const wanted = initialRef.current?.assessmentId;
-          const known = wanted !== undefined && list.some((a: Assessment) => a.id === wanted);
-          if (known) initialRef.current = undefined;
-          setSelectedAssessment((prev) => prev || (known ? (wanted as string) : list[0].id));
-        }
+        if (chosen) setSelectedAssessment((prev) => prev || chosen);
       } catch (err: unknown) {
+        if (cancelled) return;
         console.error('Failed to load assessments', err);
         toast.error('Could not load assessments. Please refresh.');
       }
@@ -123,6 +124,7 @@ export function useTeacherGrades(initial?: GradebookParams) {
     fetchAssessments();
     setSelectedAssessment('');
     setMarkEntries([]);
+    return () => { cancelled = true; };
   }, [selectedClass, selectedSubject]);
 
   // Filtered assessments by term; 'year' shows every assessment.

@@ -48,3 +48,16 @@ export function readGradebookParams(params: { get(name: string): string | null }
   if (tab && TABS.has(tab)) result.tab = tab as GradebookTab;
   return result;
 }
+
+/**
+ * Which assessment to open after a class's assessments load. A linked one wins;
+ * if it isn't in the loaded page, fetch it by id rather than opening the wrong one.
+ */
+export function resolveLinkedAssessment(
+  list: ReadonlyArray<{ id: string }>,
+  wantedId: string | undefined,
+): { pick: string | null; fetchWanted: boolean } {
+  if (!wantedId) return { pick: list[0]?.id ?? null, fetchWanted: false };
+  if (list.some((a) => a.id === wantedId)) return { pick: wantedId, fetchWanted: false };
+  return { pick: null, fetchWanted: true };
+}
