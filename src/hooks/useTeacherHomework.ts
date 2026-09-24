@@ -182,7 +182,7 @@ export function useTeacherHomeworkMutations(): {
       const res = await apiClient.post('/homework', payload);
       return unwrapResponse<Homework>(res);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to create homework');
+      toast.error(extractErrorMessage(err, 'Failed to create homework'));
       return null;
     } finally {
       setMutLoading(false);

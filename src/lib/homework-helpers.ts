@@ -1,3 +1,5 @@
+import { resolveId } from '@/lib/api-helpers';
+import type { PopulatedId } from '@/types';
 import type {
   Homework,
   HomeworkSubmission,
@@ -252,4 +254,9 @@ export function normalizeSubmission(raw: RawSubmission): HomeworkSubmission {
     gradedAt: raw.gradedAt ?? undefined,
     status: derivedStatus,
   };
+}
+
+/** The learner's submission for a homework; the API may return homeworkId populated. */
+export function submissionForHomework<T extends { homeworkId: unknown }>(subs: T[], homeworkId: string): T | null {
+  return subs.find((s) => resolveId(s.homeworkId as PopulatedId) === homeworkId) ?? null;
 }

@@ -9,7 +9,7 @@ import {
   unwrapList,
   unwrapResponse,
 } from '@/lib/api-helpers';
-import { normalizeHomework, normalizeSubmission } from '@/lib/homework-helpers';
+import { normalizeHomework, normalizeSubmission, submissionForHomework } from '@/lib/homework-helpers';
 import { useCurrentStudent } from './useCurrentStudent';
 import type { Homework, HomeworkSubmission } from '@/types';
 import type {
@@ -227,7 +227,7 @@ export function useStudentHomeworkDetail(
             `/homework/student/${sid}/submissions`,
           );
           const subs = unwrapList<StructuredHomeworkSubmission>(subRes, 'submissions');
-          structured = subs.find((s) => s.homeworkId === homeworkId) ?? null;
+          structured = submissionForHomework(subs, homeworkId);
           if (structured) {
             legacySub = normalizeSubmission(
               structured as unknown as Parameters<typeof normalizeSubmission>[0],
@@ -279,11 +279,7 @@ export function useStudentHomeworkDetail(
         setSubmission(data);
         return data;
       } catch (err: unknown) {
-        toast.error(
-          err instanceof Error
-            ? err.message
-            : extractErrorMessage(err, 'Submit failed'),
-        );
+        toast.error(extractErrorMessage(err, 'Submit failed'));
         return null;
       }
     },
