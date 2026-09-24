@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 
-export type HomeworkWizardType = 'quiz' | 'reading' | 'exercise';
+// One quiz system: new homework is an exercise (question-bank questions) or
+// a reading — quiz is no longer a creatable homework type here.
+export type HomeworkWizardType = 'reading' | 'exercise';
 
 export interface HomeworkWizardState {
   // Step 1
@@ -18,7 +20,6 @@ export interface HomeworkWizardState {
   latePenaltyPercent: number;
   gradebookAutoPublish: boolean;
   // Step 2 — type-specific
-  quizId: string;
   contentResourceId: string;
   pageRange: string;
   comprehensionQuestionIds: string[];
@@ -43,7 +44,6 @@ const INITIAL: Omit<HomeworkWizardState, 'set' | 'reset'> = {
   latePolicy: 'block',
   latePenaltyPercent: 25,
   gradebookAutoPublish: true,
-  quizId: '',
   contentResourceId: '',
   pageRange: '',
   comprehensionQuestionIds: [],

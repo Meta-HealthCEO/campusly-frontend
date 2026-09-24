@@ -51,12 +51,13 @@ export function HomeworkWizardStep1() {
     return Array.from(map.values());
   }, [entries]);
 
-  const needsTopic = state.type === 'reading' || state.type === 'exercise';
+  // Both remaining homework types (exercise, reading) need a CAPS topic —
+  // it's only optional before a type is even picked.
+  const needsTopic = state.type !== null;
 
   const handleTypeChange = (type: HomeworkWizardType) => {
     state.set({
       type,
-      quizId: '',
       contentResourceId: '',
       comprehensionQuestionIds: [],
       exerciseQuestionIds: [],
@@ -71,7 +72,6 @@ export function HomeworkWizardStep1() {
       subjectId: '',
       curriculumNodeId: '',
       curriculumNodeName: '',
-      quizId: '',
       contentResourceId: '',
       comprehensionQuestionIds: [],
       exerciseQuestionIds: [],
@@ -83,7 +83,6 @@ export function HomeworkWizardStep1() {
       subjectId,
       curriculumNodeId: '',
       curriculumNodeName: '',
-      quizId: '',
       contentResourceId: '',
       comprehensionQuestionIds: [],
       exerciseQuestionIds: [],
@@ -100,7 +99,7 @@ export function HomeworkWizardStep1() {
     <div className="space-y-6">
       <div className="space-y-3">
         <Label>What are you assigning? <span className="text-destructive">*</span></Label>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           {TYPE_OPTIONS.map((opt) => {
             const Icon = opt.icon;
             const selected = state.type === opt.value;
@@ -140,7 +139,7 @@ export function HomeworkWizardStep1() {
           topicHelpText={
             needsTopic
               ? 'Homework generation should be anchored to one CAPS topic.'
-              : 'Optional for quiz homework.'
+              : 'Pick a homework type above first.'
           }
           topicEmptyText="No CAPS topics found for this class and subject."
         />
