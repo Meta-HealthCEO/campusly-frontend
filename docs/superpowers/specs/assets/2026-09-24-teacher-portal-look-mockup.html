@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teacher portal — night-back identity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<style>
+  /* ---------- page chrome (the brief around the mockups) ---------- */
+  :root { --page: #eceef5; --page-ink: #0d1224; --page-muted: #5b6178; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--page-ink); font: 15px/1.5 'Instrument Sans', system-ui, sans-serif; }
+  .brief { max-width: 1240px; margin: 0 auto; padding: 32px 24px 8px; }
+  .brief h1 { font: 700 30px/1.1 'Bricolage Grotesque', sans-serif; letter-spacing: -0.02em; margin: 0 0 8px; }
+  .brief p { margin: 0; color: var(--page-muted); max-width: 70ch; }
+  .section { max-width: 1240px; margin: 0 auto; padding: 24px; }
+  .section > h2 { font: 600 19px/1.2 'Bricolage Grotesque', sans-serif; margin: 0 0 4px; }
+  .section > p { margin: 0 0 14px; color: var(--page-muted); }
+  .cards { display: grid; gap: 28px; }
+  .card { background: transparent; border-radius: 14px; outline: 2px solid transparent; outline-offset: 6px; cursor: pointer; transition: outline-color .15s; }
+  .card:hover { outline-color: #c4b5fd; }
+  .card.selected { outline-color: #7c3aed; }
+  .card-body { display: flex; align-items: baseline; gap: 12px; padding: 12px 4px 0; }
+  .card-body h3 { margin: 0; font: 600 16px/1.2 'Bricolage Grotesque', sans-serif; }
+  .card-body p { margin: 0; color: var(--page-muted); }
+  .card-body .pick { margin-left: auto; font: 500 12px 'JetBrains Mono', monospace; color: #7c3aed; white-space: nowrap; }
+  .card.selected .pick::after { content: ' ✓ selected'; }
+  .stage { width: 100%; overflow: hidden; border-radius: 12px; box-shadow: 0 1px 0 rgba(13,18,36,.06), 0 12px 32px -16px rgba(13,18,36,.25); }
+  .stage > .app { transform-origin: top left; }
+
+  /* ---------- the product: tokens ---------- */
+  .app {
+    --bg: #f5f6fb; --surface: #ffffff; --ink: #0d1224; --ink-2: #3a4058; --muted: #62687f; --line: #e4e6f0; --line-2: #eef0f6;
+    --primary: #7c3aed; --primary-ink: #ffffff; --accent: #6d28d9; --accent-wash: #f1ecfe;
+    --ok: #047857; --ok-dot: #10b981; --ok-wash: #e7f8f1;
+    --warn: #b45309; --warn-dot: #f59e0b; --warn-wash: #fdf3e1;
+    --bad: #be123c; --bad-dot: #f43f5e; --bad-wash: #fdecef;
+    --info: #0369a1; --info-dot: #0ea5e9; --info-wash: #e6f3fb;
+    --side: #0d1224; --side-ink: #aeb3cc; --side-ink-strong: #ffffff; --side-line: rgba(196,181,253,.10); --side-active: rgba(167,139,250,.14); --side-mark: #a78bfa; --side-label: #8a90ab;
+    width: 1200px; height: 660px; display: grid; grid-template-columns: 232px 1fr; background: var(--bg); color: var(--ink);
+    font: 14px/1.45 'Instrument Sans', system-ui, sans-serif;
+  }
+  .app.frame-dawn { --side: #ffffff; --side-ink: #3a4058; --side-ink-strong: #0d1224; --side-line: #e4e6f0; --side-active: #f1ecfe; --side-mark: #7c3aed; --side-label: #8a8fa6; }
+  .app.theme-night {
+    --bg: #070912; --surface: #0d1224; --ink: #eef0fa; --ink-2: #c9cce0; --muted: #9aa0b8; --line: rgba(196,181,253,.12); --line-2: rgba(196,181,253,.07);
+    --primary: #7c3aed; --accent: #c4b5fd; --accent-wash: rgba(167,139,250,.14);
+    --ok: #6ee7b7; --ok-dot: #34d399; --ok-wash: rgba(52,211,153,.12);
+    --warn: #fcd34d; --warn-dot: #fbbf24; --warn-wash: rgba(251,191,36,.12);
+    --bad: #fda4af; --bad-dot: #fb7185; --bad-wash: rgba(251,113,133,.12);
+    --info: #7dd3fc; --info-dot: #38bdf8; --info-wash: rgba(56,189,248,.12);
+    --side: #05060d; --side-line: rgba(196,181,253,.08);
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+  .display { font-family: 'Bricolage Grotesque', sans-serif; letter-spacing: -0.02em; }
+
+  /* sidebar */
+  .side { background: var(--side); border-right: 1px solid var(--side-line); display: flex; flex-direction: column; padding: 18px 12px; }
+  .logo { display: flex; align-items: center; gap: 9px; padding: 2px 10px 18px; color: var(--side-ink-strong); font: 700 19px 'Bricolage Grotesque', sans-serif; letter-spacing: -0.02em; }
+  .logo .mark { width: 26px; height: 26px; border-radius: 7px; background: #7c3aed; display: grid; place-items: center; color: #fff; }
+  .logo .mark svg { width: 15px; height: 15px; }
+  .navlabel { font: 500 10.5px 'JetBrains Mono', monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--side-label); padding: 14px 10px 6px; }
+  .nav a { display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border-radius: 8px; color: var(--side-ink); text-decoration: none; position: relative; font-weight: 500; }
+  .nav a svg { width: 17px; height: 17px; stroke-width: 1.75; }
+  .nav a.active { background: var(--side-active); color: var(--side-ink-strong); }
+  .nav a.active::before { content: ''; position: absolute; left: -12px; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: var(--side-mark); }
+  .nav .ai { margin-left: auto; color: var(--side-mark); }
+  .nav .ai svg { width: 14px; height: 14px; }
+  .nav .count { margin-left: auto; font: 500 11px 'JetBrains Mono', monospace; color: var(--side-ink-strong); background: var(--side-active); padding: 1px 7px; border-radius: 999px; }
+  .me { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px 10px 2px; border-top: 1px solid var(--side-line); }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: #c4b5fd; color: #2e1065; display: grid; place-items: center; font: 600 12px 'Instrument Sans', sans-serif; }
+  .me b { display: block; color: var(--side-ink-strong); font-weight: 600; font-size: 13px; }
+  .me span { color: var(--side-label); font-size: 12px; }
+
+  /* top bar + main */
+  .main { display: flex; flex-direction: column; min-width: 0; }
+  .top { height: 58px; display: flex; align-items: center; gap: 14px; padding: 0 28px; border-bottom: 1px solid var(--line); background: var(--surface); }
+  .search { display: flex; align-items: center; gap: 8px; height: 36px; width: 380px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); background: var(--bg); }
+  .search svg { width: 16px; height: 16px; }
+  .search kbd { margin-left: auto; font: 500 11px 'JetBrains Mono', monospace; border: 1px solid var(--line); border-radius: 5px; padding: 0 5px; color: var(--muted); }
+  .top .spacer { flex: 1; }
+  .iconbtn { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; color: var(--ink-2); position: relative; }
+  .iconbtn svg { width: 18px; height: 18px; stroke-width: 1.75; }
+  .iconbtn .dot { position: absolute; top: 8px; right: 9px; width: 7px; height: 7px; border-radius: 50%; background: #7c3aed; box-shadow: 0 0 0 2px var(--surface); }
+  .content { padding: 26px 28px; display: flex; flex-direction: column; gap: 20px; overflow: hidden; }
+
+  .head { display: flex; align-items: flex-end; gap: 16px; }
+  .eyebrow { font: 500 11px 'JetBrains Mono', monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .head h1 { margin: 6px 0 4px; font: 600 32px/1.05 'Bricolage Grotesque', sans-serif; letter-spacing: -0.025em; }
+  .head .lede { margin: 0; color: var(--ink-2); }
+  .head .lede b { font-weight: 600; color: var(--ink); }
+  .head .actions { margin-left: auto; display: flex; gap: 10px; }
+  .btn { height: 40px; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; border-radius: 8px; font: 600 14px 'Instrument Sans', sans-serif; border: 1px solid transparent; white-space: nowrap; }
+  .btn svg { width: 16px; height: 16px; }
+  .btn.primary { background: var(--primary); color: var(--primary-ink); box-shadow: 0 1px 0 rgba(255,255,255,.18) inset, 0 6px 16px -8px rgba(124,58,237,.8); }
+  .btn.secondary { background: var(--surface); color: var(--ink); border-color: var(--line); }
+  .btn.sm { height: 32px; padding: 0 12px; font-size: 13px; }
+  .btn.focus { outline: 2px solid #a78bfa; outline-offset: 2px; }
+
+  .grid { display: grid; grid-template-columns: 1.75fr 1fr; gap: 20px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+  .panel-h { display: flex; align-items: baseline; padding: 16px 18px 6px; }
+  .panel-h h2 { margin: 0; font: 600 17px 'Bricolage Grotesque', sans-serif; letter-spacing: -0.01em; }
+  .panel-h a { margin-left: auto; color: var(--accent); font-weight: 500; font-size: 13px; text-decoration: none; }
+
+  /* the day timeline + now-line (signature) */
+  .day { padding: 4px 18px 14px; position: relative; }
+  .slot { display: grid; grid-template-columns: 52px 18px 1fr auto; align-items: center; gap: 10px; min-height: 50px; border-top: 1px solid var(--line-2); }
+  .slot:first-child { border-top: 0; }
+  .slot .t { font: 500 13px 'JetBrains Mono', monospace; color: var(--muted); }
+  .slot.past .t, .slot.past .what { opacity: .55; }
+  .slot .rail { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); justify-self: center; }
+  .slot.past .rail { background: var(--line); border-color: var(--line); }
+  .slot.next .rail { border-color: #7c3aed; background: #7c3aed; box-shadow: 0 0 0 4px var(--accent-wash); }
+  .what b { font-weight: 600; }
+  .what span { color: var(--muted); }
+  .what .sub { display: block; font-size: 12.5px; color: var(--muted); }
+  .now { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 10px; height: 22px; border-top: 1px solid var(--line-2); }
+  .now .clock { font: 500 11.5px 'JetBrains Mono', monospace; color: #fff; background: #7c3aed; border-radius: 5px; padding: 1px 6px; justify-self: start; }
+  .now .line { height: 1.5px; background: linear-gradient(90deg, #7c3aed, rgba(124,58,237,.15)); }
+
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border-radius: 999px; font: 500 12px 'Instrument Sans', sans-serif; white-space: nowrap; }
+  .chip i { width: 6px; height: 6px; border-radius: 50%; }
+  .chip.ok { background: var(--ok-wash); color: var(--ok); } .chip.ok i { background: var(--ok-dot); }
+  .chip.warn { background: var(--warn-wash); color: var(--warn); } .chip.warn i { background: var(--warn-dot); }
+  .chip.bad { background: var(--bad-wash); color: var(--bad); } .chip.bad i { background: var(--bad-dot); }
+  .chip.info { background: var(--info-wash); color: var(--info); } .chip.info i { background: var(--info-dot); }
+  .chip.ai { background: var(--accent-wash); color: var(--accent); }
+  .chip.ai svg { width: 12px; height: 12px; }
+  .chip.quiet { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+
+  .needs { padding: 2px 8px 10px; }
+  .need { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 8px; min-height: 52px; padding: 0 10px; border-radius: 8px; }
+  .need + .need { border-top: 1px solid var(--line-2); }
+  .need svg { width: 17px; height: 17px; color: var(--ink-2); stroke-width: 1.75; }
+  .need b { font-weight: 500; }
+  .need small { display: block; font-size: 12px; color: var(--warn); }
+  .need .n { font: 500 20px 'JetBrains Mono', monospace; }
+  .need.zero { color: var(--muted); } .need.zero svg { color: var(--muted); }
+  .need.zero .n { font: 500 13px 'Instrument Sans', sans-serif; color: var(--ok); }
+
+  .make { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .maker { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+  .maker .ic { width: 38px; height: 38px; border-radius: 9px; background: var(--accent-wash); color: var(--accent); display: grid; place-items: center; flex: none; }
+  .maker .ic svg { width: 19px; height: 19px; }
+  .maker b { display: block; font: 600 15px 'Bricolage Grotesque', sans-serif; letter-spacing: -0.01em; }
+  .maker span { color: var(--muted); font-size: 12.5px; }
+  .maker .go { margin-left: auto; color: var(--muted); }
+  .maker .go svg { width: 16px; height: 16px; }
+  .label-row { font: 500 11px 'JetBrains Mono', monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: -8px; }
+
+  /* numbers & states strip */
+  .strip { background: #f5f6fb; border-radius: 12px; padding: 22px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; box-shadow: 0 1px 0 rgba(13,18,36,.06), 0 12px 32px -16px rgba(13,18,36,.25); }
+  .strip .panel { padding: 18px; }
+  .specimen div { display: flex; align-items: baseline; gap: 14px; padding: 8px 0; border-top: 1px solid var(--line-2); }
+  .specimen div:first-child { border-top: 0; }
+  .specimen .name { width: 150px; flex: none; color: var(--muted); font-size: 12px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .stat { padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  .stat .k { font-size: 12.5px; color: var(--muted); }
+  .stat .v { font: 500 26px/1.2 'JetBrains Mono', monospace; letter-spacing: -0.02em; margin-top: 4px; }
+  .stat .v small { font-size: 13px; color: var(--muted); }
+  .stat.warn { border-color: #f6d9a8; background: #fffaf0; } .stat.warn .v { color: var(--warn); }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font: 500 11px 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 0 10px 8px; }
+  td { padding: 10px; border-top: 1px solid var(--line-2); }
+  td.num, th.num { text-align: right; }
+  td.num { font: 500 13.5px 'JetBrains Mono', monospace; }
+  .up { color: var(--ok); } .down { color: var(--bad); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 16px; }
+  .btns { display: flex; gap: 10px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<header class="brief">
+  <h1>Teacher portal, in the night-back identity</h1>
+  <p>Same palette as the /teachers ads: midnight ink, violet for actions and AI, a calm “dawn” workspace, and monospace numerals for times, marks and counts. This is Thandi’s Thursday on the Today page. Option A (midnight frame) was chosen on 2026-09-24.</p>
+</header>
+
+<section class="section">
+  <div class="cards">
+    <div class="card" data-choice="midnight-frame" onclick="toggleSelect(this)">
+      <div class="stage" data-app="midnight-frame theme-dawn"></div>
+      <div class="card-body"><h3>A · Midnight frame</h3><p>A dark sidebar puts the brand on every page. The workspace stays light and calm.</p><span class="pick">pick A</span></div>
+    </div>
+    <div class="card" data-choice="dawn-frame" onclick="toggleSelect(this)">
+      <div class="stage" data-app="frame-dawn theme-dawn"></div>
+      <div class="card-body"><h3>B · Dawn frame</h3><p>Everything is light. Violet only marks where you are and what to do next.</p><span class="pick">pick B</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>At night (dark mode)</h2>
+  <p>The theme toggle becomes day/night. Dark mode is the brand, not an afterthought, and it’s the same for A and B.</p>
+  <div class="stage" data-app="midnight-frame theme-night"></div>
+</section>
+
+<section class="section">
+  <h2>Type, numbers and states</h2>
+  <p>One meaning per colour across every page: green done, amber needs attention, red wrong or absent, blue informational, violet for you or AI.</p>
+  <div class="strip app" style="width:auto;height:auto;display:grid;">
+    <div class="panel specimen">
+      <div><span class="name">Bricolage Grotesque</span><span class="display" style="font-size:26px;font-weight:600">Good morning, Thandi</span></div>
+      <div><span class="name">Instrument Sans</span><span>Everything you read: labels, tables, forms and help text.</span></div>
+      <div><span class="name">JetBrains Mono</span><span class="mono">07:45 · 72.7% · 38/52 · 3 overdue</span></div>
+      <div style="display:block">
+        <div class="chips">
+          <span class="chip ok"><i></i>Present</span><span class="chip bad"><i></i>Absent</span><span class="chip warn"><i></i>Late</span><span class="chip info"><i></i>Excused</span>
+          <span class="chip ok"><i></i>Marked</span><span class="chip warn"><i></i>3 overdue</span><span class="chip quiet">Draft</span><span class="chip ai"><i data-lucide="sparkles"></i>AI draft</span>
+        </div>
+        <div class="btns"><span class="btn primary"><i data-lucide="sparkles"></i>Make a paper</span><span class="btn secondary">Take register</span><span class="btn secondary focus">Keyboard focus</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="stats">
+        <div class="stat"><div class="k">Class average</div><div class="v">72.7<small>%</small></div></div>
+        <div class="stat"><div class="k">Marked</div><div class="v">38<small>/52</small></div></div>
+        <div class="stat warn"><div class="k">Overdue</div><div class="v">3</div></div>
+      </div>
+      <table>
+        <thead><tr><th>Grade 1 A</th><th class="num">English</th><th class="num">Afrikaans</th><th class="num">Overall</th></tr></thead>
+        <tbody>
+          <tr><td>Jan Botha</td><td class="num">67.4 <span class="down">↘</span></td><td class="num">78.2 <span class="up">↗</span></td><td class="num"><b>72.8</b></td></tr>
+          <tr><td>Lebo Mthembu</td><td class="num">75.0 <span class="up">↗</span></td><td class="num">70.2 <span class="down">↘</span></td><td class="num"><b>72.6</b></td></tr>
+          <tr><td>Aisha Naidoo</td><td class="num">81.5 <span class="up">↗</span></td><td class="num">84.0 <span class="up">↗</span></td><td class="num"><b>82.8</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<template id="app-tpl">
+  <aside class="side">
+    <div class="logo"><span class="mark"><i data-lucide="graduation-cap"></i></span>Campusly</div>
+    <nav class="nav">
+      <a class="active"><i data-lucide="sunrise"></i>Today</a>
+      <div class="navlabel">Teach</div>
+      <a><i data-lucide="book-open"></i>Lessons<span class="ai"><i data-lucide="sparkles"></i></span></a>
+      <a><i data-lucide="file-text"></i>Test papers<span class="ai"><i data-lucide="sparkles"></i></span></a>
+      <a><i data-lucide="clipboard-list"></i>Homework</a>
+      <div class="navlabel">Mark</div>
+      <a><i data-lucide="check-check"></i>Marking<span class="count">14</span></a>
+      <a><i data-lucide="table-2"></i>Gradebook</a>
+      <div class="navlabel">Class</div>
+      <a><i data-lucide="users"></i>My classes</a>
+      <a><i data-lucide="calendar-check"></i>Attendance</a>
+      <a><i data-lucide="clock"></i>Timetable</a>
+      <div class="navlabel">Talk</div>
+      <a><i data-lucide="message-square"></i>Messages<span class="count">3</span></a>
+    </nav>
+    <div class="me"><span class="avatar">TM</span><div><b>Thandi Molefe</b><span>Greenfield Primary</span></div></div>
+  </aside>
+  <div class="main">
+    <div class="top">
+      <div class="search"><i data-lucide="search"></i>Search learners, lessons, papers…<kbd>Ctrl K</kbd></div>
+      <div class="spacer"></div>
+      <span class="iconbtn"><i data-lucide="moon"></i></span>
+      <span class="iconbtn"><i data-lucide="bell"></i><span class="dot"></span></span>
+      <span class="avatar">TM</span>
+    </div>
+    <div class="content">
+      <div class="head">
+        <div>
+          <div class="eyebrow">Thu 24 Sep · Term 3 · Week 9</div>
+          <h1>Good morning, Thandi</h1>
+          <p class="lede">Four periods today. Next up: <b>Grade R Life Skills at 10:45</b>, and the lesson’s ready.</p>
+        </div>
+        <div class="actions"><span class="btn secondary"><i data-lucide="calendar-check"></i>Take register</span><span class="btn primary"><i data-lucide="sparkles"></i>Make with AI</span></div>
+      </div>
+      <div class="grid">
+        <div class="panel">
+          <div class="panel-h"><h2>Your day</h2><a>Timetable →</a></div>
+          <div class="day">
+            <div class="slot past"><span class="t">07:45</span><span class="rail"></span><span class="what"><b>Register</b> <span>· Grade 1 A</span></span><span class="chip ok"><i></i>Taken</span></div>
+            <div class="slot past"><span class="t">08:00</span><span class="rail"></span><span class="what"><b>English</b> <span>· Grade 1 A · Room 4</span><span class="sub">Phonics: “sh” and “ch”</span></span><span class="chip quiet">Done</span></div>
+            <div class="slot past"><span class="t">09:00</span><span class="rail"></span><span class="what"><b>Mathematics</b> <span>· Grade R A</span><span class="sub">Counting to 20</span></span><span class="chip quiet">Done</span></div>
+            <div class="now"><span class="clock">10:12</span><span class="line"></span></div>
+            <div class="slot next"><span class="t">10:45</span><span class="rail"></span><span class="what"><b>Life Skills</b> <span>· Grade R A</span><span class="sub">My body, my senses</span></span><span class="btn secondary sm">Open lesson</span></div>
+            <div class="slot"><span class="t">12:00</span><span class="rail"></span><span class="what"><b>English</b> <span>· Grade 1 A</span><span class="sub">Reading groups</span></span><span class="chip warn"><i></i>No lesson yet</span></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h"><h2>Needs you</h2></div>
+          <div class="needs">
+            <div class="need"><i data-lucide="check-check"></i><span><b>Scripts to mark</b><small>3 overdue</small></span><span class="n">14</span></div>
+            <div class="need"><i data-lucide="clipboard-list"></i><span><b>Homework due today</b></span><span class="n">2</span></div>
+            <div class="need"><i data-lucide="message-square"></i><span><b>Unread messages</b></span><span class="n">3</span></div>
+            <div class="need zero"><i data-lucide="calendar-check"></i><span>Registers to take</span><span class="n">All taken</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="label-row">Make with AI</div>
+      <div class="make">
+        <div class="maker"><span class="ic"><i data-lucide="presentation"></i></span><div><b>Make a lesson</b><span>Slides and explanations</span></div><span class="go"><i data-lucide="arrow-right"></i></span></div>
+        <div class="maker"><span class="ic"><i data-lucide="file-text"></i></span><div><b>Make a paper</b><span>CAPS test with a memo</span></div><span class="go"><i data-lucide="arrow-right"></i></span></div>
+        <div class="maker"><span class="ic"><i data-lucide="clipboard-list"></i></span><div><b>Set homework</b><span>Auto-marked practice</span></div><span class="go"><i data-lucide="arrow-right"></i></span></div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  const tpl = document.getElementById('app-tpl');
+  document.querySelectorAll('.stage[data-app]').forEach((stage) => {
+    const app = document.createElement('div');
+    app.className = 'app ' + stage.dataset.app;
+    app.appendChild(tpl.content.cloneNode(true));
+    stage.appendChild(app);
+  });
+  function fit() {
+    document.querySelectorAll('.stage').forEach((stage) => {
+      const app = stage.querySelector('.app');
+      const scale = Math.min(1, stage.clientWidth / 1200);
+      app.style.transform = `scale(${scale})`;
+      stage.style.height = `${660 * scale}px`;
+    });
+  }
+  window.addEventListener('resize', fit);
+  fit();
+  if (window.lucide) lucide.createIcons({ attrs: { 'stroke-width': 1.75 } });
+</script>
+</body>
+</html>
