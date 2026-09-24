@@ -155,14 +155,20 @@ A violet hairline across the day's timeline, with the current time in a violet m
 
 **Sidebar (`components/layout/Sidebar.tsx`)**
 - **Midnight in both themes**, entirely through `--sidebar-*` tokens.
-- **Sections:** `NavItem` gains an optional `section?: string`. The Sidebar renders a mono uppercase label whenever the section changes. `TEACHER_NAV` is regrouped:
-  - Today
-  - Teach: Lessons, Test papers, Assignments, Homework
-  - Mark: Marking, Gradebook
-  - Class: Classes, Attendance, Timetable
-  - Talk: Communication
-  - then the existing groups and permission/module items
-- `STANDALONE_TEACHER_NAV` gets the same sections for the items it has.
+- **Sections:** `NavItem` gains an optional `section?: string`. The Sidebar renders a mono uppercase label whenever the section changes. `TEACHER_NAV` is regrouped into the six sections approved in the [programme plan §3](2026-09-24-teacher-portal-programme.md). Items stay flat under each section label; nested flyouts go away.
+  - **Today:** Today
+  - **Teach:** Courses, Lessons, Library, Live classes
+  - **Assess:** Test papers, Homework & assignments, Marking, Gradebook
+  - **Class:** Classes, Attendance, Timetable, Behaviour
+  - **Talk:** Messages, Announcements, Parent meetings
+  - **Me:** Leave, Substitutes, Policies, Settings, plus role items (HOD oversight, Pastoral caseload)
+- **Where the items point.** Until phases 2–5 build the merged screens, items point at today's pages. For example:
+  - Library → `curriculum/content`
+  - Behaviour → `discipline`
+  - Parent meetings → `meetings`
+
+  Module and permission gates are kept per item.
+- `STANDALONE_TEACHER_NAV` uses the same sections for the items it has: Today; Teach; Assess; Class (Classes); Me (Billing, Settings).
 - **AI marker:** `badge: 'AI'` renders a small violet sparkle icon (with an `aria-label` of "AI") instead of the black pill.
 - **Live counts:** `NavItem` gains an optional `countKey?: 'marking' | 'messages'`. A new `useTeacherNavCounts` hook fetches the counts on mount and every 5 minutes:
   - marking pending count, only when the workbench module is on
@@ -175,7 +181,10 @@ A violet hairline across the day's timeline, with the current time in a violet m
 
 **Top bar (`TopBar.tsx`).** In the teacher scope, the role label ("Teacher") is replaced by the current page's section and title ("Mark · Gradebook"), derived from the nav config. Other roles are unchanged.
 
-**Bottom nav (phones).** Restyled through tokens only: active item in violet, and a count dot for Marking.
+**Bottom nav (phones).**
+- Tabs: Today, Teach, Assess, Class and More. More covers Talk and Me.
+- Each section tab opens a sheet listing that section's items, so nothing nested is unreachable. That fixes the current bug where `children` never render on phones.
+- Active item in violet, and a count dot for Marking.
 
 ### 6.5 Shared components
 
@@ -290,7 +299,7 @@ Each page gets this checklist:
 
 | Phase | PR(s) | Contents |
 |---|---|---|
-| 1 | backend + frontend | Seed demo data (backend); workbench gating (frontend) |
+| 1 | backend + frontend | Seed demo data (backend); workbench gating (frontend). **Delivered as part of programme phase 0 ("Fix what's broken").** |
 | 2 | frontend | Tokens, fonts, scope, frame (sidebar sections, counts, me card, top bar, bottom nav), shared components, `StatusChip`, colour guard, contrast test |
 | 3a | frontend | Today, Test papers, Gradebook, Marking |
 | 3b | frontend | Attendance, Lessons, Timetable, Classes, Students |

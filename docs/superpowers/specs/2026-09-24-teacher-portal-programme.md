@@ -1,6 +1,6 @@
 # Teacher portal programme — plan
 
-**Date:** 2026-09-24 · **Status:** draft for Shaun's review
+**Date:** 2026-09-24 · **Status:** approved by Shaun, 2026-09-24 (§7)
 **Tracker:** https://claude.ai/artifact/8vTAWvNGe6oTAXefBhmP6Z
 **Related:** [visual design spec](2026-09-24-teacher-portal-look-design.md). It becomes phase 1 of this programme and is updated to use the navigation structure in §3.
 
@@ -167,12 +167,16 @@ Each phase ships as small PRs. The tracker lists every task.
 
 The phase 3 backend (queue, data model, quiz unification) can start alongside phases 1 and 2, because it's independent of the UI.
 
-## 7. Decisions needed from Shaun
+## 7. Decisions (Shaun, 2026-09-24)
 
-1. **Navigation:** approve the six sections and the cuts and merges in §3–4.
-2. **Course builder audience:** class-paced units that a teacher runs for their own class (recommended first), or self-paced courses any learner can enrol in, or both.
-3. **Course availability:** core for every teacher (recommended; it's the headline), or a per-school paid module as today.
-4. **Order:** the roadmap in §6, or pull the course builder forward.
+1. **Navigation:** the six sections and the cuts and merges in §3–4 are **approved as proposed**.
+2. **Course builder audience:** **class-paced units first.** A teacher builds a unit for their own classes and releases it week by week. Self-paced catalogue courses come later on the same engine.
+3. **Course availability:** **core for every teacher.**
+   - The courses module is on by default for schools and included in the teacher plans.
+   - Free standalone teachers get a limited allowance, like the 3 free AI papers. The number is set in the course builder spec.
+4. **Order:** the **roadmap in §6 as proposed.** The builder's backend (generation queue, data model) starts alongside phases 1 and 2.
+
+**Status:** approved. Each phase now gets its own implementation plan in `docs/superpowers/plans/`.
 
 ## 8. Out of scope
 
