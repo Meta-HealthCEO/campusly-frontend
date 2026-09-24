@@ -98,3 +98,18 @@ export function summariseToday(input: {
   if (input.unreadMessages > 0) parts.push(count(input.unreadMessages, 'unread message'));
   return parts;
 }
+
+/**
+ * Where today's "now" line goes (look-design spec §5.5): before the next
+ * period, or just below one that's under way. Hidden before the first period
+ * starts, once the last one ends, and on days with no periods.
+ */
+export function nowLinePlacement(periods: AnnotatedPeriod[], now: Date): { index: number; label: string } | null {
+  if (periods.length === 0) return null;
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  if (nowMin < minutesOf(periods[0].startTime) || nowMin >= minutesOf(periods[periods.length - 1].endTime)) return null;
+  const inProgress = periods.findIndex((p: AnnotatedPeriod) => p.phase === 'now');
+  const index = inProgress >= 0 ? inProgress + 1 : periods.findIndex((p: AnnotatedPeriod) => p.phase === 'next');
+  const label = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  return { index: index < 0 ? periods.length : index, label };
+}

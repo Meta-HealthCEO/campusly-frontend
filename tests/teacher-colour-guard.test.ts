@@ -14,6 +14,7 @@ const MIGRATED = [
   'src/app/(dashboard)/teacher/policies/[id]/page.tsx',
   'src/components/hod/RequestChangesDialog.tsx',
   'src/components/hod/ModerationQueueTable.tsx',
+  'src/components/teacher-home/YourDayCard.tsx',
 ];
 
 const RAW = /\b(?:bg|text|border|ring|from|to|via|fill|stroke|outline|divide|decoration)-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)-\d{2,3}\b/g;

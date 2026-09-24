@@ -97,6 +97,7 @@ export default function TeacherHomePage() {
                 lessonsByClass={today.lessonsByClass}
                 isWeekend={today.isWeekend}
                 showTimetableLink={!isStandaloneTeacher}
+                now={now}
               />
             </div>
           ) : null}

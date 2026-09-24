@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   annotatePeriods,
   lessonsByClassForDay,
+  nowLinePlacement,
   summariseToday,
   type TodayPeriod,
 } from '../src/lib/teacher-today';
@@ -66,5 +67,32 @@ describe('summariseToday', () => {
     expect(summariseToday({ periods: [], markingPending: 1, unreadMessages: 2 })).toEqual([
       '1 to mark', '2 unread messages',
     ]);
+  });
+});
+
+describe('nowLinePlacement', () => {
+  const day: TodayPeriod[] = [
+    { startTime: '07:45', endTime: '08:30' },
+    { startTime: '08:30', endTime: '09:15' },
+    { startTime: '10:30', endTime: '11:15' },
+  ].map((p, i) => ({ timetableId: `t${i}`, classId: 'c', className: 'Gr 1 A', subjectName: 'English', period: i + 1, room: null, recorded: false, recordedCount: 0, ...p }));
+  const at = (hh: number, mm: number) => new Date(2026, 8, 24, hh, mm);
+  const annotated = (d: Date) => annotatePeriods(day, d);
+
+  it('sits between the last finished period and the next one', () => {
+    expect(nowLinePlacement(annotated(at(10, 12)), at(10, 12))).toEqual({ index: 2, label: '10:12' });
+  });
+
+  it('sits just below a period that is under way', () => {
+    expect(nowLinePlacement(annotated(at(8, 45)), at(8, 45))).toEqual({ index: 2, label: '08:45' });
+  });
+
+  it('is hidden before school and after the last period', () => {
+    expect(nowLinePlacement(annotated(at(7, 0)), at(7, 0))).toBeNull();
+    expect(nowLinePlacement(annotated(at(11, 15)), at(11, 15))).toBeNull();
+  });
+
+  it('is hidden on a day with no periods', () => {
+    expect(nowLinePlacement([], at(9, 0))).toBeNull();
   });
 });
