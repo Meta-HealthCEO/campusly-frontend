@@ -185,3 +185,8 @@ export function termViewShowing(selectedTerm: string, term: number): string {
 export function subjectChipOpens(missingWeighting: boolean): 'weightings' | 'trend' {
   return missingWeighting ? 'weightings' : 'trend';
 }
+
+/** What "Set weightings" does: open the editor for those who may save, else show the read-only tab. */
+export function weightingAction(canEdit: boolean): 'dialog' | 'tab' {
+  return canEdit ? 'dialog' : 'tab';
+}

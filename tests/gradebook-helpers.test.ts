@@ -6,6 +6,7 @@ import {
   mapStudentHistory,
   termViewShowing,
   subjectChipOpens,
+  weightingAction,
   type MarkEntry,
 } from '../src/lib/gradebook-helpers';
 import { gradeColor } from '../src/lib/grade-bands';
@@ -166,5 +167,14 @@ describe('gradeColor', () => {
     [0, 'text-destructive'],
   ] as const)('%s%% reads as %s', (pct, token) => {
     expect(gradeColor(pct)).toBe(token);
+  });
+});
+
+describe('weightingAction', () => {
+  it('lets a teacher who can edit weightings open the editor', () => {
+    expect(weightingAction(true)).toBe('dialog');
+  });
+  it('sends everyone else to the read-only Weightings tab, not a Save that fails', () => {
+    expect(weightingAction(false)).toBe('tab');
   });
 });

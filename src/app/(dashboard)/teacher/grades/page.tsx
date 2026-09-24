@@ -16,6 +16,9 @@ import {
 import { Save, BookOpen, Download, FileText, AlertCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GradebookPickers } from '@/components/grades/GradebookPickers';
+import { GradebookWeightingsTab } from '@/components/grades/GradebookWeightingsTab';
+import { useCan } from '@/hooks/useCan';
+import { resolveId } from '@/lib/api-helpers';
 import { TermSummaryTab } from '@/components/grades/TermSummaryTab';
 import { useTeacherGrades } from '@/hooks/useTeacherGrades';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
@@ -42,6 +45,8 @@ export default function TeacherGradesPage() {
     createAssessment, updateAssessment, deleteAssessment, fetchStudentHistory,
   } = useTeacherGrades(linkParams);
   const [tab, setTab] = useState<GradebookTab>(linkParams.tab ?? 'overview');
+  const [summaryKey, setSummaryKey] = useState(0);
+  const canEditWeightings = useCan('manage_academic_setup');
   const router = useRouter();
   const changeTab = (value: unknown): void => {
     const next = readGradebookParams({ get: (name: string) => (name === 'tab' && typeof value === 'string' ? value : null) }).tab ?? 'overview';
@@ -196,7 +201,15 @@ export default function TeacherGradesPage() {
     </>
   );
 
-  const weightingsTab = null;
+  const weightingsTab = (
+    <GradebookWeightingsTab
+      gradeId={resolveId(classes.find((c) => c.id === selectedClass)?.gradeId as string | { id?: string; _id?: string } | undefined) || null}
+      subjects={subjects}
+      term={selectedTerm}
+      canEdit={canEditWeightings}
+      onSaved={() => setSummaryKey((k: number) => k + 1)}
+    />
+  );
   const reportsTab = null;
 
   return (
@@ -231,6 +244,9 @@ export default function TeacherGradesPage() {
               classId={selectedClass}
               term={resolveTermScope(selectedTerm)}
               academicYear={new Date().getFullYear()}
+              canEditWeightings={canEditWeightings}
+              onOpenWeightings={() => changeTab('weightings')}
+              refreshKey={summaryKey}
             />
           </TabsContent>
 

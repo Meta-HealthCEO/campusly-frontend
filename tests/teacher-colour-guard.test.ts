@@ -39,6 +39,8 @@ const MIGRATED = [
   'src/app/(dashboard)/teacher/workbench/marking-hub/page.tsx',
   'src/components/homework/HomeworkSubmissionsTable.tsx',
   'src/components/homework/MarkSubmissionDialog.tsx',
+  'src/components/grades/GradebookWeightingsTab.tsx',
+  'src/components/grades/GradebookPickers.tsx',
   'src/components/grades/TermSummaryHelpers.tsx',
   'src/components/grades/StudentTermDetailDialog.tsx',
   'src/components/grades/StudentHistoryDialog.tsx',

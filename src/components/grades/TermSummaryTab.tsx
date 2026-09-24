@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ import { TermSummaryTotalsTable } from './TermSummaryTotalsTable';
 import { TermSummaryTestsTable } from './TermSummaryTestsTable';
 import { TermSummarySubjectChip } from './TermSummarySubjectChip';
 import { cn } from '@/lib/utils';
+import { weightingAction } from '@/lib/gradebook-helpers';
 
 type ViewMode = 'totals' | 'tests';
 
@@ -30,10 +31,18 @@ interface Props {
   // Pass 'year' for the full-year roll-up.
   term: number | 'year';
   academicYear: number;
+  /** False: "Set weightings" opens the read-only Weightings tab instead of an editor whose Save would be refused. */
+  canEditWeightings: boolean;
+  onOpenWeightings: () => void;
+  /** Bumped by the page after weightings change elsewhere, to reload the summary. */
+  refreshKey?: number;
 }
 
-export function TermSummaryTab({ classId, term, academicYear }: Props) {
-  const { summary, loading } = useTermSummary({ classId, term, academicYear });
+export function TermSummaryTab({ classId, term, academicYear, canEditWeightings, onOpenWeightings, refreshKey = 0 }: Props) {
+  const { summary, loading, refetch } = useTermSummary({ classId, term, academicYear });
+  useEffect(() => {
+    if (refreshKey > 0) void refetch();
+  }, [refreshKey, refetch]);
   const [search, setSearch] = useState('');
   // Default to "totals" — the report-card-style at-a-glance view that's
   // useful for primary teachers with many subjects per class. "Tests" is
@@ -131,7 +140,9 @@ export function TermSummaryTab({ classId, term, academicYear }: Props) {
                 key={s.subjectId}
                 subject={s}
                 onOpenTrend={() => setSubjectDrill({ id: s.subjectId, name: s.subjectName })}
-                onConfigureWeightings={() => setWeightingSubjectId(s.subjectId)}
+                onConfigureWeightings={() => (weightingAction(canEditWeightings) === 'dialog'
+                  ? setWeightingSubjectId(s.subjectId)
+                  : onOpenWeightings())}
               />
             ))}
           </div>
@@ -219,7 +230,11 @@ export function TermSummaryTab({ classId, term, academicYear }: Props) {
 
       <SubjectWeightingDialog
         open={weightingSubjectId !== null}
-        onOpenChange={(open) => { if (!open) setWeightingSubjectId(null); }}
+        onOpenChange={(open) => {
+          if (open) return;
+          setWeightingSubjectId(null);
+          void refetch();
+        }}
         subjectId={weightingSubjectId}
         gradeId={summary.gradeId}
       />
