@@ -57,10 +57,15 @@ describe('teacher navigation', () => {
     ['Discipline', 'attendance'],
     ['Merits', 'attendance'],
     ['Incidents', 'incident_wellbeing'],
-    ['Report Comments', 'ai_tools'],
     ['Substitutes', 'attendance'],
   ])('only shows %s where the school has its module (%s)', (label, module) => {
     expect(flatten(TEACHER_NAV).find((item) => item.label === label)?.module).toBe(module);
+  });
+
+  it('keeps report cards and report comments inside the gradebook, not the nav', () => {
+    const labels = flatten(TEACHER_NAV).map((item) => item.label);
+    expect(labels).not.toContain('Reports');
+    expect(labels).not.toContain('Report Comments');
   });
 
   it('shows counsellors Pastoral Care whatever modules the school has (its API is ungated)', () => {

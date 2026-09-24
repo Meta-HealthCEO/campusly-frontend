@@ -8,7 +8,7 @@ const APP = path.resolve(__dirname, '../src/app/(dashboard)');
 const pageFor = (route: string): string =>
   path.join(
     APP,
-    ...route.split('/').filter(Boolean).map((seg: string) => (seg.startsWith(':') ? `[${seg.slice(1)}]` : seg)),
+    ...route.split('?')[0].split('/').filter(Boolean).map((seg: string) => (seg.startsWith(':') ? `[${seg.slice(1)}]` : seg)),
     'page.tsx',
   );
 
@@ -21,6 +21,14 @@ describe('legacy teacher redirects', () => {
   it('only sends people to pages that exist', () => {
     const missing = LEGACY_TEACHER_REDIRECTS.map((r) => r.destination).filter((d: string) => !existsSync(pageFor(d)));
     expect(missing).toEqual([]);
+  });
+
+  it('sends old reports, report comments and assessment structures into the gradebook', () => {
+    const to = (source: string) => LEGACY_TEACHER_REDIRECTS.find((r) => r.source === source)?.destination;
+    expect(to('/teacher/reports')).toBe('/teacher/grades?tab=reports');
+    expect(to('/teacher/ai-tools/report-comments')).toBe('/teacher/grades?tab=reports');
+    expect(to('/teacher/curriculum/assessment-structure')).toBe('/teacher/grades?tab=weightings');
+    expect(to('/teacher/curriculum/assessment-structure/:id')).toBe('/teacher/grades?tab=weightings');
   });
 
   it('is exactly what Next serves', async () => {

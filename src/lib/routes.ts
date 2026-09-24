@@ -141,7 +141,6 @@ export const ROUTES = {
   PARENT_AI_ASSISTANT: '/parent/ai-assistant',
 
   // Teacher — AI Report Comments
-  TEACHER_AI_REPORT_COMMENTS: '/teacher/ai-tools/report-comments',
 
   // Student — Careers
   STUDENT_CAREERS: '/student/careers',
@@ -179,7 +178,6 @@ export const ROUTES = {
   TEACHER_COMMUNICATION: '/teacher/communication',
   TEACHER_MESSAGES: '/teacher/messages',
   TEACHER_MEETINGS: '/teacher/meetings',
-  TEACHER_REPORTS: '/teacher/reports',
   TEACHER_AI_ASSISTANT: '/teacher/ai-assistant',
   TEACHER_AI_TOOLS: '/teacher/ai-tools',
   TEACHER_AI_CREATE_PAPER: '/teacher/ai-tools/create-paper',
@@ -210,7 +208,6 @@ export const ROUTES = {
   TEACHER_CURRICULUM_PREVIEW: '/teacher/curriculum/preview',
   TEACHER_CURRICULUM_PAPERS: '/teacher/curriculum/papers',
   TEACHER_CURRICULUM_MARK_PAPERS: '/teacher/curriculum/mark-papers',
-  TEACHER_ASSESSMENT_STRUCTURES: '/teacher/curriculum/assessment-structure',
 
   // Teacher — Courses
   TEACHER_COURSES: '/teacher/courses',

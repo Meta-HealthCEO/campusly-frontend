@@ -25,8 +25,6 @@ export const TEACHER_NAV: NavItem[] = [
     badge: 'AI', module: 'teacher_workbench', countKey: 'marking',
   },
   { section: 'Assess', label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
-  { section: 'Assess', label: 'Reports', href: ROUTES.TEACHER_REPORTS, icon: FileText },
-  { section: 'Assess', label: 'Report Comments', href: ROUTES.TEACHER_AI_REPORT_COMMENTS, icon: FileText, badge: 'AI', module: 'ai_tools' },
   { section: 'Assess', label: 'Term Planner', href: ROUTES.TEACHER_WORKBENCH_PLANNER, icon: CalendarDays, module: 'teacher_workbench' },
 
   { section: 'Class', label: 'My Classes', href: ROUTES.TEACHER_CLASSES, icon: Users },

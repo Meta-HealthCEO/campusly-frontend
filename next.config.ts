@@ -20,6 +20,11 @@ export const LEGACY_TEACHER_REDIRECTS: { source: string; destination: string; pe
   { source: '/teacher/workbench/question-bank', destination: '/teacher/curriculum/questions', permanent: true },
   { source: '/teacher/workbench/papers/:id/memo', destination: '/teacher/papers/:id', permanent: true },
   { source: '/teacher/workbench/student-360/:id', destination: '/teacher/students/:id', permanent: true },
+  // Phase 2C: report cards, report comments and weightings live in the gradebook.
+  { source: '/teacher/reports', destination: '/teacher/grades?tab=reports', permanent: false },
+  { source: '/teacher/ai-tools/report-comments', destination: '/teacher/grades?tab=reports', permanent: false },
+  { source: '/teacher/curriculum/assessment-structure', destination: '/teacher/grades?tab=weightings', permanent: false },
+  { source: '/teacher/curriculum/assessment-structure/:id', destination: '/teacher/grades?tab=weightings', permanent: false },
 ];
 
 const nextConfig: NextConfig = {
