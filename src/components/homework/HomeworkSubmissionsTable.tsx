@@ -25,6 +25,9 @@ import type {
   StructuredHomeworkSubmission,
   GradedAnswerBase,
 } from '@/types/homework';
+import { LearnerLink } from '@/components/students/LearnerLink';
+import { resolveId } from '@/lib/api-helpers';
+import type { PopulatedId } from '@/types';
 
 interface PopulatedStudent {
   _id: string;
@@ -133,7 +136,11 @@ export function HomeworkSubmissionsTable({ homework }: Props) {
                     )}
                   </TableCell>
                   <TableCell>
-                    <span className="font-medium">{resolveStudentName(s)}</span>
+                    <LearnerLink
+                      studentId={typeof s.studentId === 'string' ? s.studentId : resolveId(s.studentId as unknown as PopulatedId)}
+                      name={resolveStudentName(s)}
+                      className="font-medium"
+                    />
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1.5 flex-wrap">

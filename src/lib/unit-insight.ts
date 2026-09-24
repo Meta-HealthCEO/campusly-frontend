@@ -4,6 +4,8 @@ export type StuckReason =
 
 export interface InsightLearner {
   enrolmentId: string;
+  /** Opens the learner's profile. */
+  studentId?: string;
   name: string;
   progressPercent: number;
   status: 'active' | 'completed' | 'dropped';

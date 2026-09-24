@@ -14,6 +14,8 @@ import { AlertTriangle } from 'lucide-react';
 import { useStudentTermDetail, type StudentTermDetailSubject } from '@/hooks/useStudentTermDetail';
 import { cn } from '@/lib/utils';
 import { gradeColor } from '@/lib/grade-bands';
+import Link from 'next/link';
+import { teacherLearnerProfilePath } from '@/lib/learner-profile';
 
 interface Props {
   open: boolean;
@@ -41,6 +43,11 @@ export function StudentTermDetailDialog({
           <DialogTitle>
             {studentName} — {term === 'year' ? `Full year ${academicYear}` : `Term ${term} (${academicYear})`}
           </DialogTitle>
+          {studentId ? (
+            <Link href={teacherLearnerProfilePath(studentId)} className="w-fit text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground">
+              Open {studentName}&apos;s profile
+            </Link>
+          ) : null}
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-4 py-4">

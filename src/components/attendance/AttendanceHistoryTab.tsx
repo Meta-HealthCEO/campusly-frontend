@@ -9,6 +9,7 @@ import { useAttendanceHistory, type HistoryStatus } from '@/hooks/useAttendanceH
 import { toISODate } from '@/lib/utils';
 import { getStudentDisplayName } from '@/lib/student-helpers';
 import type { Student } from '@/types';
+import { LearnerLink } from '@/components/students/LearnerLink';
 
 type GridView = 'week' | 'month';
 
@@ -208,7 +209,7 @@ export function AttendanceHistoryTab({ classId, period, students, onSetPeriod, o
             {students.map((s) => (
               <tr key={s.id} className="border-b last:border-0">
                 <td className="px-3 py-2">
-                  <div className="text-sm font-medium">{getStudentDisplayName(s).full}</div>
+                  <LearnerLink studentId={s.id} name={getStudentDisplayName(s).full} className="block text-sm font-medium" />
                   {s.admissionNumber ? (
                     <div className="text-xs text-muted-foreground">{s.admissionNumber}</div>
                   ) : null}

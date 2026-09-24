@@ -7,6 +7,7 @@ import { getStudentDisplayName } from '@/lib/student-helpers';
 import type { AttendanceStatus } from '@/hooks/useTeacherAttendance';
 import type { AttendanceEditHistoryEntry } from '@/types/attendance';
 import type { Student } from '@/types';
+import { LearnerLink } from '@/components/students/LearnerLink';
 
 export interface StudentRowProps {
   student: Student;
@@ -43,7 +44,7 @@ export function StudentRow({
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${dotClass(status)}`} />
           <div className="min-w-0 flex items-center gap-1">
-            <p className="text-sm font-medium truncate">{name.full}</p>
+            <LearnerLink studentId={student.id} name={name.full} className="text-sm font-medium truncate" />
             {hasHistory && editHistory && (
               <Popover>
                 <PopoverTrigger

@@ -16,6 +16,8 @@ import type {
   AssignmentSubmissionStatus,
   PopulatedStudent,
 } from '@/types/assignments';
+import { LearnerLink } from '@/components/students/LearnerLink';
+import type { PopulatedId } from '@/types';
 
 interface Props {
   assignment: Assignment;
@@ -170,7 +172,11 @@ export function AssignmentSubmissionsTab({ assignment, onChanged }: Props) {
                   return (
                     <li key={sub._id} className="flex items-center justify-between gap-3 px-6 py-3">
                       <div className="min-w-0 space-y-0.5">
-                        <p className="font-medium truncate">{studentName(sub.studentId)}</p>
+                        <LearnerLink
+                          studentId={typeof sub.studentId === 'object' && sub.studentId !== null ? resolveId(sub.studentId as unknown as PopulatedId) : (sub.studentId as string | null)}
+                          name={studentName(sub.studentId)}
+                          className="block font-medium truncate"
+                        />
                         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                           <span>Submitted {new Date(sub.submittedAt).toLocaleString()}</span>
                           {sub.isLate && <Badge variant="destructive" className="text-[10px]">Late</Badge>}

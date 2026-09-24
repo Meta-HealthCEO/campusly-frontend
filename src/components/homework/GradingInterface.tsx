@@ -8,6 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Save, FileText, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
+import { LearnerLink } from '@/components/students/LearnerLink';
+import { resolveId } from '@/lib/api-helpers';
+import type { PopulatedId } from '@/types';
 
 interface SubmissionData {
   id: string;
@@ -84,7 +87,7 @@ export function GradingInterface({
     <div className="rounded-lg border p-4 space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-medium">{studentName}</p>
+          <LearnerLink studentId={resolveId(submission.studentId as unknown as PopulatedId)} name={studentName} className="block font-medium" />
           <p className="text-xs text-muted-foreground">
             Submitted: {formatDate(submission.submittedAt, 'dd MMM yyyy, HH:mm')}
           </p>

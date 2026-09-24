@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { learnerStatusLine, revisionTargets, stuckLabel, type InsightLearner, type MissedQuestion, type RevisionTarget, type UnitInsight as Insight } from '@/lib/unit-insight';
+import { LearnerLink } from '@/components/students/LearnerLink';
 
 function LearnerRow({ learner }: { learner: InsightLearner }) {
   const stuck = stuckLabel(learner.stuck);
@@ -12,7 +13,7 @@ function LearnerRow({ learner }: { learner: InsightLearner }) {
   return (
     <li className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{learner.name}</p>
+        <LearnerLink studentId={learner.studentId} name={learner.name} className="block truncate text-sm font-medium" />
         <p className="truncate text-xs text-muted-foreground">{learnerStatusLine(learner)}</p>
         {stuck ? (
           <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-attention-soft px-2 py-0.5 text-xs font-medium text-attention">

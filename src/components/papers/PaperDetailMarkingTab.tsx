@@ -27,6 +27,7 @@ import type {
   SubmissionStatus,
   PaperAssignmentMode,
 } from '@/types/papers';
+import { LearnerLink } from '@/components/students/LearnerLink';
 
 interface Props {
   paper: Paper;
@@ -246,7 +247,7 @@ function RosterRow({ student, mode, onReview, onUpload, onType }: RowProps) {
   return (
     <li className="flex items-center justify-between gap-3 px-4 py-3">
       <div className="min-w-0 space-y-0.5">
-        <p className="font-medium truncate">{student.studentName}</p>
+        <LearnerLink studentId={student.studentId} name={student.studentName} className="block font-medium truncate" />
         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
           {student.admissionNumber && <span>{student.admissionNumber}</span>}
           {s && <SubmissionPill status={s.status} />}
