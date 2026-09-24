@@ -1,0 +1,83 @@
+/** One behaviour log: the kinds, categories and wording, matching the server's rules. */
+export type BehaviourKind = 'merit' | 'demerit' | 'incident';
+export type Severity = 'low' | 'medium' | 'high';
+
+export const BEHAVIOUR_KINDS: Array<{ value: BehaviourKind; label: string; hint: string }> = [
+  { value: 'merit', label: 'Merit', hint: 'Something to praise' },
+  { value: 'demerit', label: 'Demerit', hint: 'A rule broken' },
+  { value: 'incident', label: 'Incident', hint: 'Something more serious' },
+];
+
+export const BEHAVIOUR_CATEGORIES: Record<BehaviourKind, Array<{ value: string; label: string }>> = {
+  merit: [
+    { value: 'effort', label: 'Effort' },
+    { value: 'kindness', label: 'Kindness' },
+    { value: 'academic', label: 'Good work' },
+    { value: 'leadership', label: 'Leadership' },
+    { value: 'service', label: 'Helping out' },
+    { value: 'sport', label: 'Sport and culture' },
+  ],
+  demerit: [
+    { value: 'late', label: 'Late' },
+    { value: 'homework', label: 'Homework not done' },
+    { value: 'disruption', label: 'Disrupting class' },
+    { value: 'uniform', label: 'Uniform' },
+    { value: 'respect', label: 'Disrespect' },
+    { value: 'language', label: 'Bad language' },
+    { value: 'other', label: 'Other' },
+  ],
+  incident: [
+    { value: 'fighting', label: 'Fighting' },
+    { value: 'bullying', label: 'Bullying' },
+    { value: 'property', label: 'Damage or theft' },
+    { value: 'safety', label: 'Safety' },
+    { value: 'other', label: 'Other' },
+  ],
+};
+
+export const SEVERITY_OPTIONS: Array<{ value: Severity; label: string }> = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+];
+
+/** The chip colour for each kind (semantic tokens). */
+export const KIND_TONE: Record<BehaviourKind, string> = {
+  merit: 'bg-success-soft text-success',
+  demerit: 'bg-attention-soft text-attention',
+  incident: 'bg-destructive-soft text-destructive',
+};
+
+const KIND_LABEL: Record<BehaviourKind, string> = { merit: 'Merit', demerit: 'Demerit', incident: 'Incident' };
+
+/** "+2", "−1", or nothing for an incident. */
+export function pointsLabel(points: number): string {
+  if (points > 0) return `+${points}`;
+  if (points < 0) return `−${Math.abs(points)}`;
+  return '';
+}
+
+export function categoryLabel(kind: BehaviourKind, category: string): string {
+  return BEHAVIOUR_CATEGORIES[kind].find((c) => c.value === category)?.label ?? category;
+}
+
+/** "Merit +2 · Kindness", as the timeline words it. */
+export function entryLabel(e: { kind: BehaviourKind; category: string; points: number }): string {
+  const points = pointsLabel(e.points);
+  return `${KIND_LABEL[e.kind]}${points ? ` ${points}` : ''} · ${categoryLabel(e.kind, e.category)}`;
+}
+
+export interface LogForm {
+  studentId: string;
+  kind: BehaviourKind;
+  category: string;
+  note: string;
+}
+
+/** What's missing before a log can be sent, in the server's words; null when it can be sent. */
+export function logProblem(form: LogForm): string | null {
+  if (!form.studentId) return 'Pick a learner.';
+  if (!form.category) return `Pick what the ${form.kind} is for.`;
+  if (form.kind !== 'merit' && !form.note.trim()) return 'Say briefly what happened.';
+  return null;
+}

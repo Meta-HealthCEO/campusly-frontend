@@ -41,3 +41,11 @@ describe('legacy teacher redirects', () => {
     expect(await nextConfig.redirects?.()).toEqual(LEGACY_TEACHER_REDIRECTS);
   });
 });
+
+describe('one behaviour log', () => {
+  it('sends the old Discipline and Merits pages to Behaviour', () => {
+    const to = (source: string) => LEGACY_TEACHER_REDIRECTS.find((r) => r.source === source)?.destination;
+    expect(to('/teacher/discipline')).toBe('/teacher/behaviour');
+    expect(to('/teacher/merits')).toBe('/teacher/behaviour');
+  });
+});

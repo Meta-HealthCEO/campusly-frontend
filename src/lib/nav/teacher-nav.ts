@@ -1,7 +1,7 @@
 import {
-  AlertTriangle, Award, BarChart3, BookMarked, BookOpen, CalendarCheck, CalendarDays, CheckSquare,
+  BarChart3, BookMarked, BookOpen, CalendarCheck, CalendarDays, CheckSquare,
   Clipboard, ClipboardCheck, ClipboardList, Clock, CreditCard, FileText, GraduationCap, Heart,
-  HeartHandshake, Library, Megaphone, MessageSquare, PlayCircle, Repeat, ScrollText, Settings,
+  Library, Megaphone, MessageSquare, PlayCircle, Repeat, ScrollText, Settings,
   Shield, Sunrise, Users, Video,
 } from 'lucide-react';
 import type { NavItem } from '../constants';
@@ -31,10 +31,8 @@ export const TEACHER_NAV: NavItem[] = [
   { section: 'Class', label: 'Students', href: ROUTES.TEACHER_STUDENTS, icon: GraduationCap },
   { section: 'Class', label: 'Attendance', href: ROUTES.TEACHER_ATTENDANCE, icon: ClipboardList, module: 'attendance' },
   { section: 'Class', label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
-  { section: 'Class', label: 'Discipline', href: ROUTES.TEACHER_DISCIPLINE, icon: Shield, module: 'attendance' },
-  { section: 'Class', label: 'Merits', href: ROUTES.TEACHER_MERITS, icon: Award, module: 'attendance' },
-  { section: 'Class', label: 'Incidents', href: ROUTES.TEACHER_INCIDENTS, icon: AlertTriangle, module: 'incident_wellbeing' },
-  { section: 'Class', label: 'Refer to counsellor', href: ROUTES.TEACHER_REFERRAL, icon: HeartHandshake },
+  // One behaviour log (merits, demerits, incidents); serious incidents and referrals open from its page.
+  { section: 'Class', label: 'Behaviour', href: ROUTES.TEACHER_BEHAVIOUR, icon: Shield, module: 'attendance' },
   // /api/pastoral has no module gate: counsellors see this whatever modules the school has.
   { section: 'Class', label: 'Pastoral Care', href: ROUTES.TEACHER_PASTORAL, icon: Heart, permission: 'isCounselor' },
 

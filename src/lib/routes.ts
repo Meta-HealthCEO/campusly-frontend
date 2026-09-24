@@ -174,6 +174,7 @@ export const ROUTES = {
   TEACHER_GRADES: '/teacher/grades',
   TEACHER_HOMEWORK: '/teacher/homework',
   TEACHER_DISCIPLINE: '/teacher/discipline',
+  TEACHER_BEHAVIOUR: '/teacher/behaviour',
   TEACHER_CLASSES: '/teacher/classes',
   TEACHER_STUDENTS: '/teacher/students',
   TEACHER_TIMETABLE: '/teacher/timetable',

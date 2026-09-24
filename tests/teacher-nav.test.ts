@@ -54,9 +54,7 @@ describe('teacher navigation', () => {
     ['Attendance', 'attendance'],
     ['Homework', 'homework'],
     ['Assignments', 'homework'],
-    ['Discipline', 'attendance'],
-    ['Merits', 'attendance'],
-    ['Incidents', 'incident_wellbeing'],
+    ['Behaviour', 'attendance'],
     ['Substitutes', 'attendance'],
   ])('only shows %s where the school has its module (%s)', (label, module) => {
     expect(flatten(TEACHER_NAV).find((item) => item.label === label)?.module).toBe(module);
@@ -73,8 +71,7 @@ describe('teacher navigation', () => {
   });
 
   it.each([
-    ['Merits', ROUTES.TEACHER_MERITS],
-    ['Refer to counsellor', ROUTES.TEACHER_REFERRAL],
+    ['Behaviour', ROUTES.TEACHER_BEHAVIOUR],
     ['Substitutes', ROUTES.TEACHER_SUBSTITUTES],
     ['Policies', ROUTES.TEACHER_POLICIES],
   ])('lets school teachers reach %s from the nav', (label, href) => {
@@ -109,4 +106,12 @@ describe('isStandaloneTeacherPathAllowed', () => {
       expect(isStandaloneTeacherPathAllowed(path)).toBe(false);
     },
   );
+});
+
+describe('one behaviour log in the Class section', () => {
+  it('shows Behaviour in place of Discipline, Merits, Incidents and Refer to counsellor', () => {
+    const labels = flatten(TEACHER_NAV).map((item) => item.label);
+    expect(labels).toContain('Behaviour');
+    for (const gone of ['Discipline', 'Merits', 'Incidents', 'Refer to counsellor']) expect(labels).not.toContain(gone);
+  });
 });

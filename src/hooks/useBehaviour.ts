@@ -1,0 +1,99 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import apiClient from '@/lib/api-client';
+import { extractErrorMessage, unwrapResponse } from '@/lib/api-helpers';
+import type { BehaviourKind, Severity } from '@/lib/behaviour';
+
+export interface BehaviourSummary { merits: number; demerits: number; incidents: number; net: number }
+
+export interface BehaviourFeedEntry {
+  id: string;
+  studentId: string;
+  studentName: string;
+  kind: BehaviourKind;
+  category: string;
+  points: number;
+  severity: Severity | null;
+  note: string;
+  occurredAt: string;
+  loggedByName: string | null;
+  canUndo: boolean;
+}
+
+export interface LogBehaviourInput {
+  studentId: string;
+  kind: BehaviourKind;
+  category: string;
+  points?: number;
+  severity?: Severity;
+  note?: string;
+  source: 'log' | 'profile' | 'roster' | 'register';
+  /** The same key for the same log, so a double tap logs once. */
+  requestKey: string;
+}
+
+const EMPTY: BehaviourSummary = { merits: 0, demerits: 0, incidents: 0, net: 0 };
+
+/** A class's recent behaviour, newest first. */
+export function useClassBehaviour(classId: string) {
+  const [entries, setEntries] = useState<BehaviourFeedEntry[]>([]);
+  const [summary, setSummary] = useState<BehaviourSummary>(EMPTY);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async (): Promise<void> => {
+    if (!classId) return;
+    setLoading(true);
+    try {
+      const data = unwrapResponse<{ entries: BehaviourFeedEntry[]; summary: BehaviourSummary }>(await apiClient.get('/behaviour', { params: { classId } }));
+      setEntries(data.entries ?? []);
+      setSummary(data.summary ?? EMPTY);
+      setError(null);
+    } catch (err: unknown) {
+      console.error('Class behaviour failed', err);
+      setError(extractErrorMessage(err, "Couldn't load this class's behaviour. Refresh to try again."));
+    } finally {
+      setLoading(false);
+    }
+  }, [classId]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  return { entries, summary, loading, error, refresh: load };
+}
+
+/** Logging and undoing behaviour; the reason a log failed stays for the form to show. */
+export function useBehaviourActions() {
+  const [logging, setLogging] = useState(false);
+  const [logError, setLogError] = useState<string | null>(null);
+
+  const log = useCallback(async (input: LogBehaviourInput): Promise<boolean> => {
+    setLogging(true);
+    setLogError(null);
+    try {
+      await apiClient.post('/behaviour', input);
+      toast.success(input.kind === 'merit' ? 'Merit logged' : input.kind === 'demerit' ? 'Demerit logged' : 'Incident logged');
+      return true;
+    } catch (err: unknown) {
+      setLogError(extractErrorMessage(err, "Couldn't log that. Try again."));
+      return false;
+    } finally {
+      setLogging(false);
+    }
+  }, []);
+
+  const undo = useCallback(async (entryId: string): Promise<boolean> => {
+    try {
+      await apiClient.delete(`/behaviour/${entryId}`);
+      toast.success('Undone');
+      return true;
+    } catch (err: unknown) {
+      toast.error(extractErrorMessage(err, "Couldn't undo that."));
+      return false;
+    }
+  }, []);
+
+  return { log, undo, logging, logError, clearLogError: () => setLogError(null) };
+}
