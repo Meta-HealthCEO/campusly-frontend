@@ -119,6 +119,23 @@ export function draftFailure(status: number | undefined, serverMessage: string |
   return { message: DRAFT_FALLBACK, retryable: true, upgrade: false };
 }
 
+/**
+ * Turns keep()'s `Promise.allSettled` results into which ids saved and how
+ * many failed — or `null` when the batch was cancelled mid-flight (Cancel
+ * clicked during "Adding…"). The caller must treat `null` as "nothing
+ * happened", never as `{ keptIds: [], failed: 0 }`, which would read as a
+ * successful save of zero questions and still fire success/added callbacks.
+ */
+export function keepResult(
+  ids: string[],
+  results: PromiseSettledResult<unknown>[],
+  aborted: boolean,
+): { keptIds: string[]; failed: number } | null {
+  if (aborted) return null;
+  const keptIds = ids.filter((_, i) => results[i]?.status === 'fulfilled');
+  return { keptIds, failed: ids.length - keptIds.length };
+}
+
 /** The drafts left after keeping: the ones that couldn't be saved. */
 export function unsavedDrafts(drafts: DraftQuestion[], keptIds: string[]): DraftQuestion[] {
   const kept = new Set(keptIds);

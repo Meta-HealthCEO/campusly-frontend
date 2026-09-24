@@ -40,6 +40,7 @@ export function HomeworkWizardStep2() {
           subjectId={state.subjectId}
           gradeId={state.gradeId}
           curriculumNodeId={state.curriculumNodeId}
+          curriculumNodeName={state.curriculumNodeName}
           selectedIds={state.exerciseQuestionIds}
           onChange={(ids: string[]) => state.set({ exerciseQuestionIds: ids })}
         />

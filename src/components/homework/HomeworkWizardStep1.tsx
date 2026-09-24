@@ -70,6 +70,7 @@ export function HomeworkWizardStep1() {
       gradeId,
       subjectId: '',
       curriculumNodeId: '',
+      curriculumNodeName: '',
       quizId: '',
       contentResourceId: '',
       comprehensionQuestionIds: [],
@@ -81,11 +82,18 @@ export function HomeworkWizardStep1() {
     state.set({
       subjectId,
       curriculumNodeId: '',
+      curriculumNodeName: '',
       quizId: '',
       contentResourceId: '',
       comprehensionQuestionIds: [],
       exerciseQuestionIds: [],
     });
+  };
+
+  const handleTopicIdsChange = (ids: string[]): void => {
+    const id = ids[0] ?? '';
+    const topic = topics.find((t) => t._id === id);
+    state.set({ curriculumNodeId: id, curriculumNodeName: topic?.title ?? '' });
   };
 
   return (
@@ -126,7 +134,7 @@ export function HomeworkWizardStep1() {
           selectedTopicIds={state.curriculumNodeId ? [state.curriculumNodeId] : []}
           onClassChange={handleClassChange}
           onSubjectChange={handleSubjectChange}
-          onTopicIdsChange={(ids) => state.set({ curriculumNodeId: ids[0] ?? '' })}
+          onTopicIdsChange={handleTopicIdsChange}
           requireTopic={needsTopic}
           topicLabel="CAPS Topic"
           topicHelpText={

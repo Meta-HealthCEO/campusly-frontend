@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useHomeworkAIDraft } from '@/hooks/useHomeworkAIDraft';
@@ -25,6 +25,8 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   scope: DraftScope;
+  /** The topic being drafted for, so the dialog can name it instead of leaving the teacher to guess. */
+  topicName?: string;
   /** Called with the ids of the questions the teacher kept (now approved in the bank). */
   onAdded: (ids: string[]) => void;
 }
@@ -32,7 +34,7 @@ interface Props {
 const COUNTS = [3, 5, 8, 10];
 
 /** Choose what to draft, let AI write it, keep the good ones. */
-export function DraftHomeworkWithAIDialog({ open, onOpenChange, scope, onAdded }: Props) {
+export function DraftHomeworkWithAIDialog({ open, onOpenChange, scope, topicName, onAdded }: Props) {
   const { drafting, drafts, failure, draft, keep, reset } = useHomeworkAIDraft();
   const [type, setType] = useState<DraftQuestionType>('short_answer');
   const [count, setCount] = useState(5);
@@ -64,8 +66,10 @@ export function DraftHomeworkWithAIDialog({ open, onOpenChange, scope, onAdded }
 
   const add = async (): Promise<void> => {
     setAdding(true);
-    const { keptIds, failed } = await keep(chosen.map((d: DraftQuestion) => d.id));
+    const result = await keep(chosen.map((d: DraftQuestion) => d.id));
     setAdding(false);
+    if (!result) return; // Cancelled mid-add — the dialog is already closed; nothing to report.
+    const { keptIds, failed } = result;
     if (keptIds.length > 0) onAdded(keptIds);
     if (failed > 0) {
       // Keep the dialog open with the ones that didn't save, so nothing the teacher chose is lost.
@@ -83,6 +87,7 @@ export function DraftHomeworkWithAIDialog({ open, onOpenChange, scope, onAdded }
       <DialogContent className="flex max-h-[85vh] flex-col sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Draft questions with AI</DialogTitle>
+          {topicName ? <DialogDescription>For {topicName}</DialogDescription> : null}
         </DialogHeader>
         <div className="flex-1 space-y-4 overflow-y-auto py-2">
           {drafts.length === 0 ? (
@@ -104,6 +109,7 @@ export function DraftHomeworkWithAIDialog({ open, onOpenChange, scope, onAdded }
                     {COUNTS.map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">Counts toward your daily AI limit, even if you don&apos;t keep them all.</p>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="draft-level">Level</Label>
@@ -123,7 +129,7 @@ export function DraftHomeworkWithAIDialog({ open, onOpenChange, scope, onAdded }
             </ul>
           )}
           {drafting ? (
-            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <p aria-live="polite" className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> Writing questions for this topic…
             </p>
           ) : null}

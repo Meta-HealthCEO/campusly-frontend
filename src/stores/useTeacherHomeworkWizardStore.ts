@@ -10,6 +10,8 @@ export interface HomeworkWizardState {
   classId: string;
   gradeId: string;
   curriculumNodeId: string;
+  /** The picked topic's name — so later steps (e.g. Draft with AI) can name it instead of just holding its id. */
+  curriculumNodeName: string;
   dueDate: string;
   totalMarks: number;
   latePolicy: 'block' | 'penalty' | 'accept';
@@ -35,6 +37,7 @@ const INITIAL: Omit<HomeworkWizardState, 'set' | 'reset'> = {
   classId: '',
   gradeId: '',
   curriculumNodeId: '',
+  curriculumNodeName: '',
   dueDate: '',
   totalMarks: 0,
   latePolicy: 'block',

@@ -16,6 +16,8 @@ interface Props {
   subjectId: string;
   gradeId: string;
   curriculumNodeId?: string;
+  /** The picked topic's name, shown in the Draft with AI dialog so it's clear what it's drafting for. */
+  curriculumNodeName?: string;
   selectedIds: string[];
   onChange: (ids: string[]) => void;
 }
@@ -24,6 +26,7 @@ export function HomeworkExercisePicker({
   subjectId,
   gradeId,
   curriculumNodeId,
+  curriculumNodeName,
   selectedIds,
   onChange,
 }: Props) {
@@ -102,7 +105,7 @@ export function HomeworkExercisePicker({
                 />
                 <div className="min-w-0 flex-1">
                   <div className="line-clamp-2 text-sm">{q.stem}</div>
-                  <div className="font-mono text-xs tabular-nums text-muted-foreground">{q.marks} pts</div>
+                  <div className="font-mono text-xs tabular-nums text-muted-foreground">{q.marks} mark{q.marks === 1 ? '' : 's'}</div>
                 </div>
               </label>
             ))}
@@ -118,6 +121,7 @@ export function HomeworkExercisePicker({
           open={drafting}
           onOpenChange={setDrafting}
           scope={{ subjectId, gradeId, curriculumNodeId }}
+          topicName={curriculumNodeName}
           onAdded={added}
         />
       ) : null}
