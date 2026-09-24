@@ -17,7 +17,7 @@ export function LearnerLink({ studentId, name, className }: Props) {
       href={teacherLearnerProfilePath(studentId)}
       // Rows that open or expand on click shouldn't also react to the name.
       onClick={(e) => e.stopPropagation()}
-      className={cn('underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-none', className)}
+      className={cn('underline underline-offset-2 focus-visible:outline-none', className)}
     >
       {name}
     </Link>

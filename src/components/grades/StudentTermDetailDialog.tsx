@@ -44,7 +44,10 @@ export function StudentTermDetailDialog({
             {studentName} — {term === 'year' ? `Full year ${academicYear}` : `Term ${term} (${academicYear})`}
           </DialogTitle>
           {studentId ? (
-            <Link href={teacherLearnerProfilePath(studentId)} className="w-fit text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground">
+            <Link
+              href={teacherLearnerProfilePath(studentId)}
+              className="inline-flex w-fit min-h-11 items-center text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground sm:min-h-0"
+            >
               Open {studentName}&apos;s profile
             </Link>
           ) : null}
