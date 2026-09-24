@@ -75,3 +75,4 @@ export * from './teacher-settings';
 export * from './lesson-student';
 export * from './subscription';
 export * from './teacher-home';
+export * from './dev-sign-in';

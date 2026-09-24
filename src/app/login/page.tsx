@@ -14,6 +14,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { PasswordInput } from '@/components/auth/PasswordInput';
+import { DevSignInPanel } from '@/components/auth/DevSignInPanel';
+import { DEV_SIGN_IN_ENABLED } from '@/lib/dev-sign-in';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -46,88 +48,99 @@ export default function LoginPage() {
     }
   };
 
+  const signInCard = (
+    <AuthCard title="Welcome back" description="Sign in to your Campusly account">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="admin@school.co.za"
+            {...register('email')}
+            aria-invalid={!!errors.email}
+            className="h-10"
+          />
+          {errors.email && (
+            <p className="text-sm text-destructive">{errors.email.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="password">Password <span className="text-destructive">*</span></Label>
+          <PasswordInput
+            id="password"
+            placeholder="Enter your password"
+            error={errors.password?.message}
+            registration={register('password')}
+          />
+        </div>
+
+        <div className="flex items-center justify-end">
+          <Link
+            href="/forgot-password"
+            className="text-sm font-medium text-[#2563EB] hover:text-[#1d4ed8]"
+          >
+            Forgot password?
+          </Link>
+        </div>
+
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="h-10 w-full bg-[#2563EB] text-white hover:bg-[#1d4ed8] hover:text-white disabled:text-white/70"
+          size="lg"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Signing in...
+            </>
+          ) : (
+            'Sign in'
+          )}
+        </Button>
+      </form>
+
+      <div className="mt-6 space-y-2 text-center text-sm text-gray-600">
+        <p>
+          Don&apos;t have an account?{' '}
+          <Link href="/register" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
+            Register your school
+          </Link>
+        </p>
+        <p>
+          Are you a teacher?{' '}
+          <Link href="/register-teacher" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
+            Sign up for free
+          </Link>
+        </p>
+        <p>
+          Are you a student?{' '}
+          <Link href="/register-student" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
+            Join your class
+          </Link>
+        </p>
+        <p>
+          Are you a coach?{' '}
+          <Link href="/signup/coach" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
+            Sign up for free
+          </Link>
+        </p>
+      </div>
+    </AuthCard>
+  );
+
   return (
     <AuthLayout>
-      <AuthCard title="Welcome back" description="Sign in to your Campusly account">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="admin@school.co.za"
-              {...register('email')}
-              aria-invalid={!!errors.email}
-              className="h-10"
-            />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password <span className="text-destructive">*</span></Label>
-            <PasswordInput
-              id="password"
-              placeholder="Enter your password"
-              error={errors.password?.message}
-              registration={register('password')}
-            />
-          </div>
-
-          <div className="flex items-center justify-end">
-            <Link
-              href="/forgot-password"
-              className="text-sm font-medium text-[#2563EB] hover:text-[#1d4ed8]"
-            >
-              Forgot password?
-            </Link>
-          </div>
-
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="h-10 w-full bg-[#2563EB] text-white hover:bg-[#1d4ed8] hover:text-white disabled:text-white/70"
-            size="lg"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              'Sign in'
-            )}
-          </Button>
-        </form>
-
-        <div className="mt-6 space-y-2 text-center text-sm text-gray-600">
-          <p>
-            Don&apos;t have an account?{' '}
-            <Link href="/register" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
-              Register your school
-            </Link>
-          </p>
-          <p>
-            Are you a teacher?{' '}
-            <Link href="/register-teacher" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
-              Sign up for free
-            </Link>
-          </p>
-          <p>
-            Are you a student?{' '}
-            <Link href="/register-student" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
-              Join your class
-            </Link>
-          </p>
-          <p>
-            Are you a coach?{' '}
-            <Link href="/signup/coach" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
-              Sign up for free
-            </Link>
-          </p>
+      {DEV_SIGN_IN_ENABLED ? (
+        <div className="flex w-full max-w-md flex-col items-center gap-4 lg:max-w-[49rem] lg:flex-row lg:items-start">
+          {signInCard}
+          <DevSignInPanel />
         </div>
-      </AuthCard>
+      ) : (
+        signInCard
+      )}
     </AuthLayout>
   );
 }

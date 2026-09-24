@@ -42,8 +42,9 @@ export function useAuth() {
   const router = useRouter();
   const { login: storeLogin, logout: storeLogout, refreshAccount, user, isAuthenticated } = useAuthStore();
 
-  const login = async (credentials: LoginCredentials) => {
-    const response = await apiClient.post('/auth/login', credentials);
+  /** Store the session from a login response and open the role's home. The password
+   *  login and the development sign-in (useDevSignIn) both end here. */
+  const startSession = (response: { data: { data?: unknown } }) => {
     const responseData = unwrapResponse(response);
     const userData = responseData.user ?? responseData;
     const accessToken = responseData.accessToken ?? responseData.access_token;
@@ -52,6 +53,10 @@ export function useAuth() {
     storeLogin(authUser, { accessToken, refreshToken: refreshToken ?? '' });
     void refreshAccount();
     router.push(getRoleDashboardPath(authUser.role));
+  };
+
+  const login = async (credentials: LoginCredentials) => {
+    startSession(await apiClient.post('/auth/login', credentials));
   };
 
   const logout = async () => {
@@ -99,5 +104,5 @@ export function useAuth() {
     await apiClient.post('/auth/reset-password', payload);
   };
 
-  return { login, logout, register, registerTeacher, registerStudent, forgotPassword, resetPassword, user, isAuthenticated };
+  return { login, startSession, logout, register, registerTeacher, registerStudent, forgotPassword, resetPassword, user, isAuthenticated };
 }
