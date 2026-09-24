@@ -1,108 +1,71 @@
 import {
-  AlertTriangle, Award, BarChart3, BookMarked, BookOpen, CalendarCheck, CalendarDays, CheckSquare, Clipboard, ClipboardCheck, ClipboardList, Clock, CreditCard, FileText, GraduationCap, Heart, HeartHandshake, Home, Megaphone, MessageSquare, PlayCircle, Repeat, ScrollText, Settings, Shield, Users, Video,
+  AlertTriangle, Award, BarChart3, BookMarked, BookOpen, CalendarCheck, CalendarDays, CheckSquare,
+  Clipboard, ClipboardCheck, ClipboardList, Clock, CreditCard, FileText, GraduationCap, Heart,
+  HeartHandshake, Library, Megaphone, MessageSquare, PlayCircle, Repeat, ScrollText, Settings,
+  Shield, Sunrise, Users, Video,
 } from 'lucide-react';
 import type { NavItem } from '../constants';
 import { ROUTES } from '../routes';
 
-/** Teacher portal navigation (school and standalone). Re-exported from constants. */
+/** Teacher portal navigation in six sections (programme plan §3). Re-exported from constants. */
 export const TEACHER_NAV: NavItem[] = [
-  { label: 'Dashboard', href: ROUTES.TEACHER_DASHBOARD, icon: Home },
-  { label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen, badge: 'AI' },
+  { section: 'Today', label: 'Today', href: ROUTES.TEACHER_DASHBOARD, icon: Sunrise },
+
+  { section: 'Teach', label: 'Courses', href: ROUTES.TEACHER_COURSES, icon: GraduationCap, module: 'courses' },
+  { section: 'Teach', label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen, badge: 'AI' },
+  { section: 'Teach', label: 'Library', href: '/teacher/curriculum/content', icon: Library },
+  { section: 'Teach', label: 'Live classes', href: ROUTES.TEACHER_CLASSROOM, icon: Video },
+  { section: 'Teach', label: 'Video library', href: ROUTES.TEACHER_CLASSROOM_VIDEOS, icon: PlayCircle },
+
+  { section: 'Assess', label: 'Test Papers', href: '/teacher/papers', icon: FileText, badge: 'AI' },
+  { section: 'Assess', label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList, module: 'homework' },
+  { section: 'Assess', label: 'Assignments', href: '/teacher/assignments', icon: ScrollText, badge: 'AI', module: 'homework' },
   {
-    label: 'Classes',
-    href: ROUTES.TEACHER_CLASSES,
-    icon: Users,
-    children: [
-      { label: 'My Classes', href: ROUTES.TEACHER_CLASSES, icon: Users },
-      { label: 'Students', href: ROUTES.TEACHER_STUDENTS, icon: GraduationCap },
-    ],
+    section: 'Assess', label: 'Marking', href: ROUTES.TEACHER_WORKBENCH_MARKING_HUB, icon: ClipboardCheck,
+    badge: 'AI', module: 'teacher_workbench', countKey: 'marking',
   },
-  { label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
-  { label: 'Attendance', href: ROUTES.TEACHER_ATTENDANCE, icon: ClipboardList, module: 'attendance' },
-  { label: 'Test Papers', href: '/teacher/papers', icon: FileText, badge: 'AI' },
-  { label: 'Assignments', href: '/teacher/assignments', icon: ScrollText, badge: 'AI', module: 'homework' },
-  { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList, module: 'homework' },
-  {
-    label: 'Marking',
-    href: ROUTES.TEACHER_WORKBENCH_MARKING_HUB,
-    icon: ClipboardCheck,
-    badge: 'AI',
-    module: 'teacher_workbench',
-  },
-  { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
-  {
-    label: 'Courses',
-    href: ROUTES.TEACHER_COURSES,
-    icon: GraduationCap,
-    module: 'courses',
-  },
-  {
-    label: 'Communication',
-    href: ROUTES.TEACHER_MESSAGES,
-    icon: MessageSquare,
-    children: [
-      { label: 'Messages', href: ROUTES.TEACHER_MESSAGES, icon: MessageSquare },
-      { label: 'Notice Board', href: ROUTES.TEACHER_NOTICE_BOARD, icon: Clipboard },
-      { label: 'Announcements', href: ROUTES.TEACHER_COMMUNICATION, icon: Megaphone, module: 'communication' },
-      { label: 'Meetings', href: ROUTES.TEACHER_MEETINGS, icon: CalendarCheck },
-      { label: 'Conferences', href: ROUTES.TEACHER_CONFERENCES, icon: Users, module: 'conference_booking' },
-    ],
-  },
-  {
-    label: 'Virtual Classroom',
-    href: ROUTES.TEACHER_CLASSROOM,
-    icon: Video,
-    children: [
-      { label: 'My Sessions', href: ROUTES.TEACHER_CLASSROOM, icon: Video },
-      { label: 'Video Library', href: ROUTES.TEACHER_CLASSROOM_VIDEOS, icon: PlayCircle },
-    ],
-  },
-  {
-    label: 'Student Welfare',
-    href: ROUTES.TEACHER_DISCIPLINE,
-    icon: Shield,
-    children: [
-      { label: 'Discipline', href: ROUTES.TEACHER_DISCIPLINE, icon: Shield, module: 'attendance' },
-      { label: 'Merits', href: ROUTES.TEACHER_MERITS, icon: Award, module: 'attendance' },
-      { label: 'Incidents', href: ROUTES.TEACHER_INCIDENTS, icon: AlertTriangle, module: 'incident_wellbeing' },
-      { label: 'Refer to counsellor', href: ROUTES.TEACHER_REFERRAL, icon: HeartHandshake },
-      { label: 'Pastoral Care', href: ROUTES.TEACHER_PASTORAL, icon: Heart, permission: 'isCounselor' },
-    ],
-  },
-  {
-    label: 'Reporting',
-    href: ROUTES.TEACHER_REPORTS,
-    icon: BarChart3,
-    children: [
-      { label: 'Reports', href: ROUTES.TEACHER_REPORTS, icon: BarChart3 },
-      { label: 'Report Comments', href: ROUTES.TEACHER_AI_REPORT_COMMENTS, icon: FileText, badge: 'AI', module: 'ai_tools' },
-    ],
-  },
-  { label: 'Term Planner', href: ROUTES.TEACHER_WORKBENCH_PLANNER, icon: CalendarDays, module: 'teacher_workbench' },
-  { label: 'My Leave', href: ROUTES.TEACHER_LEAVE, icon: CalendarDays, module: 'staff_leave' },
-  { label: 'Substitutes', href: ROUTES.TEACHER_SUBSTITUTES, icon: Repeat, module: 'attendance' },
-  { label: 'Policies', href: ROUTES.TEACHER_POLICIES, icon: ScrollText },
-  // ─── Permission-gated (Special Roles) ──────────────────────────────
-  { label: 'HOD Oversight', href: ROUTES.TEACHER_HOD, icon: Users, permission: 'isHOD' },
-  { label: 'Course Review', href: ROUTES.ADMIN_COURSES_REVIEW, icon: CheckSquare, permission: 'isHOD', module: 'courses' },
+  { section: 'Assess', label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
+  { section: 'Assess', label: 'Reports', href: ROUTES.TEACHER_REPORTS, icon: FileText },
+  { section: 'Assess', label: 'Report Comments', href: ROUTES.TEACHER_AI_REPORT_COMMENTS, icon: FileText, badge: 'AI', module: 'ai_tools' },
+  { section: 'Assess', label: 'Term Planner', href: ROUTES.TEACHER_WORKBENCH_PLANNER, icon: CalendarDays, module: 'teacher_workbench' },
+
+  { section: 'Class', label: 'My Classes', href: ROUTES.TEACHER_CLASSES, icon: Users },
+  { section: 'Class', label: 'Students', href: ROUTES.TEACHER_STUDENTS, icon: GraduationCap },
+  { section: 'Class', label: 'Attendance', href: ROUTES.TEACHER_ATTENDANCE, icon: ClipboardList, module: 'attendance' },
+  { section: 'Class', label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
+  { section: 'Class', label: 'Discipline', href: ROUTES.TEACHER_DISCIPLINE, icon: Shield, module: 'attendance' },
+  { section: 'Class', label: 'Merits', href: ROUTES.TEACHER_MERITS, icon: Award, module: 'attendance' },
+  { section: 'Class', label: 'Incidents', href: ROUTES.TEACHER_INCIDENTS, icon: AlertTriangle, module: 'incident_wellbeing' },
+  { section: 'Class', label: 'Refer to counsellor', href: ROUTES.TEACHER_REFERRAL, icon: HeartHandshake },
+  // /api/pastoral has no module gate: counsellors see this whatever modules the school has.
+  { section: 'Class', label: 'Pastoral Care', href: ROUTES.TEACHER_PASTORAL, icon: Heart, permission: 'isCounselor' },
+
+  { section: 'Talk', label: 'Messages', href: ROUTES.TEACHER_MESSAGES, icon: MessageSquare, countKey: 'messages' },
+  { section: 'Talk', label: 'Announcements', href: ROUTES.TEACHER_COMMUNICATION, icon: Megaphone, module: 'communication' },
+  { section: 'Talk', label: 'Notice Board', href: ROUTES.TEACHER_NOTICE_BOARD, icon: Clipboard },
+  { section: 'Talk', label: 'Meetings', href: ROUTES.TEACHER_MEETINGS, icon: CalendarCheck },
+  { section: 'Talk', label: 'Conferences', href: ROUTES.TEACHER_CONFERENCES, icon: Users, module: 'conference_booking' },
+
+  { section: 'Me', label: 'My Leave', href: ROUTES.TEACHER_LEAVE, icon: CalendarDays, module: 'staff_leave' },
+  { section: 'Me', label: 'Substitutes', href: ROUTES.TEACHER_SUBSTITUTES, icon: Repeat, module: 'attendance' },
+  { section: 'Me', label: 'Policies', href: ROUTES.TEACHER_POLICIES, icon: ScrollText },
+  { section: 'Me', label: 'HOD Oversight', href: ROUTES.TEACHER_HOD, icon: Users, permission: 'isHOD' },
+  { section: 'Me', label: 'Course Review', href: ROUTES.ADMIN_COURSES_REVIEW, icon: CheckSquare, permission: 'isHOD', module: 'courses' },
 ];
 
 export const STANDALONE_TEACHER_NAV: NavItem[] = [
-  { label: 'Home', href: ROUTES.TEACHER_DASHBOARD, icon: Home },
-  { label: 'Teaching Groups', href: ROUTES.TEACHER_CLASSES, icon: Users },
-  { label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen, badge: 'AI' },
-  { label: 'Textbooks', href: '/teacher/curriculum/textbooks', icon: BookMarked },
-  { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList, module: 'homework' },
-  { label: 'Assignments', href: '/teacher/assignments', icon: ScrollText, badge: 'AI', module: 'homework' },
-  { label: 'Test Papers', href: '/teacher/papers', icon: FileText, badge: 'AI' },
+  { section: 'Today', label: 'Today', href: ROUTES.TEACHER_DASHBOARD, icon: Sunrise },
+  { section: 'Teach', label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen, badge: 'AI' },
+  { section: 'Teach', label: 'Textbooks', href: '/teacher/curriculum/textbooks', icon: BookMarked },
+  { section: 'Assess', label: 'Test Papers', href: '/teacher/papers', icon: FileText, badge: 'AI' },
+  { section: 'Assess', label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList, module: 'homework' },
+  { section: 'Assess', label: 'Assignments', href: '/teacher/assignments', icon: ScrollText, badge: 'AI', module: 'homework' },
   {
-    label: 'Marking',
-    href: ROUTES.TEACHER_WORKBENCH_MARKING_HUB,
-    icon: ClipboardCheck,
-    badge: 'AI',
-    module: 'teacher_workbench',
+    section: 'Assess', label: 'Marking', href: ROUTES.TEACHER_WORKBENCH_MARKING_HUB, icon: ClipboardCheck,
+    badge: 'AI', module: 'teacher_workbench', countKey: 'marking',
   },
-  { label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
-  { label: 'Billing', href: '/my/billing', icon: CreditCard },
-  { label: 'Settings', href: '/teacher/settings', icon: Settings },
+  { section: 'Assess', label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
+  { section: 'Class', label: 'Teaching Groups', href: ROUTES.TEACHER_CLASSES, icon: Users },
+  { section: 'Me', label: 'Billing', href: '/my/billing', icon: CreditCard },
+  { section: 'Me', label: 'Settings', href: '/teacher/settings', icon: Settings },
 ];

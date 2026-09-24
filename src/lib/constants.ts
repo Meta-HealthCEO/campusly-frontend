@@ -16,6 +16,9 @@ export * from './routes';
 export { TEACHER_NAV, STANDALONE_TEACHER_NAV } from './nav/teacher-nav';
 
 
+export type NavSection = 'Today' | 'Teach' | 'Assess' | 'Class' | 'Talk' | 'Me';
+export const NAV_SECTIONS: NavSection[] = ['Today', 'Teach', 'Assess', 'Class', 'Talk', 'Me'];
+
 export interface NavItem {
   label: string;
   href: string;
@@ -24,6 +27,10 @@ export interface NavItem {
   badge?: string;
   permission?: PermissionFlag;
   children?: NavItem[];
+  /** Section label shown above this item (teacher portal). */
+  section?: NavSection;
+  /** Live count shown beside this item. */
+  countKey?: 'marking' | 'messages';
 }
 
 export const ADMIN_NAV: NavItem[] = [

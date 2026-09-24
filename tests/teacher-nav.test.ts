@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { STANDALONE_TEACHER_NAV, TEACHER_NAV, type NavItem } from '../src/lib/constants';
+import { NAV_SECTIONS, STANDALONE_TEACHER_NAV, TEACHER_NAV, type NavItem } from '../src/lib/constants';
 import { ROUTES } from '../src/lib/routes';
 import { isStandaloneTeacherPathAllowed } from '../src/lib/standalone-teacher-paths';
 
@@ -16,6 +16,32 @@ describe('teacher navigation', () => {
 
     expect(marking?.href).toBe(ROUTES.TEACHER_WORKBENCH_MARKING_HUB);
     expect(marking?.badge).toBe('AI');
+  });
+
+  it.each([
+    ['school teachers', TEACHER_NAV],
+    ['independent teachers', STANDALONE_TEACHER_NAV],
+  ])('puts every item %s see into one of the six sections, in order', (_who, nav) => {
+    expect(nav.every((item) => item.section && NAV_SECTIONS.includes(item.section))).toBe(true);
+    expect(nav.every((item) => !item.children)).toBe(true);
+    const order = nav.map((item) => NAV_SECTIONS.indexOf(item.section!));
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+  });
+
+  it('files the daily jobs where teachers expect them', () => {
+    const sectionOf = (label: string) => TEACHER_NAV.find((i) => i.label === label)?.section;
+    expect(sectionOf('Today')).toBe('Today');
+    expect(sectionOf('Lessons')).toBe('Teach');
+    expect(sectionOf('Marking')).toBe('Assess');
+    expect(sectionOf('Gradebook')).toBe('Assess');
+    expect(sectionOf('Attendance')).toBe('Class');
+    expect(sectionOf('Messages')).toBe('Talk');
+    expect(sectionOf('Policies')).toBe('Me');
+  });
+
+  it('shows live counts on Marking and Messages', () => {
+    expect(TEACHER_NAV.find((i) => i.label === 'Marking')?.countKey).toBe('marking');
+    expect(TEACHER_NAV.find((i) => i.label === 'Messages')?.countKey).toBe('messages');
   });
 
   it('only shows Marking where the marking hub API is enabled', () => {
