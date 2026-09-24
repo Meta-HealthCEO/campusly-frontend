@@ -12,14 +12,16 @@ export function todayEyebrow(now: Date): string {
 
 const count = (n: number): string => `${WORDS[n] ?? n} period${n === 1 ? '' : 's'} today`;
 
-/** The line under the greeting: how many periods, and what is on now or next. */
+/** The line under the greeting: how many periods, and what is on now or next, or once the day is over, the registers still to take. */
 export function todayLede(periods: AnnotatedPeriod[]): string | null {
   if (periods.length === 0) return null;
   const current = periods.find((p: AnnotatedPeriod) => p.phase === 'now');
   if (current) return `${count(periods.length)}. On now: ${current.subjectName} with ${current.className}.`;
   const next = periods.find((p: AnnotatedPeriod) => p.phase === 'next');
   if (next) return `${count(periods.length)}. Next up: ${next.subjectName} with ${next.className} at ${next.startTime}.`;
-  return `${count(periods.length)}, all done.`;
+  const open = periods.filter((p: AnnotatedPeriod) => !p.recorded).length;
+  if (open === 0) return `${count(periods.length)}. All registers taken.`;
+  return `${count(periods.length)}. ${open} register${open === 1 ? '' : 's'} still to take.`;
 }
 
 /** A page's nav section as an eyebrow, e.g. "ASSESS". */

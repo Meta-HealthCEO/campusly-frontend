@@ -21,8 +21,15 @@ describe('todayLede', () => {
     expect(todayLede([p(1, '07:45', 'now', 'Mathematics')])).toBe('One period today. On now: Mathematics with Grade 1 - A.');
   });
 
-  it('wraps up after the last period', () => {
-    expect(todayLede([p(1, '07:45', 'done'), p(2, '08:30', 'done')])).toBe('Two periods today, all done.');
+  it('after the last period, counts the registers still to take', () => {
+    const periods = [p(1, '07:45', 'done'), p(2, '08:30', 'done'), { ...p(3, '09:15', 'done'), recorded: true }];
+    expect(todayLede(periods)).toBe('Three periods today. 2 registers still to take.');
+    expect(todayLede([p(1, '07:45', 'done')])).toBe('One period today. 1 register still to take.');
+  });
+
+  it('after the last period, says so when every register is taken', () => {
+    const periods = [{ ...p(1, '07:45', 'done'), recorded: true }, { ...p(2, '08:30', 'done'), recorded: true }];
+    expect(todayLede(periods)).toBe('Two periods today. All registers taken.');
   });
 
   it('says nothing on an empty day', () => {
