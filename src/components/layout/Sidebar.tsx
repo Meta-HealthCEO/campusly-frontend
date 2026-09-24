@@ -11,6 +11,8 @@ import { useSchoolStore } from '@/stores/useSchoolStore';
 import { useModule } from '@/hooks/useModule';
 import { visibleNavItems } from '@/lib/nav-visibility';
 import { groupNavBySection } from '@/lib/nav-sections';
+import { navBadgeText } from '@/lib/nav-counts';
+import { useTeacherNavCounts } from '@/hooks/useTeacherNavCounts';
 import { SidebarNavItem } from './SidebarNavItem';
 import type { NavItem } from '@/lib/constants';
 
@@ -25,6 +27,7 @@ export function Sidebar({ items }: SidebarProps) {
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const user = useAuthStore((s) => s.user);
   const schoolName = useSchoolStore((s) => s.school?.name ?? '');
+  const counts = useTeacherNavCounts(user?.role === 'teacher');
 
   const filteredItems = visibleNavItems(items, { isModuleEnabled, hasPermission });
   // Sectioned (teacher) navs are flat, so a page below an item (e.g. a lesson) highlights it too.
@@ -103,6 +106,7 @@ export function Sidebar({ items }: SidebarProps) {
                   active={isItemActive(item)}
                   collapsed={sidebarCollapsed}
                   expanded={expandedItems.has(item.href)}
+                  countText={navBadgeText(item.countKey, counts)}
                   onToggle={toggleExpanded}
                   onNavigate={() => setSidebarOpen(false)}
                 />
