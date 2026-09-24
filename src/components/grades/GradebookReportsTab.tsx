@@ -75,7 +75,10 @@ export function GradebookReportsTab({ classId, term }: Props) {
     <div className="space-y-8">
       <section aria-labelledby="report-card-heading" className="space-y-3">
         <h2 id="report-card-heading" className="font-heading text-lg font-semibold tracking-tight">Report card</h2>
-        <ReportCardPanel classId={classId} term={term} />
+        {/* Keyed by classId: a fresh mount when the header class changes,
+            so the previous class's picked learner and report card don't
+            linger on screen under the new class. */}
+        <ReportCardPanel key={classId} classId={classId} term={term} />
       </section>
       <section aria-labelledby="report-comments-heading" className="space-y-3 print:hidden">
         <h2 id="report-comments-heading" className="font-heading text-lg font-semibold tracking-tight">Report comments</h2>

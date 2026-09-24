@@ -11,6 +11,7 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import {
   buildMarkEntries,
   computeClassStats,
+  resolveInitialClass,
   termViewShowing,
   validateMarkEntries,
   type ClassStats,
@@ -57,11 +58,17 @@ export function useTeacherGrades(initial?: GradebookParams) {
         setClasses(list);
         if (list.length > 0) {
           const wanted = initialRef.current?.classId;
-          const known = wanted !== undefined && list.some((c: SchoolClass) => c.id === wanted);
-          if (!known) initialRef.current = undefined;
-          setSelectedClass((prev) => prev || (known ? (wanted as string) : list[0].id));
+          const { classId: resolvedClassId, matchedWanted, forcedClassMissing } = resolveInitialClass(list, wanted);
+          // A link (e.g. "View in gradebook") asked for a specific class
+          // that isn't in this teacher's list — say so instead of silently
+          // landing on the first class as if that were the one asked for.
+          if (forcedClassMissing) {
+            toast.warning("That class isn't in your teaching load — showing your first class instead.");
+          }
+          if (!matchedWanted) initialRef.current = undefined;
+          setSelectedClass((prev) => prev || resolvedClassId);
           // Set the linked subject in the same update, so assessments load once, already filtered.
-          if (known) setSelectedSubject(initialRef.current?.subjectId ?? '');
+          if (matchedWanted) setSelectedSubject(initialRef.current?.subjectId ?? '');
         }
       } catch (err: unknown) {
         console.error('Failed to load classes', err);

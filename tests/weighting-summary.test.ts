@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classSubjects, weightingLines } from '../src/lib/weighting-summary';
+import { classSubjects, weightingChip, weightingLines } from '../src/lib/weighting-summary';
 import type { TermBuckets } from '../src/hooks/useSubjectWeightings';
 
 const term = (n: number, buckets: Array<[TermBuckets['buckets'][number]['assessmentType'], number]>): TermBuckets => ({
@@ -20,6 +20,27 @@ describe('weightingLines', () => {
     expect(lines[0]).toEqual({ term: 1, set: false, text: 'Not set' });
     expect(lines[1]).toEqual({ term: 2, set: false, text: 'Not set' });
     expect(lines[3]).toEqual({ term: 4, set: false, text: 'Not set' });
+  });
+});
+
+describe('weightingChip', () => {
+  const setLine = { term: 3, set: true, text: 'Tests 50 · Assignments 30 · Projects 20' };
+  const unsetLine = { term: 3, set: false, text: 'Not set' };
+
+  it("flags a fetch failure distinctly, even for a term that would otherwise read as set", () => {
+    expect(weightingChip(setLine, true)).toEqual({ status: 'absent', label: "Couldn't load" });
+  });
+
+  it("still flags a fetch failure when there's no line at all for the term", () => {
+    expect(weightingChip(undefined, true)).toEqual({ status: 'absent', label: "Couldn't load" });
+  });
+
+  it('shows "Not set" only when the fetch actually succeeded and found nothing', () => {
+    expect(weightingChip(unsetLine, false)).toEqual({ status: 'due', label: 'Not set' });
+  });
+
+  it('shows nothing once a term has real weightings', () => {
+    expect(weightingChip(setLine, false)).toBeNull();
   });
 });
 
