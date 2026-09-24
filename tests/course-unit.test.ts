@@ -4,9 +4,14 @@ import {
   defaultUnitTitle,
   formatMinutes,
   generationSummary,
+  liveGeneration,
   moduleMinutes,
   releaseBlocker,
+  schoolTermFor,
+  unitChip,
   unitMinutes,
+  unitStage,
+  withPolledStatus,
 } from '../src/lib/course-unit';
 import type { CourseTree, GenerationState } from '../src/types/courses';
 
@@ -75,5 +80,57 @@ describe('labels and titles', () => {
     expect(ITEM_KIND_LABEL).toEqual({ notes: 'Notes', worked_example: 'Worked example', quick_check: 'Quick check' });
     expect(defaultUnitTitle('Mathematics', 'Grade 1', 3)).toBe('Mathematics · Grade 1 · Term 3');
     expect(defaultUnitTitle('', 'Grade 1', 3)).toBe('Grade 1 · Term 3');
+  });
+});
+
+describe('schoolTermFor', () => {
+  it('defaults the form to the school term the date falls in', () => {
+    expect(schoolTermFor(new Date(2026, 0, 20))).toBe(1);
+    expect(schoolTermFor(new Date(2026, 4, 5))).toBe(2);
+    expect(schoolTermFor(new Date(2026, 8, 24))).toBe(3);
+    expect(schoolTermFor(new Date(2026, 10, 2))).toBe(4);
+  });
+});
+
+describe('unitStage and unitChip', () => {
+  it('knows where the unit is, and labels it for the teacher', () => {
+    expect(unitStage(unit({ outlineStatus: 'none' }))).toBe('outline');
+    expect(unitChip(unit({ outlineStatus: 'none' }))).toEqual({ status: 'draft', label: 'No outline yet' });
+    expect(unitChip(unit({ outlineStatus: 'drafted' }))).toEqual({ status: 'draft', label: 'Outline to check' });
+    const writing = unit({ generation: gen({ status: 'running', total: 2, done: 1 }) }, ['ready', 'generating']);
+    expect(unitStage(writing)).toBe('writing');
+    expect(unitChip(writing)).toEqual({ status: 'ai', label: 'Writing items' });
+    expect(unitStage(unit({}))).toBe('release');
+    expect(unitChip(unit({}))).toEqual({ status: 'due', label: 'Ready to release' });
+    expect(unitChip(unit({}, ['ready', 'failed']))).toEqual({ status: 'overdue', label: 'Needs attention' });
+    expect(unitStage(unit({ status: 'published' }))).toBe('released');
+    expect(unitChip(unit({ status: 'published' }))).toEqual({ status: 'published', label: 'Released' });
+  });
+});
+
+describe('liveGeneration', () => {
+  it('counts from the items once writing is over, so removed items drop out', () => {
+    const tree = unit({ generation: gen({ status: 'done', total: 3, done: 2, failed: 1 }) }, ['ready', 'ready']);
+    expect(liveGeneration(tree)).toMatchObject({ status: 'done', total: 2, done: 2, failed: 0 });
+  });
+
+  it('keeps the server counts while items are being written', () => {
+    const tree = unit({ generation: gen({ status: 'running', total: 3, done: 1 }) }, ['ready', 'generating', 'pending']);
+    expect(liveGeneration(tree)).toMatchObject({ status: 'running', total: 3, done: 1 });
+  });
+});
+
+describe('withPolledStatus', () => {
+  it('shows each item as the latest poll has it, and the latest progress', () => {
+    const tree = unit({ generation: gen({ status: 'running', total: 2, done: 0 }) }, ['pending', 'pending']);
+    const next = withPolledStatus(tree, {
+      outlineStatus: 'approved',
+      generation: gen({ status: 'running', total: 2, done: 1 }),
+      items: [{ id: 'l0', genStatus: 'ready', genError: '' }, { id: 'l1', genStatus: 'failed', genError: 'timeout' }],
+    });
+    expect(next.generation?.done).toBe(1);
+    expect(next.modules[0].lessons.map((l) => [l.genStatus, l.genError ?? ''])).toEqual([['ready', ''], ['failed', 'timeout']]);
+    expect(tree.modules[0].lessons[0].genStatus).toBe('pending');
+    expect(withPolledStatus(tree, null)).toBe(tree);
   });
 });

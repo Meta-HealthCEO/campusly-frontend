@@ -1,4 +1,5 @@
-import type { CourseTree, GenerationState, ItemKind } from '@/types/courses';
+import type { CourseTree, GenerationState, ItemGenStatus, ItemKind, OutlineStatus } from '@/types/courses';
+import type { ChipStatus } from '@/lib/status-chip';
 
 export const ITEM_KIND_LABEL: Record<ItemKind, string> = {
   notes: 'Notes',
@@ -61,4 +62,72 @@ export function releaseBlocker(course: CourseTree): string | null {
 
 export function defaultUnitTitle(subjectName: string, gradeName: string, termNumber: number): string {
   return [subjectName, gradeName, `Term ${termNumber}`].filter(Boolean).join(' · ');
+}
+
+/** The school term a date falls in (South African terms run roughly by quarter); a form default only. */
+export function schoolTermFor(date: Date): number {
+  return Math.floor(date.getMonth() / 3) + 1;
+}
+
+export type UnitStage = 'outline' | 'writing' | 'release' | 'released';
+
+/** Where a unit is: its outline to draft or check, items being written, ready to release, or released. */
+export function unitStage(course: CourseTree): UnitStage {
+  if (course.status === 'published') return 'released';
+  if (course.outlineStatus !== 'approved') return 'outline';
+  const writing = course.generation?.status === 'queued' || course.generation?.status === 'running'
+    || course.modules.some((m) => m.lessons.some((l) => l.genStatus === 'pending' || l.genStatus === 'generating'));
+  return writing ? 'writing' : 'release';
+}
+
+/** The unit's status chip. */
+export function unitChip(course: CourseTree): { status: ChipStatus; label: string } {
+  switch (unitStage(course)) {
+    case 'released':
+      return { status: 'published', label: 'Released' };
+    case 'writing':
+      return { status: 'ai', label: 'Writing items' };
+    case 'release':
+      return releaseBlocker(course) ? { status: 'overdue', label: 'Needs attention' } : { status: 'due', label: 'Ready to release' };
+    default:
+      return { status: 'draft', label: course.outlineStatus === 'drafted' ? 'Outline to check' : 'No outline yet' };
+  }
+}
+
+/**
+ * The unit's writing state, recounted from its items once writing is over, so
+ * an item the teacher removed no longer counts as failed.
+ */
+export function liveGeneration(course: CourseTree): GenerationState | undefined {
+  const g = course.generation;
+  if (!g || g.status === 'queued' || g.status === 'running') return g;
+  const items = course.modules.flatMap((m) => m.lessons).filter((l) => l.genStatus);
+  if (items.length === 0) return g;
+  const done = items.filter((l) => l.genStatus === 'ready').length;
+  const failed = items.filter((l) => l.genStatus === 'failed').length;
+  return { ...g, total: items.length, done, failed, status: failed === items.length ? 'failed' : 'done' };
+}
+
+export interface PolledState {
+  outlineStatus: OutlineStatus;
+  generation: GenerationState;
+  items: Array<{ id: string; genStatus: ItemGenStatus | null; genError: string }>;
+}
+
+/** The unit as the latest progress poll has it (a new tree; the original is left alone). */
+export function withPolledStatus(course: CourseTree, poll: PolledState | null): CourseTree {
+  if (!poll) return course;
+  const byId = new Map(poll.items.map((i) => [i.id, i]));
+  return {
+    ...course,
+    outlineStatus: poll.outlineStatus,
+    generation: poll.generation,
+    modules: course.modules.map((m) => ({
+      ...m,
+      lessons: m.lessons.map((l) => {
+        const polled = byId.get(l.id);
+        return polled ? { ...l, genStatus: polled.genStatus, genError: polled.genError } : l;
+      }),
+    })),
+  };
 }
