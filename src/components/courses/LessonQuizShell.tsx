@@ -98,7 +98,7 @@ export function LessonQuizShell({
                 </p>
               </div>
               {!result.passed && result.canRetry && (
-                <Button variant="outline" onClick={handleRetry}>
+                <Button variant="outline" onClick={handleRetry} className="min-h-11">
                   <RotateCcw className="mr-2 h-4 w-4" />
                   Try again
                 </Button>
@@ -170,7 +170,7 @@ export function LessonQuizShell({
           <span className="text-sm text-muted-foreground">
             {totalAnswered} of {questions.length} answered
           </span>
-          <Button onClick={handleSubmit} disabled={!canSubmit || submitting}>
+          <Button onClick={handleSubmit} disabled={!canSubmit || submitting} className="min-h-11">
             {submitting ? 'Submitting...' : 'Submit quiz'}
           </Button>
         </div>

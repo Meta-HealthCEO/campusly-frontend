@@ -133,7 +133,7 @@ function LessonButton({ lesson, isCurrent, onSelect }: LessonButtonProps) {
       disabled={isLocked}
       onClick={() => !isLocked && onSelect()}
       className={cn(
-        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors',
+        'flex min-h-11 w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors lg:min-h-0 lg:py-1.5 lg:text-xs',
         isCurrent ? 'bg-primary/10 text-foreground' : 'hover:bg-muted/50',
         isLocked && 'text-muted-foreground cursor-not-allowed',
       )}

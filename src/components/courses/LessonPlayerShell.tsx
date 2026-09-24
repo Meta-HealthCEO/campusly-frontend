@@ -52,7 +52,7 @@ export function LessonPlayerShell({
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger
             render={
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="min-h-11">
                 <Menu className="mr-2 h-4 w-4" />
                 Course outline
               </Button>
@@ -88,11 +88,12 @@ export function LessonPlayerShell({
             variant="outline"
             onClick={onPrevious}
             disabled={!canGoPrevious}
+            className="min-h-11"
           >
             <ChevronLeft className="mr-2 h-4 w-4" />
             Previous
           </Button>
-          <Button onClick={onNext} disabled={!canGoNext}>
+          <Button onClick={onNext} disabled={!canGoNext} className="min-h-11">
             Next
             <ChevronRight className="ml-2 h-4 w-4" />
           </Button>

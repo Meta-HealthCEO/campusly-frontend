@@ -57,8 +57,9 @@ export function UnitHome({ unit, progressPercent, onOpen }: Props) {
           <p className="font-mono text-xs text-muted-foreground tabular-nums">{progressPercent}% done</p>
         </div>
         {target ? (
-          <Button onClick={() => onOpen(target.lessonId)} className="min-h-12 w-full gap-2 sm:w-auto">
-            <PlayCircle className="h-5 w-5" aria-hidden /> {target.started ? 'Continue' : 'Start'}: {target.title}
+          <Button onClick={() => onOpen(target.lessonId)} className="h-auto min-h-12 w-full justify-start gap-2 whitespace-normal py-2 text-left sm:w-auto">
+            <PlayCircle className="h-5 w-5 shrink-0" aria-hidden />
+            <span className="min-w-0">{target.started ? 'Continue' : 'Start'}: {target.title}</span>
           </Button>
         ) : (
           <p className="flex items-center gap-2 rounded-lg border border-success/30 bg-success-soft px-3 py-2 text-sm text-success">

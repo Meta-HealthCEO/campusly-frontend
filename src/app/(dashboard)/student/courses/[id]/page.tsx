@@ -27,7 +27,7 @@ export default function StudentUnitPage() {
 
   return (
     <div className="space-y-4">
-      <Button variant="ghost" size="sm" onClick={() => router.push(ROUTES.STUDENT_COURSES)}>
+      <Button variant="ghost" size="sm" onClick={() => router.push(ROUTES.STUDENT_COURSES)} className="min-h-11">
         <ChevronLeft className="mr-1 h-4 w-4" /> Courses
       </Button>
       <UnitHome
