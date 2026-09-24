@@ -65,6 +65,7 @@ function MemoAnswerCard({
           <Textarea
             value={ans.expectedAnswer}
             onChange={(e) => onPatchAnswer({ expectedAnswer: e.target.value })}
+            placeholder="Add the expected answer."
             rows={3}
             disabled={isFinalised}
           />

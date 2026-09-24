@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, FileText, Trash2, Eye, Users, ScanLine, Library } from 'lucide-react';
@@ -23,7 +23,6 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { StatusChip } from '@/components/shared/StatusChip';
 import {
-  filterByModeration,
   moderationChip,
   moderationFilterFromParam,
   type ModerationFilter,
@@ -59,7 +58,14 @@ export default function TeacherPapersPage() {
   const setModeration = (value: ModerationFilter): void => {
     router.replace(value === 'all' ? '/teacher/papers' : `/teacher/papers?moderation=${value}`, { scroll: false });
   };
-  const shown = useMemo(() => filterByModeration(papers, moderation), [papers, moderation]);
+  // The moderation filter lives in the URL (shareable/bookmarkable); mirror
+  // it into the fetch filters so the backend does the filtering — the list
+  // is capped at `limit` per page, so filtering client-side only ever saw
+  // the first page and "Showing X of total" showed the unfiltered total.
+  useEffect(() => {
+    setFilters({ ...filters, moderation: moderation === 'all' ? undefined : moderation });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moderation]);
   const hasActiveFilters = Boolean(filters.search || filters.status || moderation !== 'all');
 
   const columns = useMemo<ColumnDef<Paper>[]>(() => [
@@ -227,11 +233,11 @@ export default function TeacherPapersPage() {
           </Button>
         )}
         <p className="text-xs text-muted-foreground sm:ml-auto">
-          Showing {shown.length} of {total} papers
+          Showing {papers.length} of {total} papers
         </p>
       </div>
 
-      {shown.length === 0 ? (
+      {papers.length === 0 ? (
         <EmptyState
           icon={FileText}
           title={hasActiveFilters ? 'No papers found' : 'No papers yet'}
@@ -252,7 +258,7 @@ export default function TeacherPapersPage() {
       ) : (
         <DataTable
           columns={columns}
-          data={shown}
+          data={papers}
           searchKey="title"
           searchPlaceholder="Search by title..."
           onRowClick={(p) => router.push(`/teacher/papers/${p._id}`)}

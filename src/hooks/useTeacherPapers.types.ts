@@ -15,6 +15,7 @@ export interface PaperFilters {
   year?: number;
   status?: string;
   paperType?: string;
+  moderation?: string;
   search?: string;
   page?: number;
   limit?: number;
