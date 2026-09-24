@@ -40,6 +40,12 @@ const nextConfig: NextConfig = {
   async redirects() {
     return LEGACY_TEACHER_REDIRECTS;
   },
+  // Git worktrees live under .worktrees/ (each with node_modules): the dev server must not watch them,
+  // or every edit there recompiles and reloads this checkout's open pages.
+  webpack: (config) => {
+    config.watchOptions = { ...config.watchOptions, ignored: ['**/.worktrees/**', '**/node_modules/**', '**/.git/**'] };
+    return config;
+  },
 };
 
 export default nextConfig;
