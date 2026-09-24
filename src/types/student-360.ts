@@ -99,3 +99,6 @@ export interface FullStudent360Data {
   sports: FullStudent360Sports;
   behaviour: FullStudent360Behaviour;
 }
+
+/** What a teacher sees about one of their learners: the Student 360 without fees or wallet. */
+export type LearnerProfileData = Omit<FullStudent360Data, 'fees' | 'wallet'>;

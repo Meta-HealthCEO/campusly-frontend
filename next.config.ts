@@ -19,6 +19,7 @@ export const LEGACY_TEACHER_REDIRECTS: { source: string; destination: string; pe
   { source: '/teacher/workbench/papers/builder', destination: '/teacher/papers', permanent: true },
   { source: '/teacher/workbench/question-bank', destination: '/teacher/curriculum/questions', permanent: true },
   { source: '/teacher/workbench/papers/:id/memo', destination: '/teacher/papers/:id', permanent: true },
+  { source: '/teacher/workbench/student-360/:id', destination: '/teacher/students/:id', permanent: true },
 ];
 
 const nextConfig: NextConfig = {

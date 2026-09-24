@@ -12,6 +12,7 @@ import { Users, Search, GraduationCap } from 'lucide-react';
 import { getInitials } from '@/lib/utils';
 import { getStudentDisplayName, isPortalStudent } from '@/lib/student-helpers';
 import { useTeacherStudents } from '@/hooks/useTeacherStudents';
+import { teacherLearnerProfilePath } from '@/lib/learner-profile';
 import { ROUTES } from '@/lib/constants';
 
 export default function TeacherStudentsPage() {
@@ -98,7 +99,8 @@ export default function TeacherStudentsPage() {
                 : '';
 
             return (
-              <Card key={student.id}>
+              <Link key={student.id} href={teacherLearnerProfilePath(student.id)} className="block rounded-xl focus-visible:outline-2">
+              <Card className="transition-colors hover:border-primary/50">
                 <CardContent className="flex items-center gap-3 p-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                     {getInitials(first, last)}
@@ -115,6 +117,7 @@ export default function TeacherStudentsPage() {
                   </Badge>
                 </CardContent>
               </Card>
+              </Link>
             );
           })}
         </div>

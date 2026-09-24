@@ -1,6 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { KeyRound, Mail, Pencil, Trash2 } from 'lucide-react';
+import { teacherLearnerProfilePath } from '@/lib/learner-profile';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getStudentDisplayName } from '@/lib/student-helpers';
@@ -36,10 +38,10 @@ export function RosterStudentRow({
       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
         {getInitials(first, last)}
       </div>
-      <div className="flex-1 min-w-0">
+      <Link href={teacherLearnerProfilePath(student.id)} className="flex-1 min-w-0 rounded-md hover:underline focus-visible:outline-2">
         <p className="text-sm font-medium truncate">{first} {last}</p>
         <p className="text-xs text-muted-foreground truncate">{student.admissionNumber}</p>
-      </div>
+      </Link>
       {isPortal ? (
         <Badge variant="default" className="shrink-0">Portal</Badge>
       ) : (
