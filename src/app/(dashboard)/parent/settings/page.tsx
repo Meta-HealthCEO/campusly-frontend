@@ -7,7 +7,7 @@ import { WhatsAppOptInCard } from '@/components/whatsapp/WhatsAppOptInCard';
 import { useWhatsAppOptIn } from '@/hooks/useWhatsAppOptIn';
 
 export default function ParentSettingsPage() {
-  const { optInStatus, loading, loadOptInStatus, optIn, optOut } = useWhatsAppOptIn();
+  const { optInStatus, loading, available, loadOptInStatus, optIn, optOut } = useWhatsAppOptIn();
 
   useEffect(() => {
     loadOptInStatus();
@@ -22,12 +22,18 @@ export default function ParentSettingsPage() {
         description="Manage your notification preferences"
       />
 
-      <WhatsAppOptInCard
-        status={optInStatus}
-        loading={loading}
-        onOptIn={optIn}
-        onOptOut={optOut}
-      />
+      {available ? (
+        <WhatsAppOptInCard
+          status={optInStatus}
+          loading={loading}
+          onOptIn={optIn}
+          onOptOut={optOut}
+        />
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          WhatsApp notifications aren&apos;t available right now. Try again later.
+        </p>
+      )}
     </div>
   );
 }

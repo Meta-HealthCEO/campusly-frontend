@@ -10,6 +10,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { MessageSquare, Shield } from 'lucide-react';
+import { toast } from 'sonner';
+import { extractErrorMessage } from '@/lib/api-helpers';
 import type { WhatsAppOptInStatus } from '@/types/whatsapp';
 
 interface WhatsAppOptInCardProps {
@@ -36,7 +38,7 @@ export function WhatsAppOptInCard({ status, loading, onOptIn, onOptOut }: WhatsA
       setSubmitting(true);
       await onOptIn(phone, language);
     } catch (err: unknown) {
-      console.error('Opt-in failed', err);
+      toast.error(extractErrorMessage(err, 'Could not turn on WhatsApp notifications'));
     } finally {
       setSubmitting(false);
     }
@@ -47,7 +49,7 @@ export function WhatsAppOptInCard({ status, loading, onOptIn, onOptOut }: WhatsA
       setSubmitting(true);
       await onOptOut();
     } catch (err: unknown) {
-      console.error('Opt-out failed', err);
+      toast.error(extractErrorMessage(err, 'Could not turn off WhatsApp notifications'));
     } finally {
       setSubmitting(false);
     }
