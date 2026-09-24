@@ -1,3 +1,4 @@
+import type { NavSection } from '@/lib/constants';
 import type { AnnotatedPeriod } from '@/lib/teacher-today';
 
 const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -19,4 +20,22 @@ export function todayLede(periods: AnnotatedPeriod[]): string | null {
   const next = periods.find((p: AnnotatedPeriod) => p.phase === 'next');
   if (next) return `${count(periods.length)}. Next up: ${next.subjectName} with ${next.className} at ${next.startTime}.`;
   return `${count(periods.length)}, all done.`;
+}
+
+/** A page's nav section as an eyebrow, e.g. "ASSESS". */
+export function sectionEyebrow(section: NavSection): string {
+  return section.toUpperCase();
+}
+
+/** The week a date falls in, named by its Monday: "WEEK OF 21 SEP". */
+export function weekOfEyebrow(date: Date): string {
+  const back = (date.getDay() + 6) % 7;
+  const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate() - back);
+  return `WEEK OF ${monday.getDate()} ${MONTHS[monday.getMonth()]}`;
+}
+
+/** The known parts of a page's context, e.g. "GRADE 1 - A · PERIOD 1"; the fallback when none are known. */
+export function contextEyebrow(parts: ReadonlyArray<string | null | undefined>, fallback = ''): string {
+  const known = parts.filter((part): part is string => Boolean(part && part.trim()));
+  return (known.length > 0 ? known.join(' · ') : fallback).toUpperCase();
 }

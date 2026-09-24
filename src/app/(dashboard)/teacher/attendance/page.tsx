@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { contextEyebrow, sectionEyebrow } from '@/lib/eyebrow';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { BarChart3, BookOpen } from 'lucide-react';
@@ -82,7 +83,7 @@ export default function TeacherAttendancePage() {
   if (hook.loading) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Attendance" description="Mark daily attendance for any of your classes" />
+        <PageHeader eyebrow={sectionEyebrow('Class')} title="Attendance" description="Mark daily attendance for any of your classes" />
         <LoadingSpinner />
       </div>
     );
@@ -91,7 +92,7 @@ export default function TeacherAttendancePage() {
   if (hook.classes.length === 0) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Attendance" />
+        <PageHeader eyebrow={sectionEyebrow('Class')} title="Attendance" />
         <EmptyState
           icon={BookOpen}
           title="No classes yet"
@@ -106,7 +107,11 @@ export default function TeacherAttendancePage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Attendance" description={classLabel}>
+      <PageHeader
+        eyebrow={contextEyebrow([classLabel.split(' · ')[0], `Period ${hook.period}`], 'Class')}
+        title="Attendance"
+        description={classLabel}
+      >
         <AttendanceClassPicker
           classes={hook.classes}
           value={hook.selectedClass?.id ?? null}

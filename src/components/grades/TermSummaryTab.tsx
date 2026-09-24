@@ -101,11 +101,11 @@ export function TermSummaryTab({ classId, term, academicYear }: Props) {
         <CardHeader className="pb-3 space-y-3">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+              <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
                 Class average · {scopeLabel}
               </p>
               <p className={cn(
-                'text-4xl font-semibold leading-none mt-1',
+                'font-mono text-4xl font-semibold leading-none tabular-nums mt-1',
                 gradeColor(summary.classOverallAverage),
               )}>
                 {summary.classOverallAverage !== null

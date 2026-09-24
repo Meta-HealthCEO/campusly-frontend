@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { sectionEyebrow } from '@/lib/eyebrow';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -109,7 +110,7 @@ export default function LessonsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <PageHeader eyebrow={sectionEyebrow('Teach')}
         title="Lessons"
         description="Plan, build, and export your lessons in one place."
       >

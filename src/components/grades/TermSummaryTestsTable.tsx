@@ -141,7 +141,7 @@ function StudentRow({ row, groups, onOpen }: StudentRowProps) {
               key={`${g.subject.subjectId}-avg`}
               className="px-3 py-2 text-center border-b border-l bg-muted/10 whitespace-nowrap"
             >
-              <span className={cn('font-semibold', gradeColor(subjectAvg))}>
+              <span className={cn('font-mono font-semibold tabular-nums', gradeColor(subjectAvg))}>
                 {subjectAvg !== null ? `${subjectAvg}%` : '—'}
               </span>
             </td>,
@@ -150,7 +150,7 @@ function StudentRow({ row, groups, onOpen }: StudentRowProps) {
         return cells;
       })}
       <td className="sticky right-0 z-10 bg-background px-3 py-2 text-center border-b border-l whitespace-nowrap">
-        <span className={cn('font-semibold', gradeColor(row.overallAverage))}>
+        <span className={cn('font-mono font-semibold tabular-nums', gradeColor(row.overallAverage))}>
           {row.overallAverage !== null ? `${row.overallAverage}%` : '—'}
         </span>
       </td>

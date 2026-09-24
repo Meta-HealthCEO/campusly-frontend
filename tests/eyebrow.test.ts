@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { todayEyebrow, todayLede } from '../src/lib/eyebrow';
+import { contextEyebrow, sectionEyebrow, todayEyebrow, todayLede, weekOfEyebrow } from '../src/lib/eyebrow';
 import type { AnnotatedPeriod } from '../src/lib/teacher-today';
 
 const p = (period: number, startTime: string, phase: AnnotatedPeriod['phase'], subjectName = 'English', className = 'Grade 1 - A'): AnnotatedPeriod =>
@@ -27,5 +27,36 @@ describe('todayLede', () => {
 
   it('says nothing on an empty day', () => {
     expect(todayLede([])).toBeNull();
+  });
+});
+
+describe('sectionEyebrow', () => {
+  it('names the nav section in caps', () => {
+    expect(sectionEyebrow('Assess')).toBe('ASSESS');
+  });
+});
+
+describe('weekOfEyebrow', () => {
+  it('names the Monday of the week', () => {
+    expect(weekOfEyebrow(new Date(2026, 8, 24))).toBe('WEEK OF 21 SEP');
+  });
+
+  it('keeps a Monday as its own week', () => {
+    expect(weekOfEyebrow(new Date(2026, 8, 21, 7, 0))).toBe('WEEK OF 21 SEP');
+  });
+
+  it('rolls a Sunday back to the Monday before', () => {
+    expect(weekOfEyebrow(new Date(2026, 8, 27))).toBe('WEEK OF 21 SEP');
+  });
+});
+
+describe('contextEyebrow', () => {
+  it('joins the known parts in caps', () => {
+    expect(contextEyebrow(['Grade 1 - A', 'Period 1'])).toBe('GRADE 1 - A · PERIOD 1');
+  });
+
+  it('skips missing parts and falls back when none are known', () => {
+    expect(contextEyebrow([null, '', undefined], 'Class')).toBe('CLASS');
+    expect(contextEyebrow(['Grade 1 - A', null])).toBe('GRADE 1 - A');
   });
 });

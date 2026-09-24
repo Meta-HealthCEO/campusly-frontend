@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { contextEyebrow, sectionEyebrow } from '@/lib/eyebrow';
 import { StatCardsSkeleton, TableSkeleton } from '@/components/shared/skeletons';
 import { EmptyState } from '@/components/shared/EmptyState';
 import {
@@ -43,7 +44,7 @@ export default function TeacherGradesPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Gradebook" description="Enter and manage student assessment marks" />
+        <PageHeader eyebrow={sectionEyebrow('Assess')} title="Gradebook" description="Enter and manage student assessment marks" />
         <StatCardsSkeleton count={4} />
         <TableSkeleton rows={8} columns={5} />
       </div>
@@ -199,7 +200,11 @@ export default function TeacherGradesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Gradebook" description="Track class performance and capture marks">
+      <PageHeader
+        eyebrow={contextEyebrow([selectedClass ? classDisplayName.trim() : null, selectedTermLabel], 'Assess')}
+        title="Gradebook"
+        description="Track class performance and capture marks"
+      >
         <div className="flex items-center gap-2">
           <Select
             value={selectedClass}

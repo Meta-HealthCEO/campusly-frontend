@@ -106,7 +106,7 @@ export function MarkingItemCard({ item, onClick }: Props) {
 
         <div className="space-y-1">
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{completedCount} / {item.totalCount} marked</span>
+            <span><span className="font-mono tabular-nums">{completedCount} / {item.totalCount}</span> marked</span>
             <span>{Math.round(progressPercent)}%</span>
           </div>
           <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">

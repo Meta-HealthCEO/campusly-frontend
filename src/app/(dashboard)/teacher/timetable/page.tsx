@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { weekOfEyebrow } from '@/lib/eyebrow';
 import { TableSkeleton } from '@/components/shared/skeletons';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
@@ -105,7 +106,7 @@ export default function TeacherTimetablePage() {
   if (loading || configLoading) {
     return (
       <div className="space-y-6">
-        <PageHeader title="My Timetable" description="Your weekly teaching schedule" />
+        <PageHeader eyebrow={weekOfEyebrow(new Date())} title="My Timetable" description="Your weekly teaching schedule" />
         <TableSkeleton rows={7} columns={6} />
       </div>
     );
@@ -115,7 +116,7 @@ export default function TeacherTimetablePage() {
   if (configError) {
     return (
       <div className="space-y-6">
-        <PageHeader title="My Timetable" description="Your weekly teaching schedule" />
+        <PageHeader eyebrow={weekOfEyebrow(new Date())} title="My Timetable" description="Your weekly teaching schedule" />
         <EmptyState
           icon={AlertCircle}
           title="Could not load configuration"
@@ -130,7 +131,7 @@ export default function TeacherTimetablePage() {
   if (!hasConfig) {
     return (
       <div className="space-y-6">
-        <PageHeader title="My Timetable" description="Your weekly teaching schedule" />
+        <PageHeader eyebrow={weekOfEyebrow(new Date())} title="My Timetable" description="Your weekly teaching schedule" />
         <EmptyState
           icon={Calendar}
           title="No period configuration"
@@ -166,7 +167,7 @@ export default function TeacherTimetablePage() {
   return (
     <ErrorBoundary>
       <div className="space-y-6">
-        <PageHeader title="My Timetable" description="Your weekly teaching schedule">
+        <PageHeader eyebrow={weekOfEyebrow(new Date())} title="My Timetable" description="Your weekly teaching schedule">
           <div className="flex gap-2 print:hidden">
             <Button variant="outline" onClick={() => window.print()}>
               <Printer className="mr-2 h-4 w-4" />

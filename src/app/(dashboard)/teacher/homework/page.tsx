@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { AlertTriangle, Plus, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { sectionEyebrow } from '@/lib/eyebrow';
 import { ListSkeleton } from '@/components/shared/skeletons';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { useTeacherHomework } from '@/hooks/useTeacherHomework';
@@ -53,7 +54,7 @@ export default function TeacherHomeworkListPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <PageHeader eyebrow={sectionEyebrow('Assess')}
         title="Homework"
         description="Assign and track structured homework"
       >

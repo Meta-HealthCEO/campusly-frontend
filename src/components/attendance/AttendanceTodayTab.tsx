@@ -124,19 +124,19 @@ export function AttendanceTodayTab(props: AttendanceTodayTabProps) {
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-success" />
-            <span className="text-success font-medium">{stats.present} Present</span>
+            <span className="text-success font-medium"><span className="font-mono tabular-nums">{stats.present}</span> Present</span>
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-destructive" />
-            <span className="text-destructive font-medium">{stats.absent} Absent</span>
+            <span className="text-destructive font-medium"><span className="font-mono tabular-nums">{stats.absent}</span> Absent</span>
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-attention" />
-            <span className="text-attention font-medium">{stats.late} Late</span>
+            <span className="text-attention font-medium"><span className="font-mono tabular-nums">{stats.late}</span> Late</span>
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-info" />
-            <span className="text-info font-medium">{stats.excused} Excused</span>
+            <span className="text-info font-medium"><span className="font-mono tabular-nums">{stats.excused}</span> Excused</span>
           </span>
         </div>
       </div>

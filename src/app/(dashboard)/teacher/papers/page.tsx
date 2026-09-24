@@ -18,6 +18,7 @@ import {
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { sectionEyebrow } from '@/lib/eyebrow';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 
@@ -134,7 +135,7 @@ export default function TeacherPapersPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <PageHeader eyebrow={sectionEyebrow('Assess')}
         title="Test Papers"
         description="Generate, convert, edit, assign, mark, and print CAPS-aligned papers."
       >

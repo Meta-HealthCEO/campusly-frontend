@@ -77,7 +77,7 @@ export function TermSummaryTotalsTable({
                       <span className="text-xs text-muted-foreground">—</span>
                     ) : (
                       <div className="inline-flex items-center gap-1">
-                        <span className={cn('font-medium', gradeColor(value))}>{value}%</span>
+                        <span className={cn('font-mono font-medium tabular-nums', gradeColor(value))}>{value}%</span>
                         {deltaIcon(value, s.classAverage)}
                       </div>
                     )}
@@ -85,7 +85,7 @@ export function TermSummaryTotalsTable({
                 );
               })}
               <td className="sticky right-0 z-10 bg-background px-3 py-2 text-center border-b border-l whitespace-nowrap">
-                <span className={cn('font-semibold', gradeColor(row.overallAverage))}>
+                <span className={cn('font-mono font-semibold tabular-nums', gradeColor(row.overallAverage))}>
                   {row.overallAverage !== null ? `${row.overallAverage}%` : '—'}
                 </span>
               </td>

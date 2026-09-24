@@ -7,6 +7,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { sectionEyebrow } from '@/lib/eyebrow';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { CardGridSkeleton } from '@/components/shared/skeletons';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
@@ -55,7 +56,7 @@ export default function TeacherClassesPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeader
+        <PageHeader eyebrow={sectionEyebrow('Class')}
           title={isStandaloneTeacher ? 'Teaching Groups' : 'My Classes'}
           description={
             isStandaloneTeacher
@@ -70,7 +71,7 @@ export default function TeacherClassesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <PageHeader eyebrow={sectionEyebrow('Class')}
         title={isStandaloneTeacher ? 'Teaching Groups' : 'My Classes'}
         description={
           isStandaloneTeacher

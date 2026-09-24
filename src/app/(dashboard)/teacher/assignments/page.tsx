@@ -14,6 +14,7 @@ import {
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { sectionEyebrow } from '@/lib/eyebrow';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 
@@ -126,7 +127,7 @@ export default function TeacherAssignmentsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <PageHeader eyebrow={sectionEyebrow('Assess')}
         title="Assignments"
         description="Long-form deliverables marked against a rubric — essays, projects, research tasks. AI can draft the brief and rubric for you."
       >

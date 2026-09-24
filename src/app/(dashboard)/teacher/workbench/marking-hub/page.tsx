@@ -7,6 +7,7 @@ import { ClipboardCheck, AlertCircle, Clock, ListChecks, Sparkles } from 'lucide
 import { buttonVariants } from '@/components/ui/button';
 import { ROUTES } from '@/lib/routes';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { sectionEyebrow } from '@/lib/eyebrow';
 import { StatCard } from '@/components/shared/StatCard';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -57,7 +58,7 @@ export default function MarkingHubPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <PageHeader eyebrow={sectionEyebrow('Assess')}
         title="Marking"
         description="Everything waiting to be marked. Photograph handwritten scripts and let AI mark them against your memo."
       >
