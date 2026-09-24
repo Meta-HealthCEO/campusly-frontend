@@ -52,13 +52,13 @@ export default function AdminLeavePage() {
   useEffect(() => {
     if (!schoolId) return;
     if (activeTab === 'requests') {
-      fetchRequests(schoolId, { status: statusFilter === 'all' ? undefined : statusFilter });
+      fetchRequests({ status: statusFilter === 'all' ? undefined : statusFilter });
     }
   }, [schoolId, activeTab, statusFilter, fetchRequests]);
 
   useEffect(() => {
     if (!schoolId || activeTab !== 'balances') return;
-    fetchBalances(schoolId, { year: now.getFullYear() });
+    fetchBalances({ year: now.getFullYear() });
   }, [schoolId, activeTab, fetchBalances, now.getFullYear]);
 
   useEffect(() => {
@@ -71,12 +71,12 @@ export default function AdminLeavePage() {
     };
     const start = toISODate(new Date(calYear, calMonth, 1));
     const end = toISODate(new Date(calYear, calMonth + 1, 0));
-    fetchCalendar(schoolId, start, end);
+    fetchCalendar(start, end);
   }, [schoolId, activeTab, calMonth, calYear, fetchCalendar]);
 
   useEffect(() => {
     if (!schoolId || activeTab !== 'reports') return;
-    fetchReport(schoolId, { year: reportYear });
+    fetchReport({ year: reportYear });
   }, [schoolId, activeTab, reportYear, fetchReport]);
 
   const handleReview = useCallback((req: LeaveRequest) => {
@@ -93,7 +93,7 @@ export default function AdminLeavePage() {
       await reviewRequest(id, data);
       toast.success(`Leave request ${data.status}`);
       setReviewOpen(false);
-      if (schoolId) fetchRequests(schoolId, { status: statusFilter === 'all' ? undefined : statusFilter });
+      if (schoolId) fetchRequests({ status: statusFilter === 'all' ? undefined : statusFilter });
     } catch (err: unknown) {
       toast.error('Failed to review request');
       console.error(err);

@@ -47,10 +47,10 @@ export function useLeave() {
   const [substitutes, setSubstitutes] = useState<SubstituteSuggestion[]>([]);
   const [substitutesLoading, setSubstitutesLoading] = useState(false);
 
-  const fetchRequests = useCallback(async (schoolId: string, params?: RequestParams) => {
+  const fetchRequests = useCallback(async (params?: RequestParams) => {
     setRequestsLoading(true);
     try {
-      const response = await apiClient.get(`/leave/requests`, { params: { ...params, schoolId } });
+      const response = await apiClient.get(`/leave/requests`, { params });
       const raw = unwrapResponse<{ requests?: LeaveRequest[]; total?: number }>(response);
       const list = Array.isArray(raw)
         ? (raw as LeaveRequest[])
@@ -70,7 +70,6 @@ export function useLeave() {
   }, []);
 
   const createRequest = useCallback(async (data: {
-    schoolId: string;
     leaveType: string;
     startDate: string;
     endDate: string;
@@ -98,10 +97,10 @@ export function useLeave() {
     return unwrapResponse<LeaveRequest>(response);
   }, []);
 
-  const fetchBalances = useCallback(async (schoolId: string, params?: BalanceParams) => {
+  const fetchBalances = useCallback(async (params?: BalanceParams) => {
     setBalancesLoading(true);
     try {
-      const response = await apiClient.get('/leave/balances', { params: { ...params, schoolId } });
+      const response = await apiClient.get('/leave/balances', { params });
       const list = unwrapList<LeaveBalance>(response, 'balances');
       setBalances(list);
     } catch (err: unknown) {
@@ -112,16 +111,16 @@ export function useLeave() {
     }
   }, []);
 
-  const initializeBalances = useCallback(async (data: { schoolId: string; year: number }) => {
+  const initializeBalances = useCallback(async (data: { year: number }) => {
     const response = await apiClient.post('/leave/balances/initialize', data);
     return unwrapResponse<{ initialized: number }>(response);
   }, []);
 
-  const fetchCalendar = useCallback(async (schoolId: string, startDate: string, endDate: string) => {
+  const fetchCalendar = useCallback(async (startDate: string, endDate: string) => {
     setCalendarLoading(true);
     try {
       const response = await apiClient.get('/leave/calendar', {
-        params: { schoolId, startDate, endDate },
+        params: { startDate, endDate },
       });
       const list = unwrapList<LeaveCalendarEntry>(response);
       setCalendar(list);
@@ -133,11 +132,11 @@ export function useLeave() {
     }
   }, []);
 
-  const fetchSubstitutes = useCallback(async (schoolId: string, params: SubstituteParams) => {
+  const fetchSubstitutes = useCallback(async (params: SubstituteParams) => {
     setSubstitutesLoading(true);
     try {
       const response = await apiClient.get('/leave/substitutes', {
-        params: { ...params, schoolId },
+        params,
       });
       const list = unwrapList<SubstituteSuggestion>(response);
       setSubstitutes(list);

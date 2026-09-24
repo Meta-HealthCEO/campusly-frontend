@@ -40,14 +40,14 @@ export default function TeacherLeavePage() {
   useEffect(() => {
     if (!schoolId) return;
     if (activeTab === 'my-leave') {
-      fetchRequests(schoolId, { staffId: userId });
+      fetchRequests();
     }
-  }, [schoolId, userId, activeTab, fetchRequests]);
+  }, [schoolId, activeTab, fetchRequests]);
 
   useEffect(() => {
     if (!schoolId || activeTab !== 'my-balances') return;
-    fetchBalances(schoolId, { staffId: userId, year: now.getFullYear() });
-  }, [schoolId, userId, activeTab, fetchBalances, now.getFullYear]);
+    fetchBalances({ year: now.getFullYear() });
+  }, [schoolId, activeTab, fetchBalances, now.getFullYear]);
 
   useEffect(() => {
     if (!schoolId || activeTab !== 'calendar') return;
@@ -59,7 +59,7 @@ export default function TeacherLeavePage() {
     };
     const start = toISODate(new Date(calYear, calMonth, 1));
     const end = toISODate(new Date(calYear, calMonth + 1, 0));
-    fetchCalendar(schoolId, start, end);
+    fetchCalendar(start, end);
   }, [schoolId, activeTab, calMonth, calYear, fetchCalendar]);
 
   const handleApply = useCallback(async (data: {
@@ -74,28 +74,28 @@ export default function TeacherLeavePage() {
   }) => {
     setSaving(true);
     try {
-      await createRequest({ ...data, schoolId });
+      await createRequest(data);
       toast.success('Leave request submitted');
       setApplyOpen(false);
-      fetchRequests(schoolId, { staffId: userId });
+      fetchRequests();
     } catch (err: unknown) {
       toast.error('Failed to submit leave request');
       console.error(err);
     } finally {
       setSaving(false);
     }
-  }, [createRequest, schoolId, userId, fetchRequests]);
+  }, [createRequest, fetchRequests]);
 
   const handleCancel = useCallback(async (request: { id: string }) => {
     try {
       await cancelRequest(request.id);
       toast.success('Leave request cancelled');
-      fetchRequests(schoolId, { staffId: userId });
+      fetchRequests();
     } catch (err: unknown) {
       toast.error('Failed to cancel request');
       console.error(err);
     }
-  }, [cancelRequest, schoolId, userId, fetchRequests]);
+  }, [cancelRequest, fetchRequests]);
 
   const prevMonth = useCallback(() => {
     if (calMonth === 0) { setCalMonth(11); setCalYear((y) => y - 1); }

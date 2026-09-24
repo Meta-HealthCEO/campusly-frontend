@@ -7,8 +7,7 @@ import type { LeavePolicy, LeaveReportSummary } from '@/types';
 
 interface ReportParams {
   year?: number;
-  startDate?: string;
-  endDate?: string;
+  department?: string;
 }
 
 export function useLeaveAdmin() {
@@ -20,10 +19,10 @@ export function useLeaveAdmin() {
   const [report, setReport] = useState<LeaveReportSummary | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
 
-  const fetchPolicy = useCallback(async (schoolId: string) => {
+  const fetchPolicy = useCallback(async () => {
     setPolicyLoading(true);
     try {
-      const response = await apiClient.get('/leave/policy', { params: { schoolId } });
+      const response = await apiClient.get('/leave/policy');
       const data = unwrapResponse<LeavePolicy>(response);
       setPolicy(data);
     } catch (err: unknown) {
@@ -34,18 +33,18 @@ export function useLeaveAdmin() {
     }
   }, []);
 
-  const updatePolicy = useCallback(async (data: Partial<LeavePolicy> & { schoolId: string }) => {
+  const updatePolicy = useCallback(async (data: Partial<LeavePolicy>) => {
     const response = await apiClient.put('/leave/policy', data);
     const updated = unwrapResponse<LeavePolicy>(response);
     setPolicy(updated);
     return updated;
   }, []);
 
-  const fetchReport = useCallback(async (schoolId: string, params?: ReportParams) => {
+  const fetchReport = useCallback(async (params?: ReportParams) => {
     setReportLoading(true);
     try {
       const response = await apiClient.get('/leave/reports/summary', {
-        params: { ...params, schoolId },
+        params,
       });
       const data = unwrapResponse<LeaveReportSummary>(response);
       setReport(data);
