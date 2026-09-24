@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse, resolveId } from '@/lib/api-helpers';
+import { shouldLoadTeacherClasses } from '@/lib/teacher-classes';
 import type { Student, SchoolClass } from '@/types';
 
 export interface SubjectTaught {
@@ -74,7 +75,13 @@ export interface RegenerateCredentialsResult {
   credentials: StudentPortalCredentials;
 }
 
-export function useTeacherClasses() {
+/**
+ * A teacher's classes, subjects and students, from their teaching load.
+ * @param enabled Set to false to skip the fetch — for hooks embedded in a
+ * dialog or other content that isn't always shown (e.g. the referral
+ * dialog), so mounting the component doesn't fetch until it's actually open.
+ */
+export function useTeacherClasses(enabled = true) {
   const [entries, setEntries] = useState<TeacherClassEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -88,6 +95,10 @@ export function useTeacherClasses() {
   }, []);
 
   useEffect(() => {
+    if (!shouldLoadTeacherClasses(enabled)) {
+      setLoading(false);
+      return;
+    }
     const controller = new AbortController();
     async function fetchTeachingLoad() {
       try {
@@ -129,7 +140,7 @@ export function useTeacherClasses() {
     }
     fetchTeachingLoad();
     return () => controller.abort();
-  }, [refreshKey]);
+  }, [refreshKey, enabled]);
 
   /** Deduplicated list of classes (backward compat). */
   const classes = useMemo(() => {

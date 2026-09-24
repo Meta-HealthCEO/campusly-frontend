@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import { extractErrorMessage, resolveId } from '@/lib/api-helpers';
+import { buildReferralStudentOptions } from '@/lib/referral';
 import type { CreateReferralPayload, ReferralReason, ReferralUrgency, Student } from '@/types';
 
 const schema = z.object({
@@ -32,6 +33,8 @@ interface Props {
   onSubmit: (data: CreateReferralPayload) => Promise<void>;
   /** Opened from a learner's profile: that learner is already chosen. */
   defaultStudentId?: string;
+  /** The pre-filled learner's name, shown even if they aren't in the teacher's own classes. */
+  defaultStudentName?: string;
 }
 
 const REASONS: { value: ReferralReason; label: string }[] = [
@@ -63,17 +66,24 @@ function studentLabel(student: Student): string {
   return `${firstName} ${lastName}`.trim() || student.admissionNumber || 'Unnamed student';
 }
 
-export function ReferralCreateDialog({ open, onOpenChange, onSubmit, defaultStudentId }: Props) {
-  const { students, loading: studentsLoading } = useTeacherClasses();
+export function ReferralCreateDialog({ open, onOpenChange, onSubmit, defaultStudentId, defaultStudentName }: Props) {
+  // Only fetch the teacher's classes while the dialog is actually open — this
+  // component is mounted for the lifetime of the learner profile page, so an
+  // unconditional fetch would fire on every profile view.
+  const { students, loading: studentsLoading } = useTeacherClasses(open);
   const {
     register, handleSubmit, setValue, reset, watch,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const selectedStudentId = watch('studentId') ?? '';
-  const studentOptions = useMemo(() => students
-    .map((student) => ({ id: resolveId(student), label: studentLabel(student) }))
-    .filter((student) => student.id), [students]);
+  const studentOptions = useMemo(() => buildReferralStudentOptions(
+    students
+      .map((student) => ({ id: resolveId(student), label: studentLabel(student) }))
+      .filter((student) => student.id),
+    defaultStudentId,
+    defaultStudentName,
+  ), [students, defaultStudentId, defaultStudentName]);
 
   useEffect(() => {
     if (open) reset(defaultStudentId ? { studentId: defaultStudentId } : undefined);
