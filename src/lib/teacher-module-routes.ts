@@ -14,7 +14,6 @@ export const TEACHER_ROUTE_MODULES: readonly TeacherRouteModule[] = [
   { prefix: '/teacher/conferences', module: 'conference_booking', label: 'Parent-Teacher Conferences' },
   { prefix: '/teacher/courses', module: 'courses', label: 'Courses' },
   { prefix: '/teacher/incidents', module: 'incident_wellbeing', label: 'Incidents and Wellbeing' },
-  { prefix: '/teacher/pastoral', module: 'incident_wellbeing', label: 'Incidents and Wellbeing' },
   { prefix: '/teacher/learning', module: 'learning', label: 'Learning' },
   { prefix: '/teacher/leave', module: 'staff_leave', label: 'Staff Leave' },
   { prefix: '/teacher/attendance', module: 'attendance', label: 'Attendance' },

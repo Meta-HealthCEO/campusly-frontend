@@ -17,6 +17,12 @@ describe('moduleForTeacherPath', () => {
     expect(moduleForTeacherPath('/teacher/leaves')).toBeNull();
   });
 
+  it("leaves pastoral care open: /api/pastoral has no module gate, only the counsellor permission", () => {
+    expect(moduleForTeacherPath('/teacher/pastoral')).toBeNull();
+    expect(moduleForTeacherPath('/teacher/pastoral/students/abc')).toBeNull();
+    expect(moduleForTeacherPath('/teacher/referral')).toBeNull();
+  });
+
   it('leaves core pages open', () => {
     expect(moduleForTeacherPath('/teacher')).toBeNull();
     expect(moduleForTeacherPath('/teacher/grades')).toBeNull();
