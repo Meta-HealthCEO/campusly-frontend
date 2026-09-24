@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/s
 import { useModule } from '@/hooks/useModule';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { phoneNavLayout, phoneSectionLayout, visibleNavItems, type PhoneTab } from '@/lib/nav-visibility';
+import { FLAT_TAB_CLASS, SECTION_TAB_CLASS } from '@/lib/bottom-nav-classes';
 import type { NavItem } from '@/lib/constants';
 
 interface BottomNavProps {
@@ -16,8 +17,6 @@ interface BottomNavProps {
 }
 
 const isActivePath = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
-
-const TAB_CLASS = 'flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2 text-xs transition-colors';
 
 function SheetLinks({ items, pathname, onPick }: { items: NavItem[]; pathname: string; onPick: () => void }) {
   return (
@@ -53,7 +52,7 @@ function SectionTabs({ tabs, pathname }: { tabs: PhoneTab[]; pathname: string })
         {tabs.map((tab: PhoneTab) => {
           const Icon = tab.icon;
           const active = tab.href ? pathname === tab.href : tab.items.some((i: NavItem) => isActivePath(pathname, i.href));
-          const className = cn(TAB_CLASS, active ? 'text-primary' : 'text-muted-foreground');
+          const className = cn(SECTION_TAB_CLASS, active ? 'text-primary' : 'text-muted-foreground');
           return tab.href ? (
             <Link key={tab.key} href={tab.href} className={className}>
               <Icon className="h-5 w-5" />
@@ -89,7 +88,7 @@ function FlatTabs({ items, pathname }: { items: NavItem[]; pathname: string }) {
           <Link
             key={item.href}
             href={item.href}
-            className={cn(TAB_CLASS, isActivePath(pathname, item.href) ? 'text-primary' : 'text-muted-foreground')}
+            className={cn(FLAT_TAB_CLASS, isActivePath(pathname, item.href) ? 'text-primary' : 'text-muted-foreground')}
           >
             <Icon className="h-5 w-5" />
             <span>{item.label}</span>
@@ -98,7 +97,7 @@ function FlatTabs({ items, pathname }: { items: NavItem[]; pathname: string }) {
       })}
       {sheet.length > 0 && (
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-          <SheetTrigger className={cn(TAB_CLASS, 'text-muted-foreground')}>
+          <SheetTrigger className={cn(FLAT_TAB_CLASS, 'text-muted-foreground')}>
             <MoreHorizontal className="h-5 w-5" />
             <span>More</span>
           </SheetTrigger>

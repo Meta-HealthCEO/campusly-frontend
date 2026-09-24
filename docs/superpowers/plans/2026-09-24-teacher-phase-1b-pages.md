@@ -39,7 +39,7 @@
 | `blue|sky|cyan|indigo-50/100` background | informational, excused | `bg-info-soft` |
 | `blue|sky|cyan|indigo-500..800` text | informational | `text-info` |
 | `blue|indigo-600` solid **button or selected state** | an action | `bg-primary text-primary-foreground` |
-| `violet|purple|fuchsia-*` | AI, "yours" | `bg-accent-soft` / `text-accent` |
+| `violet|purple|fuchsia-*` | AI, "yours" | `bg-accent-soft` / `text-accent-foreground` |
 | `gray|slate|zinc|neutral|stone-50/100` background | quiet surface | `bg-muted` |
 | `gray|slate|…-400..600` text | secondary text | `text-muted-foreground` |
 | `gray|slate|…-200/300` border | hairline | `border-border` |
@@ -142,7 +142,7 @@ export function nowLinePlacement(periods: AnnotatedPeriod[], now: Date): { index
   - Rows use a `grid grid-cols-[52px_18px_minmax(0,1fr)_auto]` layout: a mono start time (`font-mono text-[13px] text-muted-foreground`), a rail dot (done = filled `bg-border`, next = `bg-primary` with a `ring-4 ring-accent-soft`, later = hollow `border-2 border-border`), the class and subject with the lesson line below, then the action.
   - Past rows get `opacity-60`.
   - Card title uses `font-heading text-[17px] font-semibold`.
-  - The "Timetable →" link is `text-accent`.
+  - The "Timetable →" link is `text-accent-foreground`.
   - Register taken shows `<StatusChip status="done" label="Taken" />`.
   - A missing lesson shows `<StatusChip status="due" label="No lesson yet" />` plus a "Make one" link to `/teacher/lessons/new`.
   - The "Take register" button stays (`h-11 sm:h-8`).
@@ -250,7 +250,7 @@ export function todayLede(periods: AnnotatedPeriod[]): string | null {
     - "Make with AI" (default/primary, linking to `/teacher/lessons/new`)
   - Remove the old summary join.
   - **NeedsYouCard:** each row is a grid of icon, label (with an optional `text-attention text-xs` sub-line such as "3 overdue") and a mono count on the right, `font-mono text-xl`. A zero row renders muted, with the right side reading "All clear" in `text-success text-[13px]` instead of 0.
-  - **AIQuickMakeHero:** three compact cards in a row (`grid grid-cols-1 sm:grid-cols-3 gap-3.5`). Each has an icon tile `bg-accent-soft text-accent rounded-lg`, a `font-heading` title, a muted subtitle and a trailing arrow. The section label above is a mono uppercase "Make with AI".
+  - **AIQuickMakeHero:** three compact cards in a row (`grid grid-cols-1 sm:grid-cols-3 gap-3.5`). Each has an icon tile `bg-accent-soft text-accent-foreground rounded-lg`, a `font-heading` title, a muted subtitle and a trailing arrow. The section label above is a mono uppercase "Make with AI".
   - Add all three files, plus `src/app/(dashboard)/teacher/page.tsx`, to the colour guard.
 - [ ] **Step 6: Check and commit:** `feat(today): header with the day's lede, Needs you counts and Make with AI`.
 

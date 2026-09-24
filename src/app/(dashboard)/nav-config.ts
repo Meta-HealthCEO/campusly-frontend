@@ -56,8 +56,12 @@ function dedupeByHref(items: NavItem[]): NavItem[] {
 }
 
 export function composeNav(user: User, baseline: NavItem[]): NavItem[] {
+  // A sectioned nav (the teacher's) only shows items that have a section, so
+  // extra-role items go under Me rather than vanishing from the phone tabs.
+  const sectioned = baseline.some((item: NavItem) => item.section);
   const capabilityItems = (Object.keys(NAV_BY_CAPABILITY) as Capability[])
     .filter((cap) => can(user, cap))
-    .flatMap((cap) => NAV_BY_CAPABILITY[cap] ?? []);
+    .flatMap((cap) => NAV_BY_CAPABILITY[cap] ?? [])
+    .map((item: NavItem): NavItem => (sectioned ? { ...item, section: 'Me' } : item));
   return dedupeByHref([...baseline, ...capabilityItems]);
 }

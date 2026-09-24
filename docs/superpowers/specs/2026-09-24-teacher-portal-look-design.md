@@ -86,7 +86,9 @@ These are the values under `[data-portal="teacher"]`. They override existing sha
 | `--chart-1..5` | `#7c3aed`, `#a78bfa`, `#10b981`, `#f59e0b`, `#0ea5e9` | same | |
 | `--radius` | `0.5rem` | same | Cards use `rounded-xl` (12px); controls `rounded-lg` (8px). |
 
-The new tokens are registered in `@theme inline` so utilities exist: `bg-success`, `bg-success-soft`, `text-attention`, `bg-info-soft`, `text-accent`, and so on.
+The new tokens are registered in `@theme inline` so utilities exist: `bg-success`, `bg-success-soft`, `text-attention`, `bg-info-soft`, `text-accent-foreground`, and so on.
+
+`accent` keeps shadcn's meaning inside the teacher scope: `--accent` is the soft violet surface that `hover:bg-accent` and menu highlights paint, and `--accent-foreground` is the violet ink for links, AI icons and "yours" chips. (Changed after the phase 1A review: a solid violet `--accent` made every `hover:bg-accent` row unreadable.)
 
 ### 5.2 One meaning per colour
 

@@ -66,12 +66,12 @@ function PeriodRow({ period, lesson }: { period: AnnotatedPeriod; lesson?: Lesso
           <span className="text-muted-foreground"> · {period.className}{period.room ? ` · ${period.room}` : ''}</span>
         </p>
         {lesson ? (
-          <Link href={`${ROUTES.TEACHER_LESSONS}/${lesson.lessonId}`} className="block truncate text-[12.5px] text-accent hover:underline">
+          <Link href={`${ROUTES.TEACHER_LESSONS}/${lesson.lessonId}`} className="block truncate text-[12.5px] text-accent-foreground hover:underline">
             {lesson.title}
           </Link>
         ) : (
           <Link href={`${ROUTES.TEACHER_LESSONS}/new`} className="text-[12.5px] text-muted-foreground hover:text-foreground">
-            No lesson yet · <span className="text-accent">Make one</span>
+            No lesson yet · <span className="text-accent-foreground">Make one</span>
           </Link>
         )}
       </div>
@@ -101,7 +101,7 @@ export function YourDayCard({ periods, lessonsByPeriod, isWeekend, showTimetable
       <CardHeader className="flex flex-row items-baseline justify-between gap-2 pb-2">
         <CardTitle className="font-heading text-[17px] font-semibold tracking-tight">Your day</CardTitle>
         {showTimetableLink ? (
-          <Link href={ROUTES.TEACHER_TIMETABLE} className="text-[13px] font-medium text-accent hover:underline">
+          <Link href={ROUTES.TEACHER_TIMETABLE} className="text-[13px] font-medium text-accent-foreground hover:underline">
             Timetable →
           </Link>
         ) : null}

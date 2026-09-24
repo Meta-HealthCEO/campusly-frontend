@@ -10,7 +10,7 @@ const TONE: Record<ChipTone, { chip: string; dot: string }> = {
   destructive: { chip: 'bg-destructive-soft text-destructive', dot: 'bg-destructive' },
   info: { chip: 'bg-info-soft text-info', dot: 'bg-info' },
   quiet: { chip: 'border border-border text-muted-foreground', dot: 'bg-border' },
-  accent: { chip: 'bg-accent-soft text-accent', dot: '' },
+  accent: { chip: 'bg-accent-soft text-accent-foreground', dot: '' },
 };
 
 interface StatusChipProps {

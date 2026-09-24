@@ -33,7 +33,8 @@ const contrast = (a: RGBA, b: RGBA) => {
 
 const PAIRS: Array<[string, string]> = [
   ['foreground', 'background'], ['muted-foreground', 'background'], ['muted-foreground', 'card'],
-  ['primary-foreground', 'primary'], ['accent', 'accent-soft'], ['success', 'success-soft'],
+  ['primary-foreground', 'primary'], ['accent-foreground', 'accent-soft'],
+  ['accent-foreground', 'accent'], ['foreground', 'accent'], ['accent-foreground', 'card'], ['success', 'success-soft'],
   ['attention', 'attention-soft'], ['destructive', 'destructive-soft'], ['info', 'info-soft'],
   ['sidebar-foreground', 'sidebar'], ['sidebar-label', 'sidebar'], ['sidebar-primary', 'sidebar'],
 ];
@@ -53,5 +54,11 @@ describe.each([
     const card = parse(tokens.card);
     const base = over(parse(tokens[bg]), card);
     expect(contrast(over(parse(tokens[fg]), base), base)).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe('tokens outside the teacher portal', () => {
+  it.each([[':root'], ['.dark']])('%s keeps the trend green other portals had (#059669)', (selector) => {
+    expect(block(selector).success).toBe('#059669');
   });
 });

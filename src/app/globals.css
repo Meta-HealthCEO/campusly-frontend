@@ -92,7 +92,7 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  --success: #047857;
+  --success: #059669;
   --success-soft: #e7f8f1;
   --attention: #b45309;
   --attention-soft: #fdf3e1;
@@ -135,7 +135,7 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-  --success: #6ee7b7;
+  --success: #059669;
   --success-soft: rgba(52, 211, 153, 0.12);
   --attention: #fcd34d;
   --attention-soft: rgba(251, 191, 36, 0.12);
@@ -160,8 +160,8 @@
   --secondary-foreground: #0d1224;
   --muted: #eef0f6;
   --muted-foreground: #62687f;
-  --accent: #6d28d9;
-  --accent-foreground: #ffffff;
+  --accent: #f1ecfe;
+  --accent-foreground: #6d28d9;
   --accent-soft: #f1ecfe;
   --destructive: #be123c;
   --destructive-soft: #fdecef;
@@ -205,8 +205,8 @@
   --secondary-foreground: #eef0fa;
   --muted: rgba(196, 181, 253, 0.07);
   --muted-foreground: #9aa0b8;
-  --accent: #c4b5fd;
-  --accent-foreground: #0d1224;
+  --accent: rgba(167, 139, 250, 0.14);
+  --accent-foreground: #c4b5fd;
   --accent-soft: rgba(167, 139, 250, 0.14);
   --destructive: #fda4af;
   --destructive-soft: rgba(251, 113, 133, 0.12);

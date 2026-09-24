@@ -38,7 +38,7 @@ export function StatCard({ title, value, icon: Icon, description, trend, tone = 
           </div>
           {Icon && (
             <div className="rounded-xl bg-primary/10 p-3 teacher:bg-accent-soft">
-              <Icon className="h-6 w-6 text-primary teacher:text-accent" />
+              <Icon className="h-6 w-6 text-primary teacher:text-accent-foreground" />
             </div>
           )}
         </div>
