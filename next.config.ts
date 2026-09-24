@@ -40,8 +40,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return LEGACY_TEACHER_REDIRECTS;
   },
+  // Builds and plain `next dev` use Turbopack. Declaring an (empty) turbopack config tells Next the
+  // webpack block below is deliberate; without it `next build` refuses to run.
+  turbopack: {},
   // Git worktrees live under .worktrees/ (each with node_modules): the dev server must not watch them,
-  // or every edit there recompiles and reloads this checkout's open pages.
+  // or every edit there recompiles and reloads this checkout's open pages. Applies to `next dev --webpack`.
   webpack: (config) => {
     config.watchOptions = { ...config.watchOptions, ignored: ['**/.worktrees/**', '**/node_modules/**', '**/.git/**'] };
     return config;
