@@ -1,6 +1,8 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { Radio } from '@base-ui/react/radio';
+import { RadioGroup } from '@base-ui/react/radio-group';
 import { useModule } from '@/hooks/useModule';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -89,53 +91,66 @@ export function LogBehaviourDialog({ open, onOpenChange, learners, learner, sour
 
           <fieldset className="space-y-1.5">
             <legend className="text-sm font-medium">What kind</legend>
-            <div className="flex flex-wrap gap-2">
+            <RadioGroup aria-label="What kind" value={kind} onValueChange={(v) => chooseKind(v as BehaviourKind)} className="flex flex-wrap gap-2">
               {BEHAVIOUR_KINDS.map((k) => (
-                <button key={k.value} type="button" aria-pressed={kind === k.value} onClick={() => chooseKind(k.value)} className={chip(kind === k.value)}>
+                <Radio.Root key={k.value} value={k.value} nativeButton render={<button type="button" className={chip(kind === k.value)} />}>
                   {k.label}
-                </button>
+                </Radio.Root>
               ))}
-            </div>
+            </RadioGroup>
           </fieldset>
 
           <fieldset className="space-y-1.5">
             <legend className="text-sm font-medium">For</legend>
-            <div className="flex flex-wrap gap-2">
+            <RadioGroup
+              aria-label="For"
+              value={category}
+              onValueChange={(v) => { setCategory(v as string); setProblem(null); }}
+              className="flex flex-wrap gap-2"
+            >
               {BEHAVIOUR_CATEGORIES[kind].map((c) => (
-                <button key={c.value} type="button" aria-pressed={category === c.value} onClick={() => { setCategory(c.value); setProblem(null); }} className={chip(category === c.value)}>
+                <Radio.Root key={c.value} value={c.value} nativeButton render={<button type="button" className={chip(category === c.value)} />}>
                   {c.label}
-                </button>
+                </Radio.Root>
               ))}
-            </div>
+            </RadioGroup>
           </fieldset>
 
           {kind !== 'incident' ? (
             <fieldset className="space-y-1.5">
               <legend className="text-sm font-medium">Points</legend>
-              <div className="flex gap-2">
+              <RadioGroup aria-label="Points" value={points} onValueChange={(v) => setPoints(v as number)} className="flex gap-2">
                 {[1, 2, 3, 4, 5].map((n) => (
-                  <button key={n} type="button" aria-pressed={points === n} onClick={() => setPoints(n)} className={cn(chip(points === n), 'w-11 px-0 font-mono tabular-nums')}>
+                  <Radio.Root
+                    key={n}
+                    value={n}
+                    nativeButton
+                    render={<button type="button" className={cn(chip(points === n), 'w-11 px-0 font-mono tabular-nums')} />}
+                  >
                     {kind === 'merit' ? `+${n}` : `−${n}`}
-                  </button>
+                  </Radio.Root>
                 ))}
-              </div>
+              </RadioGroup>
             </fieldset>
           ) : null}
 
           {kind !== 'merit' ? (
             <fieldset className="space-y-1.5">
               <legend className="text-sm font-medium">How serious</legend>
-              <div className="flex gap-2">
+              <RadioGroup aria-label="How serious" value={severity} onValueChange={(v) => setSeverity(v as Severity)} className="flex gap-2">
                 {SEVERITY_OPTIONS.map((s) => (
-                  <button key={s.value} type="button" aria-pressed={severity === s.value} onClick={() => setSeverity(s.value)} className={chip(severity === s.value)}>{s.label}</button>
+                  <Radio.Root key={s.value} value={s.value} nativeButton render={<button type="button" className={chip(severity === s.value)} />}>
+                    {s.label}
+                  </Radio.Root>
                 ))}
-              </div>
+              </RadioGroup>
             </fieldset>
           ) : null}
 
           <div className="space-y-1.5">
             <Label htmlFor="behaviour-note">{kind === 'merit' ? 'Note (optional)' : 'What happened'}</Label>
             <Textarea id="behaviour-note" value={note} onChange={(e) => { setNote(e.target.value); setProblem(null); }} rows={3} maxLength={500} />
+            <p className="text-xs text-muted-foreground">Parents see this note.</p>
           </div>
 
           {kind === 'incident' && isModuleEnabled('incident_wellbeing') ? (

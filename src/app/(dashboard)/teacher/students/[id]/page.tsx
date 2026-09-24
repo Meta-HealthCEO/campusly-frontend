@@ -106,7 +106,13 @@ export default function LearnerProfilePage() {
           onSend={(m) => void sendToParent(m)}
         />
       ) : null}
-      <ReferralCreateDialog open={referring} onOpenChange={setReferring} defaultStudentId={student.id} onSubmit={actions.refer} />
+      <ReferralCreateDialog
+        open={referring}
+        onOpenChange={setReferring}
+        defaultStudentId={student.id}
+        defaultStudentName={`${student.firstName} ${student.lastName}`.trim()}
+        onSubmit={actions.refer}
+      />
     </div>
   );
 }

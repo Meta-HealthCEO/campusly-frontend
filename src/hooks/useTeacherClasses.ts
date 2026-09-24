@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse, resolveId } from '@/lib/api-helpers';
+import { shouldLoadTeacherClasses } from '@/lib/teacher-classes';
 import type { Student, SchoolClass } from '@/types';
 
 export interface SubjectTaught {
@@ -75,12 +76,12 @@ export interface RegenerateCredentialsResult {
 }
 
 /**
- * The teacher's full teaching load (classes, subjects, students).
- * `enabled` (default true) defers the fetch — pass false for a page where
- * this is only needed once some other UI opens (a dialog, a tab), so it
- * isn't loaded on every visit whether or not it's used.
+ * A teacher's classes, subjects and students, from their teaching load.
+ * @param enabled Set to false to skip the fetch — for hooks embedded in a
+ * dialog or other content that isn't always shown (e.g. the referral
+ * dialog), so mounting the component doesn't fetch until it's actually open.
  */
-export function useTeacherClasses(enabled: boolean = true) {
+export function useTeacherClasses(enabled = true) {
   const [entries, setEntries] = useState<TeacherClassEntry[]>([]);
   const [loading, setLoading] = useState(enabled);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -94,9 +95,9 @@ export function useTeacherClasses(enabled: boolean = true) {
   }, []);
 
   useEffect(() => {
-    if (!enabled) {
+    if (!shouldLoadTeacherClasses(enabled)) {
       setLoading(false);
-      return undefined;
+      return;
     }
     const controller = new AbortController();
     async function fetchTeachingLoad() {

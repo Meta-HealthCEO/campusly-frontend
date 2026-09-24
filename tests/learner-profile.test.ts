@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { learnerClassLabel, learnerQuickStats, teacherLearnerProfilePath, messageSubjectFor, noParentMessage, parentLabel } from '../src/lib/learner-profile';
+import {
+  learnerClassLabel, learnerQuickStats, teacherLearnerProfilePath, messageSubjectFor, noParentMessage, parentLabel,
+  meritPointsLabel, demeritPointsLabel,
+} from '../src/lib/learner-profile';
 import type { LearnerProfileData } from '../src/types/student-360';
 
 function profile(overrides: Partial<LearnerProfileData> = {}): LearnerProfileData {
@@ -68,5 +71,14 @@ describe('messaging a parent from the profile', () => {
 
   it('says what to do when no parent is linked', () => {
     expect(noParentMessage('Lebo')).toBe("No parent is linked to Lebo yet. The school office links parents to learners; ask them to add one.");
+  });
+});
+
+describe('merit/demerit point badges (Recent Activity card)', () => {
+  it('labels totals as points, so they read distinctly from the behaviour timeline\'s entry counts', () => {
+    expect(meritPointsLabel(7)).toBe('7 merit points');
+    expect(meritPointsLabel(1)).toBe('1 merit point');
+    expect(demeritPointsLabel(3)).toBe('3 demerit points');
+    expect(demeritPointsLabel(1)).toBe('1 demerit point');
   });
 });
