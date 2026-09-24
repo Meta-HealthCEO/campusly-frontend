@@ -17,9 +17,10 @@ interface Props {
   onUndo: (entry: BehaviourFeedEntry) => void;
 }
 
-// How long the "Confirm undo" state stays up before reverting to "Undo", so
-// a stray second tap minutes later can't undo something by accident.
-const CONFIRM_TIMEOUT_MS = 4000;
+// How long the "Confirm undo" state stays up before reverting to "Undo": long
+// enough to read, short enough that a stray tap minutes later can't undo
+// something by accident.
+const CONFIRM_TIMEOUT_MS = 8000;
 
 /** One entry's Undo button: a tap reveals a confirm step before it actually undoes. */
 function UndoButton({ entry, onUndo }: { entry: BehaviourFeedEntry; onUndo: (entry: BehaviourFeedEntry) => void }) {

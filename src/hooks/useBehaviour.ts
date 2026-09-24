@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { extractErrorMessage, unwrapResponse } from '@/lib/api-helpers';
-import type { BehaviourKind, Severity, TimelineItem } from '@/lib/behaviour';
+import { feedPending, type BehaviourKind, type Severity, type TimelineItem } from '@/lib/behaviour';
 
 export interface BehaviourSummary { merits: number; demerits: number; incidents: number; net: number }
 
@@ -43,6 +43,9 @@ function useFeed(path: string, params: Record<string, string> | null, failMessag
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const key = params ? JSON.stringify(params) : '';
+  // The params the shown entries belong to, so a newly picked class reads as
+  // loading (not "Nothing logged yet") before its first fetch starts.
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
 
   const load = useCallback(async (): Promise<void> => {
     if (!key) return;
@@ -56,13 +59,22 @@ function useFeed(path: string, params: Record<string, string> | null, failMessag
       console.error('Behaviour feed failed', err);
       setError(extractErrorMessage(err, failMessage));
     } finally {
+      setLoadedKey(key);
       setLoading(false);
     }
   }, [path, key, failMessage]);
 
   useEffect(() => { void load(); }, [load]);
 
-  return { entries, summary, loading, error, refresh: load };
+  // Another class's entries never stand in for this one's while it loads.
+  const current = loadedKey === key;
+  return {
+    entries: current ? entries : [],
+    summary: current ? summary : EMPTY,
+    loading: loading || feedPending(key, loadedKey),
+    error,
+    refresh: load,
+  };
 }
 
 /** A class's recent behaviour, newest first. */

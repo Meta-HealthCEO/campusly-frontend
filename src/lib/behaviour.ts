@@ -111,7 +111,15 @@ export function timelineTone(kind: TimelineItem['kind']): string {
   return kind === 'referral' ? 'bg-info-soft text-info' : KIND_TONE[kind];
 }
 
-const count = (n: number, one: string, many: string): string => (n === 0 ? `no ${many}` : n === 1 ? `1 ${one}` : `${n} ${many}`);
+/** The noun to go after a count: "1 incident", "2 incidents". */
+export const plural = (n: number, one: string, many = `${one}s`): string => (n === 1 ? one : many);
+
+const count = (n: number, one: string, many: string): string => (n === 0 ? `no ${many}` : `${n} ${plural(n, one, many)}`);
+
+/** A feed is still loading until the one asked for (its params key) has come back; no key, nothing to wait for. */
+export function feedPending(key: string, loadedKey: string | null): boolean {
+  return key !== '' && key !== loadedKey;
+}
 
 /** "2 merits · 1 demerit · no incidents" */
 export function summaryLine(s: { merits: number; demerits: number; incidents: number; net?: number }): string {

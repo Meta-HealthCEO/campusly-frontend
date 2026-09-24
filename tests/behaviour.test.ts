@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { BEHAVIOUR_CATEGORIES, entryLabel, logProblem, pointsLabel, summaryLine, timelineTone } from '../src/lib/behaviour';
+import { BEHAVIOUR_CATEGORIES, entryLabel, feedPending, logProblem, plural, pointsLabel, summaryLine, timelineTone } from '../src/lib/behaviour';
 
 describe('behaviour wording', () => {
   it('shows points signed, as the server stores them', () => {
@@ -39,5 +39,25 @@ describe('the profile behaviour card', () => {
   it('colours a referral apart from behaviour', () => {
     expect(timelineTone('merit')).toBe('bg-success-soft text-success');
     expect(timelineTone('referral')).toBe('bg-info-soft text-info');
+  });
+});
+
+describe('the class behaviour tallies', () => {
+  it('uses the singular for one and the plural otherwise', () => {
+    expect(plural(1, 'incident')).toBe('incident');
+    expect(plural(0, 'incident')).toBe('incidents');
+    expect(plural(2, 'merit')).toBe('merits');
+  });
+});
+
+describe('feedPending', () => {
+  it('is pending until the feed for the picked class has loaded', () => {
+    expect(feedPending('{"classId":"a"}', null)).toBe(true);
+    expect(feedPending('{"classId":"b"}', '{"classId":"a"}')).toBe(true);
+    expect(feedPending('{"classId":"a"}', '{"classId":"a"}')).toBe(false);
+  });
+
+  it('is not pending when there is nothing to load', () => {
+    expect(feedPending('', null)).toBe(false);
   });
 });

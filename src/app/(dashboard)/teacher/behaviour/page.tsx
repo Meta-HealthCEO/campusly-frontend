@@ -13,13 +13,14 @@ import { useModule } from '@/hooks/useModule';
 import { useBehaviourActions, useClassBehaviour, type LogBehaviourInput } from '@/hooks/useBehaviour';
 import { resolveId } from '@/lib/api-helpers';
 import { getStudentDisplayName } from '@/lib/student-helpers';
+import { plural } from '@/lib/behaviour';
 import { ROUTES } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 import type { PopulatedId } from '@/types';
 
 /** One behaviour log for the teacher's classes: log in a few taps, see what's been noted. */
 export default function BehaviourPage() {
-  const { entries: classEntries } = useTeacherClasses();
+  const { entries: classEntries, loading: classesLoading } = useTeacherClasses();
   const { isModuleEnabled } = useModule();
   const classes = useMemo(() => {
     const seen = new Map<string, { id: string; name: string; learners: Array<{ id: string; name: string }> }>();
@@ -41,6 +42,11 @@ export default function BehaviourPage() {
   const feed = useClassBehaviour(classId);
   const actions = useBehaviourActions();
   const [logging, setLogging] = useState(false);
+  // Until the class list and that class's feed are in, show loading — not an
+  // empty log with zero counts.
+  const feedLoading = classesLoading || feed.loading;
+  const firstLoad = feedLoading && feed.entries.length === 0;
+  const { summary } = feed;
 
   const logIt = async (input: LogBehaviourInput): Promise<void> => {
     if (await actions.log(input)) {
@@ -64,16 +70,18 @@ export default function BehaviourPage() {
             {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
           </SelectContent>
         </Select>
-        <p className="text-sm text-muted-foreground" aria-live="polite">
-          <span className="font-mono tabular-nums text-success">{feed.summary.merits}</span> merits ·{' '}
-          <span className="font-mono tabular-nums text-attention">{feed.summary.demerits}</span> demerits ·{' '}
-          <span className="font-mono tabular-nums text-destructive">{feed.summary.incidents}</span> incidents lately
-        </p>
+        {firstLoad ? null : (
+          <p className="text-sm text-muted-foreground" aria-live="polite">
+            <span className="font-mono tabular-nums text-success">{summary.merits}</span> {plural(summary.merits, 'merit')} ·{' '}
+            <span className="font-mono tabular-nums text-attention">{summary.demerits}</span> {plural(summary.demerits, 'demerit')} ·{' '}
+            <span className="font-mono tabular-nums text-destructive">{summary.incidents}</span> {plural(summary.incidents, 'incident')} lately
+          </p>
+        )}
       </div>
 
       <BehaviourFeed
         entries={feed.entries}
-        loading={feed.loading}
+        loading={feedLoading}
         error={feed.error}
         onUndo={(e) => void actions.undo(e.id).then((ok) => { if (ok) void feed.refresh(); })}
       />
