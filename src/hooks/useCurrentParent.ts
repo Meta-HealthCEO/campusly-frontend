@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { studentFromParentRecord } from '@/lib/parent-children';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
@@ -18,10 +19,6 @@ interface CurrentParentResult {
   parent: ParentRecord | null;
   children: Student[];
   loading: boolean;
-}
-
-function normalizeStudent(raw: Student & { _id?: string }): Student {
-  return { ...raw, id: raw._id ?? raw.id };
 }
 
 export function useCurrentParent(): CurrentParentResult {
@@ -48,7 +45,7 @@ export function useCurrentParent(): CurrentParentResult {
         setParent(me);
 
         // childrenIds is populated with Student records by the backend
-        const kids = (me.childrenIds ?? []).map(normalizeStudent);
+        const kids = (me.childrenIds ?? []).map((c) => studentFromParentRecord(c as Parameters<typeof studentFromParentRecord>[0]));
         setChildren(kids);
       } catch {
         console.error('Failed to resolve current parent');

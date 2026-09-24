@@ -1,5 +1,6 @@
 'use client';
 
+import { childClassLine } from '@/lib/parent-children';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -79,7 +80,7 @@ export default function ParentDashboard() {
                     </div>
                     <div>
                       <CardTitle className="text-base">{cd.firstName} {cd.lastName}</CardTitle>
-                      <CardDescription>{cd.gradeName} - {cd.className}</CardDescription>
+                      <CardDescription>{childClassLine(cd.gradeName, cd.className)}</CardDescription>
                     </div>
                   </div>
                   <Badge variant="secondary">{cd.admissionNumber}</Badge>
