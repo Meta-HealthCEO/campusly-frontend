@@ -62,10 +62,10 @@ export const ADMIN_NAV: NavItem[] = [
   },
   { label: 'Wallet', href: ROUTES.ADMIN_WALLET, icon: Wallet, module: 'wallet' },
   { label: 'Tuck Shop', href: ROUTES.ADMIN_TUCKSHOP, icon: ShoppingBag, module: 'tuckshop' },
-  { label: 'Academics', href: ROUTES.ADMIN_ACADEMICS, icon: BookOpen },
-  { label: 'Timetable Builder', href: ROUTES.ADMIN_TIMETABLE_BUILDER, icon: CalendarCog },
-  { label: 'Attendance', href: ROUTES.ADMIN_ATTENDANCE, icon: ClipboardList },
-  { label: 'Substitutes', href: ROUTES.ADMIN_SUBSTITUTES, icon: UserCheck },
+  { label: 'Academics', href: ROUTES.ADMIN_ACADEMICS, icon: BookOpen, module: 'academic' },
+  { label: 'Timetable Builder', href: ROUTES.ADMIN_TIMETABLE_BUILDER, icon: CalendarCog, module: 'academic' },
+  { label: 'Attendance', href: ROUTES.ADMIN_ATTENDANCE, icon: ClipboardList, module: 'attendance' },
+  { label: 'Substitutes', href: ROUTES.ADMIN_SUBSTITUTES, icon: UserCheck, module: 'attendance' },
   { label: 'Events', href: ROUTES.ADMIN_EVENTS, icon: CalendarDays, module: 'event' },
   { label: 'Transport', href: ROUTES.ADMIN_TRANSPORT, icon: Bus, module: 'transport' },
   {
@@ -76,15 +76,15 @@ export const ADMIN_NAV: NavItem[] = [
       { label: 'Delivery Log', href: ROUTES.ADMIN_COMM_LOG, icon: FileText },
     ],
   },
-  { label: 'Lost & Found', href: ROUTES.ADMIN_LOST_FOUND, icon: PackageSearch },
+  { label: 'Lost & Found', href: ROUTES.ADMIN_LOST_FOUND, icon: PackageSearch, module: 'lost_found' },
   { label: 'Library', href: ROUTES.ADMIN_LIBRARY, icon: BookMarked, module: 'library' },
-  { label: 'After Care', href: ROUTES.ADMIN_AFTERCARE, icon: Clock },
+  { label: 'After Care', href: ROUTES.ADMIN_AFTERCARE, icon: Clock, module: 'aftercare' },
   { label: 'Announcements', href: ROUTES.ADMIN_ANNOUNCEMENTS, icon: Megaphone },
   { label: 'School News', href: ROUTES.ADMIN_SCHOOL_NEWS, icon: Newspaper },
-  { label: 'Fundraising', href: ROUTES.ADMIN_FUNDRAISING, icon: Heart },
-  { label: 'Learning', href: ROUTES.ADMIN_LEARNING, icon: BookMarked },
-  { label: 'Data Migration', href: ROUTES.ADMIN_MIGRATION, icon: Upload },
-  { label: 'Uniform Shop', href: ROUTES.ADMIN_UNIFORM, icon: Shirt },
+  { label: 'Fundraising', href: ROUTES.ADMIN_FUNDRAISING, icon: Heart, module: 'fundraising' },
+  { label: 'Learning', href: ROUTES.ADMIN_LEARNING, icon: BookMarked, module: 'learning' },
+  { label: 'Data Migration', href: ROUTES.ADMIN_MIGRATION, icon: Upload, module: 'migration' },
+  { label: 'Uniform Shop', href: ROUTES.ADMIN_UNIFORM, icon: Shirt, module: 'uniform' },
   {
     label: 'Sport', href: ROUTES.ADMIN_SPORT, icon: Trophy, module: 'sport',
     children: [
@@ -95,7 +95,7 @@ export const ADMIN_NAV: NavItem[] = [
     ],
   },
   {
-    label: 'Achiever', href: ROUTES.ADMIN_ACHIEVER, icon: Award,
+    label: 'Achiever', href: ROUTES.ADMIN_ACHIEVER, icon: Award, module: 'achiever',
     children: [
       { label: 'Overview', href: ROUTES.ADMIN_ACHIEVER, icon: Award },
       { label: 'Houses', href: ROUTES.ADMIN_ACHIEVER_HOUSES, icon: Trophy },
@@ -128,14 +128,14 @@ export const ADMIN_NAV: NavItem[] = [
   // ─── Permission-gated (Special Roles) ──────────────────────────────
   { label: 'Principal Dashboard', href: ROUTES.ADMIN_PRINCIPAL, icon: Crown, permission: 'isSchoolPrincipal' },
   { label: 'Financial Management', href: ROUTES.ADMIN_BURSAR, icon: Wallet, permission: 'isBursar' },
-  { label: 'Visitor Management', href: ROUTES.ADMIN_RECEPTION, icon: DoorOpen, permission: 'isReceptionist' },
+  { label: 'Visitor Management', href: ROUTES.ADMIN_RECEPTION, icon: DoorOpen, permission: 'isReceptionist', module: 'visitor_management' },
   {
     label: 'Settings', href: ROUTES.ADMIN_SETTINGS, icon: Settings,
     children: [
       { label: 'General', href: ROUTES.ADMIN_SETTINGS, icon: Settings },
       { label: 'Payments', href: ROUTES.ADMIN_PAYMENT_SETTINGS, icon: CreditCard },
-      { label: 'Messaging', href: ROUTES.ADMIN_COMM_CONFIG, icon: MessageSquare },
-      { label: 'Templates', href: ROUTES.ADMIN_COMM_TEMPLATES, icon: FileText },
+      { label: 'Messaging', href: ROUTES.ADMIN_COMM_CONFIG, icon: MessageSquare, module: 'communication' },
+      { label: 'Templates', href: ROUTES.ADMIN_COMM_TEMPLATES, icon: FileText, module: 'communication' },
       { label: 'WhatsApp', href: ROUTES.ADMIN_WHATSAPP_SETTINGS, icon: MessageSquare },
       { label: 'Permissions', href: ROUTES.ADMIN_PERMISSIONS, icon: Shield },
     ],
