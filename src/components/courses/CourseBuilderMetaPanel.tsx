@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -71,7 +72,14 @@ export function CourseBuilderMetaPanel({
           {isDirty && (
             <p className="text-xs text-muted-foreground italic">Saving...</p>
           )}
-          {course.status === 'draft' && (
+          {course.kind === 'class_unit' ? (
+            <p className="rounded-md border border-border px-3 py-2 text-xs text-muted-foreground">
+              This is a class unit. Release it to your class from its{' '}
+              <Link href={`/teacher/courses/${course.id}`} className="font-medium text-foreground underline underline-offset-2">unit page</Link>,
+              which checks every item is written first.
+            </p>
+          ) : null}
+          {course.status === 'draft' && course.kind !== 'class_unit' && (
             <Button
               className="w-full"
               onClick={onSubmitForReview}
@@ -86,7 +94,7 @@ export function CourseBuilderMetaPanel({
               Add at least one lesson before submitting.
             </p>
           )}
-          {course.status === 'published' && (
+          {course.status === 'published' && course.kind !== 'class_unit' && (
             <>
               <Button
                 className="w-full"

@@ -4,6 +4,7 @@ import {
   defaultUnitTitle,
   formatMinutes,
   generationSummary,
+  isStuckWriting,
   liveGeneration,
   moduleMinutes,
   releaseBlocker,
@@ -132,5 +133,23 @@ describe('withPolledStatus', () => {
     expect(next.modules[0].lessons.map((l) => [l.genStatus, l.genError ?? ''])).toEqual([['ready', ''], ['failed', 'timeout']]);
     expect(tree.modules[0].lessons[0].genStatus).toBe('pending');
     expect(withPolledStatus(tree, null)).toBe(tree);
+  });
+});
+
+describe('isStuckWriting', () => {
+  it('spots an item a restart left half-written, so the teacher can try it again', () => {
+    const now = new Date('2026-09-24T10:00:00Z');
+    expect(isStuckWriting({ genStatus: 'generating', updatedAt: '2026-09-24T09:49:00Z' }, now)).toBe(true);
+    expect(isStuckWriting({ genStatus: 'generating', updatedAt: '2026-09-24T09:55:00Z' }, now)).toBe(false);
+    expect(isStuckWriting({ genStatus: 'failed', updatedAt: '2026-09-24T09:00:00Z' }, now)).toBe(false);
+  });
+
+  it('takes the latest updatedAt from the progress poll', () => {
+    const tree = unit({ generation: gen({ status: 'running', total: 1 }) }, ['generating']);
+    const next = withPolledStatus(tree, {
+      outlineStatus: 'approved', generation: gen({ status: 'running', total: 1 }),
+      items: [{ id: 'l0', genStatus: 'generating', genError: '', updatedAt: '2026-09-24T09:49:00Z' }],
+    });
+    expect(next.modules[0].lessons[0].updatedAt).toBe('2026-09-24T09:49:00Z');
   });
 });

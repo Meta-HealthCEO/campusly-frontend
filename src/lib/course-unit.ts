@@ -111,7 +111,16 @@ export function liveGeneration(course: CourseTree): GenerationState | undefined 
 export interface PolledState {
   outlineStatus: OutlineStatus;
   generation: GenerationState;
-  items: Array<{ id: string; genStatus: ItemGenStatus | null; genError: string }>;
+  items: Array<{ id: string; genStatus: ItemGenStatus | null; genError: string; updatedAt?: string }>;
+}
+
+/** An item "writing" for longer than this was left behind by a restart (the server uses the same rule). */
+export const STALE_WRITING_MS = 10 * 60 * 1000;
+
+/** Whether an item has been "writing" so long it was left behind: the teacher can try it again. */
+export function isStuckWriting(item: { genStatus?: ItemGenStatus | null; updatedAt?: string }, now: Date = new Date()): boolean {
+  if (item.genStatus !== 'generating' || !item.updatedAt) return false;
+  return now.getTime() - new Date(item.updatedAt).getTime() > STALE_WRITING_MS;
 }
 
 /** The unit as the latest progress poll has it (a new tree; the original is left alone). */
@@ -126,7 +135,7 @@ export function withPolledStatus(course: CourseTree, poll: PolledState | null): 
       ...m,
       lessons: m.lessons.map((l) => {
         const polled = byId.get(l.id);
-        return polled ? { ...l, genStatus: polled.genStatus, genError: polled.genError } : l;
+        return polled ? { ...l, genStatus: polled.genStatus, genError: polled.genError, updatedAt: polled.updatedAt ?? l.updatedAt } : l;
       }),
     })),
   };

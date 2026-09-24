@@ -61,7 +61,7 @@ export default function UnitPage() {
       </Button>
 
       <UnitHeader course={course}>
-        {stage === 'outline' && hasOutline ? (
+        {stage === 'outline' && course.outlineStatus === 'drafted' ? (
           <>
             <Button variant="outline" onClick={() => setConfirmRedraft(true)} disabled={view.busy !== null} className="min-h-11 gap-1.5 sm:min-h-9">
               <RefreshCw className="h-4 w-4" aria-hidden /> Redraft
@@ -93,7 +93,7 @@ export default function UnitPage() {
           ) : null}
           {stage === 'writing' || stage === 'release' ? <UnitGenerationBanner generation={course.generation} /> : null}
           {stage === 'release' && blocker ? <p className="text-sm text-muted-foreground">{blocker}.</p> : null}
-          {stage === 'outline' && hasOutline ? (
+          {stage === 'outline' && course.outlineStatus === 'drafted' ? (
             <p className="rounded-xl border border-accent-foreground/20 bg-accent px-4 py-3 text-sm text-accent-foreground">
               Check the outline: remove anything you don&apos;t want, then approve it. Nothing is written until you do.
             </p>
@@ -126,9 +126,11 @@ export default function UnitPage() {
         </div>
         <aside className="space-y-4">
           <UnitSteps current={stage ?? 'outline'} />
-          <p className="text-xs text-muted-foreground">
-            Prefer to build it yourself? <Link href={ROUTES.TEACHER_COURSE_EDIT(courseId)} className="underline underline-offset-2">Open the course builder</Link>.
-          </p>
+          {stage !== 'writing' && stage !== 'released' ? (
+            <p className="text-xs text-muted-foreground">
+              Want to add your own items? <Link href={ROUTES.TEACHER_COURSE_EDIT(courseId)} className="underline underline-offset-2">Open the course builder</Link>, then release from here.
+            </p>
+          ) : null}
         </aside>
       </div>
 

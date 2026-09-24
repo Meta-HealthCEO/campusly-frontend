@@ -2,7 +2,7 @@
 
 import { AlertTriangle, BookOpen, CheckCircle2, ListChecks, Loader2, RotateCcw, Sigma, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ITEM_KIND_LABEL } from '@/lib/course-unit';
+import { ITEM_KIND_LABEL, isStuckWriting } from '@/lib/course-unit';
 import type { CourseLesson, ItemKind } from '@/types/courses';
 
 const KIND_ICON: Record<ItemKind, typeof BookOpen> = {
@@ -41,6 +41,8 @@ export function UnitItemRow({ item, outlineStage, onOpen, onRetry, onRemove, bus
   const kind = item.itemKind ?? 'notes';
   const Icon = KIND_ICON[kind];
   const openable = item.genStatus === 'ready';
+  // Failed, or left half-written by a restart: either way the teacher can try again.
+  const retryable = item.genStatus === 'failed' || isStuckWriting(item);
   return (
     <li className="group flex items-start gap-3 py-3">
       <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground" aria-hidden>
@@ -64,12 +66,12 @@ export function UnitItemRow({ item, outlineStage, onOpen, onRetry, onRemove, bus
         {outlineStage && item.brief ? <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{item.brief}</p> : null}
         {item.genStatus === 'failed' && item.genError ? <p className="mt-1 text-xs text-destructive">{item.genError}</p> : null}
       </div>
-      {item.genStatus === 'failed' ? (
+      {retryable ? (
         <Button size="sm" variant="outline" onClick={onRetry} disabled={busy} className="min-h-11 shrink-0 gap-1 sm:min-h-8">
           <RotateCcw className="h-3.5 w-3.5" aria-hidden /> Try again
         </Button>
       ) : null}
-      {outlineStage || item.genStatus === 'failed' ? (
+      {outlineStage || retryable ? (
         <Button size="icon-sm" variant="ghost" onClick={onRemove} disabled={busy} aria-label={`Remove ${item.title}`} className="shrink-0">
           <X className="h-4 w-4" />
         </Button>
