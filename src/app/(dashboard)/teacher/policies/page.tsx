@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { BookOpen } from 'lucide-react';
 import { useGovernancePolicies } from '@/hooks/useGovernancePolicies';
 import { PolicyList } from '@/components/governance';
+import { ROUTES } from '@/lib/routes';
 
 export default function TeacherPoliciesPage() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function TeacherPoliciesPage() {
       ) : (
         <PolicyList
           policies={policies}
-          onView={(id) => router.push(`/admin/governance/policies/${id}`)}
+          onView={(id) => router.push(`${ROUTES.TEACHER_POLICIES}/${id}`)}
         />
       )}
     </div>

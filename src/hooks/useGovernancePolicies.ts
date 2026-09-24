@@ -11,11 +11,17 @@ import type {
   PolicyFilters,
 } from '@/types';
 
+export interface PendingPolicy {
+  id: string;
+  title: string;
+}
+
 export function useGovernancePolicies() {
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [activePolicy, setActivePolicy] = useState<Policy | null>(null);
   const [acknowledgements, setAcknowledgements] = useState<PolicyAcknowledgement[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pendingAcknowledgements, setPendingAcknowledgements] = useState<PendingPolicy[] | null>(null);
 
   const fetchPolicies = useCallback(async (filters?: PolicyFilters) => {
     setLoading(true);
@@ -110,9 +116,19 @@ export function useGovernancePolicies() {
     }
   }, []);
 
+  const fetchPendingAcknowledgements = useCallback(async () => {
+    try {
+      const response = await apiClient.get('/governance/policies/pending-acknowledgements');
+      setPendingAcknowledgements(unwrapList<PendingPolicy>(response));
+    } catch (err: unknown) {
+      // Stay unknown (null): an empty list would wrongly read as "already acknowledged".
+      console.error('Failed to load policies to acknowledge', err);
+    }
+  }, []);
+
   return {
-    policies, activePolicy, acknowledgements, loading,
+    policies, activePolicy, acknowledgements, loading, pendingAcknowledgements,
     fetchPolicies, fetchPolicy, createPolicy, updatePolicy, deletePolicy,
-    acknowledgePolicy, fetchAcknowledgements,
+    acknowledgePolicy, fetchAcknowledgements, fetchPendingAcknowledgements,
   };
 }
