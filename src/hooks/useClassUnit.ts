@@ -38,6 +38,9 @@ export interface ReleaseResult {
 }
 
 /** Class units: create, outline with AI, approve, retry, preview and release. */
+export interface CopyUnitInput { classId: string; termNumber: number; title?: string }
+export type CopyUnitResult = { ok: true; id: string } | { ok: false; message: string };
+
 export function useClassUnit() {
   const createUnit = useCallback(async (input: CreateUnitInput): Promise<Course | null> => {
     try {
@@ -152,9 +155,20 @@ export function useClassUnit() {
     }
   }, []);
 
+  /** A copy of the unit for one of the teacher's classes: the new unit's id, or why it couldn't be made. */
+  const copyUnit = useCallback(async (courseId: string, input: CopyUnitInput): Promise<CopyUnitResult> => {
+    try {
+      const copy = unwrapResponse<{ id: string }>(await apiClient.post(`/courses/${courseId}/copy`, input));
+      toast.success('Unit copied. Check it, then release it to your class.');
+      return { ok: true, id: copy.id };
+    } catch (err: unknown) {
+      return { ok: false, message: extractErrorMessage(err, 'Could not copy the unit. Try again.') };
+    }
+  }, []);
+
   return {
     createUnit, draftOutline, approveOutline, retryItem, previewItem, releaseUnit,
-    saveContent, saveQuestions, rewriteItem, updateSettings, addRevision,
+    saveContent, saveQuestions, rewriteItem, updateSettings, addRevision, copyUnit,
   };
 }
 

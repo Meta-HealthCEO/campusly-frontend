@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { AlertTriangle, BarChart3, CheckCircle2, ChevronLeft, RefreshCw, Send, Sparkles } from 'lucide-react';
+import { AlertTriangle, BarChart3, CheckCircle2, ChevronLeft, Copy, RefreshCw, Send, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -16,11 +16,14 @@ import { UnitItemPreview } from '@/components/courses/unit/UnitItemPreview';
 import { ReleaseUnitDialog } from '@/components/courses/unit/ReleaseUnitDialog';
 import { UnitInsight } from '@/components/courses/unit/UnitInsight';
 import { UnitSettings } from '@/components/courses/unit/UnitSettings';
+import { CopyUnitDialog } from '@/components/courses/unit/CopyUnitDialog';
+import { useCopyUnit } from '@/hooks/useCopyUnit';
 import { useUnitInsight } from '@/hooks/useUnitInsight';
 import { useUnitView } from '@/hooks/useUnitView';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import { resolveId } from '@/lib/api-helpers';
 import { releaseBlocker } from '@/lib/course-unit';
+import { copyClassOptions } from '@/lib/unit-library';
 import { ROUTES } from '@/lib/routes';
 import type { PopulatedId } from '@/types';
 
@@ -34,6 +37,7 @@ export default function UnitPage() {
   const [releaseOpen, setReleaseOpen] = useState(false);
   const { course, stage } = view;
   const insight = useUnitInsight(courseId, stage === 'released');
+  const copier = useCopyUnit();
 
   // Catalogue courses keep the course builder.
   useEffect(() => {
@@ -48,6 +52,7 @@ export default function UnitPage() {
     }
     return [...seen.values()];
   }, [entries]);
+  const copyClasses = useMemo(() => copyClassOptions(entries), [entries]);
 
   if (view.loading) return <LoadingSpinner />;
   if (!course) {
@@ -78,6 +83,15 @@ export default function UnitPage() {
         {stage === 'release' ? (
           <Button onClick={() => setReleaseOpen(true)} disabled={blocker !== null} title={blocker ?? undefined} className="min-h-11 gap-1.5 sm:min-h-9">
             <Send className="h-4 w-4" aria-hidden /> Release to class
+          </Button>
+        ) : null}
+        {stage === 'release' || stage === 'released' ? (
+          <Button
+            variant="outline"
+            onClick={() => copier.start({ courseId, title: course.title, gradeId: course.scope?.gradeId ?? null, gradeName: '', termNumber: course.scope?.termNumber ?? 1 })}
+            className="min-h-11 gap-1.5 sm:min-h-9"
+          >
+            <Copy className="h-4 w-4" aria-hidden /> Copy to a class
           </Button>
         ) : null}
         {stage === 'released' ? (
@@ -171,6 +185,17 @@ export default function UnitPage() {
         confirmLabel="Redraft"
         onConfirm={async () => { await view.draft(); }}
       />
+      {copier.target ? (
+        <CopyUnitDialog
+          open
+          onOpenChange={(o) => { if (!o) copier.close(); }}
+          source={copier.target}
+          classes={copyClasses}
+          copying={copier.copying}
+          error={copier.error}
+          onCopy={(input) => void copier.copy(input)}
+        />
+      ) : null}
       {releaseOpen ? (
         <ReleaseUnitDialog
           open={releaseOpen}

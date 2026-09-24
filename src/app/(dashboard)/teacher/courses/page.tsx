@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { CardGridSkeleton } from '@/components/shared/skeletons';
@@ -16,9 +16,16 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { GraduationCap, Plus, Search, Sparkles } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CourseCard } from '@/components/courses/CourseCard';
 import { CreateCourseDialog } from '@/components/courses/CreateCourseDialog';
+import { UnitLibrary } from '@/components/courses/UnitLibrary';
+import { CopyUnitDialog } from '@/components/courses/unit/CopyUnitDialog';
 import { useTeacherCourses } from '@/hooks/useTeacherCourses';
+import { useUnitLibrary } from '@/hooks/useUnitLibrary';
+import { useTeacherClasses } from '@/hooks/useTeacherClasses';
+import { copyClassOptions } from '@/lib/unit-library';
+import { useCopyUnit } from '@/hooks/useCopyUnit';
 import { ROUTES } from '@/lib/constants';
 import type { Course, CourseStatus } from '@/types';
 
@@ -42,6 +49,11 @@ export default function TeacherCoursesPage() {
   } = useTeacherCourses();
   const [createOpen, setCreateOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<Course | null>(null);
+  const [tab, setTab] = useState<'mine' | 'library'>('mine');
+  const library = useUnitLibrary(tab === 'library');
+  const { entries: classEntries } = useTeacherClasses();
+  const classes = useMemo(() => copyClassOptions(classEntries), [classEntries]);
+  const copier = useCopyUnit();
 
   const handleCreated = (course: Course) => {
     router.push(ROUTES.TEACHER_COURSE_EDIT(course.id));
@@ -67,6 +79,24 @@ export default function TeacherCoursesPage() {
         </div>
       </PageHeader>
 
+      <Tabs value={tab} onValueChange={(v: unknown) => setTab(v === 'library' ? 'library' : 'mine')}>
+        <TabsList>
+          <TabsTrigger value="mine">Your courses</TabsTrigger>
+          <TabsTrigger value="library">School library</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="library" className="space-y-3 pt-2">
+          <p className="text-sm text-muted-foreground">Units released at your school. Copy one to your own class and change what you like.</p>
+          <UnitLibrary
+            entries={library.entries}
+            loading={library.loading}
+            error={library.error}
+            onOpen={(e) => router.push(`/teacher/courses/${e.id}`)}
+            onCopy={(e) => copier.start({ courseId: e.id, title: e.title, gradeId: e.gradeId, gradeName: e.gradeName, termNumber: e.termNumber ?? 1 })}
+          />
+        </TabsContent>
+
+        <TabsContent value="mine" className="space-y-6 pt-2">
       {/* Filter bar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
@@ -133,6 +163,20 @@ export default function TeacherCoursesPage() {
           ))}
         </div>
       )}
+        </TabsContent>
+      </Tabs>
+
+      {copier.target ? (
+        <CopyUnitDialog
+          open
+          onOpenChange={(o) => { if (!o) copier.close(); }}
+          source={copier.target}
+          classes={classes}
+          copying={copier.copying}
+          error={copier.error}
+          onCopy={(input) => void copier.copy(input)}
+        />
+      ) : null}
 
       <CreateCourseDialog
         open={createOpen}
