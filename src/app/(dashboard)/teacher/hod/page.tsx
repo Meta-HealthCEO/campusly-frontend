@@ -13,8 +13,9 @@ import {
   DepartmentOverviewCards, SubjectPerformanceTable,
   ModerationQueueTable, WorkloadChart, WorkloadTable,
   ObservationTable, ObservationForm, CommonAssessmentChart,
-  CurriculumPacingList, ScheduleObservationDialog,
+  CurriculumPacingList, ScheduleObservationDialog, RequestChangesDialog,
 } from '@/components/hod';
+import { usePaperModeration } from '@/hooks/usePaperModeration';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import type { TeacherObservation, UpdateObservationPayload, CreateObservationPayload } from '@/types';
@@ -52,13 +53,28 @@ export default function HODDashboardPage() {
   }, [activeTab, departmentId, fetchPerformance, fetchPacing, fetchWorkload, fetchModeration, fetchObservations, fetchCommonAssessments]);
 
   // ─── Handlers ─────────────────────────────────────────────────────────
+  const { reviewPaper, submitting: reviewing } = usePaperModeration();
+  const [changesFor, setChangesFor] = useState<string | null>(null);
+
+  const refreshModeration = useCallback(async () => {
+    if (departmentId) await fetchModeration(departmentId);
+  }, [departmentId, fetchModeration]);
+
   const handleApprove = useCallback(async (paperId: string) => {
-    toast.info(`Approve paper ${paperId} — integrate with Teacher Workbench moderation endpoint`);
+    if (await reviewPaper(paperId, 'approved', '')) await refreshModeration();
+  }, [reviewPaper, refreshModeration]);
+
+  const handleRequestChanges = useCallback((paperId: string) => {
+    setChangesFor(paperId);
   }, []);
 
-  const handleRequestChanges = useCallback(async (paperId: string) => {
-    toast.info(`Request changes for paper ${paperId}`);
-  }, []);
+  const handleSendChanges = useCallback(async (comments: string) => {
+    if (!changesFor) return;
+    if (await reviewPaper(changesFor, 'changes_requested', comments)) {
+      setChangesFor(null);
+      await refreshModeration();
+    }
+  }, [changesFor, reviewPaper, refreshModeration]);
 
   const handleScheduleObs = useCallback(async (data: CreateObservationPayload) => {
     setSaving(true);
@@ -178,6 +194,14 @@ export default function HODDashboardPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      <RequestChangesDialog
+        key={changesFor ?? 'closed'}
+        open={changesFor !== null}
+        submitting={reviewing}
+        onOpenChange={(open) => { if (!open) setChangesFor(null); }}
+        onSend={handleSendChanges}
+      />
     </div>
   );
 }

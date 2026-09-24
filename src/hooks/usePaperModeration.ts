@@ -17,7 +17,7 @@ interface UsePaperModerationReturn {
     paperId: string,
     status: Extract<ModerationStatus, 'approved' | 'changes_requested'>,
     comments: string,
-  ) => Promise<void>;
+  ) => Promise<boolean>;
 }
 
 export function usePaperModeration(): UsePaperModerationReturn {
@@ -82,7 +82,7 @@ export function usePaperModeration(): UsePaperModerationReturn {
       paperId: string,
       status: Extract<ModerationStatus, 'approved' | 'changes_requested'>,
       comments: string,
-    ) => {
+    ): Promise<boolean> => {
       setSubmitting(true);
       try {
         await apiClient.post(
@@ -92,9 +92,11 @@ export function usePaperModeration(): UsePaperModerationReturn {
         const label = status === 'approved' ? 'approved' : 'changes requested';
         toast.success(`Paper ${label} successfully`);
         await fetchQueue();
+        return true;
       } catch (err: unknown) {
         const msg = extractErrorMessage(err, 'Failed to submit review');
         toast.error(msg);
+        return false;
       } finally {
         setSubmitting(false);
       }

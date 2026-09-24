@@ -8,3 +8,4 @@ export { ObservationTable } from './ObservationTable';
 export { CommonAssessmentChart } from './CommonAssessmentChart';
 export { CurriculumPacingList } from './CurriculumPacingList';
 export { ScheduleObservationDialog } from './ScheduleObservationDialog';
+export { RequestChangesDialog } from './RequestChangesDialog';
