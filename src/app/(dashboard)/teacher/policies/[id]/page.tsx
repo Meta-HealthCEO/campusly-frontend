@@ -39,7 +39,7 @@ export default function TeacherPolicyPage() {
     return <EmptyState icon={BookOpen} title="This policy isn't available" description="It may have been withdrawn or replaced." action={back} />;
   }
 
-  const acknowledged = isPolicyAcknowledged(id, pendingAcknowledgements);
+  const acknowledged = isPolicyAcknowledged(id, pendingAcknowledgements, activePolicy.status);
   return (
     <div className="space-y-6">
       <PageHeader title={activePolicy.title} description={`Version ${activePolicy.version}`}>

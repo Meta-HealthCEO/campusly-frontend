@@ -14,4 +14,10 @@ describe('isPolicyAcknowledged', () => {
   it("is unknown until the teacher's list has loaded", () => {
     expect(isPolicyAcknowledged('p1', null)).toBeNull();
   });
+
+  it('never claims an archived or draft policy was acknowledged (only active ones are tracked)', () => {
+    expect(isPolicyAcknowledged('p1', [], 'archived')).toBeNull();
+    expect(isPolicyAcknowledged('p1', [], 'draft')).toBeNull();
+    expect(isPolicyAcknowledged('p1', [], 'active')).toBe(true);
+  });
 });
