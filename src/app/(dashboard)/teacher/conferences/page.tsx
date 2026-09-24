@@ -20,7 +20,7 @@ export default function TeacherConferencesPage() {
   const userId = user?.id ?? '';
 
   const {
-    events, eventsLoading, fetchEvents,
+    events, eventsLoading, eventsError, fetchEvents,
     availability, availabilityLoading, fetchAvailability, setTeacherAvailability,
     mySchedule, myScheduleLoading, fetchMySchedule, updateBookingStatus,
   } = useConferences();
@@ -30,7 +30,7 @@ export default function TeacherConferencesPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (schoolId) fetchEvents({ schoolId, status: 'published' });
+    if (schoolId) fetchEvents({ status: 'published' });
   }, [schoolId, fetchEvents]);
 
   useEffect(() => {
@@ -112,8 +112,9 @@ export default function TeacherConferencesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Conferences" description="View upcoming conferences and set your availability" />
+      <PageHeader title="Parent meetings" description="Parent evenings: set when you are free and see who has booked." />
 
+      {eventsError ? <p className="text-sm text-destructive">{eventsError}</p> : null}
       {eventsLoading ? <LoadingSpinner /> : events.length === 0 ? (
         <EmptyState
           icon={CalendarDays}

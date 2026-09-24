@@ -66,12 +66,20 @@ export interface ConferenceTeacherAvailability {
   bookedSlots?: number;
 }
 
+/** A booked learner: names come on their user (the API's shape), or on the learner itself. */
+export interface ConferenceBookingLearner {
+  id: string;
+  userId?: { firstName?: string; lastName?: string } | null;
+  firstName?: string;
+  lastName?: string;
+}
+
 export interface ConferenceBooking {
   id: string;
   eventId: string;
   teacherId: { id: string; firstName: string; lastName: string };
   parentId: { id: string; firstName: string; lastName: string };
-  studentId: { id: string; firstName: string; lastName: string };
+  studentId: ConferenceBookingLearner;
   schoolId: string;
   slotId: string;
   slotStartTime: string;
@@ -163,7 +171,6 @@ export interface JoinWaitlistPayload {
 }
 
 export interface ConferenceEventFilters {
-  schoolId?: string;
   status?: ConferenceEventStatus;
   page?: number;
   limit?: number;

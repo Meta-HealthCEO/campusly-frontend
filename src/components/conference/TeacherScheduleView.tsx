@@ -1,5 +1,6 @@
 'use client';
 
+import { learnerName } from '@/lib/conference';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookingStatusBadge } from './BookingStatusBadge';
@@ -56,7 +57,7 @@ export function TeacherScheduleView({ bookings, onMarkStatus }: TeacherScheduleV
                   </p>
                   <p className="text-sm">
                     <span className="text-muted-foreground">Student:</span>{' '}
-                    {booking.studentId.firstName} {booking.studentId.lastName}
+                    {learnerName(booking.studentId)}
                   </p>
                   {booking.notes && (
                     <p className="text-sm text-muted-foreground line-clamp-2">

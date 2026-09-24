@@ -42,15 +42,18 @@ export function useConferences() {
   const [reportLoading, setReportLoading] = useState(false);
 
   // ─── Event CRUD ──────────────────────────────────────────────────
+  const [eventsError, setEventsError] = useState<string | null>(null);
   const fetchEvents = useCallback(async (filters?: ConferenceEventFilters) => {
     setEventsLoading(true);
     try {
       const response = await apiClient.get('/conferences/events', { params: filters });
       const list = unwrapList<ConferenceEvent>(response, 'events');
       setEvents(list);
+      setEventsError(null);
     } catch (err: unknown) {
       console.error('Failed to fetch conference events:', extractErrorMessage(err));
       setEvents([]);
+      setEventsError(extractErrorMessage(err, "Couldn't load parent meetings. Refresh to try again."));
     } finally {
       setEventsLoading(false);
     }
@@ -188,6 +191,7 @@ export function useConferences() {
   }, []);
 
   return {
+    eventsError,
     events, eventsLoading, fetchEvents,
     createEvent, updateEvent, updateEventStatus, deleteEvent,
     availability, availabilityLoading, fetchAvailability, setTeacherAvailability,

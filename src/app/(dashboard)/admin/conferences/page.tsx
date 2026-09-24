@@ -50,7 +50,7 @@ export default function AdminConferencesPage() {
   const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
-    if (schoolId) fetchEvents({ schoolId, status: statusFilter === 'all' ? undefined : statusFilter as ConferenceEventStatus });
+    if (schoolId) fetchEvents({ status: statusFilter === 'all' ? undefined : statusFilter as ConferenceEventStatus });
   }, [schoolId, statusFilter, fetchEvents]);
 
   useEffect(() => {
@@ -89,37 +89,37 @@ export default function AdminConferencesPage() {
         toast.success('Event created');
       }
       setDialogOpen(false);
-      fetchEvents({ schoolId });
+      fetchEvents();
     } catch (err: unknown) {
       toast.error('Failed to save event');
       console.error(err);
     } finally {
       setSaving(false);
     }
-  }, [editId, form, updateEvent, createEvent, schoolId, fetchEvents]);
+  }, [editId, form, updateEvent, createEvent, fetchEvents]);
 
   const handleStatusChange = useCallback(async (ev: ConferenceEvent, status: ConferenceEventStatus) => {
     try {
       await updateEventStatus(ev.id, status);
       toast.success(`Event ${status}`);
-      fetchEvents({ schoolId });
+      fetchEvents();
     } catch (err: unknown) {
       toast.error('Failed to update status');
       console.error(err);
     }
-  }, [updateEventStatus, schoolId, fetchEvents]);
+  }, [updateEventStatus, fetchEvents]);
 
   const handleDelete = useCallback(async (ev: ConferenceEvent) => {
     try {
       await deleteEvent(ev.id);
       toast.success('Event deleted');
       setSelectedEvent(null);
-      fetchEvents({ schoolId });
+      fetchEvents();
     } catch (err: unknown) {
       toast.error('Failed to delete event');
       console.error(err);
     }
-  }, [deleteEvent, schoolId, fetchEvents]);
+  }, [deleteEvent, fetchEvents]);
 
   const updateField = (key: keyof CreateConferenceEventPayload, value: unknown) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -127,7 +127,7 @@ export default function AdminConferencesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Conferences" description="Manage parent-teacher conference events">
+      <PageHeader title="Parent meetings" description="Set up parent evenings; teachers add their times and parents book.">
         <Button onClick={openCreate}><Plus className="h-4 w-4 mr-1" /> Create Event</Button>
       </PageHeader>
 

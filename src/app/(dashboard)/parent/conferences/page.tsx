@@ -28,7 +28,7 @@ export default function ParentConferencesPage() {
   const schoolId = user?.schoolId ?? '';
 
   const {
-    events, eventsLoading, fetchEvents,
+    events, eventsLoading, eventsError, fetchEvents,
     availability, availabilityLoading, fetchAvailability,
     mySchedule, myScheduleLoading, fetchMySchedule,
     createBooking, cancelBooking,
@@ -53,7 +53,7 @@ export default function ParentConferencesPage() {
   );
 
   useEffect(() => {
-    if (schoolId) fetchEvents({ schoolId, status: 'published' });
+    if (schoolId) fetchEvents({ status: 'published' });
   }, [schoolId, fetchEvents]);
 
   useEffect(() => {
@@ -242,8 +242,9 @@ export default function ParentConferencesPage() {
   // ─── Event list ────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      <PageHeader title="Conferences" description="Book slots with your child's teachers" />
+      <PageHeader title="Parent meetings" description="Book a time with your child's teachers at a parent evening." />
 
+      {eventsError ? <p className="text-sm text-destructive">{eventsError}</p> : null}
       {eventsLoading ? <LoadingSpinner /> : events.length === 0 ? (
         <EmptyState
           icon={CalendarDays}
