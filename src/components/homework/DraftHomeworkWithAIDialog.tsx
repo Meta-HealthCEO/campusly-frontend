@@ -4,11 +4,12 @@ import { useState } from 'react';
 import { Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useHomeworkAIDraft } from '@/hooks/useHomeworkAIDraft';
+import { DraftQuestionItem } from '@/components/homework/DraftQuestionItem';
+import { UpgradeModal } from '@/components/subscription/UpgradeModal';
 import {
   DRAFT_LEVEL_LABELS,
   DRAFT_TYPE_LABELS,
@@ -32,12 +33,14 @@ const COUNTS = [3, 5, 8, 10];
 
 /** Choose what to draft, let AI write it, keep the good ones. */
 export function DraftHomeworkWithAIDialog({ open, onOpenChange, scope, onAdded }: Props) {
-  const { drafting, drafts, error, draft, keep, reset } = useHomeworkAIDraft();
+  const { drafting, drafts, failure, draft, keep, reset } = useHomeworkAIDraft();
   const [type, setType] = useState<DraftQuestionType>('short_answer');
   const [count, setCount] = useState(5);
   const [level, setLevel] = useState<DraftLevel>('standard');
   const [unticked, setUnticked] = useState<Set<string>>(new Set());
   const [adding, setAdding] = useState(false);
+  const [saveNote, setSaveNote] = useState<string | null>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const chosen = drafts.filter((d: DraftQuestion) => !unticked.has(d.id));
 
@@ -45,6 +48,7 @@ export function DraftHomeworkWithAIDialog({ open, onOpenChange, scope, onAdded }
     if (!next) {
       reset();
       setUnticked(new Set());
+      setSaveNote(null);
     }
     onOpenChange(next);
   };
@@ -63,8 +67,12 @@ export function DraftHomeworkWithAIDialog({ open, onOpenChange, scope, onAdded }
     const { keptIds, failed } = await keep(chosen.map((d: DraftQuestion) => d.id));
     setAdding(false);
     if (keptIds.length > 0) onAdded(keptIds);
-    if (failed > 0) toast.warning(keptSummary(keptIds.length, failed));
-    else toast.success(keptSummary(keptIds.length, 0));
+    if (failed > 0) {
+      // Keep the dialog open with the ones that didn't save, so nothing the teacher chose is lost.
+      setSaveNote(`${keptSummary(keptIds.length, failed)} They're still below: add them again.`);
+      return;
+    }
+    toast.success(keptSummary(keptIds.length, 0));
     close(false);
   };
 
@@ -110,14 +118,7 @@ export function DraftHomeworkWithAIDialog({ open, onOpenChange, scope, onAdded }
           ) : (
             <ul className="space-y-2">
               {drafts.map((d: DraftQuestion, i: number) => (
-                <li key={d.id} className="flex items-start gap-3 rounded-lg border border-border p-3">
-                  <Checkbox checked={!unticked.has(d.id)} onCheckedChange={() => toggle(d.id)} aria-label={`Keep question ${i + 1}`} className="mt-0.5" />
-                  <div className="min-w-0 space-y-1 text-sm">
-                    <p className="font-medium">{d.questionText}</p>
-                    {d.answer ? <p className="text-muted-foreground">Answer: <span className="text-foreground">{d.answer}</span></p> : null}
-                    <p className="font-mono text-xs text-muted-foreground tabular-nums">{d.marks} mark{d.marks === 1 ? '' : 's'}</p>
-                  </div>
-                </li>
+                <DraftQuestionItem key={d.id} question={d} index={i} checked={!unticked.has(d.id)} onToggle={() => toggle(d.id)} />
               ))}
             </ul>
           )}
@@ -126,23 +127,29 @@ export function DraftHomeworkWithAIDialog({ open, onOpenChange, scope, onAdded }
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> Writing questions for this topic…
             </p>
           ) : null}
-          {error ? (
-            <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{error}</div>
+          {failure ? (
+            <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{failure.message}</div>
+          ) : null}
+          {saveNote ? (
+            <div role="alert" className="rounded-lg border border-attention/30 bg-attention-soft px-3 py-2 text-sm text-attention">{saveNote}</div>
           ) : null}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => close(false)} className="min-h-11 sm:min-h-9">Cancel</Button>
-          {drafts.length === 0 ? (
+          {drafts.length === 0 && failure?.upgrade ? (
+            <Button onClick={() => setUpgradeOpen(true)} className="min-h-11 sm:min-h-9">Start a free trial</Button>
+          ) : drafts.length === 0 && (!failure || failure.retryable) ? (
             <Button onClick={run} disabled={drafting} className="min-h-11 gap-1.5 sm:min-h-9">
-              <Sparkles className="h-4 w-4" aria-hidden /> {error ? 'Try again' : 'Draft questions'}
+              <Sparkles className="h-4 w-4" aria-hidden /> {failure ? 'Try again' : 'Draft questions'}
             </Button>
-          ) : (
+          ) : drafts.length === 0 ? null : (
             <Button onClick={() => void add()} disabled={adding || chosen.length === 0} className="min-h-11 sm:min-h-9">
               {adding ? 'Adding…' : `Add ${chosen.length} to homework`}
             </Button>
           )}
         </DialogFooter>
       </DialogContent>
+      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature="aiGeneration" />
     </Dialog>
   );
 }

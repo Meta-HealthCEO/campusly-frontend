@@ -8,6 +8,8 @@ import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { DraftHomeworkWithAIDialog } from '@/components/homework/DraftHomeworkWithAIDialog';
 import { useQuestionBankLibrary } from '@/hooks/useQuestionBankLibrary';
+import { useEntitlement } from '@/hooks/useEntitlement';
+import { UpgradeModal } from '@/components/subscription/UpgradeModal';
 import { draftBlockedReason } from '@/lib/homework-ai-draft';
 
 interface Props {
@@ -28,6 +30,9 @@ export function HomeworkExercisePicker({
   const [search, setSearch] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
   const [drafting, setDrafting] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  // Free-plan independent teachers don't have AI drafting: offer the trial instead of a dead end.
+  const canDraft = useEntitlement('aiGeneration');
   const { questions, loading } = useQuestionBankLibrary({
     subjectId,
     gradeId,
@@ -61,7 +66,7 @@ export function HomeworkExercisePicker({
         />
         <Button
           variant="outline"
-          onClick={() => setDrafting(true)}
+          onClick={() => (canDraft ? setDrafting(true) : setUpgradeOpen(true))}
           disabled={blocked !== null}
           title={blocked ?? undefined}
           className="min-h-11 gap-1.5 sm:min-h-9"
@@ -116,6 +121,7 @@ export function HomeworkExercisePicker({
           onAdded={added}
         />
       ) : null}
+      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature="aiGeneration" />
     </div>
   );
 }
