@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Camera, ClipboardList, Inbox, CheckCircle2, Loader2, AlertTriangle,
   Keyboard, Users,
@@ -19,6 +19,7 @@ import { PaperMarkingTextDialog } from '@/components/papers/PaperMarkingTextDial
 import { PaperMarkingReviewDialog } from '@/components/papers/PaperMarkingReviewDialog';
 import { usePaperMarkingRoster } from '@/hooks/usePaperMarkingRoster';
 import { useTeacherMarking } from '@/hooks/useTeacherMarking';
+import { cn } from '@/lib/utils';
 import type {
   Paper,
   RosterStudent,
@@ -27,7 +28,11 @@ import type {
   PaperAssignmentMode,
 } from '@/types/papers';
 
-interface Props { paper: Paper }
+interface Props {
+  paper: Paper;
+  /** A class to scroll to and highlight (from a marking-queue link). */
+  focusClassId?: string;
+}
 
 interface StudentTarget {
   classId: string;
@@ -40,13 +45,19 @@ interface BatchTarget {
   className: string;
 }
 
-export function PaperDetailMarkingTab({ paper }: Props) {
+export function PaperDetailMarkingTab({ paper, focusClassId }: Props) {
   const { roster, loading, refetch } = usePaperMarkingRoster(paper._id);
   const { markPaper, loading: marking } = useTeacherMarking();
   const [uploadTarget, setUploadTarget] = useState<StudentTarget | null>(null);
   const [textTarget, setTextTarget] = useState<StudentTarget | null>(null);
   const [batchTarget, setBatchTarget] = useState<BatchTarget | null>(null);
   const [reviewMarkingId, setReviewMarkingId] = useState<string | null>(null);
+
+  // Scroll to the class a link named, once its card is on screen.
+  useEffect(() => {
+    if (!focusClassId || !roster) return;
+    document.getElementById(`marking-class-${focusClassId}`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }, [focusClassId, roster]);
 
   const handleUpload = async (images: { base64: string; type: string }[]) => {
     if (!uploadTarget) return;
@@ -96,7 +107,11 @@ export function PaperDetailMarkingTab({ paper }: Props) {
   return (
     <div className="space-y-6">
       {roster.classes.map((cls) => (
-        <Card key={cls.classId}>
+        <Card
+          key={cls.classId}
+          id={`marking-class-${cls.classId}`}
+          className={cn('scroll-mt-20', cls.classId === focusClassId && 'ring-2 ring-primary/40')}
+        >
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <CardTitle className="text-base flex items-center gap-2">

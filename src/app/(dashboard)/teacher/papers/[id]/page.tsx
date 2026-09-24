@@ -1,7 +1,7 @@
 'use client';
 
 import { use, useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Download, FileText, ChevronLeft, CheckCircle, ShieldCheck } from 'lucide-react';
 import { useTeacherPapers } from '@/hooks/useTeacherPapers';
 import { usePaperModeration } from '@/hooks/usePaperModeration';
@@ -20,6 +20,7 @@ import { PaperDetailPaperTab } from '@/components/papers/PaperDetailPaperTab';
 import { PaperDetailMemoTab } from '@/components/papers/PaperDetailMemoTab';
 import { PaperDetailAssignmentsTab } from '@/components/papers/PaperDetailAssignmentsTab';
 import { PaperDetailMarkingTab } from '@/components/papers/PaperDetailMarkingTab';
+import { paperTabFromParam, type PaperTab } from '@/lib/paper-tabs';
 import type { Paper, PaperMemo, PaperStatus } from '@/types/papers';
 
 function statusVariant(
@@ -37,6 +38,18 @@ export default function PaperDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState<PaperTab>(() => paperTabFromParam(searchParams.get('tab')));
+  const focusClassId = tab === 'marking' ? searchParams.get('classId') ?? undefined : undefined;
+
+  const changeTab = (value: unknown): void => {
+    const next = paperTabFromParam(typeof value === 'string' ? value : null);
+    setTab(next);
+    const query = new URLSearchParams({ tab: next });
+    const classId = searchParams.get('classId');
+    if (next === 'marking' && classId) query.set('classId', classId);
+    router.replace(`/teacher/papers/${id}?${query.toString()}`, { scroll: false });
+  };
   const {
     getPaperById,
     getMemoByPaperId,
@@ -166,7 +179,7 @@ export default function PaperDetailPage({
         </div>
       </PageHeader>
 
-      <Tabs defaultValue="paper">
+      <Tabs value={tab} onValueChange={changeTab}>
         <TabsList>
           <TabsTrigger value="paper">Paper</TabsTrigger>
           <TabsTrigger value="memo">Memo</TabsTrigger>
@@ -194,7 +207,7 @@ export default function PaperDetailPage({
           <PaperDetailAssignmentsTab paper={paper} />
         </TabsContent>
         <TabsContent value="marking">
-          <PaperDetailMarkingTab paper={paper} />
+          <PaperDetailMarkingTab paper={paper} focusClassId={focusClassId} />
         </TabsContent>
       </Tabs>
     </div>
