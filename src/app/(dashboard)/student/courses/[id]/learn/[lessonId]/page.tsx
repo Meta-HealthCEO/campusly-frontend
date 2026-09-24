@@ -79,8 +79,15 @@ export default function LessonItemPage() {
 
   const onSubmitQuiz: QuizSubmit = useCallback(async (answers) => {
     const res = await submitQuiz(lessonId, answers);
+    if (res && 'stale' in res) {
+      // The teacher changed this check: load its current questions, or every
+      // resubmit of the old ones is refused. The quiz starts over with them.
+      const fresh = await fetchLesson(lessonId);
+      if (fresh) setContent(fresh);
+      return null;
+    }
     return res ? { attempt: res.attempt, passed: res.passed, canRetry: res.canRetry } : null;
-  }, [submitQuiz, lessonId]);
+  }, [submitQuiz, fetchLesson, lessonId]);
 
   if (content === undefined) return <LoadingSpinner />;
   if (content === null || !content.ok) {

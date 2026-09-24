@@ -64,7 +64,8 @@ export function LessonMainContent({ content, interactions, onBlockAttempt, onSub
   }
 
   if (source.kind === 'quiz') {
-    return <LessonQuizShell lessonTitle={lesson.title} questions={source.questions} maxAttempts={lesson.maxAttempts} onSubmit={onSubmitQuiz} />;
+    // Keyed by the questions, so a check reloaded with new questions starts with no stale answers.
+    return <LessonQuizShell key={source.questions.map((q) => q.id).join(',')} lessonTitle={lesson.title} questions={source.questions} maxAttempts={lesson.maxAttempts} onSubmit={onSubmitQuiz} />;
   }
 
   return (

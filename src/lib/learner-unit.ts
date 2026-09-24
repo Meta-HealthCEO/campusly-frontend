@@ -117,3 +117,17 @@ export function currentEnrolment<T extends EnrolmentLike>(enrolments: T[]): T | 
   if (pool.length === 0) return null;
   return [...pool].sort((a, b) => new Date(b.enrolledAt).getTime() - new Date(a.enrolledAt).getTime())[0];
 }
+
+/** What the server says when a learner answers a quick check the teacher has since changed. */
+const STALE_CHECK_MESSAGE = 'This check changed. Start it again.';
+
+/**
+ * The quick check was edited after the learner opened it: the server refuses
+ * these answers, and will refuse every resubmit of the same questions, so the
+ * player must load the check's current questions.
+ */
+export function isStaleCheckRefusal(err: unknown): boolean {
+  if (typeof err !== 'object' || err === null) return false;
+  const response = (err as { response?: { status?: number; data?: { error?: string; message?: string } } }).response;
+  return response?.status === 400 && (response.data?.error ?? response.data?.message) === STALE_CHECK_MESSAGE;
+}

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse, extractErrorMessage } from '@/lib/api-helpers';
+import { isStaleCheckRefusal } from '@/lib/learner-unit';
 import type {
   Enrolment,
   CourseTree,
@@ -37,6 +38,9 @@ interface QuizSubmitResponse {
   nextLessonUnlocked: boolean;
 }
 
+/** The check changed since it was opened: reload it for its current questions. */
+export const STALE_CHECK = { stale: true } as const;
+
 /**
  * Hook for the student course home + lesson player. Takes an
  * enrolmentId (which callers resolve from courseId via
@@ -54,7 +58,8 @@ interface QuizSubmitResponse {
  *   the new unlock state.
  * - `submitQuiz(lessonId, answers)` — single-shot quiz attempt.
  *   Shows a success toast on pass, an info toast on fail (with retry
- *   hint when applicable). Refetches the tree on pass.
+ *   hint when applicable). Refetches the tree on pass. Returns
+ *   STALE_CHECK when the teacher changed the check since it was opened.
  *
  * Guards against empty enrolmentId — callers may pass '' while they
  * resolve courseId → enrolmentId, so the hook no-ops on empty input.
@@ -184,7 +189,7 @@ export function useLessonPlayer(enrolmentId: string) {
     async (
       lessonId: string,
       answers: { questionId: string; answer: unknown }[],
-    ): Promise<QuizSubmitResponse | null> => {
+    ): Promise<QuizSubmitResponse | typeof STALE_CHECK | null> => {
       if (!enrolmentId || !lessonId) return null;
       try {
         const res = await apiClient.post(
@@ -203,7 +208,7 @@ export function useLessonPlayer(enrolmentId: string) {
         return result;
       } catch (err: unknown) {
         toast.error(extractErrorMessage(err, 'Failed to submit quiz.'));
-        return null;
+        return isStaleCheckRefusal(err) ? STALE_CHECK : null;
       }
     },
     [enrolmentId, fetchEnrolment],
