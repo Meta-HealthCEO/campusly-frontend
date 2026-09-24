@@ -9,9 +9,17 @@ const CHIPS: Record<PaperModerationState['status'], { status: ChipStatus; label:
   changes_requested: { status: 'overdue', label: 'Changes asked' },
 };
 
-/** The chip for a paper's moderation state; nothing for a paper never submitted. */
-export function moderationChip(m: PaperModerationState | null | undefined): { status: ChipStatus; label: string } | null {
-  return m ? CHIPS[m.status] : null;
+/**
+ * The chip for a paper's moderation state; nothing for a paper never submitted.
+ * A reviewer (not the author) sees a pending paper as awaiting their review.
+ */
+export function moderationChip(
+  m: PaperModerationState | null | undefined,
+  { isAuthor = true }: { isAuthor?: boolean } = {},
+): { status: ChipStatus; label: string } | null {
+  if (!m) return null;
+  if (m.status === 'pending' && !isAuthor) return { status: 'due', label: 'Awaiting review' };
+  return CHIPS[m.status];
 }
 
 export function filterByModeration<P extends { moderation?: PaperModerationState | null }>(papers: P[], filter: ModerationFilter): P[] {

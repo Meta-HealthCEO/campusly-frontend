@@ -22,6 +22,8 @@ interface Props {
   paper: Paper;
   memo: PaperMemo;
   onChanged: () => Promise<void>;
+  /** Reviewers (e.g. an HOD) read the memo without edit controls. */
+  readOnly?: boolean;
 }
 
 interface AnswerCardProps {
@@ -163,12 +165,12 @@ function MemoAnswerCard({
   );
 }
 
-export function PaperDetailMemoTab({ paper, memo, onChanged }: Props) {
+export function PaperDetailMemoTab({ paper, memo, onChanged, readOnly = false }: Props) {
   const { updateMemo } = useTeacherPapers(false);
   const [sections, setSections] = useState<MemoSection[]>(memo.sections);
   const [saving, setSaving] = useState(false);
 
-  const isFinalised = paper.status === 'finalised';
+  const isFinalised = paper.status === 'finalised' || readOnly;
 
   const updateAnswer = (
     sIdx: number,

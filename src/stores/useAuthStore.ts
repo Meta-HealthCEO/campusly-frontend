@@ -4,6 +4,7 @@ import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import type { User, UserRole, AuthTokens, UserPermissions, PermissionFlag } from '@/types';
 import type { Subscription, Plan, FreeAllowance } from '@/types/subscription';
+import { userFromApi } from '@/lib/user-from-api';
 
 const DEFAULT_PERMISSIONS: UserPermissions = {
   isSchoolPrincipal: false,
@@ -115,28 +116,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const response = await apiClient.get('/auth/me');
     const raw = unwrapResponse<Record<string, unknown>>(response);
     const userData = (raw.user ?? raw) as Record<string, unknown>;
-    const role = userData.role === 'school_admin' ? 'admin' : (userData.role as UserRole);
-    const user: User = {
-      id: (userData._id as string) ?? (userData.id as string),
-      email: userData.email as string,
-      firstName: userData.firstName as string,
-      lastName: userData.lastName as string,
-      role,
-      phone: (userData.phone as string) ?? '',
-      schoolId: (userData.schoolId as string) ?? '',
-      isActive: (userData.isActive as boolean) ?? true,
-      isSchoolPrincipal: userData.isSchoolPrincipal === true,
-      isHOD: userData.isHOD === true,
-      isBursar: userData.isBursar === true,
-      isCounselor: userData.isCounselor === true,
-      isReceptionist: userData.isReceptionist === true,
-      isStandaloneTeacher: userData.isStandaloneTeacher === true,
-      isStandaloneCoach: userData.isStandaloneCoach === true,
-      mustChangePassword: userData.mustChangePassword === true,
-      avatar: (userData.profileImage as string) ?? (userData.avatar as string) ?? undefined,
-      createdAt: (userData.createdAt as string) ?? '',
-      updatedAt: (userData.updatedAt as string) ?? '',
-    };
+    const user: User = userFromApi(userData);
     const perms = parsePermissions(userData);
     set({ user, permissions: perms, isAuthenticated: true });
   },

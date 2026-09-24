@@ -6,6 +6,7 @@ import { getRoleDashboardPath } from '@/lib/auth';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import type { LoginCredentials, User } from '@/types';
+import { userFromApi } from '@/lib/user-from-api';
 
 export interface RegisterPayload {
   email: string;
@@ -47,31 +48,10 @@ export function useAuth() {
     const userData = responseData.user ?? responseData;
     const accessToken = responseData.accessToken ?? responseData.access_token;
     const refreshToken = responseData.refreshToken ?? responseData.refresh_token;
-    // Normalize school_admin → admin for frontend routing
-    const role = userData.role === 'school_admin' ? 'admin' : userData.role;
-    const authUser: User = {
-      id: userData._id ?? userData.id,
-      email: userData.email,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      role,
-      phone: userData.phone ?? '',
-      schoolId: userData.schoolId ?? '',
-      isActive: userData.isActive ?? true,
-      isSchoolPrincipal: userData.isSchoolPrincipal === true,
-      isHOD: userData.isHOD === true,
-      isBursar: userData.isBursar === true,
-      isCounselor: userData.isCounselor === true,
-      isReceptionist: userData.isReceptionist === true,
-      isStandaloneTeacher: userData.isStandaloneTeacher === true,
-      isStandaloneCoach: userData.isStandaloneCoach === true,
-      avatar: userData.profileImage ?? userData.avatar ?? undefined,
-      createdAt: userData.createdAt ?? '',
-      updatedAt: userData.updatedAt ?? '',
-    };
+    const authUser: User = userFromApi(userData);
     storeLogin(authUser, { accessToken, refreshToken: refreshToken ?? '' });
     void refreshAccount();
-    router.push(getRoleDashboardPath(role));
+    router.push(getRoleDashboardPath(authUser.role));
   };
 
   const logout = async () => {
@@ -94,27 +74,7 @@ export function useAuth() {
     const userData = responseData.user ?? responseData;
     const accessToken = responseData.accessToken ?? responseData.access_token;
     const refreshToken = responseData.refreshToken ?? responseData.refresh_token;
-    const role = userData.role === 'school_admin' ? 'admin' : userData.role;
-    const authUser: User = {
-      id: userData._id ?? userData.id,
-      email: userData.email,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      role,
-      phone: userData.phone ?? '',
-      schoolId: userData.schoolId ?? '',
-      isActive: userData.isActive ?? true,
-      isSchoolPrincipal: userData.isSchoolPrincipal === true,
-      isHOD: userData.isHOD === true,
-      isBursar: userData.isBursar === true,
-      isCounselor: userData.isCounselor === true,
-      isReceptionist: userData.isReceptionist === true,
-      isStandaloneTeacher: userData.isStandaloneTeacher === true,
-      isStandaloneCoach: userData.isStandaloneCoach === true,
-      avatar: userData.profileImage ?? userData.avatar ?? undefined,
-      createdAt: userData.createdAt ?? '',
-      updatedAt: userData.updatedAt ?? '',
-    };
+    const authUser: User = userFromApi(userData);
     storeLogin(authUser, { accessToken, refreshToken: refreshToken ?? '' });
     void refreshAccount();
     router.push('/teacher/onboarding');
@@ -126,26 +86,7 @@ export function useAuth() {
     const userData = responseData.user ?? responseData;
     const accessToken = responseData.accessToken ?? responseData.access_token;
     const refreshToken = responseData.refreshToken ?? responseData.refresh_token;
-    const authUser: User = {
-      id: userData._id ?? userData.id,
-      email: userData.email,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      role: 'student',
-      phone: userData.phone ?? '',
-      schoolId: userData.schoolId ?? '',
-      isActive: userData.isActive ?? true,
-      isSchoolPrincipal: userData.isSchoolPrincipal === true,
-      isHOD: userData.isHOD === true,
-      isBursar: userData.isBursar === true,
-      isCounselor: userData.isCounselor === true,
-      isReceptionist: userData.isReceptionist === true,
-      isStandaloneTeacher: userData.isStandaloneTeacher === true,
-      isStandaloneCoach: userData.isStandaloneCoach === true,
-      avatar: userData.profileImage ?? userData.avatar ?? undefined,
-      createdAt: userData.createdAt ?? '',
-      updatedAt: userData.updatedAt ?? '',
-    };
+    const authUser: User = { ...userFromApi(userData), role: 'student' };
     storeLogin(authUser, { accessToken, refreshToken: refreshToken ?? '' });
     router.push('/student/dashboard');
   };

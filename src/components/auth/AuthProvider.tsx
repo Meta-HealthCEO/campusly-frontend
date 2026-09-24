@@ -9,6 +9,7 @@ import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import type { User } from '@/types';
 import type { Subscription, Plan, FreeAllowance } from '@/types/subscription';
+import { userFromApi } from '@/lib/user-from-api';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -29,26 +30,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       .then((response) => {
         const raw = unwrapResponse(response);
         const userData = raw.user ?? raw;
-        const user: User = {
-          id: userData._id ?? userData.id,
-          email: userData.email,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          role: userData.role === 'school_admin' ? 'admin' : userData.role,
-          phone: userData.phone ?? '',
-          schoolId: userData.schoolId ?? '',
-          isActive: userData.isActive ?? true,
-          isSchoolPrincipal: userData.isSchoolPrincipal === true,
-          isHOD: userData.isHOD === true,
-          isBursar: userData.isBursar === true,
-          isCounselor: userData.isCounselor === true,
-          isReceptionist: userData.isReceptionist === true,
-          isStandaloneTeacher: userData.isStandaloneTeacher === true,
-          isStandaloneCoach: userData.isStandaloneCoach === true,
-          avatar: userData.profileImage ?? userData.avatar ?? undefined,
-          createdAt: userData.createdAt ?? '',
-          updatedAt: userData.updatedAt ?? '',
-        };
+        const user: User = userFromApi(userData);
         const subscription = (raw.subscription as Subscription | null) ?? null;
         const plan = (raw.plan as Plan | null) ?? null;
 

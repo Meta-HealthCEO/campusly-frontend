@@ -24,6 +24,7 @@ import { PaperDetailMemoTab } from '@/components/papers/PaperDetailMemoTab';
 import { PaperDetailAssignmentsTab } from '@/components/papers/PaperDetailAssignmentsTab';
 import { PaperDetailMarkingTab } from '@/components/papers/PaperDetailMarkingTab';
 import { paperTabFromParam, type PaperTab } from '@/lib/paper-tabs';
+import { canEditPaper, isPaperAuthor } from '@/lib/paper-access';
 import type { Paper, PaperMemo, PaperStatus } from '@/types/papers';
 
 function statusVariant(
@@ -132,14 +133,20 @@ export default function PaperDetailPage({
     const result = await finalisePaper(paper._id);
     if (result) setPaper(result);
   };
+  // Only the author (or an admin/principal) changes a paper; an HOD reviewing
+  // a colleague's paper reads the paper and memo.
+  const canEdit = canEditPaper(paper.createdBy, user ? { ...user, isSchoolPrincipal: permissions.isSchoolPrincipal } : null);
   // Independent teachers have no HOD or admin to moderate, so they finalise directly.
-  const canFinaliseDirectly = !!(
+  const canFinaliseDirectly = canEdit && !!(
+    user?.role === 'admin' ||
     user?.role === 'school_admin' ||
     user?.role === 'super_admin' ||
     permissions.isSchoolPrincipal ||
     user?.isStandaloneTeacher === true
   );
-  const review = moderationChip(paper.moderation);
+  const shownTab: PaperTab = canEdit || tab === 'memo' ? tab : 'paper';
+  const isAuthor = isPaperAuthor(paper.createdBy, user?.id);
+  const review = moderationChip(paper.moderation, { isAuthor });
   const withHod = paper.moderation?.status === 'pending';
   const changesAsked = paper.moderation?.status === 'changes_requested';
 
@@ -162,7 +169,7 @@ export default function PaperDetailPage({
               <CheckCircle className="h-4 w-4 mr-1" /> Finalise
             </Button>
           )}
-          {paper.status === 'draft' && !canFinaliseDirectly && !withHod && (
+          {paper.status === 'draft' && canEdit && !canFinaliseDirectly && !withHod && (
             <Button
               size="sm"
               onClick={() => void submitForModeration(paper._id).then(() => reload())}
@@ -191,20 +198,20 @@ export default function PaperDetailPage({
 
       {changesAsked && paper.moderation?.comments ? (
         <div role="note" className="rounded-lg border border-attention/30 bg-attention-soft px-4 py-3 text-sm">
-          <p className="font-medium text-attention">Your HOD asked for changes</p>
+          <p className="font-medium text-attention">{isAuthor ? 'Your HOD asked for changes' : 'Changes asked of the author'}</p>
           <p className="mt-1 whitespace-pre-line text-foreground">{paper.moderation.comments}</p>
         </div>
       ) : null}
 
-      <Tabs value={tab} onValueChange={changeTab}>
+      <Tabs value={shownTab} onValueChange={changeTab}>
         <TabsList>
           <TabsTrigger value="paper">Paper</TabsTrigger>
           <TabsTrigger value="memo">Memo</TabsTrigger>
-          <TabsTrigger value="assignments">Assign</TabsTrigger>
-          <TabsTrigger value="marking">Marking</TabsTrigger>
+          {canEdit ? <TabsTrigger value="assignments">Assign</TabsTrigger> : null}
+          {canEdit ? <TabsTrigger value="marking">Marking</TabsTrigger> : null}
         </TabsList>
         <TabsContent value="paper">
-          <PaperDetailPaperTab paper={paper} onChanged={reload} />
+          <PaperDetailPaperTab paper={paper} onChanged={reload} readOnly={!canEdit} />
         </TabsContent>
         <TabsContent value="memo">
           {memo ? (
@@ -213,15 +220,18 @@ export default function PaperDetailPage({
               paper={paper}
               memo={memo}
               onChanged={reload}
+              readOnly={!canEdit}
             />
           ) : (
             <EmptyState
               icon={FileText}
               title="No memo yet"
-              description={paper.status === 'finalised'
-                ? 'This paper was finalised without a memo. Reopen it to add one.'
-                : "Build one from this paper's model answers, then check and edit the expected answers."}
-              action={paper.status === 'finalised' ? undefined : (
+              description={!canEdit
+                ? "The paper's author hasn't added a memo yet."
+                : paper.status === 'finalised'
+                  ? "This paper was finalised without a memo. Build one from its model answers; it's final straight away."
+                  : "Build one from this paper's model answers, then check and edit the expected answers."}
+              action={!canEdit ? undefined : (
                 <Button onClick={() => void buildMemo(paper._id).then((m) => { if (m) setMemo(m); })} className="min-h-11 sm:min-h-9">
                   Build memo from model answers
                 </Button>
@@ -229,12 +239,16 @@ export default function PaperDetailPage({
             />
           )}
         </TabsContent>
-        <TabsContent value="assignments">
-          <PaperDetailAssignmentsTab paper={paper} />
-        </TabsContent>
-        <TabsContent value="marking">
-          <PaperDetailMarkingTab paper={paper} focusClassId={focusClassId} />
-        </TabsContent>
+        {canEdit ? (
+          <TabsContent value="assignments">
+            <PaperDetailAssignmentsTab paper={paper} />
+          </TabsContent>
+        ) : null}
+        {canEdit ? (
+          <TabsContent value="marking">
+            <PaperDetailMarkingTab paper={paper} focusClassId={focusClassId} />
+          </TabsContent>
+        ) : null}
       </Tabs>
     </div>
   );

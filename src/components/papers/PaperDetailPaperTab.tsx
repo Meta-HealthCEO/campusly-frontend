@@ -17,6 +17,8 @@ import type { Paper, PaperQuestion, PopulatedPaperQuestionRef } from '@/types/pa
 interface Props {
   paper: Paper;
   onChanged: () => Promise<void>;
+  /** Reviewers (e.g. an HOD) read the paper without edit controls. */
+  readOnly?: boolean;
 }
 
 interface EditingState {
@@ -24,7 +26,7 @@ interface EditingState {
   question: PaperQuestion;
 }
 
-export function PaperDetailPaperTab({ paper, onChanged }: Props) {
+export function PaperDetailPaperTab({ paper, onChanged, readOnly = false }: Props) {
   const { regenerateQuestion, deleteQuestion } = useTeacherPapers(false);
   const { saveQuestionToBank } = usePaperBankActions();
   const [editing, setEditing] = useState<EditingState | null>(null);
@@ -92,7 +94,7 @@ export function PaperDetailPaperTab({ paper, onChanged }: Props) {
     return { inBank: false, canSave: status !== 'rejected' };
   }
 
-  const isFinalised = paper.status === 'finalised';
+  const isFinalised = paper.status === 'finalised' || readOnly;
   const subjectIdStr =
     typeof paper.subjectId === 'object' ? paper.subjectId._id : paper.subjectId;
   const gradeIdStr =

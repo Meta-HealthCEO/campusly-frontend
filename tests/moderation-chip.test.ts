@@ -8,6 +8,11 @@ describe('moderationChip', () => {
     expect(moderationChip({ status: 'changes_requested', comments: 'Q3', updatedAt: null })).toEqual({ status: 'overdue', label: 'Changes asked' });
   });
 
+  it("tells a reviewer (not the author) that a pending paper awaits review", () => {
+    expect(moderationChip({ status: 'pending', comments: null, updatedAt: null }, { isAuthor: false })).toEqual({ status: 'due', label: 'Awaiting review' });
+    expect(moderationChip({ status: 'approved', comments: null, updatedAt: null }, { isAuthor: false })?.label).toBe('Approved');
+  });
+
   it('shows nothing for a paper never sent for moderation', () => {
     expect(moderationChip(null)).toBeNull();
     expect(moderationChip(undefined)).toBeNull();

@@ -36,6 +36,8 @@ export interface User {
   isActive: boolean;
   isSchoolPrincipal?: boolean;
   isHOD?: boolean;
+  /** The department an HOD heads (and a teacher belongs to). */
+  departmentId?: string | null;
   isBursar?: boolean;
   isCounselor?: boolean;
   isReceptionist?: boolean;
