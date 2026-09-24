@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { readGradebookParams, type GradebookTab } from '@/lib/gradebook-link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,8 +25,11 @@ import { ClassStatsBar } from '@/components/grades/ClassStatsBar';
 import { AssessmentInfoCard } from '@/components/grades/AssessmentInfoCard';
 import { getSubjectName, getPaperId, TERM_OPTIONS, resolveTermScope } from '@/components/grades/grades-page-helpers';
 import { gradeColor } from '@/lib/grade-bands';
+import { marksCsv } from '@/lib/gradebook-csv';
 
 export default function TeacherGradesPage() {
+  const searchParams = useSearchParams();
+  const [linkParams] = useState(() => readGradebookParams(searchParams));
   const {
     classes, subjects, assessments, markEntries,
     selectedClass, selectedSubject, selectedAssessment, selectedTerm,
@@ -34,7 +39,8 @@ export default function TeacherGradesPage() {
     setSelectedClass, setSelectedSubject, setSelectedAssessment, setSelectedTerm,
     setSelectedStudent, handleMarkChange, saveMarks,
     createAssessment, updateAssessment, deleteAssessment, fetchStudentHistory,
-  } = useTeacherGrades();
+  } = useTeacherGrades(linkParams);
+  const [tab, setTab] = useState<GradebookTab>(linkParams.tab ?? 'overview');
   const termScope = resolveTermScope(selectedTerm);
 
   const [editOpen, setEditOpen] = useState(false);
@@ -63,25 +69,7 @@ export default function TeacherGradesPage() {
 
   function exportCSV() {
     if (!currentAssessment || markEntries.length === 0) return;
-    const rows = [
-      [`Class: ${classDisplayName}`],
-      [`Assessment: ${currentAssessment.name}`],
-      [],
-      ['Student Name', 'Admission Number', 'Mark', 'Total', 'Percentage'],
-      ...markEntries.map((e) => {
-        const pct = e.mark
-          ? Math.round((Number(e.mark) / currentAssessment.totalMarks) * 100)
-          : '';
-        return [
-          `${e.lastName} ${e.firstName}`,
-          e.admissionNumber,
-          e.mark,
-          currentAssessment.totalMarks,
-          pct !== '' ? `${pct}%` : '',
-        ];
-      }),
-    ];
-    const csv = rows.map((r) => r.join(',')).join('\n');
+    const csv = marksCsv({ classLabel: classDisplayName, assessmentName: currentAssessment.name, totalMarks: currentAssessment.totalMarks, entries: markEntries });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -238,7 +226,7 @@ export default function TeacherGradesPage() {
       </PageHeader>
 
       {selectedClass ? (
-        <Tabs defaultValue="overview">
+        <Tabs value={tab} onValueChange={(value: unknown) => setTab(value === 'capture' ? 'capture' : 'overview')}>
           <TabsList>
             <TabsTrigger value="overview">Class overview</TabsTrigger>
             <TabsTrigger value="capture">Enter marks</TabsTrigger>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import apiClient from '@/lib/api-client';
 import {
   unwrapList,
@@ -11,19 +11,25 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import {
   buildMarkEntries,
   computeClassStats,
-  mapStudentHistory,
   termViewShowing,
   validateMarkEntries,
   type ClassStats,
   type CreateAssessmentPayload,
   type MarkEntry,
   type MarkValidationError,
-  type StudentMark,
   type UpdateAssessmentPayload,
 } from '@/lib/gradebook-helpers';
+import type { GradebookParams } from '@/lib/gradebook-link';
+import { useStudentMarkHistory } from '@/hooks/useStudentMarkHistory';
 import type { SchoolClass, Assessment, Subject } from '@/types';
 
-export function useTeacherGrades() {
+/**
+ * The gradebook's data and selection. `initial` (from a link such as "View in
+ * gradebook") picks the class, subject, term and assessment once, if the
+ * teacher has them; after that the pickers behave as usual.
+ */
+export function useTeacherGrades(initial?: GradebookParams) {
+  const initialRef = useRef<GradebookParams | undefined>(initial);
   const { user } = useAuthStore();
   const schoolId = user?.schoolId ?? '';
 
@@ -34,12 +40,11 @@ export function useTeacherGrades() {
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedAssessment, setSelectedAssessment] = useState('');
-  const [selectedTerm, setSelectedTerm] = useState('year');
+  const [selectedTerm, setSelectedTerm] = useState(initial?.term ?? 'year');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  const [studentHistory, setStudentHistory] = useState<StudentMark[]>([]);
-  const [selectedStudent, setSelectedStudent] = useState<MarkEntry | null>(null);
+  const history = useStudentMarkHistory();
 
   // Load classes — auto-select the first one so the gradebook lands on
   // something useful instead of a blank "Select class" prompt.
@@ -50,7 +55,10 @@ export function useTeacherGrades() {
         const list = unwrapList<SchoolClass>(res);
         setClasses(list);
         if (list.length > 0) {
-          setSelectedClass((prev) => prev || list[0].id);
+          const wanted = initialRef.current?.classId;
+          const known = wanted !== undefined && list.some((c: SchoolClass) => c.id === wanted);
+          if (!known) initialRef.current = undefined;
+          setSelectedClass((prev) => prev || (known ? (wanted as string) : list[0].id));
         }
       } catch (err: unknown) {
         console.error('Failed to load classes', err);
@@ -79,7 +87,8 @@ export function useTeacherGrades() {
   // Reset assessment-scoped state when class changes — but keep the term
   // picker as-is so the teacher's chosen term carries across class switches.
   useEffect(() => {
-    setSelectedSubject('');
+    const linked = initialRef.current;
+    setSelectedSubject(linked?.classId && linked.classId === selectedClass ? linked.subjectId ?? '' : '');
     setSelectedAssessment('');
     setAllAssessments([]);
     setMarkEntries([]);
@@ -101,7 +110,10 @@ export function useTeacherGrades() {
         // Auto-select the most recently created assessment so a fresh publish
         // is immediately visible. Backend default sort is `-createdAt`.
         if (list.length > 0) {
-          setSelectedAssessment((prev) => prev || list[0].id);
+          const wanted = initialRef.current?.assessmentId;
+          const known = wanted !== undefined && list.some((a: Assessment) => a.id === wanted);
+          if (known) initialRef.current = undefined;
+          setSelectedAssessment((prev) => prev || (known ? (wanted as string) : list[0].id));
         }
       } catch (err: unknown) {
         console.error('Failed to load assessments', err);
@@ -286,18 +298,6 @@ export function useTeacherGrades() {
     }
   }, [selectedAssessment]);
 
-  const fetchStudentHistory = useCallback(async (studentId: string) => {
-    try {
-      const res = await apiClient.get(`/academic/marks/student/${studentId}`);
-      const raw = unwrapList<Record<string, unknown>>(res);
-      setStudentHistory(mapStudentHistory(raw));
-    } catch (err: unknown) {
-      console.error('Failed to load student history', err);
-      toast.error('Could not load student history.');
-      setStudentHistory([]);
-    }
-  }, []);
-
   return {
     classes,
     subjects,
@@ -315,19 +315,19 @@ export function useTeacherGrades() {
     classStats,
     hasValidationErrors,
     getMarkError,
-    studentHistory,
-    selectedStudent,
+    studentHistory: history.studentHistory,
+    selectedStudent: history.selectedStudent,
     setSelectedClass,
     setSelectedSubject,
     setSelectedAssessment,
     setSelectedTerm,
-    setSelectedStudent,
+    setSelectedStudent: history.setSelectedStudent,
     handleMarkChange,
     saveMarks,
     createAssessment,
     updateAssessment,
     deleteAssessment,
-    fetchStudentHistory,
+    fetchStudentHistory: history.fetchStudentHistory,
     loadMarks,
   };
 }
