@@ -10,7 +10,7 @@ import {
   CalendarCheck, CalendarCog, Crown, DoorOpen, UserPlus,
   AlertTriangle, Calculator,
   CheckSquare, Video, PlayCircle, ScrollText, ClipboardCheck,
-  User,
+  User, HeartHandshake, Repeat,
   type LucideIcon
 } from 'lucide-react';
 import type { PermissionFlag } from '@/types';
@@ -241,10 +241,10 @@ export const TEACHER_NAV: NavItem[] = [
     ],
   },
   { label: 'Timetable', href: ROUTES.TEACHER_TIMETABLE, icon: Clock },
-  { label: 'Attendance', href: ROUTES.TEACHER_ATTENDANCE, icon: ClipboardList },
+  { label: 'Attendance', href: ROUTES.TEACHER_ATTENDANCE, icon: ClipboardList, module: 'attendance' },
   { label: 'Test Papers', href: '/teacher/papers', icon: FileText, badge: 'AI' },
-  { label: 'Assignments', href: '/teacher/assignments', icon: ScrollText, badge: 'AI' },
-  { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
+  { label: 'Assignments', href: '/teacher/assignments', icon: ScrollText, badge: 'AI', module: 'homework' },
+  { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList, module: 'homework' },
   {
     label: 'Marking',
     href: ROUTES.TEACHER_WORKBENCH_MARKING_HUB,
@@ -285,9 +285,11 @@ export const TEACHER_NAV: NavItem[] = [
     href: ROUTES.TEACHER_DISCIPLINE,
     icon: Shield,
     children: [
-      { label: 'Discipline', href: ROUTES.TEACHER_DISCIPLINE, icon: Shield },
+      { label: 'Discipline', href: ROUTES.TEACHER_DISCIPLINE, icon: Shield, module: 'attendance' },
+      { label: 'Merits', href: ROUTES.TEACHER_MERITS, icon: Award, module: 'attendance' },
       { label: 'Incidents', href: ROUTES.TEACHER_INCIDENTS, icon: AlertTriangle, module: 'incident_wellbeing' },
-      { label: 'Pastoral Care', href: ROUTES.TEACHER_PASTORAL, icon: Heart, permission: 'isCounselor' },
+      { label: 'Refer to counsellor', href: ROUTES.TEACHER_REFERRAL, icon: HeartHandshake },
+      { label: 'Pastoral Care', href: ROUTES.TEACHER_PASTORAL, icon: Heart, permission: 'isCounselor', module: 'incident_wellbeing' },
     ],
   },
   {
@@ -296,11 +298,13 @@ export const TEACHER_NAV: NavItem[] = [
     icon: BarChart3,
     children: [
       { label: 'Reports', href: ROUTES.TEACHER_REPORTS, icon: BarChart3 },
-      { label: 'Report Comments', href: ROUTES.TEACHER_AI_REPORT_COMMENTS, icon: FileText, badge: 'AI' },
+      { label: 'Report Comments', href: ROUTES.TEACHER_AI_REPORT_COMMENTS, icon: FileText, badge: 'AI', module: 'ai_tools' },
     ],
   },
   { label: 'Term Planner', href: ROUTES.TEACHER_WORKBENCH_PLANNER, icon: CalendarDays, module: 'teacher_workbench' },
   { label: 'My Leave', href: ROUTES.TEACHER_LEAVE, icon: CalendarDays, module: 'staff_leave' },
+  { label: 'Substitutes', href: ROUTES.TEACHER_SUBSTITUTES, icon: Repeat, module: 'attendance' },
+  { label: 'Policies', href: ROUTES.TEACHER_POLICIES, icon: ScrollText },
   // ─── Permission-gated (Special Roles) ──────────────────────────────
   { label: 'HOD Oversight', href: ROUTES.TEACHER_HOD, icon: Users, permission: 'isHOD' },
   { label: 'Course Review', href: ROUTES.ADMIN_COURSES_REVIEW, icon: CheckSquare, permission: 'isHOD', module: 'courses' },
@@ -311,8 +315,8 @@ export const STANDALONE_TEACHER_NAV: NavItem[] = [
   { label: 'Teaching Groups', href: ROUTES.TEACHER_CLASSES, icon: Users },
   { label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen, badge: 'AI' },
   { label: 'Textbooks', href: '/teacher/curriculum/textbooks', icon: BookMarked },
-  { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList },
-  { label: 'Assignments', href: '/teacher/assignments', icon: ScrollText, badge: 'AI' },
+  { label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList, module: 'homework' },
+  { label: 'Assignments', href: '/teacher/assignments', icon: ScrollText, badge: 'AI', module: 'homework' },
   { label: 'Test Papers', href: '/teacher/papers', icon: FileText, badge: 'AI' },
   {
     label: 'Marking',

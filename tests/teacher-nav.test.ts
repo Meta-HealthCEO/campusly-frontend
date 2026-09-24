@@ -24,6 +24,31 @@ describe('teacher navigation', () => {
     expect(marking?.module).toBe('teacher_workbench');
   });
 
+  it.each([
+    ['Attendance', 'attendance'],
+    ['Homework', 'homework'],
+    ['Assignments', 'homework'],
+    ['Discipline', 'attendance'],
+    ['Merits', 'attendance'],
+    ['Incidents', 'incident_wellbeing'],
+    ['Pastoral Care', 'incident_wellbeing'],
+    ['Report Comments', 'ai_tools'],
+    ['Substitutes', 'attendance'],
+  ])('only shows %s where the school has its module (%s)', (label, module) => {
+    expect(flatten(TEACHER_NAV).find((item) => item.label === label)?.module).toBe(module);
+  });
+
+  it.each([
+    ['Merits', ROUTES.TEACHER_MERITS],
+    ['Refer to counsellor', ROUTES.TEACHER_REFERRAL],
+    ['Substitutes', ROUTES.TEACHER_SUBSTITUTES],
+    ['Policies', ROUTES.TEACHER_POLICIES],
+  ])('lets school teachers reach %s from the nav', (label, href) => {
+    const item = flatten(TEACHER_NAV).find((navItem) => navItem.label === label);
+    expect(href).toMatch(/^\/teacher\//);
+    expect(item?.href).toBe(href);
+  });
+
   it('never links an independent teacher to a page the layout would bounce them from', () => {
     const blocked = flatten(STANDALONE_TEACHER_NAV)
       .map((item) => item.href)

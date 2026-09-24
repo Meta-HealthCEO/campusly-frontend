@@ -6,7 +6,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { BookOpen } from 'lucide-react';
+import { BarChart3, BookOpen } from 'lucide-react';
+import { buttonVariants } from '@/components/ui/button';
+import { ROUTES } from '@/lib/routes';
+import { cn } from '@/lib/utils';
 import { useTeacherAttendance } from '@/hooks/useTeacherAttendance';
 import { AttendanceClassPicker } from '@/components/attendance/AttendanceClassPicker';
 import { AttendanceTodayTab } from '@/components/attendance/AttendanceTodayTab';
@@ -116,6 +119,10 @@ export default function TeacherAttendancePage() {
           dateTo={exportScope.dateTo}
           filename={exportScope.filename}
         />
+        <Link href={ROUTES.TEACHER_ATTENDANCE_REPORT} className={cn(buttonVariants({ variant: 'outline' }), 'w-full sm:w-auto')}>
+          <BarChart3 className="mr-2 h-4 w-4" />
+          Report
+        </Link>
       </PageHeader>
 
       <Tabs value={view} onValueChange={(v: unknown) => { if (isView(v as string)) setView(v as AttendanceView); }}>

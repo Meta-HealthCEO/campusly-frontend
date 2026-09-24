@@ -188,6 +188,10 @@ export const ROUTES = {
   TEACHER_LESSONS: '/teacher/lessons',
   TEACHER_LESSON_NEW: '/teacher/lessons/new',
   TEACHER_SUBSTITUTES: '/teacher/substitutes',
+  TEACHER_POLICIES: '/teacher/policies',
+  TEACHER_REFERRAL: '/teacher/referral',
+  TEACHER_MERITS: '/teacher/merits',
+  TEACHER_ATTENDANCE_REPORT: '/teacher/attendance/report',
 
   // Teacher — Virtual Classroom
   TEACHER_CLASSROOM: '/teacher/classroom',
