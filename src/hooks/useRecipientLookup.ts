@@ -1,12 +1,7 @@
 import { useState, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
-
-interface RecipientOption {
-  id: string;
-  name: string;
-  role: string;
-}
+import { recipientsFromStudent, type RecipientOption } from '@/lib/message-recipients';
 
 /**
  * Look up messaging recipients for a given student.
@@ -25,29 +20,9 @@ export function useRecipientLookup(userRole: string) {
     setLoading(true);
     try {
       if (userRole === 'teacher') {
-        // Get student's parents
+        // The learner's parents (GET /students/:id returns them as guardianIds).
         const res = await apiClient.get(`/students/${studentId}`);
-        const raw = unwrapResponse<Record<string, unknown>>(res);
-        const parentIds = (raw.parentIds ?? raw.parents ?? []) as Array<Record<string, unknown> | string>;
-        const mapped: RecipientOption[] = parentIds.map((p) => {
-          if (typeof p === 'string') {
-            return { id: p, name: 'Parent', role: 'parent' };
-          }
-          const userId = (p.userId as string) ?? (p._id as string) ?? (p.id as string) ?? '';
-          // parentIds may be populated with parent records whose userId is the User record
-          const userObj = p.userId as Record<string, unknown> | string | undefined;
-          let name = '';
-          let uid = '';
-          if (userObj && typeof userObj === 'object') {
-            uid = (userObj._id as string) ?? (userObj.id as string) ?? '';
-            name = `${(userObj.firstName as string) ?? ''} ${(userObj.lastName as string) ?? ''}`.trim();
-          } else {
-            uid = userId;
-            name = `${(p.firstName as string) ?? ''} ${(p.lastName as string) ?? ''}`.trim() || 'Parent';
-          }
-          return { id: uid, name, role: 'parent' };
-        }).filter((r) => r.id);
-        setRecipients(mapped);
+        setRecipients(recipientsFromStudent(unwrapResponse<Record<string, unknown>>(res)));
       } else {
         // Parent: get student's teachers via class
         const res = await apiClient.get(`/students/${studentId}`);
