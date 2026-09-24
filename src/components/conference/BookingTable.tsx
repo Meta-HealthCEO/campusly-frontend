@@ -1,5 +1,6 @@
 'use client';
 
+import { learnerName } from '@/lib/conference';
 import { useMemo } from 'react';
 import { DataTable } from '@/components/shared/DataTable';
 import { BookingStatusBadge } from './BookingStatusBadge';
@@ -61,10 +62,7 @@ export function BookingTable({
       {
         id: 'student',
         header: 'Student',
-        cell: ({ row }) => {
-          const s = row.original.studentId;
-          return <span className="truncate">{s.firstName} {s.lastName}</span>;
-        },
+        cell: ({ row }) => <span className="truncate">{learnerName(row.original.studentId)}</span>,
       },
       {
         accessorKey: 'status',
