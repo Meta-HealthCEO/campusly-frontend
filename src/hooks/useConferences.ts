@@ -143,7 +143,7 @@ export function useConferences() {
   }, []);
 
   const cancelBooking = useCallback(async (id: string) => {
-    await apiClient.patch(`/conferences/bookings/${id}/cancel`);
+    await apiClient.patch(`/conferences/bookings/${id}/cancel`, {});
   }, []);
 
   const updateBookingStatus = useCallback(async (id: string, status: 'completed' | 'no_show') => {
