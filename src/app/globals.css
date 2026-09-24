@@ -4,13 +4,23 @@
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant teacher (&:where([data-portal="teacher"], [data-portal="teacher"] *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-mono: var(--portal-font-mono, var(--font-geist-mono));
+  --font-heading: var(--portal-font-heading, var(--font-sans));
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-attention: var(--attention);
+  --color-attention-soft: var(--attention-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-accent-soft: var(--accent-soft);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-sidebar-label: var(--sidebar-label);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -82,6 +92,15 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --success: #047857;
+  --success-soft: #e7f8f1;
+  --attention: #b45309;
+  --attention-soft: #fdf3e1;
+  --info: #0369a1;
+  --info-soft: #e6f3fb;
+  --accent-soft: oklch(0.97 0 0);
+  --destructive-soft: #fdecef;
+  --sidebar-label: oklch(0.556 0 0);
 }
 
 .dark {
@@ -116,6 +135,91 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --success: #6ee7b7;
+  --success-soft: rgba(52, 211, 153, 0.12);
+  --attention: #fcd34d;
+  --attention-soft: rgba(251, 191, 36, 0.12);
+  --info: #7dd3fc;
+  --info-soft: rgba(56, 189, 248, 0.12);
+  --accent-soft: oklch(0.269 0 0);
+  --destructive-soft: rgba(251, 113, 133, 0.12);
+  --sidebar-label: oklch(0.708 0 0);
+}
+
+/* ─── Teacher portal: the night-back identity (look-design spec §5.1) ─── */
+[data-portal="teacher"] {
+  --background: #f5f6fb;
+  --foreground: #0d1224;
+  --card: #ffffff;
+  --card-foreground: #0d1224;
+  --popover: #ffffff;
+  --popover-foreground: #0d1224;
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+  --secondary: #eef0f6;
+  --secondary-foreground: #0d1224;
+  --muted: #eef0f6;
+  --muted-foreground: #62687f;
+  --accent: #6d28d9;
+  --accent-foreground: #ffffff;
+  --accent-soft: #f1ecfe;
+  --destructive: #be123c;
+  --destructive-soft: #fdecef;
+  --success: #047857;
+  --success-soft: #e7f8f1;
+  --attention: #b45309;
+  --attention-soft: #fdf3e1;
+  --info: #0369a1;
+  --info-soft: #e6f3fb;
+  --border: #e4e6f0;
+  --input: #e4e6f0;
+  --ring: #a78bfa;
+  --chart-1: #7c3aed;
+  --chart-2: #a78bfa;
+  --chart-3: #10b981;
+  --chart-4: #f59e0b;
+  --chart-5: #0ea5e9;
+  --radius: 0.5rem;
+  --sidebar: #0d1224;
+  --sidebar-foreground: #aeb3cc;
+  --sidebar-primary: #ffffff;
+  --sidebar-primary-foreground: #0d1224;
+  --sidebar-accent: rgba(167, 139, 250, 0.14);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(196, 181, 253, 0.1);
+  --sidebar-ring: #a78bfa;
+  --sidebar-label: #8a90ab;
+  --font-sans: var(--font-ui);
+  --portal-font-heading: var(--font-display);
+  --portal-font-mono: var(--font-numeric);
+}
+
+.dark [data-portal="teacher"] {
+  --background: #070912;
+  --foreground: #eef0fa;
+  --card: #0d1224;
+  --card-foreground: #eef0fa;
+  --popover: #0d1224;
+  --popover-foreground: #eef0fa;
+  --secondary: rgba(196, 181, 253, 0.07);
+  --secondary-foreground: #eef0fa;
+  --muted: rgba(196, 181, 253, 0.07);
+  --muted-foreground: #9aa0b8;
+  --accent: #c4b5fd;
+  --accent-foreground: #0d1224;
+  --accent-soft: rgba(167, 139, 250, 0.14);
+  --destructive: #fda4af;
+  --destructive-soft: rgba(251, 113, 133, 0.12);
+  --success: #6ee7b7;
+  --success-soft: rgba(52, 211, 153, 0.12);
+  --attention: #fcd34d;
+  --attention-soft: rgba(251, 191, 36, 0.12);
+  --info: #7dd3fc;
+  --info-soft: rgba(56, 189, 248, 0.12);
+  --border: rgba(196, 181, 253, 0.12);
+  --input: rgba(196, 181, 253, 0.16);
+  --sidebar: #05060d;
+  --sidebar-border: rgba(196, 181, 253, 0.08);
 }
 
 @layer base {
@@ -127,5 +231,8 @@
   }
   html {
     @apply font-sans;
+  }
+  [data-portal="teacher"] .font-mono {
+    font-variant-numeric: tabular-nums;
   }
 }
