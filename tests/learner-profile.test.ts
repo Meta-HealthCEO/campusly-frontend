@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { learnerQuickStats, teacherLearnerProfilePath } from '../src/lib/learner-profile';
+import { learnerClassLabel, learnerQuickStats, teacherLearnerProfilePath } from '../src/lib/learner-profile';
 import type { LearnerProfileData } from '../src/types/student-360';
 
 function profile(overrides: Partial<LearnerProfileData> = {}): LearnerProfileData {
@@ -41,5 +41,20 @@ describe('learnerQuickStats', () => {
 describe('teacherLearnerProfilePath', () => {
   it("links to the learner's profile", () => {
     expect(teacherLearnerProfilePath('abc123')).toBe('/teacher/students/abc123');
+  });
+});
+
+describe('learnerClassLabel', () => {
+  it('does not repeat the grade when the class name already includes it', () => {
+    expect(learnerClassLabel('Grade R', 'Grade R - A')).toBe('Grade R - A');
+  });
+
+  it('adds the grade when the class name is just a letter', () => {
+    expect(learnerClassLabel('Grade 1', 'A')).toBe('Grade 1 A');
+  });
+
+  it('copes with a missing grade or class', () => {
+    expect(learnerClassLabel('', 'Grade 1 - A')).toBe('Grade 1 - A');
+    expect(learnerClassLabel('Grade 1', '')).toBe('Grade 1');
   });
 });

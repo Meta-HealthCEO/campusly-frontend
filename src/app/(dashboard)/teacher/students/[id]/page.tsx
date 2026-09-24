@@ -13,6 +13,7 @@ import { AttendanceSummaryCard } from '@/components/student-360/AttendanceSummar
 import { RecentActivityCard } from '@/components/student-360/RecentActivityCard';
 import { LearnerQuickStats } from '@/components/students/LearnerQuickStats';
 import { useLearnerProfile } from '@/hooks/useLearnerProfile';
+import { learnerClassLabel } from '@/lib/learner-profile';
 import { ROUTES } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
@@ -49,7 +50,7 @@ export default function LearnerProfilePage() {
     <div className="space-y-6">
       <PageHeader
         title={`${student.firstName} ${student.lastName}`}
-        description={`${student.gradeName} ${student.className} · ${student.admissionNumber}`}
+        description={`${learnerClassLabel(student.gradeName, student.className)} · ${student.admissionNumber}`}
       >
         {back}
       </PageHeader>

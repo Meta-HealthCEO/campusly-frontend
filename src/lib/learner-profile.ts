@@ -41,3 +41,12 @@ export function learnerQuickStats(profile: LearnerProfileData): LearnerStat[] {
     },
   ];
 }
+
+/** "Grade R" + "Grade R - A" reads "Grade R - A"; "Grade 1" + "A" reads "Grade 1 A". */
+export function learnerClassLabel(gradeName: string, className: string): string {
+  const grade = gradeName.trim();
+  const cls = className.trim();
+  if (!grade) return cls;
+  if (!cls) return grade;
+  return cls.toLowerCase().startsWith(grade.toLowerCase()) ? cls : `${grade} ${cls}`;
+}
