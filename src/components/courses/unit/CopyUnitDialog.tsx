@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { TERMS, copyTitleFor, sameGradeClasses, type CopyClassOption, type CopySource } from '@/lib/unit-library';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { TERMS, copyClassChoice, copyTitleFor, sameGradeClasses, type CopyClassOption, type CopySource } from '@/lib/unit-library';
 import type { CopyUnitInput } from '@/hooks/useClassUnit';
 
 interface Props {
@@ -15,6 +16,8 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   source: CopySource;
   classes: CopyClassOption[];
+  /** The teacher's classes are still loading. */
+  classesLoading: boolean;
   copying: boolean;
   /** Why the last copy failed. */
   error: string | null;
@@ -22,15 +25,17 @@ interface Props {
 }
 
 /** Copy a unit to one of the teacher's classes of the same grade, for this term or another. */
-export function CopyUnitDialog({ open, onOpenChange, source, classes, copying, error, onCopy }: Props) {
+export function CopyUnitDialog({ open, onOpenChange, source, classes, classesLoading, copying, error, onCopy }: Props) {
   const options = sameGradeClasses(classes, source.gradeId);
-  const [classId, setClassId] = useState(options[0]?.id ?? '');
+  const [picked, setPicked] = useState('');
+  const classId = copyClassChoice(picked, options);
   const [term, setTerm] = useState(source.termNumber);
   const [title, setTitle] = useState<string | null>(null);
   const shownTitle = title ?? copyTitleFor(source.title, term, source.termNumber);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    // While copying, the dialog stays open so the result (or the reason it failed) is seen.
+    <Dialog open={open} onOpenChange={(next: boolean) => { if (!copying) onOpenChange(next); }}>
       <DialogContent className="flex max-h-[85vh] flex-col sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Copy to a class</DialogTitle>
@@ -40,17 +45,19 @@ export function CopyUnitDialog({ open, onOpenChange, source, classes, copying, e
         </DialogHeader>
 
         <div className="flex-1 space-y-4 overflow-y-auto py-2">
-          {options.length === 0 ? (
+          {classesLoading && options.length === 0 ? <LoadingSpinner /> : null}
+          {!classesLoading && options.length === 0 ? (
             <p className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
               {source.gradeName
                 ? <>This unit is for {source.gradeName}, and you don&apos;t teach a {source.gradeName} class.</>
                 : <>You don&apos;t teach a class in this unit&apos;s grade.</>}
             </p>
-          ) : (
+          ) : null}
+          {options.length > 0 ? (
             <>
               <div className="space-y-1.5">
                 <Label htmlFor="copy-class">Class</Label>
-                <Select value={classId} onValueChange={(v: unknown) => setClassId(String(v))}>
+                <Select value={classId} onValueChange={(v: unknown) => setPicked(String(v))}>
                   <SelectTrigger id="copy-class" className="w-full"><SelectValue placeholder="Pick a class" /></SelectTrigger>
                   <SelectContent>
                     {options.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
@@ -71,7 +78,7 @@ export function CopyUnitDialog({ open, onOpenChange, source, classes, copying, e
                 <Input id="copy-title" value={shownTitle} onChange={(e) => setTitle(e.target.value)} maxLength={200} />
               </div>
             </>
-          )}
+          ) : null}
           {error ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{error}</p> : null}
         </div>
 

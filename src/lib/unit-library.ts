@@ -73,3 +73,8 @@ export function copyClassOptions(entries: Array<{ class: { id?: string; name: st
   }
   return [...seen.values()];
 }
+
+/** The class a copy goes to: the teacher's pick while it's still offered, otherwise the first one. */
+export function copyClassChoice(selected: string, options: CopyClassOption[]): string {
+  return options.some((c) => c.id === selected) ? selected : options[0]?.id ?? '';
+}

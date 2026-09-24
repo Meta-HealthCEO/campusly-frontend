@@ -32,7 +32,7 @@ export default function UnitPage() {
   const router = useRouter();
   const courseId = params.id as string;
   const view = useUnitView(courseId);
-  const { entries } = useTeacherClasses();
+  const { entries, loading: classesLoading } = useTeacherClasses();
   const [confirmRedraft, setConfirmRedraft] = useState(false);
   const [releaseOpen, setReleaseOpen] = useState(false);
   const { course, stage } = view;
@@ -191,6 +191,7 @@ export default function UnitPage() {
           onOpenChange={(o) => { if (!o) copier.close(); }}
           source={copier.target}
           classes={copyClasses}
+          classesLoading={classesLoading}
           copying={copier.copying}
           error={copier.error}
           onCopy={(input) => void copier.copy(input)}

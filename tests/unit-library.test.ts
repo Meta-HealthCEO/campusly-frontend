@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { copyClassOptions, copyTitleFor, libraryByline, libraryMeta, sameGradeClasses, type LibraryEntry } from '../src/lib/unit-library';
+import { copyClassChoice, copyClassOptions, copyTitleFor, libraryByline, libraryMeta, sameGradeClasses, type LibraryEntry } from '../src/lib/unit-library';
 
 const entry: LibraryEntry = {
   id: 'c1', title: 'Numbers to 99 · Grade 1 Mathematics · Term 3', gradeId: 'g1', gradeName: 'Grade 1', subjectName: 'Mathematics',
@@ -39,5 +39,16 @@ describe('copyClassOptions', () => {
       { class: { id: 'r', name: 'Grade R - A', gradeId: { id: 'gR', name: 'Grade R' } } },
     ];
     expect(copyClassOptions(entries)).toEqual([{ id: 'a', name: 'Grade 1 - A', gradeId: 'g1' }, { id: 'r', name: 'Grade R - A', gradeId: 'gR' }]);
+  });
+});
+
+describe('copyClassChoice', () => {
+  const options = [{ id: 'a', name: 'Grade 1 - A', gradeId: 'g1' }, { id: 'b', name: 'Grade 1 - B', gradeId: 'g1' }];
+
+  it("keeps the teacher's pick, and picks the first class once the classes arrive", () => {
+    expect(copyClassChoice('b', options)).toBe('b');
+    expect(copyClassChoice('', options)).toBe('a');
+    expect(copyClassChoice('gone', options)).toBe('a');
+    expect(copyClassChoice('', [])).toBe('');
   });
 });

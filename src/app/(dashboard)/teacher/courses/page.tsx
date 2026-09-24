@@ -51,7 +51,7 @@ export default function TeacherCoursesPage() {
   const [pendingDelete, setPendingDelete] = useState<Course | null>(null);
   const [tab, setTab] = useState<'mine' | 'library'>('mine');
   const library = useUnitLibrary(tab === 'library');
-  const { entries: classEntries } = useTeacherClasses();
+  const { entries: classEntries, loading: classesLoading } = useTeacherClasses();
   const classes = useMemo(() => copyClassOptions(classEntries), [classEntries]);
   const copier = useCopyUnit();
 
@@ -172,6 +172,7 @@ export default function TeacherCoursesPage() {
           onOpenChange={(o) => { if (!o) copier.close(); }}
           source={copier.target}
           classes={classes}
+          classesLoading={classesLoading}
           copying={copier.copying}
           error={copier.error}
           onCopy={(input) => void copier.copy(input)}
