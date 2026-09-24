@@ -15,6 +15,7 @@ import {
   type TodayPeriod,
 } from '@/lib/teacher-today';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useSchoolStore } from '@/stores/useSchoolStore';
 import type { MarkingItem } from '@/types';
 
 const TICK_MS = 60_000;
@@ -50,6 +51,10 @@ function settled<T>(result: PromiseSettledResult<T>): T | null {
  */
 export function useTeacherToday(): TeacherToday {
   const isStandalone = useAuthStore((s) => s.user?.isStandaloneTeacher === true);
+  // False until the school loads (call it and let a 403 hide the row, as before).
+  const workbenchOff = useSchoolStore((s) =>
+    s.school ? !s.school.modulesEnabled.includes('teacher_workbench') : false,
+  );
   const [loading, setLoading] = useState(true);
   const [rawPeriods, setRawPeriods] = useState<TodayPeriod[]>([]);
   const [markingItems, setMarkingItems] = useState<MarkingItem[] | null>(null);
@@ -65,7 +70,9 @@ export function useTeacherToday(): TeacherToday {
     try {
       const [periodsRes, markingRes, lessonsRes, unreadRes] = await Promise.allSettled([
         apiClient.get('/attendance/register-status', { params: { date: toISODate(today) } }),
-        apiClient.get('/teacher-workbench/marking-hub/pending'),
+        workbenchOff
+          ? Promise.reject(new Error('teacher_workbench is off'))
+          : apiClient.get('/teacher-workbench/marking-hub/pending'),
         apiClient.get('/lessons', {
           params: { dateFrom: dayStart.toISOString(), dateTo: dayEnd.toISOString(), limit: 50 },
         }),
@@ -89,7 +96,7 @@ export function useTeacherToday(): TeacherToday {
     } finally {
       setLoading(false);
     }
-  }, [isStandalone]);
+  }, [isStandalone, workbenchOff]);
 
   useEffect(() => { void fetchAll(); }, [fetchAll]);
 
