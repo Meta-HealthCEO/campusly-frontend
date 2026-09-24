@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Trash2, RotateCcw } from 'lucide-react';
+import { periodConfigForm } from '@/lib/timetable-config';
 import type { TimetableConfig, PeriodTime, BreakSlot, PeriodsPerDay } from '@/types';
 
 const DAYS: { key: keyof PeriodsPerDay; label: string }[] = [
@@ -23,22 +24,22 @@ interface PeriodConfigStepProps {
 }
 
 export function PeriodConfigStep({ config, onSave, onApplyDefaults }: PeriodConfigStepProps) {
-  const [periodsPerDay, setPeriodsPerDay] = useState<PeriodsPerDay>(
-    config?.periodsPerDay ?? { monday: 7, tuesday: 7, wednesday: 7, thursday: 7, friday: 7 },
-  );
-  const [periodTimes, setPeriodTimes] = useState<PeriodTime[]>(config?.periodTimes ?? []);
-  const [breakSlots, setBreakSlots] = useState<BreakSlot[]>(config?.breakSlots ?? []);
-  const [academicYear, setAcademicYear] = useState(config?.academicYear ?? new Date().getFullYear());
-  const [term, setTerm] = useState(config?.term ?? 1);
+  const initial = periodConfigForm(config, new Date().getFullYear());
+  const [periodsPerDay, setPeriodsPerDay] = useState<PeriodsPerDay>(initial.periodsPerDay);
+  const [periodTimes, setPeriodTimes] = useState<PeriodTime[]>(initial.periodTimes);
+  const [breakSlots, setBreakSlots] = useState<BreakSlot[]>(initial.breakSlots);
+  const [academicYear, setAcademicYear] = useState(initial.academicYear);
+  const [term, setTerm] = useState(initial.term);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (config) {
-      setPeriodsPerDay(config.periodsPerDay);
-      setPeriodTimes(config.periodTimes);
-      setBreakSlots(config.breakSlots);
-      setAcademicYear(config.academicYear);
-      setTerm(config.term);
+      const form = periodConfigForm(config, new Date().getFullYear());
+      setPeriodsPerDay(form.periodsPerDay);
+      setPeriodTimes(form.periodTimes);
+      setBreakSlots(form.breakSlots);
+      setAcademicYear(form.academicYear);
+      setTerm(form.term);
     }
   }, [config]);
 

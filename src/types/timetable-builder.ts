@@ -27,8 +27,9 @@ export interface TimetableConfig {
   periodsPerDay: PeriodsPerDay;
   periodTimes: PeriodTime[];
   breakSlots: BreakSlot[];
-  academicYear: number;
-  term: number;
+  // Optional on the API: a saved config may have neither.
+  academicYear?: number;
+  term?: number;
 }
 
 export interface TeacherAvailabilityEntry {
