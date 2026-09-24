@@ -25,6 +25,8 @@ export const LEGACY_TEACHER_REDIRECTS: { source: string; destination: string; pe
   { source: '/teacher/ai-tools/report-comments', destination: '/teacher/grades?tab=reports', permanent: false },
   { source: '/teacher/curriculum/assessment-structure', destination: '/teacher/grades?tab=weightings', permanent: false },
   { source: '/teacher/curriculum/assessment-structure/:id', destination: '/teacher/grades?tab=weightings', permanent: false },
+  // Phase 2B: moderation status lives on the papers list.
+  { source: '/teacher/workbench/papers/moderation', destination: '/teacher/papers?moderation=pending', permanent: false },
 ];
 
 const nextConfig: NextConfig = {

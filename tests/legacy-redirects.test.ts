@@ -31,6 +31,11 @@ describe('legacy teacher redirects', () => {
     expect(to('/teacher/curriculum/assessment-structure/:id')).toBe('/teacher/grades?tab=weightings');
   });
 
+  it('sends the old moderation page to the papers list, filtered to papers with the HOD', () => {
+    expect(LEGACY_TEACHER_REDIRECTS.find((r) => r.source === '/teacher/workbench/papers/moderation')?.destination)
+      .toBe('/teacher/papers?moderation=pending');
+  });
+
   it('is exactly what Next serves', async () => {
     expect(LEGACY_TEACHER_REDIRECTS.length).toBeGreaterThan(0);
     expect(await nextConfig.redirects?.()).toEqual(LEGACY_TEACHER_REDIRECTS);

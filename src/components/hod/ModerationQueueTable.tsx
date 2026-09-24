@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import Link from 'next/link';
 import type { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/shared/DataTable';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -36,7 +37,15 @@ export function ModerationQueueTable({
   busy = false,
 }: ModerationQueueTableProps) {
   const columns = useMemo<ColumnDef<ModerationItem, unknown>[]>(() => [
-    { accessorKey: 'paperTitle', header: 'Paper' },
+    {
+      accessorKey: 'paperTitle',
+      header: 'Paper',
+      cell: ({ row }) => (
+        <Link href={`/teacher/papers/${row.original.paperId}`} className="font-medium text-accent-foreground hover:underline">
+          {row.original.paperTitle}
+        </Link>
+      ),
+    },
     { accessorKey: 'subjectName', header: 'Subject' },
     { accessorKey: 'teacherName', header: 'Teacher' },
     {
