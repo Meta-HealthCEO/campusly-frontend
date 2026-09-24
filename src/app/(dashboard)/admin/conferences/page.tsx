@@ -35,7 +35,7 @@ export default function AdminConferencesPage() {
   const schoolId = user?.schoolId ?? '';
 
   const {
-    events, eventsLoading, fetchEvents,
+    events, eventsLoading, eventsError, fetchEvents,
     createEvent, updateEvent, updateEventStatus, deleteEvent,
     bookings, bookingsLoading, fetchBookings,
     report, reportLoading, fetchReport,
@@ -145,6 +145,7 @@ export default function AdminConferencesPage() {
         </Select>
       </div>
 
+      {eventsError ? <p className="text-sm text-destructive">{eventsError}</p> : null}
       {eventsLoading ? <LoadingSpinner /> : events.length === 0 ? (
         <EmptyState icon={CalendarDays} title="No conference events" description="Create your first parent-teacher conference event." />
       ) : (

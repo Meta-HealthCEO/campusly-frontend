@@ -27,7 +27,6 @@ export * from './teacher-workbench-views';
 export * from './ai-tutor';
 export * from './payment-gateway';
 export * from './messaging';
-export * from './meetings';
 export * from './whatsapp';
 export * from './ai-sports';
 export * from './notice-board';
