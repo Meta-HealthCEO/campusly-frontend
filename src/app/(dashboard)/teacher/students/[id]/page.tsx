@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { ArrowLeft, UserRound } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -12,6 +13,10 @@ import { AcademicSummaryCard } from '@/components/student-360/AcademicSummaryCar
 import { AttendanceSummaryCard } from '@/components/student-360/AttendanceSummaryCard';
 import { RecentActivityCard } from '@/components/student-360/RecentActivityCard';
 import { LearnerQuickStats } from '@/components/students/LearnerQuickStats';
+import { LearnerActions } from '@/components/students/LearnerActions';
+import { MessageParentDialog } from '@/components/students/MessageParentDialog';
+import { ReferralCreateDialog } from '@/components/pastoral/ReferralCreateDialog';
+import { useLearnerActions } from '@/hooks/useLearnerActions';
 import { useLearnerProfile } from '@/hooks/useLearnerProfile';
 import { learnerClassLabel } from '@/lib/learner-profile';
 import { ROUTES } from '@/lib/routes';
@@ -21,6 +26,10 @@ export default function LearnerProfilePage() {
   const params = useParams();
   const studentId = typeof params.id === 'string' ? params.id : '';
   const { profile, loading, error, loadProfile } = useLearnerProfile();
+  const router = useRouter();
+  const actions = useLearnerActions();
+  const [messaging, setMessaging] = useState(false);
+  const [referring, setReferring] = useState(false);
 
   useEffect(() => {
     if (studentId) void loadProfile(studentId);
@@ -46,12 +55,21 @@ export default function LearnerProfilePage() {
   }
 
   const { student } = profile;
+  const parents = profile.parents ?? [];
+  const sendToParent = async (m: { recipientId: string; subject: string; message: string }): Promise<void> => {
+    const ok = await actions.messageParent({ ...m, studentId: student.id, subject: m.subject || undefined });
+    if (!ok) return;
+    setMessaging(false);
+    const to = parents.find((p) => p.userId === m.recipientId)?.name ?? 'the parent';
+    toast.success(`Message sent to ${to}`, { action: { label: 'Open Messages', onClick: () => router.push(ROUTES.TEACHER_MESSAGES) } });
+  };
   return (
     <div className="space-y-6">
       <PageHeader
         title={`${student.firstName} ${student.lastName}`}
         description={`${learnerClassLabel(student.gradeName, student.className)} · ${student.admissionNumber}`}
       >
+        <LearnerActions onMessageParent={() => { actions.clearSendError(); setMessaging(true); }} onRefer={() => setReferring(true)} />
         {back}
       </PageHeader>
       <LearnerQuickStats profile={profile} />
@@ -60,6 +78,19 @@ export default function LearnerProfilePage() {
         <AttendanceSummaryCard attendance={profile.attendance} />
       </div>
       <RecentActivityCard achievements={profile.achievements} behaviour={profile.behaviour} sports={profile.sports} />
+
+      {messaging ? (
+        <MessageParentDialog
+          open
+          onOpenChange={setMessaging}
+          firstName={student.firstName}
+          parents={parents}
+          sending={actions.sending}
+          error={actions.sendError}
+          onSend={(m) => void sendToParent(m)}
+        />
+      ) : null}
+      <ReferralCreateDialog open={referring} onOpenChange={setReferring} defaultStudentId={student.id} onSubmit={actions.refer} />
     </div>
   );
 }

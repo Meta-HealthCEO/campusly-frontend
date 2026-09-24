@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { learnerClassLabel, learnerQuickStats, teacherLearnerProfilePath } from '../src/lib/learner-profile';
+import { learnerClassLabel, learnerQuickStats, teacherLearnerProfilePath, messageSubjectFor, noParentMessage, parentLabel } from '../src/lib/learner-profile';
 import type { LearnerProfileData } from '../src/types/student-360';
 
 function profile(overrides: Partial<LearnerProfileData> = {}): LearnerProfileData {
@@ -56,5 +56,17 @@ describe('learnerClassLabel', () => {
   it('copes with a missing grade or class', () => {
     expect(learnerClassLabel('', 'Grade 1 - A')).toBe('Grade 1 - A');
     expect(learnerClassLabel('Grade 1', '')).toBe('Grade 1');
+  });
+});
+
+describe('messaging a parent from the profile', () => {
+  it('names each parent with how they are related, and suggests a subject', () => {
+    expect(parentLabel({ userId: 'u1', name: 'Bongiwe Mthembu', relationship: 'mother' })).toBe('Bongiwe Mthembu (mother)');
+    expect(parentLabel({ userId: 'u2', name: 'Sam Dube', relationship: 'guardian' })).toBe('Sam Dube (guardian)');
+    expect(messageSubjectFor('Lebo')).toBe('About Lebo');
+  });
+
+  it('says what to do when no parent is linked', () => {
+    expect(noParentMessage('Lebo')).toBe("No parent is linked to Lebo yet. The school office links parents to learners; ask them to add one.");
   });
 });

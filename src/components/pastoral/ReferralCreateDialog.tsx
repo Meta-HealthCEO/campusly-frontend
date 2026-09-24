@@ -13,7 +13,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
-import { resolveId } from '@/lib/api-helpers';
+import { extractErrorMessage, resolveId } from '@/lib/api-helpers';
 import type { CreateReferralPayload, ReferralReason, ReferralUrgency, Student } from '@/types';
 
 const schema = z.object({
@@ -30,6 +30,8 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: CreateReferralPayload) => Promise<void>;
+  /** Opened from a learner's profile: that learner is already chosen. */
+  defaultStudentId?: string;
 }
 
 const REASONS: { value: ReferralReason; label: string }[] = [
@@ -61,7 +63,7 @@ function studentLabel(student: Student): string {
   return `${firstName} ${lastName}`.trim() || student.admissionNumber || 'Unnamed student';
 }
 
-export function ReferralCreateDialog({ open, onOpenChange, onSubmit }: Props) {
+export function ReferralCreateDialog({ open, onOpenChange, onSubmit, defaultStudentId }: Props) {
   const { students, loading: studentsLoading } = useTeacherClasses();
   const {
     register, handleSubmit, setValue, reset, watch,
@@ -74,8 +76,8 @@ export function ReferralCreateDialog({ open, onOpenChange, onSubmit }: Props) {
     .filter((student) => student.id), [students]);
 
   useEffect(() => {
-    if (open) reset();
-  }, [open, reset]);
+    if (open) reset(defaultStudentId ? { studentId: defaultStudentId } : undefined);
+  }, [open, reset, defaultStudentId]);
 
   const handleFormSubmit = async (data: FormData) => {
     try {
@@ -83,8 +85,7 @@ export function ReferralCreateDialog({ open, onOpenChange, onSubmit }: Props) {
       toast.success('Referral submitted successfully');
       onOpenChange(false);
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to submit referral';
-      toast.error(msg);
+      toast.error(extractErrorMessage(err, 'Failed to submit referral'));
     }
   };
 

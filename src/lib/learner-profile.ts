@@ -1,4 +1,4 @@
-import type { LearnerProfileData } from '@/types/student-360';
+import type { FullStudent360Parent, LearnerProfileData } from '@/types/student-360';
 
 export type LearnerStatKey = 'average' | 'attendance' | 'homework' | 'merits';
 
@@ -49,4 +49,17 @@ export function learnerClassLabel(gradeName: string, className: string): string 
   if (!grade) return cls;
   if (!cls) return grade;
   return cls.toLowerCase().startsWith(grade.toLowerCase()) ? cls : `${grade} ${cls}`;
+}
+
+/** "Bongiwe Mthembu (mother)" */
+export function parentLabel(parent: FullStudent360Parent): string {
+  return `${parent.name} (${parent.relationship})`;
+}
+
+export function messageSubjectFor(firstName: string): string {
+  return `About ${firstName}`;
+}
+
+export function noParentMessage(firstName: string): string {
+  return `No parent is linked to ${firstName} yet. The school office links parents to learners; ask them to add one.`;
 }

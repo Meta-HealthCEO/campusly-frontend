@@ -87,6 +87,13 @@ export interface FullStudent360Behaviour {
   recentIncidents: FullStudent360Incident[];
 }
 
+/** A learner's parent, by name, for messaging them through Campusly (no contact details). */
+export interface FullStudent360Parent {
+  userId: string;
+  name: string;
+  relationship: string;
+}
+
 export interface FullStudent360Data {
   student: FullStudent360Student;
   academic: FullStudent360Academic;
@@ -98,6 +105,7 @@ export interface FullStudent360Data {
   library: FullStudent360Library;
   sports: FullStudent360Sports;
   behaviour: FullStudent360Behaviour;
+  parents?: FullStudent360Parent[];
 }
 
 /** What a teacher sees about one of their learners: the Student 360 without fees or wallet. */
