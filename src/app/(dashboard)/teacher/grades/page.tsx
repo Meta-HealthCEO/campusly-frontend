@@ -160,7 +160,7 @@ export default function TeacherGradesPage() {
                         </td>
                         <td className="py-3">
                           {percentage !== null && !isNaN(percentage) ? (
-                            <span className={`text-sm font-semibold ${percentage >= 80 ? 'text-primary' : percentage >= 50 ? 'text-blue-600' : 'text-destructive'}`}>
+                            <span className={`text-sm font-semibold ${percentage >= 80 ? 'text-primary' : percentage >= 50 ? 'text-info' : 'text-destructive'}`}>
                               {percentage}%
                             </span>
                           ) : (
@@ -177,7 +177,7 @@ export default function TeacherGradesPage() {
           {markEntries.length > 0 && (
             <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
               {isDirty && (
-                <div className="mr-auto flex items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-700 dark:text-amber-400">
+                <div className="mr-auto flex items-center gap-2 rounded-md border border-attention/40 bg-attention-soft px-3 py-1.5 text-xs text-attention">
                   <AlertCircle className="h-3.5 w-3.5" />
                   You have unsaved changes
                 </div>

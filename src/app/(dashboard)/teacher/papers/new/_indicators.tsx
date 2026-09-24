@@ -38,7 +38,7 @@ export function StepIndicator({ current }: { current: number }) {
 }
 
 export function ContextBadge({ status, error }: { status: CurriculumContextStatus; error: string | null }) {
-  if (status === 'ready') return <Badge variant="outline" className="gap-1 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="h-3.5 w-3.5" />Ready</Badge>;
+  if (status === 'ready') return <Badge variant="outline" className="gap-1 border-success/30 text-success"><CheckCircle2 className="h-3.5 w-3.5" />Ready</Badge>;
   if (status === 'preparing') return <Badge variant="outline" className="gap-1"><Spin className="h-3.5 w-3.5 animate-spin" />Preparing context</Badge>;
   if (status === 'error') return <span className="text-sm text-destructive">{error ?? 'Missing subject, grade, or term context.'}</span>;
   return null;

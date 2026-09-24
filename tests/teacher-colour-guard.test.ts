@@ -35,6 +35,17 @@ const MIGRATED = [
   'src/components/attendance/AttendanceBulkMarkMenu.tsx',
   'src/components/timetable/timetable-helpers.ts',
   'src/components/timetable/PeriodConfigDialog.tsx',
+  'src/components/grades/TermSummaryHelpers.tsx',
+  'src/components/grades/StudentTermDetailDialog.tsx',
+  'src/components/grades/StudentHistoryDialog.tsx',
+  'src/app/(dashboard)/teacher/grades/page.tsx',
+  'src/components/papers/paper-wizard-helpers.ts',
+  'src/app/(dashboard)/teacher/papers/new/_indicators.tsx',
+  'src/components/reports/ReportCardTable.tsx',
+  'src/components/workbench/planner/WeightingSidebar.tsx',
+  'src/app/(dashboard)/teacher/workbench/planner/page.tsx',
+  'src/components/classes/StudentAddCredentialsResults.tsx',
+  'src/components/grades/TermSummarySubjectChip.tsx',
 ];
 
 const RAW = /\b(?:bg|text|border|ring|from|to|via|fill|stroke|outline|divide|decoration)-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)-\d{2,3}\b/g;

@@ -29,7 +29,7 @@ export function StudentAddCredentialsResults({ batch, deliveryMode }: StudentAdd
         </div>
       </div>
 
-      <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-50 p-2 text-xs text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+      <div className="flex items-start gap-2 rounded-md border border-attention/30 bg-attention-soft p-2 text-xs text-attention">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
         <span>
           Once you close this dialog the temporary password cannot be retrieved. Copy or print it now, then share with the student or parent.

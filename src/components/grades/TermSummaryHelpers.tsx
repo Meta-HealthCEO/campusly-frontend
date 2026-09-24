@@ -2,6 +2,7 @@
 
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { gradeColor } from '@/lib/grade-bands';
 import type {
   TermSummaryAssessment,
   TermSummarySubjectColumn,
@@ -12,12 +13,7 @@ export interface SubjectGroup {
   assessments: TermSummaryAssessment[];
 }
 
-export function gradeColor(pct: number | null): string {
-  if (pct === null) return 'text-muted-foreground';
-  if (pct >= 80) return 'text-emerald-600 dark:text-emerald-400';
-  if (pct >= 50) return 'text-foreground';
-  return 'text-destructive';
-}
+export { gradeColor } from '@/lib/grade-bands';
 
 export function deltaIcon(value: number | null, base: number | null) {
   if (value === null || base === null) return null;
@@ -26,7 +22,7 @@ export function deltaIcon(value: number | null, base: number | null) {
     return <Minus className="h-3 w-3 text-muted-foreground" aria-label="On par with class" />;
   }
   if (diff > 0) {
-    return <TrendingUp className="h-3 w-3 text-emerald-600" aria-label={`+${diff.toFixed(1)} vs class`} />;
+    return <TrendingUp className="h-3 w-3 text-success" aria-label={`+${diff.toFixed(1)} vs class`} />;
   }
   return <TrendingDown className="h-3 w-3 text-destructive" aria-label={`${diff.toFixed(1)} vs class`} />;
 }

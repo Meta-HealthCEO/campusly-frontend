@@ -26,9 +26,9 @@ function progressBarWidth(actual: number, required: number): number {
 
 function totalTone(total: number, required: number): string {
   const target = required || 100;
-  if (Math.round(total) === Math.round(target)) return 'border-emerald-500 text-emerald-700';
+  if (Math.round(total) === Math.round(target)) return 'border-success/30 text-success';
   if (total > target) return 'border-destructive text-destructive';
-  return 'border-amber-500 text-amber-700';
+  return 'border-attention/30 text-attention';
 }
 
 export function WeightingSidebar({ weightings }: Props) {
@@ -67,7 +67,7 @@ export function WeightingSidebar({ weightings }: Props) {
                       weighting.totalWeight > requiredTotal
                         ? 'bg-destructive'
                         : totalPct >= 100
-                          ? 'bg-emerald-500'
+                          ? 'bg-success'
                           : 'bg-primary',
                     )}
                     style={{ width: `${totalPct}%` }}

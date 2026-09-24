@@ -142,7 +142,7 @@ export default function TermPlannerPage() {
         description="Plan assessment dates, weightings, and curriculum coverage for the term."
       >
         {hasPendingChanges && (
-          <Badge variant="outline" className="border-amber-500 text-amber-700">
+          <Badge variant="outline" className="border-attention/30 text-attention">
             Unsaved changes
           </Badge>
         )}

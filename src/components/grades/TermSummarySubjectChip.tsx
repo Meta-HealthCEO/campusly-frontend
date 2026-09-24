@@ -16,7 +16,7 @@ interface SubjectChipProps {
 //   • Body (clickable) → opens the per-term trend drilldown.
 //   • Cog button (top-right) → opens the weightings config.
 // When weightings aren't configured, the body's average is replaced with
-// a destructive "Set weightings" prompt — there is no flat-average
+// an attention "Set weightings" prompt — there is no flat-average
 // fallback by design (school policy must be set first).
 export function TermSummarySubjectChip({
   subject, onOpenTrend, onConfigureWeightings,
@@ -25,7 +25,7 @@ export function TermSummarySubjectChip({
   return (
     <div className={cn(
       'group relative rounded-lg border bg-muted/10 transition-colors',
-      missing ? 'border-destructive/40' : 'hover:border-primary/50 hover:bg-muted/30',
+      missing ? 'border-attention/40' : 'hover:border-primary/50 hover:bg-muted/30',
     )}>
       <button
         type="button"
@@ -35,7 +35,7 @@ export function TermSummarySubjectChip({
       >
         <p className="text-sm font-medium truncate">{subject.subjectName}</p>
         {missing ? (
-          <div className="mt-1 flex items-center gap-1 text-destructive">
+          <div className="mt-1 flex items-center gap-1 text-attention">
             <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
             <span className="text-xs font-medium">Set weightings</span>
           </div>
@@ -57,7 +57,7 @@ export function TermSummarySubjectChip({
         className={cn(
           'absolute top-1.5 right-1.5 inline-flex h-7 w-7 items-center justify-center rounded-md hover:bg-muted',
           missing
-            ? 'text-destructive opacity-100'
+            ? 'text-attention opacity-100'
             : 'text-muted-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100',
         )}
         title="Configure weightings"

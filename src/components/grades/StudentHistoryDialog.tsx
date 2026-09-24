@@ -89,7 +89,7 @@ export function StudentHistoryDialog({
                               m.percentage >= 80
                                 ? 'font-semibold text-primary'
                                 : m.percentage >= 50
-                                ? 'font-semibold text-blue-600'
+                                ? 'font-semibold text-info'
                                 : 'font-semibold text-destructive'
                             }
                           >

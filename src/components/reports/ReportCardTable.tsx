@@ -4,6 +4,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import type { ReportCardMark, ReportCardSubjectSummary } from '@/hooks/useReports';
+import { gradeColor } from '@/lib/grade-bands';
 
 interface ReportCardTableProps {
   marks: ReportCardMark[];
@@ -52,13 +53,6 @@ function groupBySubject(
   return Array.from(map.values()).sort((a, b) => a.subjectName.localeCompare(b.subjectName));
 }
 
-function getPercentageColor(pct: number): string {
-  if (pct >= 80) return 'text-emerald-600 dark:text-emerald-400';
-  if (pct >= 60) return 'text-blue-600 dark:text-blue-400';
-  if (pct >= 50) return 'text-yellow-600 dark:text-yellow-400';
-  return 'text-destructive dark:text-destructive';
-}
-
 export function ReportCardTable({ marks, term, academicYear, subjectSummaries }: ReportCardTableProps) {
   const groups = groupBySubject(marks, subjectSummaries);
 
@@ -78,7 +72,7 @@ export function ReportCardTable({ marks, term, academicYear, subjectSummaries }:
             <h4 className="text-sm font-semibold">
               {group.subjectName} ({group.subjectCode})
             </h4>
-            <span className={`text-sm font-medium ${getPercentageColor(group.average)}`}>
+            <span className={`text-sm font-medium ${gradeColor(group.average)}`}>
               Avg: {group.average}%
             </span>
           </div>
@@ -101,7 +95,7 @@ export function ReportCardTable({ marks, term, academicYear, subjectSummaries }:
                     <TableCell className="text-right">
                       {m.mark}/{m.total ?? m.assessmentId?.totalMarks ?? '-'}
                     </TableCell>
-                    <TableCell className={`text-right font-medium ${getPercentageColor(m.percentage)}`}>
+                    <TableCell className={`text-right font-medium ${gradeColor(m.percentage)}`}>
                       {m.percentage}%
                     </TableCell>
                     <TableCell className="text-muted-foreground">{m.comment ?? '-'}</TableCell>

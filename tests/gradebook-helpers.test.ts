@@ -8,6 +8,7 @@ import {
   subjectChipOpens,
   type MarkEntry,
 } from '../src/lib/gradebook-helpers';
+import { gradeColor } from '../src/lib/grade-bands';
 
 function entry(studentId: string, mark: string): MarkEntry {
   return {
@@ -149,5 +150,21 @@ describe('subjectChipOpens', () => {
 
   it('opens the trend once weightings are set', () => {
     expect(subjectChipOpens(false)).toBe('trend');
+  });
+});
+
+describe('gradeColor', () => {
+  it.each([
+    [null, 'text-muted-foreground'],
+    [85, 'text-success'],
+    [70, 'text-success'],
+    [69, 'text-foreground'],
+    [50, 'text-foreground'],
+    [49, 'text-attention'],
+    [40, 'text-attention'],
+    [39, 'text-destructive'],
+    [0, 'text-destructive'],
+  ] as const)('%s%% reads as %s', (pct, token) => {
+    expect(gradeColor(pct)).toBe(token);
   });
 });

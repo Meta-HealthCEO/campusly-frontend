@@ -25,8 +25,8 @@ export const LENGTH_PRESETS = [
 ];
 
 export const DIFFICULTY_OPTIONS: Array<{ value: PaperDifficulty; label: string; dot: string }> = [
-  { value: 'easy', label: 'Foundation', dot: 'bg-emerald-500' },
-  { value: 'medium', label: 'Standard', dot: 'bg-amber-500' },
+  { value: 'easy', label: 'Foundation', dot: 'bg-success' },
+  { value: 'medium', label: 'Standard', dot: 'bg-attention' },
   { value: 'hard', label: 'Advanced', dot: 'bg-foreground' },
 ];
 

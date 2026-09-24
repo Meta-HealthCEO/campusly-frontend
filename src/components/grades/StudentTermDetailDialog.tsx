@@ -26,7 +26,7 @@ interface Props {
 
 function gradeColor(pct: number | null): string {
   if (pct === null) return 'text-muted-foreground';
-  if (pct >= 80) return 'text-emerald-600 dark:text-emerald-400';
+  if (pct >= 80) return 'text-success';
   if (pct >= 50) return 'text-foreground';
   return 'text-destructive';
 }
