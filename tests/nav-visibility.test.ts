@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { Home, Users, Shield, MessageSquare, BookOpen, Clock } from 'lucide-react';
 import type { NavItem } from '../src/lib/constants';
-import { phoneNavLayout, visibleNavItems } from '../src/lib/nav-visibility';
+import { TEACHER_NAV } from '../src/lib/constants';
+import { phoneNavLayout, phoneSectionLayout, visibleNavItems } from '../src/lib/nav-visibility';
 
 const nav: NavItem[] = [
   { label: 'Dashboard', href: '/teacher', icon: Home },
@@ -62,5 +63,33 @@ describe('phoneNavLayout', () => {
     const { sheet } = phoneNavLayout(nav);
     expect(sheet.map((i) => i.href)).not.toContain('/teacher/classes');
     expect(new Set(sheet.map((i) => i.href)).size).toBe(sheet.length);
+  });
+});
+
+describe('phoneSectionLayout', () => {
+  it('gives teachers Today, Teach, Assess, Class and More tabs', () => {
+    const tabs = phoneSectionLayout(TEACHER_NAV);
+    expect(tabs?.map((t) => t.label)).toEqual(['Today', 'Teach', 'Assess', 'Class', 'More']);
+  });
+
+  it('links Today directly and opens the others as sheets', () => {
+    const tabs = phoneSectionLayout(TEACHER_NAV)!;
+    expect(tabs[0].href).toBe('/teacher');
+    expect(tabs[1].href).toBeUndefined();
+    expect(tabs[2].items.map((i) => i.label)).toContain('Marking');
+  });
+
+  it('puts Talk and Me under More', () => {
+    const more = phoneSectionLayout(TEACHER_NAV)!.at(-1)!;
+    expect(more.items.map((i) => i.label)).toEqual(expect.arrayContaining(['Messages', 'Policies']));
+  });
+
+  it('drops a section with nothing visible', () => {
+    const tabs = phoneSectionLayout(TEACHER_NAV.filter((i) => i.section !== 'Class'))!;
+    expect(tabs.map((t) => t.label)).toEqual(['Today', 'Teach', 'Assess', 'More']);
+  });
+
+  it('leaves navs without sections to the old layout', () => {
+    expect(phoneSectionLayout(nav)).toBeNull();
   });
 });
