@@ -1,4 +1,5 @@
 import type { TeachingScope } from '@/types';
+import { inviteLink } from './join-code';
 
 /** What /auth/onboarding-status says about a standalone teacher's setup. */
 export interface OnboardingStatus {
@@ -33,9 +34,9 @@ export function scopeFromPicks(picks: readonly GradePick[]): TeachingScope {
   };
 }
 
-/** A message a teacher can paste into WhatsApp or email so learners can join. */
+/** A message a teacher can paste into WhatsApp or email: the link opens sign-up with the code filled in. */
 export function joinMessage(code: string, origin: string): string {
-  return `Join my class on Campusly: go to ${origin}/register-student and enter the code ${code}.`;
+  return `Join my class on Campusly: ${inviteLink(origin, code)} (class code ${code}).`;
 }
 
 /** The CAPS framework's id: the one named CAPS, else the default one. */

@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Copy, RefreshCw, Users } from 'lucide-react';
+import { Copy, Link2, RefreshCw, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useClassroomCode } from '@/hooks/useClassroomCode';
+import { inviteLink } from '@/lib/join-code';
 
 interface ClassroomCodeCardProps {
   classId: string;
@@ -52,6 +53,17 @@ export function ClassroomCodeCard({
     try {
       await navigator.clipboard.writeText(joinCode);
       toast.success(`${isTeachingGroup ? 'Group' : 'Classroom'} code copied`);
+    } catch {
+      toast.error('Failed to copy to clipboard');
+    }
+  };
+
+  const handleCopyInvite = async () => {
+    const joinCode = await fetchCode();
+    if (!joinCode) return;
+    try {
+      await navigator.clipboard.writeText(inviteLink(window.location.origin, joinCode));
+      toast.success('Invite link copied');
     } catch {
       toast.error('Failed to copy to clipboard');
     }
@@ -111,6 +123,12 @@ export function ClassroomCodeCard({
                 Retry
               </Button>
             )}
+            {displayCode ? (
+              <Button variant="outline" size="sm" onClick={handleCopyInvite} disabled={loadingFetch}>
+                <Link2 className="mr-2 h-4 w-4" aria-hidden />
+                Copy invite link
+              </Button>
+            ) : null}
             <Button
               variant="outline"
               size="sm"

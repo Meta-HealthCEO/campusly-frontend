@@ -21,6 +21,8 @@ import { useClassesPageState } from '@/hooks/useClassesPageState';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { TeacherClassEntry } from '@/hooks/useTeacherClasses';
 import { classesPageCopy, entryToEdit } from '@/lib/teacher-classes';
+import { inviteLink } from '@/lib/join-code';
+import { toast } from 'sonner';
 
 export default function TeacherClassesPage() {
   const user = useAuthStore((state) => state.user);
@@ -137,6 +139,11 @@ export default function TeacherClassesPage() {
           onAddStudents={openAddStudent}
           onEdit={setEditEntry}
           onDelete={(entry) => setDeleteTarget(resolveId(entry.class))}
+          onCopyInvite={isStandaloneTeacher ? (entry: TeacherClassEntry) => {
+            void navigator.clipboard.writeText(inviteLink(window.location.origin, entry.class.classroomCode ?? ''))
+              .then(() => toast.success(`Invite link for ${entry.class.name} copied`))
+              .catch(() => toast.error('Failed to copy to clipboard'));
+          } : undefined}
         />
       )}
 

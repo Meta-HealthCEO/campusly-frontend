@@ -79,6 +79,11 @@ describe('buildMarkEntries', () => {
     },
   ];
 
+  it('includes a learner who joined the class as a second group', () => {
+    const rows = buildMarkEntries([...students, { id: 'st-3', classId: 'class-2', subjectClassIds: ['class-1'], admissionNumber: 'A003', user: { firstName: 'Thabo', lastName: 'M' } }], {}, 'class-1');
+    expect(rows.map((r) => r.studentId)).toEqual(['st-1', 'st-3']);
+  });
+
   it('keeps only students in the selected class', () => {
     const rows = buildMarkEntries(students, {}, 'class-1');
     expect(rows).toHaveLength(1);

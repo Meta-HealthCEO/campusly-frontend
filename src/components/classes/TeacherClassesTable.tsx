@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Home, Pencil, Trash2, UserPlus } from 'lucide-react';
+import { Home, Link2, Pencil, Trash2, UserPlus } from 'lucide-react';
 import { resolveId } from '@/lib/api-helpers';
 import type { TeacherClassEntry } from '@/hooks/useTeacherClasses';
 
@@ -14,6 +14,8 @@ interface TeacherClassesTableProps {
   onAddStudents: (entry: TeacherClassEntry) => void;
   onEdit: (entry: TeacherClassEntry) => void;
   onDelete: (entry: TeacherClassEntry) => void;
+  /** Standalone teachers: copy the group's invite link. */
+  onCopyInvite?: (entry: TeacherClassEntry) => void;
 }
 
 function readGradeName(entry: TeacherClassEntry): string {
@@ -31,6 +33,7 @@ export function TeacherClassesTable({
   onAddStudents,
   onEdit,
   onDelete,
+  onCopyInvite,
 }: TeacherClassesTableProps) {
   const router = useRouter();
   const isTeachingGroup = mode === 'teachingGroup';
@@ -108,6 +111,11 @@ export function TeacherClassesTable({
         const entry = row.original;
         return (
           <div className="flex items-center justify-end gap-0.5">
+            {onCopyInvite && entry.class.classroomCode ? (
+              <Button variant="ghost" size="icon-sm" aria-label="Copy invite link" title="Copy invite link" onClick={stop(() => onCopyInvite(entry))}>
+                <Link2 className="h-4 w-4" />
+              </Button>
+            ) : null}
             <Button
               variant="ghost"
               size="icon-sm"

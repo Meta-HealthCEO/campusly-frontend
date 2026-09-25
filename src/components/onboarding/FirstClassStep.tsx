@@ -41,7 +41,7 @@ export function FirstClassStep({ options, loading, creating, created, onCreate }
         <div>
           <h2 className="text-lg font-semibold">{created.name} is ready</h2>
           <p className="text-sm text-muted-foreground">
-            Learners join by signing up at /register-student with this code. Send them the join message.
+            Send learners the join message: its link opens sign-up with this code filled in.
           </p>
         </div>
         <ClassroomCodeCard classId={created.id} className={created.name} initialCode={created.classroomCode || undefined} />

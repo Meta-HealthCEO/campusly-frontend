@@ -20,7 +20,7 @@ export function classesPageCopy(isStandalone: boolean, schoolDescription: string
   if (!isStandalone) return { title: 'My Classes', description: schoolDescription };
   return {
     title: 'My classes',
-    description: 'Your teaching groups by grade and subject. Learners join a group with its code at /register-student; homework, lessons and marks follow the group.',
+    description: 'Your teaching groups by grade and subject. Learners join with a group\'s invite link, or its code at /register-student; homework, lessons and marks follow the group.',
   };
 }
 

@@ -17,7 +17,7 @@ describe('onboarding', () => {
   });
   it('writes a join message a teacher can paste to learners', () => {
     expect(joinMessage('K7Q2MX', 'https://campusly.co.za'))
-      .toBe('Join my class on Campusly: go to https://campusly.co.za/register-student and enter the code K7Q2MX.');
+      .toBe('Join my class on Campusly: https://campusly.co.za/register-student?code=K7Q2MX (class code K7Q2MX).');
   });
 });
 

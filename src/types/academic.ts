@@ -24,6 +24,8 @@ export interface SchoolClass {
   teacher: Teacher;
   capacity: number;
   studentCount: number;
+  /** The group's join code (teaching-load and class reads carry it). */
+  classroomCode?: string;
 }
 
 export interface Subject {

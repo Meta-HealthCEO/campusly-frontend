@@ -121,10 +121,10 @@ export function buildMarkEntries(
   selectedClassId: string,
 ): MarkEntry[] {
   const classStudents = students.filter((s) => {
-    const cid = resolveId(
-      s.classId as string | { id?: string; _id?: string } | undefined,
-    );
-    return cid === selectedClassId;
+    const cid = resolveId(s.classId as string | { id?: string; _id?: string } | undefined);
+    const others = Array.isArray(s.subjectClassIds) ? (s.subjectClassIds as unknown[]).map((id) => resolveId(id as string | { id?: string; _id?: string })) : [];
+    // A learner is in the class through their own group or a group they joined (spec §3).
+    return cid === selectedClassId || others.includes(selectedClassId);
   });
 
   return classStudents.map((s) => {
