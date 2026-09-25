@@ -1,6 +1,21 @@
 import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { extendTailwindMerge } from "tailwind-merge"
 import { format, formatDistanceToNow, parseISO } from "date-fns"
+
+/**
+ * tailwind-merge knows only Tailwind's default scales; without these keys it reads `text-caption` as a
+ * colour and drops it beside `text-muted-foreground`. The Blueprint theme (globals.css `@theme`, spec §2.3–2.4).
+ */
+const twMerge = extendTailwindMerge({
+  extend: {
+    theme: {
+      text: ['caption', 'small', 'body', 'h3', 'h2', 'h1', 'h1-desktop', 'display', 'eyebrow'],
+      radius: ['control', 'card'],
+      shadow: ['card', 'overlay'],
+      ease: ['standard'],
+    },
+  },
+})
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
