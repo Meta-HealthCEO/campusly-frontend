@@ -52,6 +52,8 @@ export function AILimitDialog() {
 
   if (!event) return null;
   if (event.kind === 'unverified') return <UnverifiedPrompt close={close} />;
+  // The learner's own prompt (no upgrade) arrives with the learner AI limit (plan Task C9, after L-B).
+  if (event.kind === 'learner-limit') return null;
 
   const copy = aiLimitCopy(event.usage, new Date());
   return (
