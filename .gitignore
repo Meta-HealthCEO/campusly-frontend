@@ -49,4 +49,5 @@ temp_interactive_push.bat
 
 # Playwright walkthrough output
 /e2e/.results/
+/e2e/.screens/
 /playwright-report/

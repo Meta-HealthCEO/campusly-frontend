@@ -1,0 +1,190 @@
+{
+  "/": [],
+  "/forgot-password": [],
+  "/login": [
+    "GET /api/auth/dev-sign-in/accounts"
+  ],
+  "/my/billing": [
+    "GET /api/auth/me",
+    "GET /api/schools/:id",
+    "GET /api/subscriptions/ai-usage",
+    "GET /api/subscriptions/invoices",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/register-student": [],
+  "/reset-password": [],
+  "/signup/coach": [],
+  "/signup/teacher": [],
+  "/subscription": [
+    "GET /api/auth/me",
+    "GET /api/plans",
+    "GET /api/schools/:id",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher": [
+    "GET /api/academic/subjects",
+    "GET /api/attendance/register-status",
+    "GET /api/auth/me",
+    "GET /api/auth/onboarding-status",
+    "GET /api/homework",
+    "GET /api/lessons",
+    "GET /api/schools/:id",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/assignments": [
+    "GET /api/auth/me",
+    "GET /api/schools/:id",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/assignments/new": [
+    "GET /api/academic/grades",
+    "GET /api/academic/subjects",
+    "GET /api/auth/me",
+    "GET /api/curriculum-structure/frameworks",
+    "GET /api/curriculum-structure/nodes",
+    "GET /api/schools/:id",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/attendance": [
+    "GET /api/academic/teacher/me/teaching-load",
+    "GET /api/attendance/class/:id",
+    "GET /api/auth/me",
+    "GET /api/schools/:id",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/attendance/report": [
+    "GET /api/academic/teacher/me/teaching-load",
+    "GET /api/auth/me",
+    "GET /api/schools/:id",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/classes": [
+    "GET /api/academic/grades",
+    "GET /api/academic/subjects",
+    "GET /api/academic/teacher/me/teaching-load",
+    "GET /api/auth/me",
+    "GET /api/schools/:id",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/courses": [
+    "GET /api/academic/classes",
+    "GET /api/academic/grades",
+    "GET /api/academic/subjects",
+    "GET /api/auth/me",
+    "GET /api/courses",
+    "GET /api/schools/:id",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/courses/new": [
+    "GET /api/academic/subjects",
+    "GET /api/academic/teacher/me/teaching-load",
+    "GET /api/auth/me",
+    "GET /api/schools/:id",
+    "GET /api/subscriptions/ai-usage",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/curriculum/mark-papers": [
+    "GET /api/academic/teacher/me/teaching-load",
+    "GET /api/auth/me",
+    "GET /api/question-bank/papers",
+    "GET /api/schools/:id",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/curriculum/textbooks": [
+    "GET /api/academic/grades",
+    "GET /api/academic/subjects",
+    "GET /api/auth/me",
+    "GET /api/curriculum-structure/frameworks",
+    "GET /api/schools/:id",
+    "GET /api/teacher-workbench/marking-hub/pending",
+    "GET /api/textbooks"
+  ],
+  "/teacher/grades": [
+    "GET /api/academic/assessments",
+    "GET /api/academic/classes",
+    "GET /api/academic/marks/assessment/:id",
+    "GET /api/academic/subjects",
+    "GET /api/academic/term-summary",
+    "GET /api/auth/me",
+    "GET /api/schools/:id",
+    "GET /api/students",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/homework": [
+    "GET /api/academic/classes",
+    "GET /api/academic/subjects",
+    "GET /api/academic/teacher/me/teaching-load",
+    "GET /api/assignments",
+    "GET /api/auth/me",
+    "GET /api/homework",
+    "GET /api/schools/:id",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/homework/new": [
+    "GET /api/academic/teacher/me/teaching-load",
+    "GET /api/auth/me",
+    "GET /api/schools/:id",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/onboarding": [
+    "GET /api/academic/teacher/me/teaching-load",
+    "GET /api/auth/me",
+    "GET /api/auth/onboarding-status",
+    "GET /api/curriculum-structure/frameworks",
+    "GET /api/curriculum-structure/nodes",
+    "GET /api/schools/:id",
+    "GET /api/teacher-settings/teaching-scope",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/papers": [
+    "GET /api/auth/me",
+    "GET /api/question-bank/papers",
+    "GET /api/schools/:id",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/papers/new": [
+    "GET /api/academic/grades",
+    "GET /api/academic/subjects",
+    "GET /api/auth/me",
+    "GET /api/curriculum-structure/frameworks",
+    "GET /api/curriculum-structure/nodes/:id",
+    "GET /api/schools/:id",
+    "GET /api/subscriptions/ai-usage",
+    "GET /api/teacher-settings/teaching-scope",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/settings": [
+    "GET /api/auth/me",
+    "GET /api/curriculum-structure/frameworks",
+    "GET /api/curriculum-structure/nodes",
+    "GET /api/schools/:id",
+    "GET /api/teacher-settings/teaching-scope",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/settings/join-school": [
+    "GET /api/auth/me",
+    "GET /api/schools/:id",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/students": [
+    "GET /api/auth/me",
+    "GET /api/schools/:id",
+    "GET /api/students",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teacher/workbench/marking-hub": [
+    "GET /api/auth/me",
+    "GET /api/schools/:id",
+    "GET /api/subscriptions/ai-usage",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "/teachers": [],
+  "/verify-email": [],
+  "detail:learner": [
+    "GET /api/auth/me",
+    "GET /api/behaviour/student/:id",
+    "GET /api/reports/student/:id/:n",
+    "GET /api/schools/:id",
+    "GET /api/teacher-workbench/marking-hub/pending"
+  ]
+}

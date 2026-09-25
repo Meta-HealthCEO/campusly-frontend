@@ -1,0 +1,38 @@
+/** Phase D's in-scope routes (plan ruling R2) and the widths the gate checks (spec §7). */
+export const WIDTHS = [320, 375, 768, 1024, 1280, 1440] as const;
+
+/** Signed out. `/design` is dev-only and absent before Task 12 (a 404 is skipped, not failed). */
+export const PUBLIC_ROUTES: readonly string[] = [
+  '/', '/teachers', '/login', '/signup/teacher', '/signup/coach', '/register-student',
+  '/verify-email', '/forgot-password', '/reset-password', '/design',
+];
+
+/** Signed in as the standalone teacher (dev sign-in panel). */
+export const TEACHER_ROUTES: readonly string[] = [
+  '/teacher', '/teacher/onboarding', '/teacher/courses', '/teacher/courses/new', '/teacher/curriculum/textbooks',
+  '/teacher/homework', '/teacher/homework/new', '/teacher/papers', '/teacher/papers/new',
+  '/teacher/workbench/marking-hub', '/teacher/curriculum/mark-papers', '/teacher/grades', '/teacher/classes',
+  '/teacher/students', '/teacher/attendance', '/teacher/attendance/report', '/teacher/assignments',
+  '/teacher/assignments/new', '/teacher/settings', '/teacher/settings/join-school', '/my/billing', '/subscription',
+];
+
+export interface DetailRoute { name: string; list: string; link: RegExp }
+
+/** Pages with an id: found from the first matching link on the list page (ruling R15). */
+export const DETAIL_ROUTES: readonly DetailRoute[] = [
+  { name: 'lesson', list: '/teacher/courses', link: /^\/teacher\/courses\/(?!new$)[^/?#]+$/ },
+  { name: 'textbook', list: '/teacher/curriculum/textbooks', link: /^\/teacher\/curriculum\/textbooks\/[^/?#]+$/ },
+  { name: 'homework', list: '/teacher/homework', link: /^\/teacher\/homework\/(?!new$)[^/?#]+$/ },
+  { name: 'paper', list: '/teacher/papers', link: /^\/teacher\/papers\/(?!new$)[^/?#]+$/ },
+  { name: 'learner', list: '/teacher/students', link: /^\/teacher\/students\/[^/?#]+$/ },
+  { name: 'roster', list: '/teacher/classes', link: /^\/teacher\/classes\/[^/?#]+\/roster$/ },
+  { name: 'assignment', list: '/teacher/assignments', link: /^\/teacher\/assignments\/(?!new$)[^/?#]+$/ },
+];
+
+/** Calls on a timer, not part of a page's behaviour. */
+export const POLLING: readonly RegExp[] = [
+  /^GET \/api\/notifications/,
+  // /teacher/papers/new lists curriculum nodes only when its framework loads before the network settles:
+  // seen once in two runs on the same code, so it is timing, not behaviour.
+  /^GET \/api\/curriculum-structure\/nodes$/,
+];
