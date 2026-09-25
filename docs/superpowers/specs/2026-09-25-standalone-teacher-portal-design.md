@@ -1,6 +1,6 @@
 # Standalone teacher portal, ready for real users — design
 
-**Date:** 2026-09-25 · **Status:** approved in conversation, awaiting written review
+**Date:** 2026-09-25 · **Status:** approved in conversation; fact-checked against the code (2026-09-25)
 **Project 1 of 4** in the standalone programme: (1) standalone teacher portal → (2) student portal → (3) syllabus → (4) Coursera-quality lessons.
 
 ## Intent
@@ -54,7 +54,7 @@ Homework already drafts questions with AI ("Draft with AI", Phase 2D) and marks 
 
 ## 4. One AI allowance
 
-- **Ledger:** a new `AIUsage` record per AI action: `{ schoolId, userId, action, createdAt, meta }` where `action` ∈ unit_outline, unit_item, unit_rewrite, revision_item, paper, homework_draft, homework_grade, marking, lesson_chat (the full list is the set of AI entry points found in the plan). One helper `recordAIUse` / `assertAIAllowance(user, action)` replaces the per-feature counters (`free-allowance.ts`, `consumeFreePaperGeneration`, `assertCourseGenerationAccess`, the daily unit cap interplay is kept as a separate per-day safety cap).
+- **Ledger:** a new `AIUsage` record per AI action: `{ schoolId, userId, action, createdAt, meta }` where `action` ∈ unit_outline, unit_item, unit_rewrite, revision_item, paper, paper_regenerate, paper_diagram, homework_draft, homework_grade, project_draft, marking, memo (one per AI entry point reachable from the standalone nav — see Enforcement). One helper `recordAIUse` / `assertAIAllowance(user, action)` replaces the per-feature counters (`free-allowance.ts`, `consumeFreePaperGeneration`, `assertCourseGenerationAccess`, the daily unit cap interplay is kept as a separate per-day safety cap).
 - **Limits:** Free = `FREE_AI_ACTIONS_PER_MONTH` (20) per calendar month (SAST); Trial and Pro = fair-use cap `PRO_AI_ACTIONS_PER_MONTH` (500). Counted per teacher's school (standalone school = the teacher). When a 14-day trial ends without a successful charge the subscription already drops to Free automatically (`handleChargeFailure`), so the Free limit applies from then on.
 - **Enforcement:** today only units, paper generation and lesson-material papers are guarded; homework drafting and AI grading, assignment drafting, AI marking, memos, lesson chat and Library generation are not. For standalone schools:
   - every AI entry point reachable from the standalone nav — unit outline/items/rewrite/revision item, paper generate/regenerate/diagram, homework draft and AI grading, project (assignment) brief draft, AI marking and memo — calls `assertAIAllowance` before spending and records after success; failures (AI error) are not counted;
