@@ -1,3 +1,11 @@
+/** The AI marks a standalone learner's homework at most this many times (backend HOMEWORK_AI_REMARKS). */
+export const HOMEWORK_AI_REMARKS = 3;
+
+/** What a learner sees on an answer still waiting to be marked. */
+export function pendingAnswerLabel(submission: { aiMarkCount?: number } | null | undefined): string {
+  return (submission?.aiMarkCount ?? 0) >= HOMEWORK_AI_REMARKS ? 'Your teacher will mark this' : 'Marking…';
+}
+
 /** The action on a homework submission row: mark it, or change an existing mark (0 counts as a mark). */
 export function markActionLabel(submission: { mark?: number | null }): 'Mark' | 'Change mark' {
   return submission.mark === undefined || submission.mark === null ? 'Mark' : 'Change mark';

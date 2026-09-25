@@ -243,6 +243,8 @@ export interface HomeworkSubmissionBase {
   isLate: boolean;
   gradingStatus: GradingStatus;
   gradingGeneration: number;
+  /** AI marking passes used (standalone classrooms). */
+  aiMarkCount?: number;
   mark?: number;
   maxMarks: number;
   feedback?: string;

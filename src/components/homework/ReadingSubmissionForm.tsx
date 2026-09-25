@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useHomeworkSubmission } from '@/hooks/useHomeworkSubmission';
+import { pendingAnswerLabel } from '@/lib/homework-grading';
 import { useContentResource } from '@/hooks/useContentResource';
 import { ExerciseQuestionRenderer } from './ExerciseQuestionRenderer';
 import { ResourceHomeworkViewer } from './ResourceHomeworkViewer';
@@ -103,7 +104,7 @@ export function ReadingSubmissionForm({ homework, submission, onSubmit }: Props)
               {la && (
                 <div className="text-xs text-muted-foreground border-t pt-2">
                   {la.gradingMethod === 'pending' ? (
-                    <span>Grading...</span>
+                    <span>{pendingAnswerLabel(liveSub)}</span>
                   ) : (
                     <span>
                       Awarded: {la.awarded ?? 0} / {q.marks}

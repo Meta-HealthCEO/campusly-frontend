@@ -8,6 +8,8 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { ResumeUnitCard } from '@/components/learner/ResumeUnitCard';
 import { courseIdOf, courseOf, useStudentUnits } from '@/hooks/useStudentUnits';
 import { ROUTES } from '@/lib/routes';
+import { useIsStandaloneLearner } from '@/hooks/useIsStandaloneLearner';
+import { learnerCopy } from '@/lib/learner-copy';
 import type { Enrolment } from '@/types';
 
 function UnitRow({ enrolment }: { enrolment: Enrolment }) {
@@ -30,13 +32,14 @@ function UnitRow({ enrolment }: { enrolment: Enrolment }) {
 export default function StudentCoursesPage() {
   const { enrolments, current, loading, failed } = useStudentUnits();
   const currentCourse = current ? courseOf(current) : null;
+  const copy = learnerCopy(useIsStandaloneLearner());
   return (
     <div className="space-y-6">
-      <PageHeader title="Courses" description="Units your teachers released to your class. Short items you can do on your phone." />
+      <PageHeader title={copy.lessonsTitle} description={copy.lessonsDescription} />
       {loading ? <CardGridSkeleton count={2} /> : failed ? (
         <EmptyState icon={AlertTriangle} title="Couldn't load your units" description="Check your connection and refresh to try again." />
       ) : enrolments.length === 0 ? (
-        <EmptyState icon={GraduationCap} title="No units yet" description="When your teacher releases a unit to your class, it appears here." />
+        <EmptyState icon={GraduationCap} title={copy.lessonsTitle === 'Lessons' ? 'No lessons yet' : 'No units yet'} description={copy.lessonsEmpty} />
       ) : (
         <>
           {current ? (

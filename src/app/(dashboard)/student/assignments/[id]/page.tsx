@@ -13,6 +13,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { RichTextView } from '@/components/shared/RichTextView';
 import { SubmissionFileUploader, type UploadedFile } from '@/components/assignments/SubmissionFileUploader';
 import { useStudentAssignments } from '@/hooks/useStudentAssignments';
+import { useIsStandaloneLearner } from '@/hooks/useIsStandaloneLearner';
 import type { StudentAssignmentItem } from '@/types/assignments';
 
 export default function StudentAssignmentDetailPage({
@@ -23,6 +24,9 @@ export default function StudentAssignmentDetailPage({
   const { id } = use(params);
   const router = useRouter();
   const { getById, submit } = useStudentAssignments();
+  const isStandaloneLearner = useIsStandaloneLearner();
+  // A standalone teacher's learner has no assignments list: projects live in Homework (spec §2).
+  const backHref = isStandaloneLearner ? '/student/homework' : '/student/assignments';
   const [assignment, setAssignment] = useState<StudentAssignmentItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState('');
@@ -46,7 +50,7 @@ export default function StudentAssignmentDetailPage({
   if (!assignment) {
     return (
       <div className="space-y-4">
-        <Button variant="ghost" size="sm" onClick={() => router.push('/student/assignments')}>
+        <Button variant="ghost" size="sm" onClick={() => router.push(backHref)}>
           <ChevronLeft className="h-4 w-4 mr-1" /> Back
         </Button>
         <p className="text-muted-foreground">Assignment not found.</p>
@@ -95,8 +99,8 @@ export default function StudentAssignmentDetailPage({
 
   return (
     <div className="space-y-6">
-      <Button variant="ghost" size="sm" onClick={() => router.push('/student/assignments')}>
-        <ChevronLeft className="h-4 w-4 mr-1" /> Back to assignments
+      <Button variant="ghost" size="sm" onClick={() => router.push(backHref)}>
+        <ChevronLeft className="h-4 w-4 mr-1" /> {isStandaloneLearner ? 'Back to homework' : 'Back to assignments'}
       </Button>
 
       <PageHeader

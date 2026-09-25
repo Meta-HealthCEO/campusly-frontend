@@ -8,6 +8,8 @@ import { Progress } from '@/components/ui/progress';
 import { BookOpen, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStudentGrades } from '@/hooks/useStudentGrades';
+import { useIsStandaloneLearner } from '@/hooks/useIsStandaloneLearner';
+import { learnerCopy } from '@/lib/learner-copy';
 import type { Subject } from '@/types';
 
 function getGradeColor(percentage: number): string {
@@ -26,6 +28,7 @@ function getGradeBadge(percentage: number): { label: string; variant: 'default' 
 
 export default function StudentGradesPage() {
   const { grades, subjects, loading } = useStudentGrades();
+  const copy = learnerCopy(useIsStandaloneLearner());
 
   if (loading) return <LoadingSpinner />;
 
@@ -62,10 +65,7 @@ export default function StudentGradesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="My Grades"
-        description="Track your academic performance across all subjects"
-      />
+      <PageHeader title={copy.marksTitle} description={copy.marksDescription} />
 
       <Card>
         <CardContent className="flex items-center gap-4 p-6">

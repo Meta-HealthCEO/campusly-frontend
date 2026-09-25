@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useHomeworkSubmission } from '@/hooks/useHomeworkSubmission';
+import { pendingAnswerLabel } from '@/lib/homework-grading';
 import { ExerciseQuestionRenderer } from './ExerciseQuestionRenderer';
 import type {
   ExerciseSubmission,
@@ -88,7 +89,7 @@ export function ExerciseSubmissionForm({ homework, submission, onSubmit }: Props
               {la && (
                 <div className="text-xs text-muted-foreground border-t pt-2">
                   {la.gradingMethod === 'pending' ? (
-                    <span>Grading...</span>
+                    <span>{pendingAnswerLabel(live.submission)}</span>
                   ) : (
                     <span>
                       Awarded: {la.awarded ?? 0} / {q.marks}

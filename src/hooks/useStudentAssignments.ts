@@ -10,11 +10,13 @@ import type {
   SubmitAssignmentInput,
 } from '@/types/assignments';
 
-export function useStudentAssignments() {
+/** `enabled: false` skips the list request (a school learner's Homework page lists no projects). */
+export function useStudentAssignments(enabled = true) {
   const [items, setItems] = useState<StudentAssignmentItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAssignments = useCallback(async () => {
+    if (!enabled) { setItems([]); setLoading(false); return; }
     setLoading(true);
     try {
       const res = await apiClient.get('/assignments/student/mine');
@@ -25,7 +27,7 @@ export function useStudentAssignments() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
   useEffect(() => { void fetchAssignments(); }, [fetchAssignments]);
 
