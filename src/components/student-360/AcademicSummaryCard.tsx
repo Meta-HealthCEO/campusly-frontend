@@ -17,22 +17,25 @@ function getGradeSymbol(percentage: number): string {
   return 'F';
 }
 
+/** A mastery dot and a foreground label (ruling O1 revised 2); every threshold branch kept (ruling R21). */
+const GRADE_DOT = "gap-1.5 bg-transparent text-foreground before:size-2 before:shrink-0 before:rounded-full before:content-['']";
+
 function getGradeColor(percentage: number): string {
-  if (percentage >= 80) return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400';
-  if (percentage >= 70) return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
-  if (percentage >= 60) return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400';
-  if (percentage >= 50) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
-  if (percentage >= 40) return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
-  return 'bg-destructive/10 text-destructive';
+  if (percentage >= 80) return `${GRADE_DOT} before:bg-mark-secure`;
+  if (percentage >= 70) return `${GRADE_DOT} before:bg-mark-secure`;
+  if (percentage >= 60) return `${GRADE_DOT} before:bg-mark-building`;
+  if (percentage >= 50) return `${GRADE_DOT} before:bg-mark-weak`;
+  if (percentage >= 40) return `${GRADE_DOT} before:bg-mark-weak`;
+  return `${GRADE_DOT} before:bg-mark-weak`;
 }
 
 function getBarColor(percentage: number): string {
-  if (percentage >= 80) return 'bg-emerald-500';
-  if (percentage >= 70) return 'bg-blue-500';
-  if (percentage >= 60) return 'bg-cyan-500';
-  if (percentage >= 50) return 'bg-yellow-500';
-  if (percentage >= 40) return 'bg-orange-500';
-  return 'bg-destructive';
+  if (percentage >= 80) return 'bg-mark-secure';
+  if (percentage >= 70) return 'bg-mark-secure';
+  if (percentage >= 60) return 'bg-mark-building';
+  if (percentage >= 50) return 'bg-mark-weak';
+  if (percentage >= 40) return 'bg-mark-weak';
+  return 'bg-mark-weak';
 }
 
 export function AcademicSummaryCard({ academic }: AcademicSummaryCardProps) {

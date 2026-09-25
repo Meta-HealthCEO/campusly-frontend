@@ -21,10 +21,10 @@ export function AttendanceSummaryCard({ attendance }: AttendanceSummaryCardProps
 
   const segments: SegmentData[] = useMemo(
     () => [
-      { label: 'Present', value: attendance.present, color: 'bg-emerald-500', ringColor: '#10b981' },
-      { label: 'Late', value: attendance.late, color: 'bg-yellow-500', ringColor: '#eab308' },
-      { label: 'Excused', value: attendance.excused, color: 'bg-blue-500', ringColor: '#3b82f6' },
-      { label: 'Absent', value: attendance.absent, color: 'bg-destructive', ringColor: 'hsl(var(--destructive))' },
+      { label: 'Present', value: attendance.present, color: 'bg-success', ringColor: 'var(--success)' },
+      { label: 'Late', value: attendance.late, color: 'bg-attention', ringColor: 'var(--attention)' },
+      { label: 'Excused', value: attendance.excused, color: 'bg-info', ringColor: 'var(--info)' },
+      { label: 'Absent', value: attendance.absent, color: 'bg-destructive', ringColor: 'var(--destructive)' },
     ],
     [attendance],
   );
@@ -68,13 +68,12 @@ export function AttendanceSummaryCard({ attendance }: AttendanceSummaryCardProps
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">Attendance</CardTitle>
           <Badge
-            variant="secondary"
-            className={
+            variant={
               attendance.percentage >= 90
-                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
+                ? 'success'
                 : attendance.percentage >= 75
-                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                  : 'bg-destructive/10 text-destructive'
+                  ? 'attention'
+                  : 'destructive'
             }
           >
             {attendance.percentage}%
@@ -86,7 +85,7 @@ export function AttendanceSummaryCard({ attendance }: AttendanceSummaryCardProps
           {/* Ring chart */}
           <div className="relative shrink-0">
             <svg width="130" height="130" viewBox="0 0 130 130">
-              <circle cx="65" cy="65" r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth="12" />
+              <circle cx="65" cy="65" r={radius} fill="none" style={{ stroke: 'var(--muted)' }} strokeWidth="12" />
               {ringSegments.map((seg) => (
                 <circle
                   key={seg.label}
@@ -94,7 +93,7 @@ export function AttendanceSummaryCard({ attendance }: AttendanceSummaryCardProps
                   cy="65"
                   r={radius}
                   fill="none"
-                  stroke={seg.ringColor}
+                  style={{ stroke: seg.ringColor }}
                   strokeWidth="12"
                   strokeDasharray={`${seg.dash} ${circumference - seg.dash}`}
                   strokeDashoffset={-seg.offset}

@@ -39,11 +39,11 @@ function StatusPill({ status }: { status: ViewStatus }) {
   const meta = STATUS_META[status];
   const tone =
     meta.tone === 'positive'
-      ? 'bg-primary/10 text-primary'
+      ? "gap-1.5 bg-transparent text-foreground before:size-2 before:shrink-0 before:rounded-full before:content-[''] before:bg-success"
       : meta.tone === 'warning'
-        ? 'bg-amber-100 text-amber-900'
+        ? "gap-1.5 bg-transparent text-foreground before:size-2 before:shrink-0 before:rounded-full before:content-[''] before:bg-attention"
         : meta.tone === 'danger'
-          ? 'bg-destructive/10 text-destructive'
+          ? "gap-1.5 bg-transparent text-foreground before:size-2 before:shrink-0 before:rounded-full before:content-[''] before:bg-destructive"
           : 'bg-muted text-foreground';
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${tone}`}>
@@ -210,7 +210,7 @@ export default function BillingPage() {
                   {daysLeftInTrial} {daysLeftInTrial === 1 ? 'day' : 'days'} left
                 </span>
               </div>
-              <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-primary/15">
+              <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-muted">
                 <div
                   className="h-full rounded-full bg-primary transition-all"
                   style={{ width: `${trialProgress}%` }}
@@ -221,7 +221,7 @@ export default function BillingPage() {
 
           {/* Past-due / canceled notices */}
           {isPastDue && (
-            <div className="mt-6 flex items-start gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
+            <div className="mt-6 flex items-start gap-3 rounded-card border border-destructive bg-card p-4 text-sm text-destructive">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <div>
                 <div className="font-medium">
@@ -237,8 +237,8 @@ export default function BillingPage() {
           )}
 
           {canceledUntil && (
-            <div className="mt-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-              <CalendarClock className="mt-0.5 h-4 w-4 shrink-0" />
+            <div className="mt-6 flex items-start gap-3 rounded-card border border-attention bg-card p-4 text-sm text-foreground">
+              <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-attention" />
               <div>
                 <div className="font-medium">
                   Pro stays active until {fmtDate(canceledUntil)}

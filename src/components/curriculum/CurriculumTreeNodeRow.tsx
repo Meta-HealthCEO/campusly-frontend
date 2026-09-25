@@ -53,14 +53,16 @@ export function sortSiblingsDesc(nodes: CurriculumNodeItem[]): CurriculumNodeIte
   return nodes;
 }
 
+/** One neutral chip for every node type: the chip's word names the type (ruling R21). Keys kept. */
+/** One neutral chip for every node type: the chip's word names the type (ruling R21). Keys kept. */
 const NODE_TYPE_COLORS: Record<CurriculumNodeType, string> = {
-  phase:   'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
-  grade:   'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  subject: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300',
-  term:    'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-  topic:   'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-  subtopic:'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-  outcome: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+  phase:   'bg-muted text-muted-foreground',
+  grade:   'bg-muted text-muted-foreground',
+  subject: 'bg-muted text-muted-foreground',
+  term:    'bg-muted text-muted-foreground',
+  topic:   'bg-muted text-muted-foreground',
+  subtopic:'bg-muted text-muted-foreground',
+  outcome: 'bg-muted text-muted-foreground',
 };
 
 // ─── Tree Node Row ────────────────────────────────────────────────────────────
@@ -105,7 +107,7 @@ export function TreeNodeRow({
           'flex items-center gap-2 rounded-md py-2 pr-3 cursor-pointer transition-colors group',
           'hover:bg-muted',
           isSelected
-            ? 'bg-primary/10 border-l-2 border-primary ring-1 ring-primary/20'
+            ? 'bg-muted border-l-2 border-primary'
             : 'border-l-2 border-transparent',
         ].join(' ')}
         style={{ paddingLeft: `${depth * 20 + 12}px` }}

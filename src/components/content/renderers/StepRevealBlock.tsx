@@ -42,7 +42,7 @@ export function StepRevealBlock({ block, onAllRevealed }: StepRevealBlockProps) 
           className="rounded-lg border p-4 space-y-1 animate-in fade-in slide-in-from-top-2 duration-300"
         >
           <div className="flex items-center gap-2">
-            <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
+            <span className="flex items-center justify-center h-6 w-6 rounded-full bg-muted text-primary text-xs font-bold shrink-0">
               {i + 1}
             </span>
             <h4 className="text-sm font-semibold">{step.title}</h4>
@@ -59,7 +59,7 @@ export function StepRevealBlock({ block, onAllRevealed }: StepRevealBlockProps) 
       )}
 
       {allRevealed && (
-        <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+        <div className="flex items-center gap-2 text-sm text-success">
           <CheckCircle2 className="h-4 w-4" />
           All steps revealed
         </div>

@@ -68,12 +68,12 @@ export function RecentActivityCard({ achievements, behaviour, sports }: RecentAc
           <CardTitle className="text-base">Recent Activity</CardTitle>
           <div className="flex gap-2">
             {achievements.totalMerits > 0 && (
-              <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+              <Badge variant="success">
                 {meritPointsLabel(achievements.totalMerits)}
               </Badge>
             )}
             {achievements.totalDemerits > 0 && (
-              <Badge variant="secondary" className="bg-destructive/10 text-destructive">
+              <Badge variant="destructive">
                 {demeritPointsLabel(achievements.totalDemerits)}
               </Badge>
             )}
@@ -90,8 +90,8 @@ export function RecentActivityCard({ achievements, behaviour, sports }: RecentAc
             {/* Sport cards summary */}
             {sports.cards.length > 0 && (
               <div className="flex items-center gap-3 rounded-lg border p-3">
-                <div className="rounded-full bg-blue-100 p-2 dark:bg-blue-900/30">
-                  <Activity className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <div className="rounded-full bg-muted p-2">
+                  <Activity className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">Sports</p>
@@ -108,12 +108,12 @@ export function RecentActivityCard({ achievements, behaviour, sports }: RecentAc
                 <div
                   className={`rounded-full p-2 shrink-0 ${
                     item.icon === 'achievement'
-                      ? 'bg-emerald-100 dark:bg-emerald-900/30'
-                      : 'bg-destructive/10'
+                      ? 'bg-muted'
+                      : 'bg-muted'
                   }`}
                 >
                   {item.icon === 'achievement' ? (
-                    <Trophy className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <Trophy className="h-4 w-4 text-success" />
                   ) : (
                     <AlertTriangle className="h-4 w-4 text-destructive" />
                   )}

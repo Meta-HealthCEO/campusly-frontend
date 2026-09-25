@@ -102,14 +102,14 @@ export default function JoinSchoolPage() {
               )}
             </div>
 
-            <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-4">
+            <div className="rounded-card border border-attention bg-card p-4">
               <div className="flex gap-3">
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-attention" />
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                  <p className="text-sm font-medium text-attention">
                     Before you join
                   </p>
-                  <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-0.5 list-disc list-inside">
+                  <ul className="text-xs text-foreground space-y-0.5 list-disc list-inside">
                     <li>Your account will be linked to the school.</li>
                     <li>Your lessons, questions, and papers will be migrated.</li>
                     <li>Your current standalone school will be archived.</li>
@@ -121,9 +121,9 @@ export default function JoinSchoolPage() {
                       id="confirm"
                       checked={confirmed}
                       onChange={(e) => setConfirmed(e.target.checked)}
-                      className="h-4 w-4 rounded border-border"
+                      className="h-4 w-4 rounded border-input accent-primary"
                     />
-                    <label htmlFor="confirm" className="text-xs text-amber-700 dark:text-amber-300 cursor-pointer">
+                    <label htmlFor="confirm" className="text-xs text-foreground cursor-pointer">
                       I understand and want to proceed
                     </label>
                   </div>
