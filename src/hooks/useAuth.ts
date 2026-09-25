@@ -73,7 +73,7 @@ export function useAuth() {
     const refreshToken = responseData.refreshToken ?? responseData.refresh_token;
     const authUser: User = { ...userFromApi(userData), role: 'student' };
     storeLogin(authUser, { accessToken, refreshToken: refreshToken ?? '' });
-    router.push('/student/dashboard');
+    router.push(getRoleDashboardPath('student'));
   };
 
   const forgotPassword = async (email: string) => {

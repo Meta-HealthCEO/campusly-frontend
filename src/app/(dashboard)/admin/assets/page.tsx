@@ -33,7 +33,7 @@ const quickLinks = [
   { label: 'Incidents', href: '/admin/assets/incidents', icon: AlertTriangle },
   { label: 'Insurance', href: '/admin/assets/insurance', icon: Shield },
   { label: 'Reports', href: '/admin/assets/reports', icon: BarChart3 },
-  { label: 'QR Labels', href: '/admin/assets/qr-labels', icon: QrCode },
+  { label: 'QR Labels', href: '/admin/assets/qr', icon: QrCode },
 ];
 
 export default function AssetDashboardPage() {
