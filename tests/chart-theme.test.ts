@@ -3,6 +3,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { chartTheme, seriesColour, trendDomain } from '../src/lib/charts/chart-theme';
 import { readTokenBlock } from '../src/lib/design/token-pairs';
+import { readSource } from './support/source';
 
 const css = readFileSync(path.resolve(__dirname, '../src/app/globals.css'), 'utf8');
 const light = readTokenBlock(css, ':root');
@@ -53,4 +54,14 @@ describe('trendDomain', () => {
     expect(trendDomain([])).toEqual([0, 100]);
     expect(trendDomain([Number.NaN])).toEqual([0, 100]);
   });
+});
+
+describe('charts use the one theme', () => {
+  it.each(['src/components/charts/index.tsx', 'src/components/attendance/AttendanceStatusChart.tsx', 'src/components/courses/LessonDropOffChart.tsx'])(
+    '%s reads its colours from useChartTheme', (file) => {
+      const src = readSource(file);
+      expect(src).toMatch(/useChartTheme\(\)/);
+      expect(src).not.toMatch(/hsl\(var\(--/);
+    },
+  );
 });

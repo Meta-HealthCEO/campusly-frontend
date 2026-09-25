@@ -1,6 +1,7 @@
 'use client';
 
 import { BarChartComponent } from '@/components/charts';
+import { useChartTheme } from '@/hooks/useChartTheme';
 import type { CourseAnalytics } from '@/types';
 
 interface LessonDropOffChartProps {
@@ -13,6 +14,7 @@ function truncateTitle(title: string, max = 20): string {
 }
 
 export function LessonDropOffChart({ data }: LessonDropOffChartProps) {
+  const theme = useChartTheme();
   if (data.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-muted-foreground">
@@ -34,8 +36,8 @@ export function LessonDropOffChart({ data }: LessonDropOffChartProps) {
       data={chartData}
       xKey="name"
       bars={[
-        { key: 'Reached', name: 'Reached', color: '#2563EB' },
-        { key: 'Completed', name: 'Completed', color: '#10B981' },
+        { key: 'Reached', name: 'Reached', color: theme?.series[0] },
+        { key: 'Completed', name: 'Completed', color: theme?.series[1] },
       ]}
       height={300}
     />

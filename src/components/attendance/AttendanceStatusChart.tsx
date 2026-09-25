@@ -11,6 +11,9 @@ import {
 import { PieChart as PieChartIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useChartTheme } from '@/hooks/useChartTheme';
+import type { ChartTheme } from '@/lib/charts/chart-theme';
 
 export interface AttendanceStatusChartProps {
   present: number;
@@ -25,17 +28,13 @@ interface ChartSlice {
   color: string;
 }
 
-// Colors aligned with the rest of the attendance module:
-// - Present: emerald-500  (#10B981)
-// - Absent:  destructive  (#EF4444)
-// - Late:    amber-500    (#F59E0B)
-// - Excused: blue-500     (#3B82F6)
-const STATUS_COLORS = {
-  present: '#10B981',
-  absent: '#EF4444',
-  late: '#F59E0B',
-  excused: '#3B82F6',
-} as const;
+/** Status colours from the chart theme (spec §4): present = secure green, late = amber, absent = red, excused = cobalt. */
+const statusColours = (theme: ChartTheme | null) => ({
+  present: theme?.series[1] ?? '',
+  absent: theme?.series[3] ?? '',
+  late: theme?.series[2] ?? '',
+  excused: theme?.series[0] ?? '',
+});
 
 export function AttendanceStatusChart({
   present,
@@ -43,13 +42,15 @@ export function AttendanceStatusChart({
   late,
   excused,
 }: AttendanceStatusChartProps) {
+  const theme = useChartTheme();
+  const colours = statusColours(theme);
   const total = present + absent + late + excused;
 
   const data: ChartSlice[] = [
-    { name: 'Present', value: present, color: STATUS_COLORS.present },
-    { name: 'Absent', value: absent, color: STATUS_COLORS.absent },
-    { name: 'Late', value: late, color: STATUS_COLORS.late },
-    { name: 'Excused', value: excused, color: STATUS_COLORS.excused },
+    { name: 'Present', value: present, color: colours.present },
+    { name: 'Absent', value: absent, color: colours.absent },
+    { name: 'Late', value: late, color: colours.late },
+    { name: 'Excused', value: excused, color: colours.excused },
   ].filter((slice) => slice.value > 0);
 
   return (
@@ -64,6 +65,8 @@ export function AttendanceStatusChart({
             title="No attendance data"
             description="There are no attendance records in the selected range."
           />
+        ) : !theme ? (
+          <Skeleton className="h-[300px] w-full" />
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -85,8 +88,10 @@ export function AttendanceStatusChart({
               </Pie>
               <Tooltip
                 contentStyle={{
-                  borderRadius: '8px',
-                  border: '1px solid hsl(var(--border))',
+                  borderRadius: 10,
+                  border: `1px solid ${theme.border}`,
+                  background: theme.surface,
+                  color: theme.text,
                 }}
               />
               <Legend />

@@ -9,10 +9,16 @@ import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/progress
 import {
   DataTable, EmptyState, ErrorState, ListSkeleton, LoadingSpinner, PageHeader, StatCard, TableSkeleton, type ColumnDef,
 } from '@/components/shared';
+import { LessonDropOffChart } from '@/components/courses/LessonDropOffChart';
 import { MASTERY_LABEL, masteryLevel } from '@/lib/readiness/mastery';
 import { GallerySection, Specimen } from './GallerySection';
 
 const BADGES = ['default', 'secondary', 'outline', 'ghost', 'link', 'success', 'attention', 'destructive', 'info', 'secure', 'building', 'weak'] as const;
+
+/** Made-up lesson progress for the chart specimen: Recharts draws it in the theme's series colours. */
+const DROP_OFF = ['Place value', 'Fractions', 'Decimals', 'Percentages', 'Ratio'].map((title: string, i: number) => ({
+  lessonId: String(i), title, orderIndex: i, studentsReached: 28 - i * 3, studentsCompleted: 24 - i * 4,
+}));
 
 interface ExampleRow {
   name: string;
@@ -111,6 +117,10 @@ export function DataStates() {
 
       <Specimen title="Data table (30 rows, sortable, paged)">
         <DataTable columns={COLUMNS} data={ROWS} searchKey="name" searchPlaceholder="Search learners..." />
+      </Specimen>
+
+      <Specimen title="Chart (series, grid and axis from the theme; flip the theme)">
+        <LessonDropOffChart data={DROP_OFF} />
       </Specimen>
 
       <div className="grid gap-4 md:grid-cols-2">
