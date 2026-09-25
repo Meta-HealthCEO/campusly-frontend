@@ -31,6 +31,33 @@ describe('readiness components', () => {
     expect(src).toMatch(/layoutExamMap\(/);
   });
 
+  it('the exam map value line wraps instead of clipping (orchestrator ruling O2)', () => {
+    const src = read('ExamMap.tsx');
+    expect(src).not.toMatch(/\btruncate\b|text-ellipsis/);
+    // Percentage and marks are separate pieces: side by side in a wide tile, stacked in a narrow one.
+    expect(src).toMatch(/@container/);
+    expect(src).toMatch(/>\{tile\.marks\} marks</);
+  });
+
+  it('colour lives in solid marks: tiles, legend dots and bars; the untested tile has no fill (ruling O1 revised 2)', () => {
+    const map = read('ExamMap.tsx');
+    expect(map).toMatch(/untested: 'border border-dashed border-border bg-card text-muted-foreground'/);
+    for (const level of ['secure', 'building', 'weak']) {
+      expect(map).toMatch(new RegExp(`${level}: 'bg-tile-${level} text-tile-${level}-ink'`));
+      expect(map).toMatch(new RegExp(`${level}: 'before:bg-mark-${level}'`));
+    }
+    // Topic name 14px bold, value line 13px semibold (revised 2).
+    expect(map).toMatch(/text-sm font-bold/);
+    expect(map).toMatch(/text-small font-semibold/);
+    expect(read('MarksToGain.tsx')).toMatch(/secure: 'bg-mark-secure', building: 'bg-mark-building', weak: 'bg-mark-weak'/);
+  });
+
+  it('NextUp is a plain card: its one emphasis is the filled button (ruling O1 revised)', () => {
+    const src = read('NextUp.tsx');
+    expect(src).toMatch(/<Card>/);
+    expect(src).not.toMatch(/bg-accent|border-primary|text-accent-foreground/);
+  });
+
   it('the trend chart takes its colours from the chart theme', () => {
     const src = read('TrendChart.tsx');
     expect(src).toMatch(/useChartTheme\(\)/);

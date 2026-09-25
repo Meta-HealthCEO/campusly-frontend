@@ -38,7 +38,7 @@ export function ForgotPasswordForm({
   if (submitted) {
     return (
       <div className="space-y-6">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success-soft">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
           <Mail className="h-8 w-8 text-success" />
         </div>
         <p className="text-center text-sm text-muted-foreground">

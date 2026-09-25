@@ -46,17 +46,17 @@ export function SidebarNavItem({ item, pathname, active, collapsed, expanded, co
           active ? 'bg-sidebar-accent font-semibold text-sidebar-accent-foreground' : 'text-sidebar-foreground hover:bg-muted hover:text-foreground',
         )}
       >
-        <Icon className="size-[18px] shrink-0" aria-hidden="true" />
+        <Icon className={cn('size-[18px] shrink-0', active && 'text-primary')} aria-hidden="true" />
         {!collapsed && (
           <>
             <span className="truncate">{item.label}</span>
             {item.badge === 'AI' ? (
               <Sparkles aria-label="AI" className="ml-auto size-3.5 shrink-0 text-primary" />
             ) : item.badge ? (
-              <span className="ml-auto rounded-full bg-accent px-2 text-caption font-semibold text-accent-foreground">{item.badge}</span>
+              <span className="ml-auto rounded-full bg-muted px-2 text-caption font-semibold text-foreground">{item.badge}</span>
             ) : null}
             {countText && (
-              <span className={cn('rounded-full bg-accent px-2 text-caption font-semibold tabular-nums text-accent-foreground', !item.badge && 'ml-auto')}>
+              <span className={cn('rounded-full bg-muted px-2 text-caption font-semibold tabular-nums text-foreground', !item.badge && 'ml-auto')}>
                 {countText}
               </span>
             )}

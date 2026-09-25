@@ -33,6 +33,9 @@ export const TOKEN_PAIRS: readonly TokenPair[] = [
   text('sidebar-foreground', 'sidebar'), text('sidebar-label', 'sidebar'), text('sidebar-primary', 'sidebar'),
   text('sidebar-accent-foreground', 'sidebar-accent'),
   ui('input', 'card'), ui('input', 'background'), ui('ring', 'card'), ui('ring', 'background'), ui('primary', 'accent'),
+  // Ruling O1 (revised): colour lives in solid marks — cobalt icons on neutral tiles, mastery bars and status dots.
+  ui('primary', 'muted'), ui('mark-secure', 'card'), ui('mark-building', 'card'), ui('mark-weak', 'card'),
+  ui('success', 'card'), ui('attention', 'card'), ui('info', 'card'),
   ui('chart-1', 'card'), ui('chart-2', 'card'), ui('chart-3', 'card'), ui('chart-4', 'card'), ui('chart-5', 'card'),
 ];
 

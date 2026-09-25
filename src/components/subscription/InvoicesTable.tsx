@@ -26,9 +26,9 @@ function formatAmount(cents: number, currency: string): string {
 function StatusPill({ status }: { status: SubscriptionInvoice['status'] }) {
   const classes =
     status === 'paid'
-      ? 'bg-primary/10 text-primary'
+      ? "gap-1.5 text-foreground before:size-2 before:rounded-full before:bg-success before:content-['']"
       : status === 'failed'
-        ? 'bg-destructive/10 text-destructive'
+        ? "gap-1.5 text-foreground before:size-2 before:rounded-full before:bg-destructive before:content-['']"
         : status === 'refunded' || status === 'partially_refunded'
           ? 'bg-muted text-foreground'
           : 'bg-muted text-muted-foreground';

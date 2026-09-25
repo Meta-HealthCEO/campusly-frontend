@@ -1,7 +1,7 @@
 import { cva } from 'class-variance-authority';
 import { FOCUS_RING, MOTION, TOUCH_TARGET } from './focus';
 
-/** Spec §4: primary = the one filled cobalt button; outline = secondary; ghost; soft destructive. Names unchanged (ruling R12). */
+/** Spec §4: primary = the one filled cobalt button; outline = secondary; ghost; destructive = neutral surface, 1px destructive edge and text (ruling O1 revised). Names unchanged (ruling R12). */
 export const buttonVariants = cva(
   [
     'group/button inline-flex shrink-0 items-center justify-center gap-1.5 rounded-control border border-transparent bg-clip-padding',
@@ -18,7 +18,7 @@ export const buttonVariants = cva(
         outline: 'border-input bg-card text-foreground hover:bg-muted aria-expanded:bg-muted',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-muted aria-expanded:bg-muted',
         ghost: 'text-foreground hover:bg-muted aria-expanded:bg-muted',
-        destructive: 'bg-destructive/10 text-destructive hover:bg-destructive/15',
+        destructive: 'border-destructive bg-card text-destructive hover:bg-muted aria-expanded:bg-muted',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {

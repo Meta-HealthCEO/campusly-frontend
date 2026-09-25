@@ -20,37 +20,37 @@ const features = [
     icon: DollarSign,
     title: 'Fee Management',
     description: 'Automate invoicing, track payments, manage debtors, and send statements to parents with ease.',
-    color: 'bg-accent text-accent-foreground',
+    color: 'bg-muted text-primary',
   },
   {
     icon: Wallet,
     title: 'Digital Wallet',
     description: 'Cashless payments via wristbands or cards. Parents top up, students tap to pay.',
-    color: 'bg-accent text-accent-foreground',
+    color: 'bg-muted text-primary',
   },
   {
     icon: ClipboardList,
     title: 'Attendance',
     description: 'Mark attendance by period or day. Instant notifications to parents for absences.',
-    color: 'bg-accent text-accent-foreground',
+    color: 'bg-muted text-primary',
   },
   {
     icon: BookOpen,
     title: 'Academics',
     description: 'Grade books, homework, timetables, and report cards all in one place.',
-    color: 'bg-accent text-accent-foreground',
+    color: 'bg-muted text-primary',
   },
   {
     icon: MessageSquare,
     title: 'Communication',
     description: 'Announcements, direct messaging, and push notifications keep everyone connected.',
-    color: 'bg-accent text-accent-foreground',
+    color: 'bg-muted text-primary',
   },
   {
     icon: ShoppingBag,
     title: 'Tuck Shop',
     description: 'Point-of-sale system with inventory management and daily sales reporting.',
-    color: 'bg-accent text-accent-foreground',
+    color: 'bg-muted text-primary',
   },
 ];
 
@@ -135,7 +135,7 @@ export default function HomePage() {
               </Button>
             </Link>
             <Link href="/register">
-              <Button size="lg">
+              <Button variant="outline" size="lg">
                 Get Started
               </Button>
             </Link>
@@ -144,14 +144,13 @@ export default function HomePage() {
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-primary py-24 sm:py-32">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSA2MCAwIEwgMCAwIDAgNjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-50" />
+      <section className="relative overflow-hidden border-b border-border bg-card py-24 sm:py-32">
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-primary-foreground text-balance sm:text-5xl lg:text-6xl">
+            <h1 className="text-4xl font-bold tracking-tight text-foreground text-balance sm:text-5xl lg:text-6xl">
               Smart School Management for South Africa
             </h1>
-            <p className="mt-6 text-lg leading-relaxed text-primary-foreground/90 sm:text-xl">
+            <p className="mt-6 text-lg leading-relaxed text-muted-foreground sm:text-xl">
               From fee collection to tuck shop sales, attendance to academics &mdash; Campusly brings
               your entire school into one powerful, easy-to-use platform.
             </p>
@@ -159,7 +158,7 @@ export default function HomePage() {
               <Link href="/register">
                 <Button
                   size="lg"
-                  className="h-12 bg-primary-foreground px-8 text-base text-primary hover:bg-primary-foreground/90"
+                  className="h-12 px-8 text-base"
                 >
                   Get Started Free
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -169,15 +168,15 @@ export default function HomePage() {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="h-12 border-primary-foreground/40 bg-transparent px-8 text-base text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                  className="h-12 px-8 text-base"
                 >
                   Login to Dashboard
                 </Button>
               </Link>
             </div>
-            <p className="mt-8 text-sm text-primary-foreground/90">
+            <p className="mt-8 text-sm text-muted-foreground">
               A teacher on your own?{' '}
-              <Link href="/teachers" className="font-semibold text-primary-foreground underline underline-offset-4 hover:no-underline">
+              <Link href="/teachers" className="font-semibold text-primary underline underline-offset-4 hover:no-underline">
                 Mark, set papers and plan lessons with AI — free to start
               </Link>
             </p>

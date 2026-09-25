@@ -38,8 +38,8 @@ export function UsageBanner({ data }: UsageBannerProps) {
       className={
         'flex flex-col gap-2 rounded-lg border px-4 py-3 sm:flex-row sm:items-center sm:justify-between ' +
         (anyNearLimit
-          ? 'border-destructive/30 bg-destructive/5'
-          : 'border-primary/20 bg-primary/5')
+          ? 'border-destructive bg-card'
+          : 'border-border bg-card')
       }
     >
       <div className="flex items-start gap-3 sm:items-center">

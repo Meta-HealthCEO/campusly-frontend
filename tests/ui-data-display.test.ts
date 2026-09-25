@@ -6,11 +6,14 @@ const ui = (file: string) => readSource(`src/components/ui/${file}`);
 const tokens = (s: string) => s.split(/\s+/).filter(Boolean);
 
 describe('badges and chips', () => {
-  it.each([['secure', 'bg-secure', 'text-secure-strong'], ['building', 'bg-building', 'text-building-strong'], ['weak', 'bg-weak', 'text-weak-strong']] as const)(
-    '%s chip uses its soft fill and strong text (spec §2.1)', (variant, fill, ink) => {
-      expect(tokens(badgeVariants({ variant }))).toEqual(expect.arrayContaining([fill, ink]));
-    },
-  );
+  it.each([
+    ['secure', 'before:bg-mark-secure'], ['building', 'before:bg-mark-building'], ['weak', 'before:bg-mark-weak'],
+    ['success', 'before:bg-success'], ['attention', 'before:bg-attention'], ['destructive', 'before:bg-destructive'], ['info', 'before:bg-info'],
+  ] as const)('%s chip is a solid 8px dot and a foreground label on no fill (ruling O1 revised)', (variant, dot) => {
+    const classes = tokens(badgeVariants({ variant }));
+    expect(classes).toEqual(expect.arrayContaining([dot, 'before:size-2', 'before:rounded-full', 'text-foreground', 'bg-transparent']));
+    expect(classes.filter((c: string) => /^bg-(?!transparent)/.test(c))).toEqual([]);
+  });
 
   it('is a pill', () => {
     expect(tokens(badgeVariants())).toContain('rounded-full');
@@ -44,7 +47,7 @@ describe('quiet fills', () => {
     expect(ui(file)).toMatch(/bg-muted/);
   });
 
-  it('avatars use the accent pair', () => {
-    expect(ui('avatar.tsx')).toMatch(/bg-accent text-accent-foreground/);
+  it('avatars are a neutral fill with foreground initials (ruling O1 revised)', () => {
+    expect(ui('avatar.tsx')).toMatch(/bg-muted text-foreground/);
   });
 });

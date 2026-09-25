@@ -12,9 +12,9 @@ export function TrialBanner() {
   const amber = daysLeftInTrial <= 3;
 
   return (
-    <div className={cn('flex items-center justify-between gap-3 px-4 py-2 text-sm md:px-6 lg:px-8', amber && 'bg-attention-soft text-attention')}>
+    <div className="flex items-center justify-between gap-3 px-4 py-2 text-sm md:px-6 lg:px-8">
       <div className="flex items-center gap-2 min-w-0">
-        <Clock className="size-4 shrink-0" aria-hidden="true" />
+        <Clock className={cn('size-4 shrink-0', amber ? 'text-attention' : 'text-primary')} aria-hidden="true" />
         <span className="truncate">
           {daysLeftInTrial} {daysLeftInTrial === 1 ? 'day' : 'days'} left in your Pro trial.
         </span>

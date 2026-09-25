@@ -14,9 +14,9 @@ export function DunningBanner() {
     : null;
 
   return (
-    <div className="flex items-center justify-between gap-3 px-4 py-2 text-sm text-destructive md:px-6 lg:px-8">
+    <div className="flex items-center justify-between gap-3 px-4 py-2 text-sm md:px-6 lg:px-8">
       <div className="flex items-center gap-2 min-w-0">
-        <AlertTriangle className="size-4 shrink-0" aria-hidden="true" />
+        <AlertTriangle className="size-4 shrink-0 text-destructive" aria-hidden="true" />
         <span className="truncate">
           {isExpiredCard
             ? 'Your card on file has expired.'

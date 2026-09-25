@@ -43,8 +43,15 @@ describe('phone and top bars (spec §3)', () => {
     expect(layout('TopBar.tsx')).not.toMatch(/toggleSidebar/);
   });
 
-  it('banners sit in one accent strip under the top bar', () => {
-    expect(layout('BannerStrip.tsx')).toMatch(/bg-accent/);
+  it('a selected nav item is a neutral fill, a cobalt icon and foreground text (ruling O1 revised)', () => {
+    expect(layout('SidebarNavItem.tsx')).toMatch(/<Icon className=\{cn\('size-\[18px\] shrink-0', active && 'text-primary'\)\}/);
+    expect(layout('BottomNav.tsx')).toMatch(/current \? 'bg-muted text-foreground \[&>svg\]:text-primary'/);
+  });
+
+  it('banners sit in one neutral card-white strip with a hairline under the top bar (ruling O1 revised)', () => {
+    expect(layout('BannerStrip.tsx')).toMatch(/border-b border-border bg-card text-foreground/);
+    expect(layout('BannerStrip.tsx')).not.toMatch(/bg-accent/);
+    expect(readSource('src/components/subscription/TrialBanner.tsx')).not.toMatch(/bg-attention-soft/);
     expect(readSource('src/app/(dashboard)/layout.tsx')).toMatch(/<BannerStrip \/>/);
   });
 

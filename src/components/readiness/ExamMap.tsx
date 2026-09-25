@@ -4,21 +4,22 @@ import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { TILE_LABEL, examMapLabel, layoutExamMap, type ExamMapTile, type ExamTopic, type TileLevel } from '@/lib/readiness/exam-map';
 
+/**
+ * Ruling O1 (revised 2): tiles are deep solid fills with white ink, the same in both themes; an untested topic is the
+ * card surface in a dashed outline, never a colour.
+ */
 const TILE_CLASS: Record<TileLevel, string> = {
   secure: 'bg-tile-secure text-tile-secure-ink',
   building: 'bg-tile-building text-tile-building-ink',
   weak: 'bg-tile-weak text-tile-weak-ink',
-  untested: 'border border-dashed border-input bg-muted text-muted-foreground',
+  untested: 'border border-dashed border-border bg-card text-muted-foreground',
 };
 
-/**
- * Legend swatches: the tile fill ringed in its ink, so the pale building fill (light) and the soft fills (dark)
- * stay visible against the card at 12px.
- */
+/** Legend: the status dot (8px, the tile colour) beside its word, as on every chip. */
 const LEGEND_CLASS: Record<Exclude<TileLevel, 'untested'>, string> = {
-  secure: 'bg-tile-secure border-tile-secure-ink',
-  building: 'bg-tile-building border-tile-building-ink',
-  weak: 'bg-tile-weak border-tile-weak-ink',
+  secure: 'before:bg-mark-secure',
+  building: 'before:bg-mark-building',
+  weak: 'before:bg-mark-weak',
 };
 
 interface ExamMapProps {
@@ -47,12 +48,15 @@ export function ExamMap({ paper, topics, className }: ExamMapProps) {
             {row.tiles.map((tile: ExamMapTile) => (
               <div
                 key={tile.id}
-                className={cn('flex min-w-0 flex-col justify-between overflow-hidden rounded-control p-2 sm:p-2.5', TILE_CLASS[tile.level])}
+                className={cn('@container flex min-w-0 flex-col justify-between overflow-hidden rounded-control p-2 sm:p-2.5', TILE_CLASS[tile.level])}
                 style={{ flexGrow: tile.marks, flexBasis: 0 }}
               >
-                <span className="line-clamp-2 font-heading text-small font-semibold leading-tight break-words hyphens-auto">{tile.name}</span>
-                <span className="truncate font-heading text-small font-bold tabular-nums">
-                  {tile.mastery === null ? TILE_LABEL.untested : `${tile.mastery}%`} · {tile.marks} marks
+                <span className="line-clamp-2 font-heading text-sm font-bold leading-tight break-words hyphens-auto">{tile.name}</span>
+                {/* Ruling O2: never an ellipsis. Side by side when the tile is wide enough, stacked when it is not. */}
+                <span className="flex flex-col font-heading text-small font-semibold leading-tight tabular-nums @min-[7.5rem]:flex-row @min-[7.5rem]:gap-1">
+                  <span>{tile.mastery === null ? TILE_LABEL.untested : `${tile.mastery}%`}</span>
+                  <span aria-hidden="true" className="hidden @min-[7.5rem]:inline">·</span>
+                  <span>{tile.marks} marks</span>
                 </span>
               </div>
             ))}
@@ -60,10 +64,12 @@ export function ExamMap({ paper, topics, className }: ExamMapProps) {
         ))}
       </div>
       <figcaption>
-        <ul className="flex flex-wrap gap-x-4 gap-y-1 text-caption text-muted-foreground">
+        <ul className="flex flex-wrap gap-x-3.5 gap-y-1">
           {(['secure', 'building', 'weak'] as const).map((level) => (
-            <li key={level} className="inline-flex items-center gap-1.5">
-              <span aria-hidden="true" className={cn('size-3 rounded-[3px] border-2', LEGEND_CLASS[level])} />
+            <li
+              key={level}
+              className={cn("inline-flex items-center gap-[7px] text-small font-semibold text-foreground before:size-2 before:rounded-full before:content-['']", LEGEND_CLASS[level])}
+            >
               {TILE_LABEL[level]}
             </li>
           ))}

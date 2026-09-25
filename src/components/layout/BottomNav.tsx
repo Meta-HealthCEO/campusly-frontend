@@ -69,7 +69,7 @@ export function BottomNav({ items }: BottomNavProps) {
                   href={item.href}
                   onClick={() => setOpenKey(null)}
                   aria-current={current ? 'page' : undefined}
-                  className={cn('flex min-h-16 min-w-0 flex-col items-center justify-center gap-1.5 rounded-control p-2 text-center text-caption font-semibold', FOCUS_RING, current ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted')}
+                  className={cn('flex min-h-16 min-w-0 flex-col items-center justify-center gap-1.5 rounded-control p-2 text-center text-caption font-semibold', FOCUS_RING, current ? 'bg-muted text-foreground [&>svg]:text-primary' : 'text-muted-foreground hover:bg-muted')}
                 >
                   <Icon className="size-5" aria-hidden="true" />
                   <span className="w-full break-words leading-tight">{item.label}</span>

@@ -26,7 +26,7 @@ describe('spec values (§2, as amended by ruling R6)', () => {
   it('pins the brand, ink and ground', () => {
     expect(THEMES.light).toMatchObject({
       background: '#F3F5FA', card: '#FFFFFF', foreground: '#0B1B33', 'muted-foreground': '#5B6B82',
-      primary: '#1554F0', accent: '#EAF0FE', ring: '#1554F0', 'secure-strong': '#137A6B', 'building-strong': '#8A5A00',
+      primary: '#1554F0', accent: '#EEF1F7' /* neutral since ruling O1 revised */, ring: '#1554F0', 'secure-strong': '#137A6B', 'building-strong': '#8A5A00',
       'weak-strong': '#B5392A', destructive: '#B5392A', input: '#7F8DA3', border: '#E2E7F0',
     });
     expect(THEMES.dark).toMatchObject({
@@ -44,6 +44,32 @@ describe('spec values (§2, as amended by ruling R6)', () => {
       '--ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1)',
     ]) expect(css).toContain(rule);
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)/);
+  });
+});
+
+describe('orchestrator ruling O1 (revised): colour only in solid marks, every surface neutral', () => {
+  const SOFT = ['accent', 'accent-soft', 'secure', 'building', 'weak', 'success-soft', 'attention-soft', 'info-soft', 'destructive-soft', 'sidebar-accent'];
+
+  it.each(Object.entries(THEMES))('%s: every soft token is the neutral muted surface', (_theme, tokens) => {
+    expect(Object.fromEntries(SOFT.map((t: string) => [t, tokens[t]])))
+      .toEqual(Object.fromEntries(SOFT.map((t: string) => [t, tokens.muted])));
+    expect(tokens['accent-foreground']).toBe(tokens.foreground);
+    expect(tokens['sidebar-accent-foreground']).toBe(tokens.foreground);
+  });
+
+  it.each(Object.entries(THEMES))('%s: exam-map tiles are deep solid fills with white ink, identical in both themes (revised 2)', (_theme, tokens) => {
+    expect(tokens).toMatchObject({
+      'tile-secure': '#0B7F63', 'tile-building': '#BD5709', 'tile-weak': '#D7372A',
+      'tile-secure-ink': '#FFFFFF', 'tile-building-ink': '#FFFFFF', 'tile-weak-ink': '#FFFFFF',
+    });
+  });
+
+  it.each(Object.entries(THEMES))('%s: bars, legend and status dots use the tile colours (3:1 on the card is pinned in TOKEN_PAIRS)', (_theme, tokens) => {
+    for (const level of ['secure', 'building', 'weak']) expect(tokens[`mark-${level}`], `mark-${level}`).toBe(tokens[`tile-${level}`]);
+  });
+
+  it('keeps the AA text colours for mastery words', () => {
+    expect(THEMES.light).toMatchObject({ 'secure-strong': '#137A6B', 'building-strong': '#8A5A00', 'weak-strong': '#B5392A' });
   });
 });
 

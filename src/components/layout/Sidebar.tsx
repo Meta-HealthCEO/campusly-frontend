@@ -85,7 +85,7 @@ export function Sidebar({ items }: SidebarProps) {
           </button>
         ) : user && (
           <div className="flex items-center gap-2.5 border-t border-sidebar-border px-4 py-3">
-            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">
+            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold text-foreground">
               {getInitials(user.firstName, user.lastName)}
             </span>
             <span className="min-w-0">

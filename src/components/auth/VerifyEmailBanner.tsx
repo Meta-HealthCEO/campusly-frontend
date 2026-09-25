@@ -18,7 +18,7 @@ export function VerifyEmailBanner() {
       className="flex flex-col gap-2 px-4 py-2 text-sm sm:flex-row sm:items-center sm:justify-between md:px-6 lg:px-8"
     >
       <div className="flex min-w-0 items-center gap-2">
-        <MailCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <MailCheck className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
         <span className="min-w-0 break-words">
           Check your inbox to verify <strong className="font-semibold">{user?.email}</strong>. You&apos;ll need it to use AI.
         </span>

@@ -14,7 +14,7 @@ interface ErrorStateProps {
 export function ErrorState({ title = 'Something went wrong', message, onRetry, retrying = false }: ErrorStateProps) {
   return (
     <div role="alert" className="flex flex-col items-center justify-center px-4 py-12 text-center">
-      <div className="mb-4 grid size-12 place-items-center rounded-card bg-destructive-soft text-destructive">
+      <div className="mb-4 grid size-12 place-items-center rounded-card bg-muted text-destructive">
         <AlertTriangle className="size-6" aria-hidden="true" />
       </div>
       <h3 className="font-heading text-h3 font-semibold">{title}</h3>

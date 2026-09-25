@@ -34,7 +34,7 @@ export function StatCard({ title, value, icon: Icon, description, trend, tone = 
             )}
           </div>
           {Icon && (
-            <div className="grid size-10 shrink-0 place-items-center rounded-control bg-accent text-accent-foreground">
+            <div className="grid size-10 shrink-0 place-items-center rounded-control bg-muted text-primary">
               <Icon className="size-5" aria-hidden="true" />
             </div>
           )}

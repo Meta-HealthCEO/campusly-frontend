@@ -47,10 +47,10 @@ export function DevSignInAccountList({ title, accounts, busyId, onPick }: DevSig
                   </span>
                 </span>
                 {isBusy ? (
-                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-accent-foreground" aria-hidden="true" />
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" aria-hidden="true" />
                 ) : (
                   <ArrowRight
-                    className="h-4 w-4 shrink-0 text-accent-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                    className="h-4 w-4 shrink-0 text-primary opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
                     aria-hidden="true"
                   />
                 )}

@@ -22,8 +22,8 @@ export function DevSignInPanel() {
     >
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent">
-            <FlaskConical className="h-5 w-5 text-accent-foreground" aria-hidden="true" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+            <FlaskConical className="h-5 w-5 text-primary" aria-hidden="true" />
           </div>
           <div className="min-w-0">
             <CardTitle>Development sign-in</CardTitle>

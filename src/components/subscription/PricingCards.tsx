@@ -77,7 +77,7 @@ export function PricingCards({ plans, currentPlanCode, onSelect, loading }: Prop
           Annual
         </span>
         {savingsPercent != null && savingsPercent > 0 && (
-          <span className="ml-1 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+          <span className="ml-1 inline-flex items-center rounded-full border border-primary px-2 py-0.5 text-xs font-semibold text-primary">
             Save {savingsPercent}%
           </span>
         )}
@@ -126,7 +126,7 @@ export function PricingCards({ plans, currentPlanCode, onSelect, loading }: Prop
           <div className="flex items-baseline gap-2">
             <h3 className="text-lg font-semibold">Pro</h3>
             {isCurrentPro && (
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+              <span className="rounded-full border border-primary px-2 py-0.5 text-xs font-medium text-primary">
                 Current
               </span>
             )}
@@ -152,7 +152,7 @@ export function PricingCards({ plans, currentPlanCode, onSelect, loading }: Prop
           <ul className="mt-8 flex-1 space-y-3 text-sm">
             {PRO_FEATURES.map((f, idx) => (
               <li key={f} className="flex items-start gap-3">
-                <span className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                <span className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-primary">
                   <Check className="h-3 w-3" />
                 </span>
                 <span>

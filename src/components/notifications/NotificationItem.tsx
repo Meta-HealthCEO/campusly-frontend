@@ -24,7 +24,7 @@ export function NotificationItem({ notification, onMarkRead }: NotificationItemP
   return (
     <li
       className={`flex items-start gap-3 rounded-lg p-3 cursor-pointer transition-colors hover:bg-muted/50 ${
-        !notification.isRead ? 'bg-primary/5' : ''
+        !notification.isRead ? 'bg-muted' : ''
       }`}
       onClick={handleClick}
       role="button"

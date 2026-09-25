@@ -5,8 +5,9 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { TILE_LABEL, layoutExamMap, topicsByGain, type ExamMapTile, type ExamTopic } from '@/lib/readiness/exam-map';
 
+/** Solid bars on the neutral track (ruling O1 revised). */
 const BAR: Record<ExamMapTile['level'], string> = {
-  secure: 'bg-secure-strong', building: 'bg-building-strong', weak: 'bg-weak-strong', untested: 'bg-transparent',
+  secure: 'bg-mark-secure', building: 'bg-mark-building', weak: 'bg-mark-weak', untested: 'bg-transparent',
 };
 
 /** Spec §1: marks to gain per topic, written plainly, where the exam map is too small. */

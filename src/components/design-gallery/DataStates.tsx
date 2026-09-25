@@ -12,7 +12,7 @@ import {
 import { MASTERY_LABEL, masteryLevel } from '@/lib/readiness/mastery';
 import { GallerySection, Specimen } from './GallerySection';
 
-const BADGES = ['default', 'secondary', 'outline', 'destructive', 'ghost', 'link', 'secure', 'building', 'weak'] as const;
+const BADGES = ['default', 'secondary', 'outline', 'ghost', 'link', 'success', 'attention', 'destructive', 'info', 'secure', 'building', 'weak'] as const;
 
 interface ExampleRow {
   name: string;
