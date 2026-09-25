@@ -2,13 +2,17 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { pairContrast } from '../src/lib/design/contrast';
-import { MIN_RATIO, REQUIRED_TOKENS, TOKEN_PAIRS, readTokenBlock, type TokenPair } from '../src/lib/design/token-pairs';
+import { MIN_RATIO, REQUIRED_TOKENS, TOKEN_PAIRS, readTokenBlock, resolveTokens, type TokenPair } from '../src/lib/design/token-pairs';
+import { listSourceFiles } from './support/source';
+import { COLOUR_LITERAL_EXEMPT } from './support/design-scope';
 
 const root = (p: string) => path.resolve(__dirname, '..', p);
 const css = readFileSync(root('src/app/globals.css'), 'utf8');
 const layout = readFileSync(root('src/app/layout.tsx'), 'utf8');
-const light = readTokenBlock(css, ':root');
-const THEMES: Record<string, Record<string, string>> = { light, dark: { ...light, ...readTokenBlock(css, '.dark') } };
+const RAW = { light: readTokenBlock(css, ':root'), dark: readTokenBlock(css, '.dark') };
+/** Both blocks sit on <html>, so dark = light overridden by .dark, then every `var(--x)` followed (as the browser does). */
+const THEMES: Record<string, Record<string, string>> = { light: resolveTokens(RAW.light), dark: resolveTokens({ ...RAW.light, ...RAW.dark }) };
+const LEVELS = ['secure', 'building', 'weak'];
 const name = (p: TokenPair) => `${p.fg} on ${p.bg}${p.bgAlpha ? ` at ${p.bgAlpha * 100}%` : ''}`;
 
 describe.each(Object.entries(THEMES))('%s theme', (_theme, tokens) => {
@@ -57,19 +61,66 @@ describe('orchestrator ruling O1 (revised): colour only in solid marks, every su
     expect(tokens['sidebar-accent-foreground']).toBe(tokens.foreground);
   });
 
-  it.each(Object.entries(THEMES))('%s: exam-map tiles are deep solid fills with white ink, identical in both themes (revised 2)', (_theme, tokens) => {
-    expect(tokens).toMatchObject({
-      'tile-secure': '#0B7F63', 'tile-building': '#BD5709', 'tile-weak': '#D7372A',
-      'tile-secure-ink': '#FFFFFF', 'tile-building-ink': '#FFFFFF', 'tile-weak-ink': '#FFFFFF',
-    });
+  it.each(Object.entries(THEMES))('%s: tiles are the solid mastery fills with white ink, identical in both themes', (_theme, tokens) => {
+    for (const level of LEVELS) {
+      expect(tokens[`tile-${level}`], `tile-${level}`).toBe(THEMES.light[`mastery-${level}`]);
+      expect(tokens[`tile-${level}-ink`], `tile-${level}-ink`).toBe('#FFFFFF');
+    }
   });
 
-  it.each(Object.entries(THEMES))('%s: bars, legend and status dots use the tile colours (3:1 on the card is pinned in TOKEN_PAIRS)', (_theme, tokens) => {
-    for (const level of ['secure', 'building', 'weak']) expect(tokens[`mark-${level}`], `mark-${level}`).toBe(tokens[`tile-${level}`]);
+  it('light: bars, legend and status dots are the mastery colours themselves', () => {
+    for (const level of LEVELS) expect(THEMES.light[`mark-${level}`], `mark-${level}`).toBe(THEMES.light[`mastery-${level}`]);
+  });
+
+  it('dark: bars, legend and status dots use lighter mark variants (3:1 on the dark card is pinned in TOKEN_PAIRS)', () => {
+    for (const level of LEVELS) expect(THEMES.dark[`mark-${level}`], `mark-${level}`).not.toBe(THEMES.dark[`tile-${level}`]);
   });
 
   it('keeps the AA text colours for mastery words', () => {
     expect(THEMES.light).toMatchObject({ 'secure-strong': '#137A6B', 'building-strong': '#8A5A00', 'weak-strong': '#B5392A' });
+  });
+});
+
+describe('orchestrator ruling O1 (revised 3): the mastery scale is a CSS-only swap', () => {
+  it('holds the three colours only in --mastery-* (+ dark mark variants); tiles and marks reference them', () => {
+    for (const level of LEVELS) {
+      expect(RAW.light[`tile-${level}`]).toBe(`var(--mastery-${level})`);
+      expect(RAW.light[`tile-${level}-ink`]).toBe('var(--mastery-ink)');
+      expect(RAW.light[`mark-${level}`]).toBe(`var(--mastery-${level}-mark)`);
+      expect(RAW.light[`mastery-${level}-mark`]).toBe(`var(--mastery-${level})`);
+      expect(RAW.dark[`mastery-${level}-mark`]).toMatch(/^#[0-9A-F]{6}$/);
+      expect(RAW.dark[`tile-${level}`]).toBeUndefined();
+      expect(RAW.dark[`mark-${level}`]).toBeUndefined();
+    }
+  });
+
+  it('uses the final scale (Shaun approved): secure #0B7F63, building #4F58D0, weak #EA580C, white ink', () => {
+    expect(THEMES.light).toMatchObject({
+      'mastery-secure': '#0B7F63', 'mastery-building': '#4F58D0', 'mastery-weak': '#EA580C', 'mastery-ink': '#FFFFFF',
+    });
+  });
+
+  it('checks white tile ink at the large-text level (3:1): tile text is 19px bold, WCAG large text', () => {
+    const tilePairs = TOKEN_PAIRS.filter((p: TokenPair) => p.bg.startsWith('tile-'));
+    expect(tilePairs.map((p: TokenPair) => [p.fg, p.bg, p.use])).toEqual(LEVELS.map((l: string) => [`tile-${l}-ink`, `tile-${l}`, 'large']));
+    expect(MIN_RATIO.large).toBe(3);
+  });
+
+  it('keeps --destructive apart from the mastery colours in both themes', () => {
+    for (const tokens of Object.values(THEMES)) {
+      const mastery = LEVELS.flatMap((level: string) => [tokens[`mastery-${level}`], tokens[`mark-${level}`]]);
+      expect(mastery).not.toContain(tokens.destructive);
+    }
+  });
+
+  it('writes no mastery hex anywhere in src except globals.css', () => {
+    const hexes = [...new Set(Object.values(THEMES).flatMap((t: Record<string, string>) => LEVELS.flatMap((l: string) => [t[`mastery-${l}`], t[`mark-${l}`]])))];
+    // The exempt data palettes (ruling R4) may share a hex by chance: economics' book cover is orange-600.
+    const offenders = listSourceFiles('src').filter((file: string) => !(file in COLOUR_LITERAL_EXEMPT)).filter((file: string) => {
+      const src = readFileSync(root(file), 'utf8').toUpperCase();
+      return hexes.some((hex: string) => src.includes(hex.toUpperCase()));
+    });
+    expect(offenders).toEqual([]);
   });
 });
 

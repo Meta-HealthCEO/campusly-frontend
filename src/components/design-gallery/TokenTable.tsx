@@ -16,6 +16,8 @@ function readTokens(): Tokens {
   return Object.fromEntries(REQUIRED_TOKENS.map((t: string) => [t, style.getPropertyValue(`--${t}`).trim()]));
 }
 
+const USE_LABEL: Record<TokenPair['use'], string> = { text: 'Text 4.5:1', large: 'Large text 3:1', ui: 'UI 3:1' };
+
 const pairKey = (p: TokenPair) => `${p.fg}/${p.bg}/${p.bgAlpha ?? 1}`;
 
 /** Every token as a swatch, then every pair the components use with its measured ratio (spec §2.2). */
@@ -75,7 +77,7 @@ export function TokenTable() {
                       <TableCell className="whitespace-nowrap">
                         {p.fg} on {p.bg}{p.bgAlpha ? ` (${p.bgAlpha * 100}%)` : ''}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{p.use === 'text' ? 'Text 4.5:1' : 'UI 3:1'}</TableCell>
+                      <TableCell className="text-muted-foreground">{USE_LABEL[p.use]}</TableCell>
                       <TableCell className="text-right font-heading font-semibold tabular-nums">{ratio.toFixed(1)}:1</TableCell>
                       <TableCell><Badge variant={ok ? 'secure' : 'weak'}>{ok ? 'AA' : 'Below AA'}</Badge></TableCell>
                     </TableRow>

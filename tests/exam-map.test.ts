@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { examMapLabel, layoutExamMap, topicsByGain, totalMarksToGain, type ExamTopic } from '../src/lib/readiness/exam-map';
+import { examMapLabel, layoutExamMap, tileMinWidth, topicsByGain, totalMarksToGain, type ExamTopic } from '../src/lib/readiness/exam-map';
 import { EXAMPLE_READINESS } from '../src/lib/readiness/example-data';
 
 const t = (id: string, section: string, marks: number, mastery: number | null): ExamTopic => ({ id, name: id, section, marks, mastery });
@@ -47,5 +47,17 @@ describe('marks at stake', () => {
   it('orders topics by marks to gain, most first, untested last', () => {
     const rows = layoutExamMap([t('a', 'A', 10, 90), t('b', 'A', 30, 40), t('c', 'B', 50, null), t('d', 'B', 20, 50)]);
     expect(topicsByGain(rows).map((x) => x.id)).toEqual(['b', 'd', 'a', 'c']);
+  });
+});
+
+describe('tileMinWidth (ruling O1 final: 19px tile text never shrinks and never breaks mid-word)', () => {
+  it('is the longest word in ch plus the tile padding, capped at the row width', () => {
+    expect(tileMinWidth('Financial maths')).toBe('min(100%, calc(9ch + 1.25rem))');
+    expect(tileMinWidth('Euclidean geometry and measurement, including proofs')).toBe('min(100%, calc(12ch + 1.25rem))');
+  });
+
+  it('copes with a one-word and an empty name', () => {
+    expect(tileMinWidth('Probability')).toBe('min(100%, calc(11ch + 1.25rem))');
+    expect(tileMinWidth('   ')).toBe('min(100%, calc(0ch + 1.25rem))');
   });
 });

@@ -46,9 +46,23 @@ describe('readiness components', () => {
       expect(map).toMatch(new RegExp(`${level}: 'bg-tile-${level} text-tile-${level}-ink'`));
       expect(map).toMatch(new RegExp(`${level}: 'before:bg-mark-${level}'`));
     }
-    // Topic name 14px bold, value line 13px semibold (revised 2).
-    expect(map).toMatch(/text-sm font-bold/);
-    expect(map).toMatch(/text-small font-semibold/);
+  });
+
+  it('tile text is WCAG large text: 19px bold for the topic name and the value line (ruling O1 final)', () => {
+    const map = read('ExamMap.tsx');
+    const tileText = /const TILE_TEXT = '([^']+)'/.exec(map)?.[1] ?? '';
+    const px = Number(/text-\[(\d+)px\]/.exec(tileText)?.[1] ?? 0);
+    expect(px).toBeGreaterThanOrEqual(19);
+    expect(tileText.split(' ')).toEqual(expect.arrayContaining(['font-bold', 'leading-[1.2]']));
+    // Both the name and the value line use it.
+    expect(map.match(/cn\([^)]*TILE_TEXT/g) ?? []).toHaveLength(2);
+  });
+
+  it('the map grows on narrow screens instead of clipping 19px text (ruling O1 final)', () => {
+    const map = read('ExamMap.tsx');
+    expect(map).toMatch(/min-h-64/);
+    expect(map).not.toMatch(/(?<![\w-])h-(64|72)\b|line-clamp/);
+    expect(map).toMatch(/flex-wrap/);
     expect(read('MarksToGain.tsx')).toMatch(/secure: 'bg-mark-secure', building: 'bg-mark-building', weak: 'bg-mark-weak'/);
   });
 

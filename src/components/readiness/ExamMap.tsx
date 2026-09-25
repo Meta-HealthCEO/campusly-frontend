@@ -2,10 +2,10 @@
 
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { TILE_LABEL, examMapLabel, layoutExamMap, type ExamMapTile, type ExamTopic, type TileLevel } from '@/lib/readiness/exam-map';
+import { TILE_LABEL, examMapLabel, layoutExamMap, tileMinWidth, type ExamMapTile, type ExamTopic, type TileLevel } from '@/lib/readiness/exam-map';
 
 /**
- * Ruling O1 (revised 2): tiles are deep solid fills with white ink, the same in both themes; an untested topic is the
+ * Ruling O1 (final): tiles are the solid mastery fills with white ink, the same in both themes; an untested topic is the
  * card surface in a dashed outline, never a colour.
  */
 const TILE_CLASS: Record<TileLevel, string> = {
@@ -14,6 +14,12 @@ const TILE_CLASS: Record<TileLevel, string> = {
   weak: 'bg-tile-weak text-tile-weak-ink',
   untested: 'border border-dashed border-border bg-card text-muted-foreground',
 };
+
+/**
+ * Every tile's text is WCAG large text (ruling O1 final): 19px bold, line-height 1.2, so white on the weak orange
+ * (3.56:1) passes. On a narrow screen the map grows taller; the text never shrinks.
+ */
+const TILE_TEXT = 'font-heading text-[19px] font-bold leading-[1.2]';
 
 /** Legend: the status dot (8px, the tile colour) beside its word, as on every chip. */
 const LEGEND_CLASS: Record<Exclude<TileLevel, 'untested'>, string> = {
@@ -40,22 +46,24 @@ export function ExamMap({ paper, topics, className }: ExamMapProps) {
       <div
         role="img"
         aria-label={examMapLabel(paper, rows)}
-        className="grid h-64 gap-1 sm:h-72"
+        className="grid min-h-64 gap-1 sm:min-h-72"
         style={{ gridTemplateRows: rows.map((r) => `${r.marks}fr`).join(' ') }}
       >
         {rows.map((row) => (
-          <div key={row.section} className="flex min-w-0 gap-1">
+          <div key={row.section} className="flex min-w-0 flex-wrap gap-1">
             {row.tiles.map((tile: ExamMapTile) => (
               <div
                 key={tile.id}
-                className={cn('@container flex min-w-0 flex-col justify-between overflow-hidden rounded-control p-2 sm:p-2.5', TILE_CLASS[tile.level])}
-                style={{ flexGrow: tile.marks, flexBasis: 0 }}
+                className={cn('@container flex flex-col justify-between gap-3 rounded-control p-2.5 text-[19px] font-bold', TILE_CLASS[tile.level])}
+                style={{ flexGrow: tile.marks, flexBasis: 0, minWidth: tileMinWidth(tile.name) }}
               >
-                <span className="line-clamp-2 font-heading text-sm font-bold leading-tight break-words hyphens-auto">{tile.name}</span>
-                {/* Ruling O2: never an ellipsis. Side by side when the tile is wide enough, stacked when it is not. */}
-                <span className="flex flex-col font-heading text-small font-semibold leading-tight tabular-nums @min-[7.5rem]:flex-row @min-[7.5rem]:gap-1">
+                {/* The min-width fits the longest word, so words wrap whole; break-words only guards a freak name. */}
+                <span className={cn('break-words', TILE_TEXT)}>{tile.name}</span>
+                {/* Ruling O2: never an ellipsis. "45% · 20 marks" when the tile is wide enough, stacked when it is not;
+                    the longer "Not yet tested" always stacks. */}
+                <span className={cn('flex flex-col tabular-nums', tile.mastery !== null && '@min-[10.5rem]:flex-row @min-[10.5rem]:gap-1.5', TILE_TEXT)}>
                   <span>{tile.mastery === null ? TILE_LABEL.untested : `${tile.mastery}%`}</span>
-                  <span aria-hidden="true" className="hidden @min-[7.5rem]:inline">·</span>
+                  {tile.mastery !== null && <span aria-hidden="true" className="hidden @min-[10.5rem]:inline">·</span>}
                   <span>{tile.marks} marks</span>
                 </span>
               </div>

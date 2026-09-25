@@ -71,3 +71,12 @@ export function topicsByGain(rows: readonly ExamMapRow[]): ExamMapTile[] {
     .sort((a: ExamMapTile, b: ExamMapTile) => (b.marksToGain ?? 0) - (a.marksToGain ?? 0));
   return [...tested, ...tiles.filter((x: ExamMapTile) => x.marksToGain === null)];
 }
+
+/**
+ * A tile's minimum width (ruling O1 final): its longest word at the tile's 19px bold, plus its padding, so text never
+ * shrinks or breaks mid-word; narrower than that, the tile moves to its row's next line. Capped at the row width.
+ */
+export function tileMinWidth(name: string): string {
+  const longest = name.split(/\s+/).reduce((max: number, word: string) => Math.max(max, word.length), 0);
+  return `min(100%, calc(${longest}ch + 1.25rem))`;
+}
