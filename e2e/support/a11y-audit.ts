@@ -15,9 +15,13 @@ export async function sidewaysOverflow(page: Page): Promise<string[]> {
   });
 }
 
-/** Form controls without a label and buttons/links without a name (spec §7). */
-export async function unlabelledControls(page: Page): Promise<string[]> {
-  return page.evaluate(() => {
+/**
+ * Form controls without a label and buttons/links without a name (spec §7). With `scope` (a selector list), only
+ * elements inside it count — the role gate audits the shell (final review 8).
+ */
+export async function unlabelledControls(page: Page, scope?: string): Promise<string[]> {
+  return page.evaluate((scopeSel: string | null) => {
+    const inScope = (el: Element): boolean => !scopeSel || el.closest(scopeSel) !== null;
     const visible = (el: Element): boolean => {
       const box = (el as HTMLElement).getBoundingClientRect();
       return box.width > 0 && box.height > 0 && getComputedStyle(el).visibility !== 'hidden';
@@ -30,7 +34,7 @@ export async function unlabelledControls(page: Page): Promise<string[]> {
     const problems: string[] = [];
     document.querySelectorAll('input:not([type=hidden]), select, textarea, [role=combobox], [role=switch], [role=checkbox], [role=radio], [role=slider]')
       .forEach((el: Element) => {
-        if (!visible(el)) return;
+        if (!visible(el) || !inScope(el)) return;
         // Ruling O3: hidden from assistive tech AND out of the tab order is not a user control (base-ui Select's form input).
         if (el.getAttribute('aria-hidden') === 'true' && el.getAttribute('tabindex') === '-1') return;
         const labels = (el as HTMLInputElement).labels;
@@ -41,30 +45,55 @@ export async function unlabelledControls(page: Page): Promise<string[]> {
         if (!labelled) problems.push(`unlabelled ${describe(el)}`);
       });
     document.querySelectorAll('button, [role=button], a[href]').forEach((el: Element) => {
-      if (!visible(el)) return;
+      if (!visible(el) || !inScope(el)) return;
       if (text(el) === '' && ariaName(el) === '' && !el.querySelector('img[alt]:not([alt=""])')) problems.push(`unnamed ${describe(el)}`);
     });
     return problems;
-  });
+  }, scope ?? null);
 }
 
-/** Tabs through the first `max` stops; lists any that show neither an outline nor a ring. */
-export async function focusRingMissing(page: Page, max = 8): Promise<string[]> {
+/** Tabs through the first `max` stops; lists any that show neither an outline nor a ring (only inside `scope`, if given). */
+export async function focusRingMissing(page: Page, max = 8, scope?: string): Promise<string[]> {
   const missing: string[] = [];
   for (let i = 0; i < max; i += 1) {
     await page.keyboard.press('Tab');
-    const result = await page.evaluate(() => {
+    const result = await page.evaluate((scopeSel: string | null) => {
       const el = document.activeElement as HTMLElement | null;
       if (!el || el === document.body) return null;
+      if (scopeSel && !el.closest(scopeSel)) return '';
       // The Next.js dev-tools badge (dev server only, never shipped) is not part of the app.
       if (el.tagName.toLowerCase() === 'nextjs-portal') return '';
       const style = getComputedStyle(el);
       const outlined = style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0;
       const ringed = style.boxShadow !== '' && style.boxShadow !== 'none';
       return outlined || ringed ? '' : `${el.tagName.toLowerCase()} "${(el.textContent ?? el.getAttribute('aria-label') ?? '').trim().slice(0, 40)}"`;
-    });
+    }, scope ?? null);
     if (result === null) break;
     if (result !== '') missing.push(result);
   }
   return missing;
+}
+
+/** Labels (matched by `selector`) with a word split across two lines — "Communi-/cation" (final review 4). */
+export async function brokenWords(page: Page, selector: string): Promise<string[]> {
+  return page.evaluate((sel: string) => {
+    const broken: string[] = [];
+    document.querySelectorAll(sel).forEach((el: Element) => {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const text = node.textContent ?? '';
+        for (const m of text.matchAll(/\S+/g)) {
+          const range = document.createRange();
+          range.setStart(node, m.index ?? 0);
+          range.setEnd(node, (m.index ?? 0) + m[0].length);
+          const lines = new Set(Array.from(range.getClientRects()).map((r: DOMRect) => Math.round(r.top)));
+          if (lines.size > 1) {
+            broken.push((el.textContent ?? '').trim());
+            return;
+          }
+        }
+      }
+    });
+    return broken;
+  }, selector);
 }

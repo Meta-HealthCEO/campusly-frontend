@@ -94,7 +94,8 @@ if (process.env.GATE_E2E !== '0') {
     await step('widths, labels, focus, request sets on next dev, incl. /design (Playwright)', async () => {
       const server = await serve(['next', 'dev', '--webpack', '-p', '3500'], 'http://localhost:3500/login', 'dev-3500');
       try {
-        sh('npx playwright test e2e/a11y-audit.spec.ts e2e/design-gate.spec.ts');
+        // design-roles: the shell for a school admin, a parent and a learner (final review 8).
+        sh('npx playwright test e2e/a11y-audit.spec.ts e2e/design-gate.spec.ts e2e/design-roles.spec.ts');
       } finally {
         stop(server);
         await portFreed('http://localhost:3500/login');
