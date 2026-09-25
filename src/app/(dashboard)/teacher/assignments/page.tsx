@@ -17,6 +17,8 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { sectionEyebrow } from '@/lib/eyebrow';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
+import { useIsStandalone } from '@/hooks/useIsStandalone';
+import { workListHref } from '@/lib/work-list';
 
 function statusVariant(status: AssignmentStatus): 'default' | 'secondary' | 'outline' {
   if (status === 'published') return 'default';
@@ -38,9 +40,16 @@ export default function TeacherAssignmentsPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
+  // Standalone teachers have no Assignments page: their projects list under Homework.
+  const isStandalone = useIsStandalone();
   useEffect(() => {
+    if (isStandalone) router.replace(workListHref(true));
+  }, [isStandalone, router]);
+
+  useEffect(() => {
+    if (isStandalone) return;
     void fetchAssignments(statusFilter !== 'all' ? { status: statusFilter } : undefined);
-  }, [fetchAssignments, statusFilter]);
+  }, [fetchAssignments, statusFilter, isStandalone]);
 
   const columns = useMemo<ColumnDef<Assignment>[]>(() => [
     {
@@ -123,7 +132,7 @@ export default function TeacherAssignmentsPage() {
     },
   ], [router]);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading || isStandalone) return <LoadingSpinner />;
 
   return (
     <div className="space-y-6">

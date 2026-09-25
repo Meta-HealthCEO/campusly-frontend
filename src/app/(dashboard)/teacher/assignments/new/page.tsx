@@ -16,6 +16,7 @@ import {
   contextsMatch,
 } from '@/hooks/useCurriculumPreparation';
 import { useTeacherAssignments } from '@/hooks/useTeacherAssignments';
+import { useIsStandalone } from '@/hooks/useIsStandalone';
 import { StepSetup } from './_StepSetup';
 import { StepDraft } from './_StepDraft';
 import { StepPublish } from './_StepPublish';
@@ -31,6 +32,8 @@ type Step = 1 | 2 | 3;
 
 export default function NewAssignmentPage() {
   const router = useRouter();
+  // A standalone teacher reaches this from Homework → Project.
+  const isStandalone = useIsStandalone();
   const {
     frameworks, selectedFramework, searchNodes, loadNode, resolveAncestors,
   } = useCurriculumStructure();
@@ -247,7 +250,7 @@ export default function NewAssignmentPage() {
   return (
     <div className="space-y-6 pb-24">
       <PageHeader
-        title="New Assignment"
+        title={isStandalone ? 'New project' : 'New Assignment'}
         description="Tell the AI what you want, then edit the brief and rubric. You can publish to a class once it is ready."
       />
 
@@ -259,6 +262,7 @@ export default function NewAssignmentPage() {
 
       {step === 1 && (
         <StepSetup
+          noun={isStandalone ? 'Project' : 'Assignment'}
           prep={prep}
           selectedFramework={selectedFramework}
           frameworkName={selectedFrameworkMeta?.name ?? null}

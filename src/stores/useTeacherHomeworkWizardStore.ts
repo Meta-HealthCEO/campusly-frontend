@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 
 // One quiz system: new homework is an exercise (question-bank questions) or
-// a reading — quiz is no longer a creatable homework type here.
-export type HomeworkWizardType = 'reading' | 'exercise';
+// a reading — quiz is no longer a creatable homework type here. A project
+// (standalone teachers) opens the assignment flow, so it never reaches step 2.
+export type HomeworkWizardType = 'reading' | 'exercise' | 'project';
 
 export interface HomeworkWizardState {
   // Step 1

@@ -14,6 +14,8 @@ import { AssignmentRubricTab } from '@/components/assignments/AssignmentRubricTa
 import { AssignmentClassesTab } from '@/components/assignments/AssignmentClassesTab';
 import { AssignmentSubmissionsTab } from '@/components/assignments/AssignmentSubmissionsTab';
 import type { Assignment, AssignmentStatus } from '@/types/assignments';
+import { useIsStandalone } from '@/hooks/useIsStandalone';
+import { workListHref } from '@/lib/work-list';
 
 function statusVariant(s: AssignmentStatus): 'default' | 'secondary' | 'outline' {
   if (s === 'published') return 'default';
@@ -28,6 +30,9 @@ export default function AssignmentDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  // Standalone teachers know these as projects, listed under Homework.
+  const isStandalone = useIsStandalone();
+  const backHref = workListHref(isStandalone);
   const { getById, update } = useTeacherAssignments();
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,10 +57,10 @@ export default function AssignmentDetailPage({
   if (!assignment) {
     return (
       <div className="space-y-4">
-        <Button variant="ghost" size="sm" onClick={() => router.push('/teacher/assignments')}>
+        <Button variant="ghost" size="sm" onClick={() => router.push(backHref)}>
           <ChevronLeft className="h-4 w-4 mr-1" /> Back
         </Button>
-        <p className="text-muted-foreground">Assignment not found.</p>
+        <p className="text-muted-foreground">{isStandalone ? 'Project' : 'Assignment'} not found.</p>
       </div>
     );
   }
@@ -84,7 +89,7 @@ export default function AssignmentDetailPage({
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => router.push('/teacher/assignments')}
+        onClick={() => router.push(backHref)}
       >
         <ChevronLeft className="h-4 w-4 mr-1" /> Back
       </Button>

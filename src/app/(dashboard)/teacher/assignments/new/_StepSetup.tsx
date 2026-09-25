@@ -46,13 +46,15 @@ interface StepSetupProps {
   instructions: string;
   setInstructions: (s: string) => void;
   blocker: string | null;
+  /** "Project" for standalone teachers. */
+  noun?: 'Assignment' | 'Project';
 }
 
 export function StepSetup({
   prep, selectedFramework, frameworkName, selectedNodes, onTopicSelect,
   onRemoveNode, searchNodes, loadNode, totalMarks, setTotalMarks, lengthHint,
   setLengthHint, criterionCount, setCriterionCount, instructions,
-  setInstructions, blocker,
+  setInstructions, blocker, noun = 'Assignment',
 }: StepSetupProps) {
   return (
     <div className="space-y-4">
@@ -105,7 +107,7 @@ export function StepSetup({
         <Card className="lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
-              <CardTitle className="text-base">Assignment settings</CardTitle>
+              <CardTitle className="text-base">{noun} settings</CardTitle>
               <Badge variant="secondary">
                 {selectedNodes.length} topic{selectedNodes.length === 1 ? '' : 's'}
               </Badge>

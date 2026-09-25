@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ClassSubjectTopicPicker } from '@/components/curriculum/ClassSubjectTopicPicker';
@@ -8,18 +9,20 @@ import { useTeacherHomeworkWizardStore } from '@/stores/useTeacherHomeworkWizard
 import type { HomeworkWizardType, HomeworkWizardState } from '@/stores/useTeacherHomeworkWizardStore';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
 import { useCurriculumTopics } from '@/hooks/useCurriculumTopics';
-import { BookOpen, Target } from 'lucide-react';
-import { WIZARD_HOMEWORK_TYPES } from '@/lib/homework-types';
+import { BookOpen, FolderKanban, Target } from 'lucide-react';
+import { wizardHomeworkTypes, type WizardHomeworkTypeOption } from '@/lib/homework-types';
+import { useIsStandalone } from '@/hooks/useIsStandalone';
 import { getClassGradeId, type ClassLike } from '@/lib/teacher-labels';
 import type { Subject } from '@/types';
 
 // One quiz system: quiz homework is now an exercise from the question bank.
-const TYPE_ICON: Record<'exercise' | 'reading', typeof Target> = { exercise: Target, reading: BookOpen };
-const TYPE_OPTIONS: Array<{ value: HomeworkWizardType; label: string; description: string; icon: typeof Target }> =
-  WIZARD_HOMEWORK_TYPES.map((t) => ({ ...t, icon: TYPE_ICON[t.value] }));
+const TYPE_ICON: Record<HomeworkWizardType, typeof Target> = { exercise: Target, reading: BookOpen, project: FolderKanban };
 
 export function HomeworkWizardStep1() {
   const state = useTeacherHomeworkWizardStore();
+  const router = useRouter();
+  const isStandalone = useIsStandalone();
+  const typeOptions = useMemo(() => wizardHomeworkTypes(isStandalone), [isStandalone]);
   const { entries, classes } = useTeacherClasses();
   const { topics, loading: topicsLoading } = useCurriculumTopics({
     subjectId: state.subjectId,
@@ -55,13 +58,19 @@ export function HomeworkWizardStep1() {
   // it's only optional before a type is even picked.
   const needsTopic = state.type !== null;
 
-  const handleTypeChange = (type: HomeworkWizardType) => {
+  const handleTypeChange = (option: WizardHomeworkTypeOption) => {
+    // A project is built in its own flow (brief + rubric).
+    if (option.href) {
+      router.push(option.href);
+      return;
+    }
+    const type: HomeworkWizardType = option.value;
     state.set({
       type,
       contentResourceId: '',
       comprehensionQuestionIds: [],
       exerciseQuestionIds: [],
-      title: state.title || `${TYPE_OPTIONS.find((option) => option.value === type)?.label ?? 'Homework'} homework`,
+      title: state.title || `${option.label} homework`,
     });
   };
 
@@ -99,15 +108,15 @@ export function HomeworkWizardStep1() {
     <div className="space-y-6">
       <div className="space-y-3">
         <Label>What are you assigning? <span className="text-destructive">*</span></Label>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {TYPE_OPTIONS.map((opt) => {
-            const Icon = opt.icon;
+        <div className={`grid gap-3 ${typeOptions.length > 2 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+          {typeOptions.map((opt: WizardHomeworkTypeOption) => {
+            const Icon = TYPE_ICON[opt.value];
             const selected = state.type === opt.value;
             return (
               <button
                 key={opt.value}
                 type="button"
-                onClick={() => handleTypeChange(opt.value)}
+                onClick={() => handleTypeChange(opt)}
                 className={`flex flex-col gap-2 rounded-lg border p-4 text-left transition-colors hover:border-primary ${
                   selected ? 'border-primary bg-primary/5' : ''
                 }`}

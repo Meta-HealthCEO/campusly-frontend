@@ -10,21 +10,19 @@ import {
 } from '@/components/ui/select';
 import { Search } from 'lucide-react';
 import type { SchoolClass } from '@/types';
+import type { WorkListFilters } from '@/lib/work-list';
 
-export type HomeworkListFilterState = {
-  search: string;
-  type: 'all' | 'quiz' | 'reading' | 'exercise';
-  classId: 'all' | string;
-  status: 'all' | 'assigned' | 'closed';
-};
+export type HomeworkListFilterState = WorkListFilters;
 
 interface Props {
   value: HomeworkListFilterState;
   onChange: (next: HomeworkListFilterState) => void;
   classes: SchoolClass[];
+  /** Standalone teachers' list includes projects. */
+  showProjects?: boolean;
 }
 
-export function HomeworkListFilters({ value, onChange, classes }: Props) {
+export function HomeworkListFilters({ value, onChange, classes, showProjects = false }: Props) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap">
       <div className="relative w-full sm:w-64">
@@ -51,6 +49,7 @@ export function HomeworkListFilters({ value, onChange, classes }: Props) {
           <SelectItem value="all">All types</SelectItem>
           <SelectItem value="reading">Reading</SelectItem>
           <SelectItem value="exercise">Exercise</SelectItem>
+          {showProjects ? <SelectItem value="project">Project</SelectItem> : null}
         </SelectContent>
       </Select>
 
@@ -87,6 +86,7 @@ export function HomeworkListFilters({ value, onChange, classes }: Props) {
           <SelectItem value="all">All statuses</SelectItem>
           <SelectItem value="assigned">Assigned</SelectItem>
           <SelectItem value="closed">Closed</SelectItem>
+          {showProjects ? <SelectItem value="draft">Draft</SelectItem> : null}
         </SelectContent>
       </Select>
     </div>

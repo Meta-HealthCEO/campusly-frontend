@@ -1,6 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
@@ -8,30 +7,18 @@ import { Button } from '@/components/ui/button';
 import { DataTable, type ColumnDef } from '@/components/shared/DataTable';
 import { formatDate } from '@/lib/utils';
 import { ExternalLink } from 'lucide-react';
-import type { Homework, SchoolClass } from '@/types';
 import type { SubmissionCounts } from '@/hooks/useTeacherHomework';
-
-const TYPE_LABEL: Record<Homework['type'], string> = {
-  quiz: 'Quiz',
-  reading: 'Reading',
-  exercise: 'Exercise',
-};
+import type { WorkRow } from '@/lib/work-list';
 
 interface Props {
-  items: Homework[];
-  classes: SchoolClass[];
+  items: WorkRow[];
   submissionCounts: Record<string, SubmissionCounts>;
 }
 
-export function HomeworkListTable({ items, classes, submissionCounts }: Props) {
+export function HomeworkListTable({ items, submissionCounts }: Props) {
   const router = useRouter();
 
-  const classNameById = useMemo(
-    () => new Map(classes.map((c) => [c.id, c.name])),
-    [classes],
-  );
-
-  const columns: ColumnDef<Homework>[] = [
+  const columns: ColumnDef<WorkRow>[] = [
     {
       accessorKey: 'title',
       header: 'Title',
@@ -45,32 +32,33 @@ export function HomeworkListTable({ items, classes, submissionCounts }: Props) {
       id: 'type',
       header: 'Type',
       cell: ({ row }) => (
-        <Badge variant="outline" className="capitalize">
-          {TYPE_LABEL[row.original.type]}
+        <Badge
+          variant="outline"
+          className={row.original.kind === 'project' ? 'border-accent-foreground/30 bg-accent text-accent-foreground' : 'capitalize'}
+        >
+          {row.original.typeLabel}
         </Badge>
       ),
     },
     {
       id: 'class',
       header: 'Class',
-      cell: ({ row }) => {
-        const name = classNameById.get(row.original.classId) ?? '—';
-        return <span className="truncate block max-w-40">{name}</span>;
-      },
+      cell: ({ row }) => <span className="truncate block max-w-40">{row.original.className || '—'}</span>,
     },
     {
       id: 'dueDate',
       header: 'Due',
       cell: ({ row }) => {
-        const hw = row.original;
-        const overdue = new Date(hw.dueDate) < new Date() && hw.status === 'assigned';
+        const { dueDate, status } = row.original;
+        if (!dueDate) return <span className="text-xs text-muted-foreground">Not set yet</span>;
+        const overdue = new Date(dueDate) < new Date() && status === 'assigned';
         return (
           <span
             className={`whitespace-nowrap text-sm ${
               overdue ? 'text-destructive font-medium' : ''
             }`}
           >
-            {formatDate(hw.dueDate)}
+            {formatDate(dueDate)}
           </span>
         );
       },
@@ -91,7 +79,7 @@ export function HomeworkListTable({ items, classes, submissionCounts }: Props) {
       id: 'submissions',
       header: 'Submissions',
       cell: ({ row }) => {
-        const counts = submissionCounts[row.original._id];
+        const counts = row.original.kind === 'homework' ? submissionCounts[row.original.id] : undefined;
         if (!counts) return <span className="text-xs text-muted-foreground">—</span>;
         return (
           <span className="text-sm whitespace-nowrap">
@@ -106,8 +94,8 @@ export function HomeworkListTable({ items, classes, submissionCounts }: Props) {
       header: '',
       cell: ({ row }) => (
         <div onClick={(e) => e.stopPropagation()}>
-          <Link href={`/teacher/homework/${row.original._id}`}>
-            <Button variant="ghost" size="sm" aria-label="Open homework">
+          <Link href={row.original.href}>
+            <Button variant="ghost" size="sm" aria-label={row.original.kind === 'project' ? 'Open project' : 'Open homework'}>
               <ExternalLink className="h-4 w-4" />
             </Button>
           </Link>
@@ -120,7 +108,7 @@ export function HomeworkListTable({ items, classes, submissionCounts }: Props) {
     <DataTable
       columns={columns}
       data={items}
-      onRowClick={(hw) => router.push(`/teacher/homework/${hw._id}`)}
+      onRowClick={(r) => router.push(r.href)}
     />
   );
 }
