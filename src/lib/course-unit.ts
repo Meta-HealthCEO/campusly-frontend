@@ -177,3 +177,9 @@ export function withPolledStatus(course: CourseTree, poll: PolledState | null): 
     })),
   };
 }
+
+/** The class the unit builder opens on: the one the link names, else a teacher's only class, else none (they pick). */
+export function startingUnitClass(classes: Array<{ id: string }>, requested: string | null): string {
+  if (requested) return requested;
+  return classes.length === 1 ? classes[0].id : '';
+}

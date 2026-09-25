@@ -12,7 +12,7 @@ import { useTeacherSubjects } from '@/hooks/useTeacherSubjects';
 import { selectedTopics, topicWeeks, useUnitTopics, type UnitTopic } from '@/hooks/useUnitTopics';
 import { resolveId } from '@/lib/api-helpers';
 import type { PopulatedId } from '@/types';
-import { defaultUnitTitle, schoolTermFor } from '@/lib/course-unit';
+import { defaultUnitTitle, schoolTermFor, startingUnitClass } from '@/lib/course-unit';
 import type { CreateUnitInput } from '@/hooks/useClassUnit';
 
 const MAX_TOPICS = 8;
@@ -63,7 +63,8 @@ export function UnitScopeForm({ busy, submitLabel, onSubmit, locked = false, ini
     return [...seen.values()];
   }, [entries]);
 
-  const [classId, setClassId] = useState(initialClassId ?? '');
+  const [pickedClassId, setClassId] = useState('');
+  const classId = pickedClassId || startingUnitClass(classes, initialClassId);
   const [pickedSubjectId, setSubjectId] = useState('');
   const [term, setTerm] = useState(() => schoolTermFor(new Date()));
   const [pickedUnticked, setUnticked] = useState<Set<string> | null>(null);

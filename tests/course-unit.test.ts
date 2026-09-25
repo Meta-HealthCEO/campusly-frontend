@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  startingUnitClass,
   ITEM_KIND_LABEL,
   canViewUnitInsight,
   defaultUnitTitle,
@@ -197,5 +198,18 @@ describe('isStuckWriting', () => {
       items: [{ id: 'l0', genStatus: 'generating', genError: '', updatedAt: '2026-09-24T09:49:00Z' }],
     });
     expect(next.modules[0].lessons[0].updatedAt).toBe('2026-09-24T09:49:00Z');
+  });
+});
+
+describe('startingUnitClass', () => {
+  it('opens on the class the link names', () => {
+    expect(startingUnitClass([{ id: 'a' }, { id: 'b' }], 'b')).toBe('b');
+  });
+  it("opens on a teacher's only class", () => {
+    expect(startingUnitClass([{ id: 'a' }], null)).toBe('a');
+  });
+  it('makes the teacher pick when there are several (or none yet)', () => {
+    expect(startingUnitClass([{ id: 'a' }, { id: 'b' }], null)).toBe('');
+    expect(startingUnitClass([], null)).toBe('');
   });
 });
