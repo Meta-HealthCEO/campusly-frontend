@@ -35,16 +35,21 @@ import { useCurrentStudent } from '@/hooks/useCurrentStudent';
 import { useStudentClasses } from '@/hooks/useStudentClasses';
 import { getInitials } from '@/lib/utils';
 import { resolveClassName, resolveGradeLevel, resolveGradeName } from '@/lib/student-helpers';
+import { LearnerProfile } from '@/components/student/LearnerProfile';
+import { useIsStandaloneLearner } from '@/hooks/useIsStandaloneLearner';
+import { learnerGroups } from '@/lib/learner-groups';
 
 export default function StudentProfilePage() {
   const { user, isLoading } = useAuthStore();
   const school = useSchoolStore((state) => state.school);
   const { student, loading: studentLoading } = useCurrentStudent();
-  const { homeroom, loading: classesLoading } = useStudentClasses();
+  const { homeroom, subjectClasses, loading: classesLoading, refresh: refreshClasses } = useStudentClasses();
   const { logout } = useAuth();
   const { theme, setTheme } = useTheme();
+  const isStandaloneLearner = useIsStandaloneLearner();
 
   if (isLoading || studentLoading || classesLoading || !user) return <LoadingSpinner />;
+  if (isStandaloneLearner) return <LearnerProfile name={`${user.firstName} ${user.lastName}`.trim()} email={user.email} groups={learnerGroups(homeroom, subjectClasses)} onJoined={() => void refreshClasses()} onSignOut={() => void logout()} />;
 
   const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Student';
   const initials = getInitials(user.firstName, user.lastName);

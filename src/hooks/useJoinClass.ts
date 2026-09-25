@@ -6,6 +6,9 @@ import type { SchoolClass } from '@/types';
 interface JoinClassResult {
   class: SchoolClass;
   previousClassId: string | null;
+  /** added: a second group (standalone classrooms); already: nothing changed; moved: a school learner's new class. */
+  joined: 'moved' | 'added' | 'already';
+  message: string;
 }
 
 interface UseJoinClassResult {
