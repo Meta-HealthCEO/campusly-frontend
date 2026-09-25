@@ -1,275 +1,178 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useAuthStore } from '@/stores/useAuthStore';
-import { useTeacherOnboarding } from '@/hooks/useTeacherOnboarding';
-import { useClasses, useGrades } from '@/hooks/useAcademics';
+import { ChevronLeft, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { CapsScopePicker } from '@/components/onboarding/CapsScopePicker';
+import { FirstClassStep } from '@/components/onboarding/FirstClassStep';
+import { FirstLessonStep } from '@/components/onboarding/FirstLessonStep';
+import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 import { useTeachingScope } from '@/hooks/useTeachingScope';
-import { SchoolSetupStep } from '@/components/onboarding/SchoolSetupStep';
-import type { SchoolSetupData } from '@/components/onboarding/SchoolSetupStep';
-import { GradesSubjectsStep } from '@/components/onboarding/GradesSubjectsStep';
-import { AddStudentsStep, type PendingStudent } from '@/components/onboarding/AddStudentsStep';
-import { WizardFooter } from '@/components/shared/WizardFooter';
-import { GRADE_LEVELS } from '@/lib/constants';
-import { resolveId } from '@/lib/api-helpers';
-import type { Grade } from '@/types';
+import { useTeacherOnboarding, type CreatedClass, type LinkedSchoolRow } from '@/hooks/useTeacherOnboarding';
+import { extractErrorMessage } from '@/lib/api-helpers';
+import {
+  classOptions, onboardingStep, schoolPairFor, scopeFromPicks, type ClassOption, type GradePick,
+} from '@/lib/onboarding';
+import { cn } from '@/lib/utils';
 
-const SCHOOL_SETUP_FORM_ID = 'teacher-onboarding-school-setup';
+type Step = 1 | 2 | 3;
+type SchoolPair = { gradeId: string; subjectId: string };
+
+const STEP_LABELS = ['What you teach', 'Your first class', 'Your first lesson'];
+const ACTION = 'min-h-11 w-full sm:w-auto';
+
+/** Class options for step 2, each tied to the school grade and subject saving the scope made. */
+function optionsWithPairs(
+  scope: Parameters<typeof classOptions>[0],
+  rows: { grades: LinkedSchoolRow[]; subjects: LinkedSchoolRow[] },
+): { options: ClassOption[]; pairs: Record<string, SchoolPair> } {
+  const titles: Record<string, string> = {};
+  for (const row of [...rows.grades, ...rows.subjects]) if (row.curriculumNodeId) titles[row.curriculumNodeId] = row.name;
+  const pairs: Record<string, SchoolPair> = {};
+  const options = classOptions(scope, titles).filter((o: ClassOption) => {
+    const pair = schoolPairFor(o.capsGradeId, o.capsSubjectId, rows.grades, rows.subjects);
+    if (pair) pairs[o.key] = pair;
+    return Boolean(pair);
+  });
+  return { options, pairs };
+}
 
 export default function TeacherOnboardingPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
-  const { updateSchool, createGrade, createSubject, createClass, bulkCreateStudents } =
-    useTeacherOnboarding();
-  const { grades, loading: gradesLoading, refetch: refetchGrades } = useGrades();
-  const { classes, loading: classesLoading, refetch: refetchClasses } = useClasses();
-  const { saveFromNames: saveScopeFromNames } = useTeachingScope();
+  const { status, loading: statusLoading, dismiss } = useOnboardingStatus();
+  const { scope, loading: scopeLoading, save } = useTeachingScope();
+  const { loadCapsFrameworkId, loadSchoolRows, createClass } = useTeacherOnboarding();
 
-  const [step, setStep] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [createdGrades, setCreatedGrades] = useState<Grade[]>([]);
-  const [classByGradeId, setClassByGradeId] = useState<Record<string, string>>({});
-  const [resumeChecked, setResumeChecked] = useState(false);
+  const [override, setOverride] = useState<Step | null>(null);
+  const [frameworkId, setFrameworkId] = useState<string | null>(null);
+  const [picks, setPicks] = useState<GradePick[] | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [classChoices, setClassChoices] = useState<{ options: ClassOption[]; pairs: Record<string, SchoolPair> } | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [created, setCreated] = useState<CreatedClass | null>(null);
+  const [skipping, setSkipping] = useState(false);
 
-  // Step 2 state
-  const [selectedGrades, setSelectedGrades] = useState<string[]>([]);
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
-
-  // Step 3 state
-  const [pendingStudents, setPendingStudents] = useState<PendingStudent[]>([]);
-  const [csvText, setCsvText] = useState('');
-  const [showCsv, setShowCsv] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
-  const schoolName = useMemo(() => {
-    if (!user) return '';
-    return `${user.firstName}'s Classroom`;
-  }, [user]);
-
-  const handleSchoolSetup = useCallback(async (data: SchoolSetupData) => {
-    setIsLoading(true);
-    try {
-      await updateSchool({ name: data.name, type: data.type, province: data.province });
-      toast.success('School details saved');
-      setStep(2);
-    } catch {
-      toast.error('Failed to update school details');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [updateSchool]);
-
-  const handleGradesSubjects = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const newGrades: Grade[] = [];
-      for (const name of selectedGrades) {
-        const orderIndex = GRADE_LEVELS.indexOf(name as typeof GRADE_LEVELS[number]);
-        const grade = await createGrade(name, orderIndex >= 0 ? orderIndex : 0);
-        newGrades.push(grade);
-      }
-
-      const gradeIds = newGrades.map((g) => g.id);
-      for (const name of selectedSubjects) {
-        const code = name.substring(0, 3).toUpperCase();
-        await createSubject(name, code, gradeIds);
-      }
-
-      const nextClassByGradeId: Record<string, string> = {};
-      for (const grade of newGrades) {
-        const cls = await createClass(`${grade.name} Class`, grade.id);
-        nextClassByGradeId[grade.id] = cls.id;
-      }
-
-      setCreatedGrades(newGrades);
-      setClassByGradeId(nextClassByGradeId);
-      await refetchGrades();
-      await refetchClasses();
-      // Also the teaching scope, so the curriculum pickers and AI tools start
-      // at these grades/subjects. Best-effort: never blocks onboarding.
-      await saveScopeFromNames(selectedGrades, selectedSubjects);
-      toast.success(`Created ${newGrades.length} grades, ${selectedSubjects.length} subjects, and ${newGrades.length} classes`);
-      setStep(3);
-    } catch {
-      toast.error('Failed to create grades/subjects');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedGrades, selectedSubjects, createClass, createGrade, createSubject, refetchClasses, refetchGrades, saveScopeFromNames]);
-
-  const bulkCreateStudentsForSelectedGrades = useCallback(
-    async (students: { firstName: string; lastName: string; gradeId: string }[]) => {
-      const withClasses = students.map((student) => {
-        const classId = classByGradeId[student.gradeId];
-        if (!classId) {
-          throw new Error(`No class found for grade ${student.gradeId}`);
-        }
-        return { ...student, classId };
-      });
-      return bulkCreateStudents(withClasses);
-    },
-    [bulkCreateStudents, classByGradeId],
-  );
-
-  const handleFinish = useCallback(() => {
-    toast.success('Onboarding complete! Welcome to Campusly.');
-    router.push('/teacher');
-  }, [router]);
-
-  const submitStudents = useCallback(async () => {
-    if (pendingStudents.length === 0) {
-      handleFinish();
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const payload = pendingStudents.map(({ firstName, lastName, gradeId }) => ({
-        firstName, lastName, gradeId,
-      }));
-      const { created, failed, failures } = await bulkCreateStudentsForSelectedGrades(payload);
-      if (created > 0) {
-        toast.success(`${created} student(s) added successfully`);
-      }
-      if (failed > 0) {
-        // Previously every student could 400 and the page still showed
-        // "0 student(s) added successfully" before navigating away.
-        toast.error(
-          `${failed} student(s) could not be added. ${failures[0] ?? ''}`.trim(),
-        );
-        return;
-      }
-      handleFinish();
-    } catch {
-      toast.error('Failed to add students');
-    } finally {
-      setSubmitting(false);
-    }
-  }, [pendingStudents, bulkCreateStudentsForSelectedGrades, handleFinish]);
+  const step = override ?? (statusLoading ? null : onboardingStep(status));
+  const shownPicks = picks ?? scope.subjectsByGrade;
+  const canSaveScope = useMemo(() => scopeFromPicks(shownPicks).grades.length > 0, [shownPicks]);
 
   useEffect(() => {
-    if (resumeChecked || gradesLoading || classesLoading) return;
+    if (step === 'done') router.replace('/teacher');
+  }, [step, router]);
 
-    const nextClassByGradeId = classes.reduce<Record<string, string>>((acc, cls) => {
-      const gradeId = resolveId(cls.gradeId) || resolveId(cls.grade);
-      const classId = resolveId(cls);
-      if (gradeId && classId) acc[gradeId] = classId;
-      return acc;
-    }, {});
+  useEffect(() => {
+    if (step !== 1 || frameworkId) return;
+    loadCapsFrameworkId()
+      .then((id: string | null) => setFrameworkId(id ?? ''))
+      .catch((err: unknown) => {
+        console.error('Failed to load the CAPS framework', err);
+        setFrameworkId('');
+      });
+  }, [step, frameworkId, loadCapsFrameworkId]);
 
-    setClassByGradeId(nextClassByGradeId);
-    if (Object.keys(nextClassByGradeId).length > 0) {
-      setStep(3);
+  useEffect(() => {
+    if (step !== 2 || classChoices || scopeLoading) return;
+    loadSchoolRows()
+      .then((rows) => setClassChoices(optionsWithPairs(scope, rows)))
+      .catch((err: unknown) => {
+        console.error('Failed to load grades and subjects', err);
+        setClassChoices({ options: [], pairs: {} });
+      });
+  }, [step, classChoices, scopeLoading, scope, loadSchoolRows]);
+
+  const saveScope = async (): Promise<void> => {
+    setSaving(true);
+    const saved = await save(scopeFromPicks(shownPicks));
+    setSaving(false);
+    if (!saved) {
+      toast.error("Couldn't save what you teach. Try again.");
+      return;
     }
-    setResumeChecked(true);
-  }, [classes, classesLoading, gradesLoading, resumeChecked]);
+    setClassChoices(null);
+    setOverride(2);
+  };
 
-  const allGrades = createdGrades.length > 0 ? createdGrades : grades;
-  const stepLabels = ['School Setup', 'Grades & Subjects', 'Students'];
-  const busy = isLoading || submitting;
+  const makeClass = async (name: string, option: ClassOption): Promise<void> => {
+    const pair = classChoices?.pairs[option.key];
+    if (!pair) return;
+    setCreating(true);
+    try {
+      setCreated(await createClass(name, pair.gradeId, pair.subjectId));
+    } catch (err: unknown) {
+      toast.error(extractErrorMessage(err, "Couldn't create the class. Try again."));
+    } finally {
+      setCreating(false);
+    }
+  };
 
-  const footer = (() => {
-    if (step === 1) {
-      return {
-        nextFormId: SCHOOL_SETUP_FORM_ID,
-        nextLabel: isLoading ? 'Saving…' : 'Next: Add Grades & Subjects',
-        nextLoading: isLoading,
-        nextDisabled: isLoading,
-      };
-    }
-    if (step === 2) {
-      return {
-        onNext: () => void handleGradesSubjects(),
-        nextLabel: isLoading ? 'Creating grades & subjects…' : 'Next: Add Students',
-        nextLoading: isLoading,
-        nextDisabled: isLoading || selectedGrades.length === 0 || selectedSubjects.length === 0,
-      };
-    }
-    return {
-      onNext: () => void submitStudents(),
-      nextLabel: busy
-        ? 'Adding students…'
-        : pendingStudents.length === 0
-          ? 'Finish'
-          : `Done — Add ${pendingStudents.length} Student${pendingStudents.length !== 1 ? 's' : ''}`,
-      nextLoading: busy,
-      nextDisabled: busy,
-      isFinal: true,
-      secondary: pendingStudents.length === 0
-        ? undefined
-        : {
-            label: 'Skip — add students later',
-            onClick: handleFinish,
-            disabled: busy,
-          },
-    };
-  })();
+  const skipLesson = async (): Promise<void> => {
+    setSkipping(true);
+    await dismiss();
+    router.push('/teacher');
+  };
+
+  if (step === null || step === 'done' || scopeLoading) return <LoadingSpinner />;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 pb-24 sm:py-12">
-      {/* Progress indicator */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-2">
-          {stepLabels.map((label, i) => (
-            <div key={label} className="flex items-center gap-1">
-              <div
-                className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium ${
-                  i + 1 <= step
-                    ? 'bg-[#2563EB] text-white'
-                    : 'bg-muted text-muted-foreground'
-                }`}
-              >
-                {i + 1}
-              </div>
-              <span className="hidden sm:inline text-xs text-muted-foreground">{label}</span>
+    <div className="mx-auto max-w-2xl space-y-6 px-0 py-2 sm:py-8">
+      <ol className="grid grid-cols-3 gap-2" aria-label="Setup steps">
+        {STEP_LABELS.map((label: string, i: number) => (
+          <li key={label} className="space-y-1.5" aria-current={i + 1 === step ? 'step' : undefined}>
+            <div className={cn('h-1 rounded-full', i + 1 <= step ? 'bg-primary' : 'bg-muted')} />
+            <p className={cn('text-xs', i + 1 === step ? 'font-medium text-foreground' : 'text-muted-foreground')}>
+              <span className="font-mono">{i + 1}</span> {label}
+            </p>
+          </li>
+        ))}
+      </ol>
+
+      <section className="rounded-xl border bg-card p-4 sm:p-6">
+        {step === 1 ? (
+          <div className="space-y-4">
+            <div>
+              <h1 className="text-lg font-semibold">What do you teach?</h1>
+              <p className="text-sm text-muted-foreground">Pick your grades, then the subjects in each. Lessons, papers and AI use these.</p>
             </div>
-          ))}
-        </div>
-        <div className="h-1 rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full rounded-full bg-[#2563EB] transition-all"
-            style={{ width: `${(step / 3) * 100}%` }}
+            {frameworkId === null ? <LoadingSpinner /> : <CapsScopePicker frameworkId={frameworkId} picks={shownPicks} onChange={setPicks} />}
+          </div>
+        ) : step === 2 ? (
+          <FirstClassStep
+            options={classChoices?.options ?? []}
+            loading={classChoices === null}
+            creating={creating}
+            created={created}
+            onCreate={(name: string, option: ClassOption) => void makeClass(name, option)}
           />
-        </div>
-      </div>
+        ) : (
+          <FirstLessonStep preferredClassId={created?.id ?? null} />
+        )}
+      </section>
 
-      {/* Step content */}
-      <div className="rounded-xl border bg-card p-4 sm:p-6">
-        {step === 1 && (
-          <SchoolSetupStep
-            defaultName={schoolName}
-            formId={SCHOOL_SETUP_FORM_ID}
-            onNext={handleSchoolSetup}
-          />
-        )}
-        {step === 2 && (
-          <GradesSubjectsStep
-            selectedGrades={selectedGrades}
-            selectedSubjects={selectedSubjects}
-            onGradesChange={setSelectedGrades}
-            onSubjectsChange={setSelectedSubjects}
-          />
-        )}
-        {step === 3 && (
-          <AddStudentsStep
-            grades={allGrades}
-            pendingStudents={pendingStudents}
-            onPendingChange={setPendingStudents}
-            csvText={csvText}
-            onCsvTextChange={setCsvText}
-            showCsv={showCsv}
-            onShowCsvToggle={() => setShowCsv((prev) => !prev)}
-          />
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+        {step === 2 && !created ? (
+          <Button variant="ghost" className={ACTION} onClick={() => setOverride(1)} disabled={creating}>
+            <ChevronLeft className="h-4 w-4" aria-hidden /> Back
+          </Button>
+        ) : <span className="hidden sm:block" />}
+        {step === 1 ? (
+          <Button className={ACTION} onClick={() => void saveScope()} disabled={!canSaveScope || saving}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null} Save and continue
+          </Button>
+        ) : step === 2 && !created ? (
+          <Button type="submit" form="first-class-form" className={ACTION} disabled={creating || !classChoices?.options.length}>
+            {creating ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null} Create class
+          </Button>
+        ) : step === 2 ? (
+          <Button className={ACTION} onClick={() => setOverride(3)}>Continue</Button>
+        ) : (
+          <Button variant="outline" className={ACTION} onClick={() => void skipLesson()} disabled={skipping}>
+            Skip for now
+          </Button>
         )}
       </div>
-
-      <WizardFooter
-        step={step}
-        totalSteps={3}
-        onBack={step > 1 ? () => setStep(step - 1) : undefined}
-        {...footer}
-      />
     </div>
   );
 }

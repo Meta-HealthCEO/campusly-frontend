@@ -9,6 +9,8 @@ const STANDALONE_TEACHER_PREFIXES = [
   '/teacher/classes',
   '/teacher/students',
   '/teacher/attendance',
+  // Class units: onboarding's first lesson opens the builder here.
+  '/teacher/courses',
   '/teacher/curriculum/textbooks',
   '/teacher/curriculum/content',
   '/teacher/curriculum/preview',

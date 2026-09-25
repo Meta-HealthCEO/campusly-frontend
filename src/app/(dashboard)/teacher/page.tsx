@@ -5,11 +5,10 @@ import { Sparkles } from 'lucide-react';
 import { DashboardSkeleton } from '@/components/shared/skeletons';
 import { buttonVariants } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { useSchoolStore } from '@/stores/useSchoolStore';
 import { useTeacherDashboard } from '@/hooks/useTeacherDashboard';
 import { useTeacherToday } from '@/hooks/useTeacherToday';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
-import { useTeachingScope } from '@/hooks/useTeachingScope';
+import { onboardingChecklist, onboardingStep } from '@/lib/onboarding';
 import { AIQuickMakeHero } from '@/components/teacher-home/AIQuickMakeHero';
 import { GettingStartedCard } from '@/components/teacher-home/GettingStartedCard';
 import { YourDayCard, registerHref } from '@/components/teacher-home/YourDayCard';
@@ -30,23 +29,17 @@ const FADE_IN = 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in
 
 export default function TeacherHomePage() {
   const user = useAuthStore((s) => s.user);
-  const school = useSchoolStore((s) => s.school);
   const dashboard = useTeacherDashboard();
   const today = useTeacherToday();
   const { status: onboarding, loading: onboardingLoading } = useOnboardingStatus();
-  const { isEmpty: scopeEmpty, loading: scopeLoading } = useTeachingScope();
 
   const firstName = user?.firstName ?? 'Teacher';
   const now = new Date();
   const salutation = salutationForHour(now.getHours());
 
-  const scopeSet = !scopeLoading && !scopeEmpty;
-  const checklistReady = !onboardingLoading && !scopeLoading;
   const isStandaloneTeacher = user?.isStandaloneTeacher === true;
-  const showChecklist =
-    isStandaloneTeacher &&
-    checklistReady &&
-    !(scopeSet && onboarding.hasClass && onboarding.hasFirstContent && onboarding.hasStudent);
+  // The same steps as /teacher/onboarding, until they are done (or the last one is skipped).
+  const showChecklist = isStandaloneTeacher && !onboardingLoading && onboardingStep(onboarding) !== 'done';
 
   // Independent teachers rarely keep a timetable here — don't show them an
   // empty day every morning.
@@ -89,13 +82,7 @@ export default function TeacherHomePage() {
 
       {showChecklist ? (
         <div className={FADE_IN}>
-          <GettingStartedCard
-            scopeSet={scopeSet}
-            hasClass={onboarding.hasClass}
-            hasFirstContent={onboarding.hasFirstContent}
-            hasStudent={onboarding.hasStudent}
-            classCode={school?.joinCode ?? null}
-          />
+          <GettingStartedCard items={onboardingChecklist(onboarding)} />
         </div>
       ) : null}
 

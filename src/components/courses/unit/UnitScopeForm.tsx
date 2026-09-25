@@ -25,6 +25,16 @@ interface Props {
   onSubmit: (input: CreateUnitInput) => void;
   /** Once a unit exists, its scope can't change here. */
   locked?: boolean;
+  /** Start on this class (and its subject), e.g. from onboarding. */
+  initialClassId?: string | null;
+  /** Start with only this CAPS topic ticked, until the teacher changes the topics. */
+  preferTopicId?: string | null;
+}
+
+/** Everything except the preferred topic starts unticked; with no (known) preference, nothing does. */
+function preferredUnticked(topics: UnitTopic[], preferTopicId: string | null): Set<string> {
+  if (!preferTopicId || !topics.some((t: UnitTopic) => t.id === preferTopicId)) return new Set();
+  return new Set(topics.filter((t: UnitTopic) => t.id !== preferTopicId).map((t: UnitTopic) => t.id));
 }
 
 function gradeNameOf(cls: { gradeName?: string; grade?: { name?: string } | null; gradeId?: unknown }): string {
@@ -33,7 +43,7 @@ function gradeNameOf(cls: { gradeName?: string; grade?: { name?: string } | null
 }
 
 /** Class, subject, term and CAPS topics: what the AI outlines a unit from. */
-export function UnitScopeForm({ busy, submitLabel, onSubmit, locked = false }: Props) {
+export function UnitScopeForm({ busy, submitLabel, onSubmit, locked = false, initialClassId = null, preferTopicId = null }: Props) {
   const { entries, loading: classesLoading } = useTeacherClasses();
   const classes = useMemo(() => {
     const seen = new Map<string, { id: string; name: string; gradeId: string; gradeName: string; subjectId: string }>();
@@ -51,16 +61,19 @@ export function UnitScopeForm({ busy, submitLabel, onSubmit, locked = false }: P
     return [...seen.values()];
   }, [entries]);
 
-  const [classId, setClassId] = useState('');
-  const [subjectId, setSubjectId] = useState('');
+  const [classId, setClassId] = useState(initialClassId ?? '');
+  const [pickedSubjectId, setSubjectId] = useState('');
   const [term, setTerm] = useState(() => schoolTermFor(new Date()));
-  const [unticked, setUnticked] = useState<Set<string>>(new Set());
+  const [pickedUnticked, setUnticked] = useState<Set<string> | null>(null);
   const [title, setTitle] = useState<string | null>(null);
 
   const cls = classes.find((c) => c.id === classId) ?? null;
+  // A preset class brings its subject until the teacher picks another.
+  const subjectId = pickedSubjectId || cls?.subjectId || '';
   const { subjects } = useTeacherSubjects(cls?.gradeId || undefined);
   const subject = subjects.find((s) => s.id === subjectId) ?? null;
   const { topics, loading: topicsLoading } = useUnitTopics(subjectId, cls?.gradeId ?? '', term);
+  const unticked = pickedUnticked ?? preferredUnticked(topics, preferTopicId);
   const chosen = selectedTopics(topics, unticked, MAX_TOPICS);
   const chosenIds = useMemo(() => new Set(chosen.map((t) => t.id)), [chosen]);
   const shownTitle = title ?? defaultUnitTitle(subject?.name ?? '', cls?.gradeName ?? '', term);
@@ -73,8 +86,8 @@ export function UnitScopeForm({ busy, submitLabel, onSubmit, locked = false }: P
   };
 
   const toggle = (id: string): void => {
-    setUnticked((prev) => {
-      const next = new Set(prev);
+    setUnticked(() => {
+      const next = new Set(unticked);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;

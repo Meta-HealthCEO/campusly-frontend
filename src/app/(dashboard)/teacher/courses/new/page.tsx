@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -15,6 +15,8 @@ import { shouldShowFreeUnitsBanner } from '@/lib/course-unit';
 
 export default function NewUnitPage() {
   const router = useRouter();
+  // Onboarding opens this page on the teacher's class and a CAPS topic.
+  const searchParams = useSearchParams();
   const { createUnit, draftOutline } = useClassUnit();
   const freeUnits = useAuthStore((s) => s.freeAllowance?.courseUnits ?? null);
   const refreshAccount = useAuthStore((s) => s.refreshAccount);
@@ -61,7 +63,7 @@ export default function NewUnitPage() {
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <section className="rounded-xl border border-border bg-card p-4 sm:p-6" aria-label="Unit scope">
-          <UnitScopeForm busy={busy} locked={unitId !== null} submitLabel={error ? 'Try again' : 'Draft the outline'} onSubmit={(input) => void draft(input)} />
+          <UnitScopeForm initialClassId={searchParams.get('classId')} preferTopicId={searchParams.get('topicId')} busy={busy} locked={unitId !== null} submitLabel={error ? 'Try again' : 'Draft the outline'} onSubmit={(input) => void draft(input)} />
           {error ? (
             <div role="alert" className="mt-4 space-y-2 rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">
               <p>{error}</p>

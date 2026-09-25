@@ -3,19 +3,25 @@ import axios from 'axios';
 import apiClient from '@/lib/api-client';
 import { useAuthStore } from '@/stores/useAuthStore';
 
-interface OnboardingStatus {
+export interface TeacherOnboardingStatus {
+  /** Picked at least one CAPS grade with subjects (onboarding step 1). */
+  hasScope: boolean;
   hasClass: boolean;
   hasStudent: boolean;
   hasFramework: boolean;
   hasFirstContent: boolean;
+  /** Built a class unit, shown as a lesson (onboarding step 3). */
+  hasUnit: boolean;
   dismissed: boolean;
 }
 
-const DEFAULT_STATUS: OnboardingStatus = {
+const DEFAULT_STATUS: TeacherOnboardingStatus = {
+  hasScope: false,
   hasClass: false,
   hasStudent: false,
   hasFramework: false,
   hasFirstContent: false,
+  hasUnit: false,
   dismissed: false,
 };
 
@@ -23,7 +29,8 @@ export function useOnboardingStatus() {
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isAuthLoading = useAuthStore((state) => state.isLoading);
-  const [status, setStatus] = useState<OnboardingStatus>(DEFAULT_STATUS);
+  const [status, setStatus] = useState<TeacherOnboardingStatus>(DEFAULT_STATUS);
+  const [reloadKey, setReloadKey] = useState(0);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -49,10 +56,12 @@ export function useOnboardingStatus() {
         const data = res.data?.data ?? res.data;
         if (cancelled) return;
         setStatus({
+          hasScope: Boolean(data?.hasScope),
           hasClass: Boolean(data?.hasClass),
           hasStudent: Boolean(data?.hasStudent),
           hasFramework: Boolean(data?.hasFramework),
           hasFirstContent: Boolean(data?.hasFirstContent),
+          hasUnit: Boolean(data?.hasUnit),
           dismissed: Boolean(data?.dismissed),
         });
       } catch (err: unknown) {
@@ -74,7 +83,9 @@ export function useOnboardingStatus() {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, isAuthLoading, user?.isStandaloneTeacher, user?.role]);
+  }, [isAuthenticated, isAuthLoading, user?.isStandaloneTeacher, user?.role, reloadKey]);
+
+  const refetch = useCallback(() => setReloadKey((k: number) => k + 1), []);
 
   const dismiss = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -86,5 +97,5 @@ export function useOnboardingStatus() {
     }
   }, [isAuthenticated]);
 
-  return { status, loading, dismiss };
+  return { status, loading, dismiss, refetch };
 }
