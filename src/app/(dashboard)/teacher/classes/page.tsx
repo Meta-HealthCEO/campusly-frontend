@@ -19,6 +19,7 @@ import { resolveId } from '@/lib/api-helpers';
 import { useClassesPageState } from '@/hooks/useClassesPageState';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { TeacherClassEntry } from '@/hooks/useTeacherClasses';
+import { classesPageCopy } from '@/lib/teacher-classes';
 
 export default function TeacherClassesPage() {
   const user = useAuthStore((state) => state.user);
@@ -56,14 +57,7 @@ export default function TeacherClassesPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeader eyebrow={sectionEyebrow('Class')}
-          title={isStandaloneTeacher ? 'Teaching Groups' : 'My Classes'}
-          description={
-            isStandaloneTeacher
-              ? 'Organise work by grade and subject. Add learners later when you are ready for digital assignments.'
-              : 'Manage your classes and student rosters'
-          }
-        />
+        <PageHeader eyebrow={sectionEyebrow('Class')} {...classesPageCopy(isStandaloneTeacher, 'Manage your classes and student rosters')} />
         <CardGridSkeleton count={6} />
       </div>
     );
@@ -71,14 +65,7 @@ export default function TeacherClassesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow={sectionEyebrow('Class')}
-        title={isStandaloneTeacher ? 'Teaching Groups' : 'My Classes'}
-        description={
-          isStandaloneTeacher
-            ? 'Use groups as folders for lesson plans, resources, homework, and papers. Students are optional until you choose to invite them.'
-            : description
-        }
-      >
+      <PageHeader eyebrow={sectionEyebrow('Class')} {...classesPageCopy(isStandaloneTeacher, description)}>
         <Button onClick={() => setShowCreateDialog(true)} className="gap-1">
           <Plus className="h-4 w-4" /> Create {entityLabel}
         </Button>
