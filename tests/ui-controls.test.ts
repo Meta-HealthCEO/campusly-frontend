@@ -70,3 +70,12 @@ describe('form controls', () => {
     for (const file of ['button-variants.ts', 'input.tsx', 'textarea.tsx', 'select.tsx']) expect(ui(file)).not.toMatch(/ring-3/);
   });
 });
+
+describe('tab panels (Task 16 gate: a focusable panel shows the ring)', () => {
+  it('TabsContent is a tab stop (base-ui tabindex=0), so it carries the shared focus ring', () => {
+    const src = ui('tabs.tsx');
+    const panel = src.slice(src.indexOf('function TabsContent'), src.indexOf('export {'));
+    expect(panel).toMatch(/FOCUS_RING/);
+    expect(panel).toMatch(/rounded-control/);
+  });
+});

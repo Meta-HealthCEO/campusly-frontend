@@ -122,7 +122,7 @@ export function ClassSubjectTopicPicker({
               onClassChange(nextValue ?? '', getClassGradeId(nextClass));
             }}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full" aria-label="Class">
               <SelectValue placeholder="Select class">
                 {selectedClass ? formatClassLabel(selectedClass) : undefined}
               </SelectValue>
@@ -155,7 +155,7 @@ export function ClassSubjectTopicPicker({
             }}
             disabled={!classId || filteredSubjects.length === 0}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full" aria-label="Subject">
               <SelectValue
                 placeholder={
                   !classId

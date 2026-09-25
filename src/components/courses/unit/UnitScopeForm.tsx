@@ -131,7 +131,7 @@ export function UnitScopeForm({ busy, submitLabel, onSubmit, locked = false, ini
 
       <fieldset className="space-y-1.5" disabled={locked}>
         <legend className="text-sm font-medium">Term</legend>
-        <div className="flex gap-2" role="radiogroup" aria-label="Term">
+        <div className="grid grid-cols-2 gap-2 sm:flex" role="radiogroup" aria-label="Term">
           {TERMS.map((t) => (
             <Button key={t} type="button" role="radio" aria-checked={term === t} variant={term === t ? 'default' : 'outline'}
               onClick={() => { setTerm(t); setUnticked(new Set()); }} className="min-h-11 flex-1 sm:min-h-9 sm:flex-none">

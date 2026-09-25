@@ -80,6 +80,7 @@ export default function TeacherStudentsPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search students..."
+          aria-label="Search students"
           className="pl-9"
         />
       </div>

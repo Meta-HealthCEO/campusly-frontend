@@ -152,8 +152,9 @@ export function StepSetup({
             )}
 
             <div className="space-y-1.5">
-              <Label>Total marks <span className="text-destructive">*</span></Label>
+              <Label htmlFor="project-total-marks">Total marks <span className="text-destructive">*</span></Label>
               <Input
+                id="project-total-marks"
                 type="number"
                 min={1}
                 max={1000}
@@ -163,14 +164,14 @@ export function StepSetup({
             </div>
 
             <div className="space-y-1.5">
-              <Label>Length hint</Label>
+              <Label htmlFor="project-length">Length hint</Label>
               <Select
                 value={lengthHint}
                 onValueChange={(v: string | null) =>
                   setLengthHint((v ?? 'medium') as AssignmentLengthHint)
                 }
               >
-                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectTrigger id="project-length" className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {ASSIGNMENT_LENGTHS.map((l) => (
                     <SelectItem key={l} value={l}>{LENGTH_LABELS[l]}</SelectItem>
@@ -180,8 +181,9 @@ export function StepSetup({
             </div>
 
             <div className="space-y-1.5">
-              <Label>Rubric criteria</Label>
+              <Label htmlFor="project-criteria">Rubric criteria</Label>
               <Input
+                id="project-criteria"
                 type="number"
                 min={2}
                 max={10}
@@ -196,10 +198,11 @@ export function StepSetup({
             </div>
 
             <div className="space-y-1.5">
-              <Label>
+              <Label htmlFor="project-instructions">
                 Instructions for the AI <span className="text-destructive">*</span>
               </Label>
               <Textarea
+                id="project-instructions"
                 value={instructions}
                 onChange={(e) => setInstructions(e.target.value)}
                 rows={8}

@@ -70,6 +70,7 @@ export function PricingCards({ plans, currentPlanCode, onSelect, loading }: Prop
         <Switch
           checked={interval === 'annual'}
           onCheckedChange={(v: boolean) => setInterval(v ? 'annual' : 'monthly')}
+          aria-label="Bill annually"
         />
         <span
           className={`text-sm font-medium ${interval === 'annual' ? 'text-foreground' : 'text-muted-foreground'}`}

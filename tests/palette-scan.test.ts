@@ -34,6 +34,11 @@ describe('findTints (orchestrator ruling O1 revised: no tinted surfaces)', () =>
       .toEqual(['bg-destructive/10', 'hover:bg-destructive/15', 'data-[x=y]:bg-primary/5', 'bg-success/20', 'bg-secure-strong/30']);
   });
 
+  it('finds tinted gradient washes and arbitrary alphas too', () => {
+    expect(findTints('bg-linear-to-br from-primary/5 to-transparent via-primary/10 to-primary/15 bg-primary/[0.04]'))
+      .toEqual(['from-primary/5', 'via-primary/10', 'to-primary/15', 'bg-primary/[0.04]']);
+  });
+
   it('allows solid marks, hover on a solid, and neutral see-through fills', () => {
     expect(findTints('bg-primary hover:bg-primary/90 bg-muted/50 bg-black/40 bg-foreground/10 bg-input/30 bg-card/95 bg-primary-foreground')).toEqual([]);
   });

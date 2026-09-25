@@ -32,3 +32,23 @@ export function diffRequestSets(before: readonly string[], after: readonly strin
   const has = new Set(after);
   return { added: after.filter((k: string) => !had.has(k)), removed: before.filter((k: string) => !has.has(k)) };
 }
+
+/** Drops timer-driven keys. Applied to the baseline and to the live run alike, so a filtered key never reads as a change. */
+export function withoutPolling(set: readonly string[], polling: readonly RegExp[]): string[] {
+  return set.filter((k: string) => !polling.some((p: RegExp) => p.test(k)));
+}
+
+/**
+ * Whether the page moved on to another path (e.g. /teacher/assignments sends a standalone teacher to /teacher/homework).
+ * A redirecting page has no request set of its own: what it records depends on how far the redirect got.
+ */
+export function landedElsewhere(route: string, finalUrl: string): boolean {
+  const trim = (p: string): string => p.replace(/\/+$/, '') || '/';
+  let landed: string;
+  try {
+    landed = new URL(finalUrl).pathname;
+  } catch {
+    return false;
+  }
+  return trim(new URL(route, 'http://localhost').pathname) !== trim(landed);
+}

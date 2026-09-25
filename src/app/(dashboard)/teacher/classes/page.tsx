@@ -87,10 +87,10 @@ export default function TeacherClassesPage() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`Search ${entityLabelPlural.toLowerCase()}...`} className="pl-9" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`Search ${entityLabelPlural.toLowerCase()}...`} aria-label={`Search ${entityLabelPlural.toLowerCase()}`} className="pl-9" />
           </div>
           <Select onValueChange={(val: unknown) => setFilterGrade(val as string)} defaultValue="all">
-            <SelectTrigger className="w-full sm:w-40">
+            <SelectTrigger className="w-full sm:w-40" aria-label="Grade">
               <SelectValue placeholder="All grades" />
             </SelectTrigger>
             <SelectContent>
@@ -101,7 +101,7 @@ export default function TeacherClassesPage() {
             </SelectContent>
           </Select>
           <Select onValueChange={(val: unknown) => setFilterSubject(val as string)} defaultValue="all">
-            <SelectTrigger className="w-full sm:w-40">
+            <SelectTrigger className="w-full sm:w-40" aria-label="Subject">
               <SelectValue placeholder="All subjects" />
             </SelectTrigger>
             <SelectContent>

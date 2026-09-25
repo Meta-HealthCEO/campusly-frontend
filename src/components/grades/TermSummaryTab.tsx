@@ -131,6 +131,7 @@ export function TermSummaryTab({ classId, term, academicYear, canEditWeightings,
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search students…"
+              aria-label="Search students"
               className="w-full sm:w-64"
             />
           </div>
@@ -176,7 +177,7 @@ export function TermSummaryTab({ classId, term, academicYear, canEditWeightings,
                   setSubjectFilter(val === 'all' || !val ? '' : val)
                 }
               >
-                <SelectTrigger className="w-full sm:w-56">
+                <SelectTrigger className="w-full sm:w-56" aria-label="Subject">
                   <SelectValue placeholder="All subjects" />
                 </SelectTrigger>
                 <SelectContent>

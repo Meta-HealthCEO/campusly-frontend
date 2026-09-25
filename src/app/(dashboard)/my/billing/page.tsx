@@ -160,8 +160,8 @@ export default function BillingPage() {
       </div>
 
       {/* ─── Hero plan card ─── */}
-      <section className="mt-6 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-        <div className="bg-linear-to-br from-primary/5 to-transparent p-6 sm:p-8">
+      <section className="mt-6 overflow-hidden rounded-card border border-border bg-card shadow-card">
+        <div className="p-6 sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">

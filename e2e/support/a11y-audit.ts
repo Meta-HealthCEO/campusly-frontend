@@ -31,9 +31,13 @@ export async function unlabelledControls(page: Page): Promise<string[]> {
     document.querySelectorAll('input:not([type=hidden]), select, textarea, [role=combobox], [role=switch], [role=checkbox], [role=radio], [role=slider]')
       .forEach((el: Element) => {
         if (!visible(el)) return;
+        // Ruling O3: hidden from assistive tech AND out of the tab order is not a user control (base-ui Select's form input).
+        if (el.getAttribute('aria-hidden') === 'true' && el.getAttribute('tabindex') === '-1') return;
         const labels = (el as HTMLInputElement).labels;
+        // ARIA takes a radio, checkbox or switch role's name from its text (a <button role="radio">Term 1</button>).
+        const nameFromContent = /^(radio|checkbox|switch)$/.test(el.getAttribute('role') ?? '') && text(el) !== '';
         const labelled = (labels !== null && labels !== undefined && Array.from(labels).some((l: HTMLLabelElement) => text(l) !== ''))
-          || ariaName(el) !== '' || text(el.closest('label')) !== '';
+          || ariaName(el) !== '' || text(el.closest('label')) !== '' || nameFromContent;
         if (!labelled) problems.push(`unlabelled ${describe(el)}`);
       });
     document.querySelectorAll('button, [role=button], a[href]').forEach((el: Element) => {

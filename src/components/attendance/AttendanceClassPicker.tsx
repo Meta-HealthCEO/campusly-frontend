@@ -20,7 +20,7 @@ export function AttendanceClassPicker({ classes, value, onChange, disabled }: At
       }}
       disabled={disabled}
     >
-      <SelectTrigger className="w-full sm:w-64">
+      <SelectTrigger className="w-full sm:w-64" aria-label="Class">
         <SelectValue placeholder="Select class" />
       </SelectTrigger>
       <SelectContent>

@@ -94,6 +94,7 @@ export function AttendanceTodayTab(props: AttendanceTodayTabProps) {
               type="date"
               value={selectedDate}
               max={todayISO}
+              aria-label="Date"
               onChange={(e) => { void onChangeDate(e.target.value); }}
               className="w-full sm:w-40"
             />
@@ -107,7 +108,7 @@ export function AttendanceTodayTab(props: AttendanceTodayTabProps) {
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground whitespace-nowrap">Period:</span>
             <Select value={String(period)} onValueChange={(v: unknown) => onSetPeriod(Number(v as string))}>
-              <SelectTrigger className="w-full sm:w-32"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-32" aria-label="Period"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {registerPeriodOptions(period).map((p: number) => (
                   <SelectItem key={p} value={String(p)}>Period {p}</SelectItem>
@@ -169,7 +170,7 @@ export function AttendanceTodayTab(props: AttendanceTodayTabProps) {
           <Users className="h-4 w-4" />
           <span>Tap a status to mark each student</span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <AttendanceBulkMarkMenu onMarkAll={onMarkAll} disabled={saving} />
           <Button
             size="default"
@@ -188,6 +189,7 @@ export function AttendanceTodayTab(props: AttendanceTodayTabProps) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search students by name or admission number..."
+            aria-label="Search students"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 w-full"

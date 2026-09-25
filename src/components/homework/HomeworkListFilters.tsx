@@ -29,6 +29,7 @@ export function HomeworkListFilters({ value, onChange, classes, showProjects = f
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Search title..."
+          aria-label="Search title"
           value={value.search}
           onChange={(e) => onChange({ ...value, search: e.target.value })}
           className="pl-8"
@@ -42,7 +43,7 @@ export function HomeworkListFilters({ value, onChange, classes, showProjects = f
             onChange({ ...value, type: v as HomeworkListFilterState['type'] });
         }}
       >
-        <SelectTrigger className="w-full sm:w-40">
+        <SelectTrigger className="w-full sm:w-40" aria-label="Type">
           <SelectValue placeholder="Type" />
         </SelectTrigger>
         <SelectContent>
@@ -59,7 +60,7 @@ export function HomeworkListFilters({ value, onChange, classes, showProjects = f
           if (typeof v === 'string') onChange({ ...value, classId: v });
         }}
       >
-        <SelectTrigger className="w-full sm:w-48">
+        <SelectTrigger className="w-full sm:w-48" aria-label="Class">
           <SelectValue placeholder="Class" />
         </SelectTrigger>
         <SelectContent>
@@ -79,7 +80,7 @@ export function HomeworkListFilters({ value, onChange, classes, showProjects = f
             onChange({ ...value, status: v as HomeworkListFilterState['status'] });
         }}
       >
-        <SelectTrigger className="w-full sm:w-40">
+        <SelectTrigger className="w-full sm:w-40" aria-label="Status">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>

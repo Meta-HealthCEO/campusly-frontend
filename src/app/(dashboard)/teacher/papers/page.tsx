@@ -198,7 +198,7 @@ export default function TeacherPapersPage() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="space-y-1 sm:w-44">
-          <label className="text-xs text-muted-foreground">Status</label>
+          <label className="text-xs text-muted-foreground" htmlFor="status-filter">Status</label>
           <Select
             value={filters.status ?? 'all'}
             onValueChange={(value) => {
@@ -206,7 +206,7 @@ export default function TeacherPapersPage() {
               setFilters({ ...filters, status: nextStatus });
             }}
           >
-            <SelectTrigger className="w-full">
+            <SelectTrigger id="status-filter" className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

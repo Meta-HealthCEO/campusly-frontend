@@ -128,14 +128,14 @@ export default function HomePage() {
               For teachers
             </Link>
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link href="/login">
-              <Button variant="ghost" size="lg">
+              <Button variant="ghost" size="lg" className="px-3 sm:px-4">
                 Login
               </Button>
             </Link>
             <Link href="/register">
-              <Button variant="outline" size="lg">
+              <Button variant="outline" size="lg" className="px-3 sm:px-4">
                 Get Started
               </Button>
             </Link>
@@ -231,7 +231,7 @@ export default function HomePage() {
                 key={tier.name}
                 className={`relative flex flex-col ${
                   tier.highlighted
-                    ? 'border-2 border-primary ring-1 ring-primary/20'
+                    ? 'overflow-visible border-2 border-primary ring-1 ring-primary/20'
                     : 'border'
                 }`}
               >

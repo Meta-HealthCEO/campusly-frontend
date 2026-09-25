@@ -11,7 +11,8 @@ const BLUEPRINT = [
   'src/components/design-gallery', 'src/components/auth', 'src/components/subscription', 'src/components/notifications',
 ].flatMap((dir: string) => listSourceFiles(dir));
 const SWEPT = [
-  'src/app/page.tsx', 'src/app/login/page.tsx', 'src/app/register-student/page.tsx',
+  'src/app/page.tsx', 'src/app/login/page.tsx', 'src/app/register-student/page.tsx', 'src/app/reset-password/page.tsx',
+  'src/components/billing/WhatYouGet.tsx',
   'src/app/(dashboard)/my/billing/page.tsx', 'src/app/(dashboard)/teacher/settings/join-school/page.tsx',
   'src/components/content/renderers/StepRevealBlock.tsx', 'src/components/courses/CourseBuilderMetaPanel.tsx',
   'src/components/curriculum/CurriculumTreeNodeRow.tsx', 'src/components/student-360/AcademicSummaryCard.tsx',

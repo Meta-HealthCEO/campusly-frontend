@@ -131,6 +131,7 @@ export default function TeacherCoursesPage() {
               setFilters({ ...filters, search: e.target.value || undefined })
             }
             placeholder={`Search ${w.Many.toLowerCase()}...`}
+            aria-label={`Search ${w.Many.toLowerCase()}`}
             className="pl-9"
           />
         </div>
@@ -144,7 +145,7 @@ export default function TeacherCoursesPage() {
             });
           }}
         >
-          <SelectTrigger className="w-full sm:w-44">
+          <SelectTrigger className="w-full sm:w-44" aria-label="Status">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>

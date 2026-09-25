@@ -53,7 +53,7 @@ function ResetPasswordContent() {
         description="Choose a strong password for your account."
       >
         {apiError && (
-          <div className="mb-4 rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <div className="mb-4 rounded-control border border-destructive bg-card px-4 py-3 text-sm text-destructive">
             <p>{apiError}</p>
             <p className="mt-1">
               <Link

@@ -164,7 +164,7 @@ export function AttendanceHistoryTab({ classId, period, students, onSetPeriod, o
           </Button>
           <Button variant="outline" size="sm" onClick={handleToday}>Today</Button>
           <Select value={String(period)} onValueChange={(v: unknown) => onSetPeriod(Number(v as string))}>
-            <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-28" aria-label="Period"><SelectValue /></SelectTrigger>
             <SelectContent>
               {registerPeriodOptions(period).map((p: number) => (
                 <SelectItem key={p} value={String(p)}>Period {p}</SelectItem>

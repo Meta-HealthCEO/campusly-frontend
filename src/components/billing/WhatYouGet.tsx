@@ -17,7 +17,7 @@ export function WhatYouGet({ current }: { current: TeacherPlan }) {
         {PLANS.map(({ plan, name }) => (
           <div
             key={plan}
-            className={`rounded-xl border p-4 ${plan === current ? 'border-primary/40 bg-primary/5' : 'border-border'}`}
+            className={`rounded-card border p-4 ${plan === current ? 'border-primary' : 'border-border'}`}
           >
             <p className="flex items-center gap-2 font-semibold">
               {name}

@@ -112,13 +112,14 @@ export default function TeacherTextbooksPage() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search textbooks..."
+            aria-label="Search textbooks"
             value={search}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
             className="pl-9 w-full"
           />
         </div>
         <Select value={filterFramework} onValueChange={(v: unknown) => setFilterFramework(v as string)}>
-          <SelectTrigger className="w-full sm:w-44">
+          <SelectTrigger className="w-full sm:w-44" aria-label="Framework">
             <SelectValue placeholder="Framework">
               {filterFramework === 'all' ? 'All Frameworks' : frameworkOptions.find((f) => f.id === filterFramework)?.name ?? 'Framework'}
             </SelectValue>
@@ -129,7 +130,7 @@ export default function TeacherTextbooksPage() {
           </SelectContent>
         </Select>
         <Select value={filterSubject} onValueChange={(v: unknown) => setFilterSubject(v as string)}>
-          <SelectTrigger className="w-full sm:w-64">
+          <SelectTrigger className="w-full sm:w-64" aria-label="Subject">
             <SelectValue placeholder="Subject">
               {filterSubject === 'all' ? 'All Subjects' : subjectOptions.find((s) => s.id === filterSubject)?.name ?? 'Subject'}
             </SelectValue>
@@ -141,7 +142,7 @@ export default function TeacherTextbooksPage() {
         </Select>
         {viewMode === 'list' && (
           <Select value={filterGrade} onValueChange={(v: unknown) => setFilterGrade(v as string)}>
-            <SelectTrigger className="w-full sm:w-40">
+            <SelectTrigger className="w-full sm:w-40" aria-label="Grade">
               <SelectValue placeholder="Grade">
                 {filterGrade === 'all' ? 'All Grades' : gradeOptions.find((g) => g.id === filterGrade)?.name ?? 'Grade'}
               </SelectValue>
@@ -153,7 +154,7 @@ export default function TeacherTextbooksPage() {
           </Select>
         )}
         <Select value={filterStatus} onValueChange={(v: unknown) => setFilterStatus(v as string)}>
-          <SelectTrigger className="w-full sm:w-36">
+          <SelectTrigger className="w-full sm:w-36" aria-label="Status">
             <SelectValue placeholder="Status">
               {filterStatus === 'all' ? 'All Statuses' : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}
             </SelectValue>

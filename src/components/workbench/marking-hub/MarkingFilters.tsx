@@ -39,7 +39,7 @@ export function MarkingFilters({
           });
         }}
       >
-        <SelectTrigger className="w-full sm:w-36">
+        <SelectTrigger className="w-full sm:w-36" aria-label="Type">
           <SelectValue placeholder="All Types" />
         </SelectTrigger>
         <SelectContent>
@@ -61,7 +61,7 @@ export function MarkingFilters({
           });
         }}
       >
-        <SelectTrigger className="w-full sm:w-36">
+        <SelectTrigger className="w-full sm:w-36" aria-label="Priority">
           <SelectValue placeholder="All Priority" />
         </SelectTrigger>
         <SelectContent>
@@ -76,7 +76,7 @@ export function MarkingFilters({
         value={sortBy}
         onValueChange={(val: unknown) => onSortChange(val as string)}
       >
-        <SelectTrigger className="w-full sm:w-36">
+        <SelectTrigger className="w-full sm:w-36" aria-label="Sort by">
           <SelectValue placeholder="Sort By" />
         </SelectTrigger>
         <SelectContent>
