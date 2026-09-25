@@ -29,10 +29,14 @@ import { useAuthStore } from '@/stores/useAuthStore';
 import { copyClassOptions } from '@/lib/unit-library';
 import { ROUTES } from '@/lib/routes';
 import type { PopulatedId } from '@/types';
+import { useIsStandalone } from '@/hooks/useIsStandalone';
+import { lessonWords } from '@/lib/lesson-words';
 
 export default function UnitPage() {
   const params = useParams();
   const router = useRouter();
+  const isStandalone = useIsStandalone();
+  const w = lessonWords(isStandalone);
   const courseId = params.id as string;
   const view = useUnitView(courseId);
   const { entries, loading: classesLoading } = useTeacherClasses();
@@ -63,7 +67,7 @@ export default function UnitPage() {
 
   if (view.loading) return <LoadingSpinner />;
   if (!course) {
-    return <EmptyState icon={AlertTriangle} title="Unit not found" description="It may have been deleted, or it belongs to another teacher." />;
+    return <EmptyState icon={AlertTriangle} title={`${w.One} not found`} description="It may have been deleted, or it belongs to another teacher." />;
   }
 
   const blocker = releaseBlocker(course);
@@ -73,7 +77,7 @@ export default function UnitPage() {
   return (
     <div className="space-y-6">
       <Button variant="ghost" size="sm" onClick={() => router.push('/teacher/courses')}>
-        <ChevronLeft className="mr-1 h-4 w-4" /> Courses
+        <ChevronLeft className="mr-1 h-4 w-4" /> {w.Many}
       </Button>
 
       <UnitHeader course={course}>
@@ -127,8 +131,8 @@ export default function UnitPage() {
               }}
             />
           ) : null}
-          {stage === 'released' ? <h2 className="pt-2 text-lg font-semibold">The unit</h2> : null}
-          {stage === 'writing' || stage === 'release' ? <UnitGenerationBanner generation={course.generation} /> : null}
+          {stage === 'released' ? <h2 className="pt-2 text-lg font-semibold">The {w.one}</h2> : null}
+          {stage === 'writing' || stage === 'release' ? <UnitGenerationBanner generation={course.generation} noun={w.one} /> : null}
           {stage === 'release' && blocker ? <p className="text-sm text-muted-foreground">{blocker}.</p> : null}
           {stage === 'outline' ? <AIUsageNotice usage={usage} /> : null}
           {stage === 'outline' && course.outlineStatus === 'drafted' ? (
@@ -142,7 +146,7 @@ export default function UnitPage() {
 
           {showHandBuiltDraftOffer(course.outlineStatus ?? 'none', hasOutline) ? (
             <div className="flex flex-col gap-3 rounded-xl border border-border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-muted-foreground">This unit&apos;s modules were built by hand. The AI can draft a CAPS outline from its topics instead.</p>
+              <p className="text-sm text-muted-foreground">This {w.one}&apos;s modules were built by hand. The AI can draft a CAPS outline from its topics instead.</p>
               <Button onClick={() => setConfirmReplaceHandBuilt(true)} disabled={view.busy !== null} className="min-h-11 shrink-0 gap-1.5 sm:min-h-9">
                 <Sparkles className="h-4 w-4" aria-hidden /> {view.busy === 'draft' ? 'Drafting your outline…' : view.draftError ? 'Try again' : 'Draft the outline'}
               </Button>
@@ -161,7 +165,7 @@ export default function UnitPage() {
             <EmptyState
               icon={Sparkles}
               title="No outline yet"
-              description="The AI drafts modules and items from this unit's CAPS topics. You check the outline before anything is written."
+              description={`The AI drafts modules and items from this ${w.one}'s CAPS topics. You check the outline before anything is written.`}
               action={(
                 <Button onClick={() => void view.draft()} disabled={view.busy !== null} className="gap-1.5">
                   <Sparkles className="h-4 w-4" aria-hidden /> {view.busy === 'draft' ? 'Drafting your outline…' : view.draftError ? 'Try again' : 'Draft the outline'}
@@ -171,11 +175,11 @@ export default function UnitPage() {
           )}
         </div>
         <aside className="space-y-4">
-          <UnitSteps current={stage ?? 'outline'} />
+          <UnitSteps current={stage ?? 'outline'} noun={w.one} />
           {hasOutline ? <UnitSettings sequential={course.sequential !== false} saving={view.busy === 'settings'} onChange={(on) => void view.setSequential(on)} /> : null}
           {stage !== 'writing' && stage !== 'released' ? (
             <p className="text-xs text-muted-foreground">
-              Want to add your own items? <Link href={ROUTES.TEACHER_COURSE_EDIT(courseId)} className="underline underline-offset-2">Open the course builder</Link>, then release from here.
+              Want to add your own items? <Link href={ROUTES.TEACHER_COURSE_EDIT(courseId)} className="underline underline-offset-2">Open the {isStandalone ? w.one : 'course'} builder</Link>, then release from here.
             </p>
           ) : null}
         </aside>
@@ -207,7 +211,7 @@ export default function UnitPage() {
         open={confirmReplaceHandBuilt}
         onOpenChange={setConfirmReplaceHandBuilt}
         title="Replace your modules with an AI outline?"
-        description="The AI drafts an outline from this unit's CAPS topics. It replaces the modules and items you built by hand, and you can't undo this."
+        description={`The AI drafts an outline from this ${w.one}'s CAPS topics. It replaces the modules and items you built by hand, and you can't undo this.`}
         confirmLabel="Replace with AI outline"
         onConfirm={async () => { await view.draft(); }}
       />

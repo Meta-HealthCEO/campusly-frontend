@@ -10,10 +10,10 @@ const STEPS: Array<{ key: Exclude<UnitStep, 'released'>; title: string; detail: 
 ];
 
 /** Where the teacher is in building a unit. The order is real: each step needs the one before. */
-export function UnitSteps({ current }: { current: UnitStep }) {
+export function UnitSteps({ current, noun = 'unit' }: { current: UnitStep; noun?: string }) {
   const at = current === 'released' ? STEPS.length : STEPS.findIndex((s) => s.key === current);
   return (
-    <ol className="space-y-3 rounded-xl border border-border bg-card p-4" aria-label="Building a unit">
+    <ol className="space-y-3 rounded-xl border border-border bg-card p-4" aria-label={`Building a ${noun}`}>
       {STEPS.map((step, i) => {
         const done = i < at;
         const now = i === at;

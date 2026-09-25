@@ -29,6 +29,8 @@ interface Props {
   initialClassId?: string | null;
   /** Start with only this CAPS topic ticked, until the teacher changes the topics. */
   preferTopicId?: string | null;
+  /** "unit", or "lesson" for standalone teachers. */
+  noun?: string;
 }
 
 /** Everything except the preferred topic starts unticked; with no (known) preference, nothing does. */
@@ -43,7 +45,7 @@ function gradeNameOf(cls: { gradeName?: string; grade?: { name?: string } | null
 }
 
 /** Class, subject, term and CAPS topics: what the AI outlines a unit from. */
-export function UnitScopeForm({ busy, submitLabel, onSubmit, locked = false, initialClassId = null, preferTopicId = null }: Props) {
+export function UnitScopeForm({ busy, submitLabel, onSubmit, locked = false, initialClassId = null, preferTopicId = null, noun = 'unit' }: Props) {
   const { entries, loading: classesLoading } = useTeacherClasses();
   const classes = useMemo(() => {
     const seen = new Map<string, { id: string; name: string; gradeId: string; gradeName: string; subjectId: string }>();
@@ -165,11 +167,11 @@ export function UnitScopeForm({ busy, submitLabel, onSubmit, locked = false, ini
             })}
           </ul>
         )}
-        {topics.length > MAX_TOPICS ? <p className="text-xs text-muted-foreground">A unit covers at most {MAX_TOPICS} topics.</p> : null}
+        {topics.length > MAX_TOPICS ? <p className="text-xs text-muted-foreground">A {noun} covers at most {MAX_TOPICS} topics.</p> : null}
       </fieldset>
 
       <div className="space-y-1.5">
-        <Label htmlFor="unit-title">Unit title</Label>
+        <Label htmlFor="unit-title">{noun.charAt(0).toUpperCase() + noun.slice(1)} title</Label>
         <Input id="unit-title" value={shownTitle} onChange={(e) => setTitle(e.target.value)} disabled={locked} maxLength={120} className="w-full" />
       </div>
 

@@ -6,7 +6,7 @@ import { generationSummary } from '@/lib/course-unit';
 import type { GenerationState } from '@/types/courses';
 
 /** Progress while the unit's items are written; a summary once they're done. */
-export function UnitGenerationBanner({ generation }: { generation: GenerationState | undefined }) {
+export function UnitGenerationBanner({ generation, noun = 'unit' }: { generation: GenerationState | undefined; noun?: string }) {
   const summary = generationSummary(generation);
   if (!summary) return null;
   const trouble = !summary.active && (generation?.failed ?? 0) > 0;
@@ -26,7 +26,7 @@ export function UnitGenerationBanner({ generation }: { generation: GenerationSta
           <p className="text-xs text-muted-foreground">You can leave this page: the writing carries on, and each item shows here when it&apos;s ready.</p>
         </>
       ) : trouble ? (
-        <p className="text-xs text-foreground">Try the items that couldn&apos;t be written again, or remove them, before releasing the unit.</p>
+        <p className="text-xs text-foreground">Try the items that couldn&apos;t be written again, or remove them, before releasing the {noun}.</p>
       ) : null}
     </section>
   );

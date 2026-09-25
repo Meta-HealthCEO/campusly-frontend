@@ -59,6 +59,8 @@ interface CreateCourseDialogProps {
   onOpenChange: (open: boolean) => void;
   onCreate: (input: CreateCourseInput) => Promise<Course | null>;
   onCreated?: (course: Course) => void;
+  /** What the teacher calls it: "course", or "lesson" for standalone teachers. */
+  noun?: 'course' | 'lesson' | 'unit';
 }
 
 export function CreateCourseDialog({
@@ -66,7 +68,9 @@ export function CreateCourseDialog({
   onOpenChange,
   onCreate,
   onCreated,
+  noun = 'course',
 }: CreateCourseDialogProps) {
+  const Noun = noun.charAt(0).toUpperCase() + noun.slice(1);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const {
     register,
@@ -121,7 +125,7 @@ export function CreateCourseDialog({
     >
       <DialogContent className="sm:max-w-lg flex flex-col max-h-[85vh]">
         <DialogHeader>
-          <DialogTitle>Create Course</DialogTitle>
+          <DialogTitle>Create {Noun}</DialogTitle>
         </DialogHeader>
         {/* The form wraps only the scrollable body; the submit button in the
             footer uses form={FORM_ID} to submit across the DOM boundary. */}
@@ -156,7 +160,7 @@ export function CreateCourseDialog({
               })}
             />
             <p className="text-xs text-muted-foreground">
-              Lowercase letters, numbers, and hyphens only. Used in the course URL.
+              Lowercase letters, numbers, and hyphens only. Used in the {noun} URL.
             </p>
             {errors.slug && (
               <p className="text-xs text-destructive">{errors.slug.message}</p>
@@ -205,7 +209,7 @@ export function CreateCourseDialog({
             form={FORM_ID}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Creating...' : 'Create Course'}
+            {isSubmitting ? 'Creating...' : `Create ${Noun}`}
           </Button>
         </DialogFooter>
       </DialogContent>

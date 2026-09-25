@@ -5,11 +5,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Trash2, GraduationCap } from 'lucide-react';
 import type { Course, CourseStatus } from '@/types';
+import { lessonWords, type LessonWords } from '@/lib/lesson-words';
 
 interface CourseCardProps {
   course: Course;
   onClick: () => void;
   onDelete?: () => void;
+  /** "Lesson" for standalone teachers, "Unit" otherwise. */
+  words?: LessonWords;
+  isStandalone?: boolean;
 }
 
 const STATUS_LABEL: Record<CourseStatus, string> = {
@@ -34,7 +38,7 @@ function getSubjectName(course: Course): string {
   return course.subjectId?.name ?? '';
 }
 
-export function CourseCard({ course, onClick, onDelete }: CourseCardProps) {
+export function CourseCard({ course, onClick, onDelete, words = lessonWords(false), isStandalone = false }: CourseCardProps) {
   const subjectName = getSubjectName(course);
   return (
     <Card
@@ -72,7 +76,7 @@ export function CourseCard({ course, onClick, onDelete }: CourseCardProps) {
         <div className="flex flex-wrap items-center gap-2">
           {course.kind === 'class_unit' && (
             <Badge variant="outline" className="border-accent-foreground/30 bg-accent text-xs text-accent-foreground">
-              Unit{course.scope ? ` · Term ${course.scope.termNumber}` : ''}
+              {words.One}{course.scope ? ` · Term ${course.scope.termNumber}` : ''}
             </Badge>
           )}
           {subjectName && (
@@ -90,7 +94,7 @@ export function CourseCard({ course, onClick, onDelete }: CourseCardProps) {
                 e.stopPropagation();
                 onDelete();
               }}
-              aria-label="Delete course"
+              aria-label={`Delete ${isStandalone ? words.one : 'course'}`}
             >
               <Trash2 className="h-4 w-4 text-muted-foreground" />
             </Button>

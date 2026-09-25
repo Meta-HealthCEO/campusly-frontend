@@ -15,11 +15,14 @@ import { useCourseAnalytics } from '@/hooks/useCourseAnalytics';
 import { useEntitlement } from '@/hooks/useEntitlement';
 import { UpgradeModal } from '@/components/subscription/UpgradeModal';
 import { ROUTES } from '@/lib/constants';
+import { useIsStandalone } from '@/hooks/useIsStandalone';
 
 export default function CourseAnalyticsPage() {
   const params = useParams();
   const router = useRouter();
   const courseId = params.id as string;
+  const isStandalone = useIsStandalone();
+  const title = isStandalone ? 'Lesson progress' : 'Course Analytics';
   const entitled = useEntitlement('advancedAnalytics');
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const { data, loading, refreshing, refresh } = useCourseAnalytics(entitled ? courseId : '');
@@ -28,7 +31,7 @@ export default function CourseAnalyticsPage() {
     return (
       <div className="space-y-6">
         <PageHeader
-          title="Course Analytics"
+          title={title}
           description="Enrolment, completion, and engagement metrics"
         />
         <EmptyState
@@ -50,7 +53,7 @@ export default function CourseAnalyticsPage() {
     return (
       <div className="space-y-6">
         <PageHeader
-          title="Course Analytics"
+          title={title}
           description="Enrolment, completion, and engagement metrics"
         />
         <StatCardsSkeleton count={4} />
@@ -62,13 +65,13 @@ export default function CourseAnalyticsPage() {
     return (
       <div className="space-y-6">
         <PageHeader
-          title="Course Analytics"
+          title={title}
           description="Enrolment, completion, and engagement metrics"
         />
         <EmptyState
           icon={BarChart3}
           title="Analytics Unavailable"
-          description="We couldn't load analytics for this course right now. Please refresh and try again."
+          description={`We couldn't load analytics for this ${isStandalone ? 'lesson' : 'course'} right now. Please refresh and try again.`}
         />
       </div>
     );
@@ -77,7 +80,7 @@ export default function CourseAnalyticsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Course Analytics"
+        title={title}
         description="Enrolment, completion, and engagement metrics"
       >
         <div className="flex items-center gap-2">

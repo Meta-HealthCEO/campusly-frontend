@@ -10,11 +10,13 @@ import { CourseBuilderMetaPanel } from '@/components/courses/CourseBuilderMetaPa
 import { ResourcePickerDialog } from '@/components/courses/ResourcePickerDialog';
 import { useCourseBuilder } from '@/hooks/useCourseBuilder';
 import { AlertTriangle } from 'lucide-react';
+import { useIsStandalone } from '@/hooks/useIsStandalone';
 
 export default function CourseBuilderPage() {
   const params = useParams();
   const courseId = params.id as string;
   const builder = useCourseBuilder(courseId);
+  const noun = useIsStandalone() ? 'lesson' : 'course';
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [pickerModuleId, setPickerModuleId] = useState<string | null>(null);
 
@@ -23,8 +25,8 @@ export default function CourseBuilderPage() {
     return (
       <EmptyState
         icon={AlertTriangle}
-        title="Course not found"
-        description="This course may have been deleted or you don't have access."
+        title={noun === 'lesson' ? 'Lesson not found' : 'Course not found'}
+        description={`This ${noun} may have been deleted or you don't have access.`}
       />
     );
   }

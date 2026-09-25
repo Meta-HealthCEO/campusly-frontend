@@ -29,6 +29,8 @@ import { useAcademicLookups } from '@/hooks/useAcademicLookups';
 import { copyClassOptions } from '@/lib/unit-library';
 import { useCopyUnit } from '@/hooks/useCopyUnit';
 import { ROUTES } from '@/lib/constants';
+import { useIsStandalone } from '@/hooks/useIsStandalone';
+import { lessonWords } from '@/lib/lesson-words';
 import type { Course, CourseStatus } from '@/types';
 
 const STATUS_OPTIONS: Array<{ value: CourseStatus | 'all'; label: string }> = [
@@ -41,6 +43,10 @@ const STATUS_OPTIONS: Array<{ value: CourseStatus | 'all'; label: string }> = [
 
 export default function TeacherCoursesPage() {
   const router = useRouter();
+  const isStandalone = useIsStandalone();
+  const w = lessonWords(isStandalone);
+  // A standalone teacher is the whole school: its library would only list their own work.
+  const showLibrary = !isStandalone;
   const {
     courses,
     loading,
@@ -71,24 +77,30 @@ export default function TeacherCoursesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Courses"
-        description="Units of work for your classes. The AI drafts them from CAPS; you check them and release them to your learners."
+        title={w.Many}
+        description={
+          isStandalone
+            ? 'Lessons your learners work through: the AI drafts them from CAPS, you check them and release them to a class.'
+            : 'Units of work for your classes. The AI drafts them from CAPS; you check them and release them to your learners.'
+        }
       >
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button onClick={() => router.push('/teacher/courses/new')} className="min-h-11 gap-1.5 sm:min-h-9">
-            <Sparkles className="h-4 w-4" aria-hidden /> New unit with AI
+            <Sparkles className="h-4 w-4" aria-hidden /> New {w.one} with AI
           </Button>
           <Button variant="outline" onClick={() => setCreateOpen(true)} className="min-h-11 sm:min-h-9">
-            <Plus className="mr-1 h-4 w-4" aria-hidden /> Blank course
+            <Plus className="mr-1 h-4 w-4" aria-hidden /> Blank {isStandalone ? w.one : 'course'}
           </Button>
         </div>
       </PageHeader>
 
-      <Tabs value={tab} onValueChange={(v: unknown) => setTab(v === 'library' ? 'library' : 'mine')}>
-        <TabsList>
-          <TabsTrigger value="mine">Your courses</TabsTrigger>
-          <TabsTrigger value="library">School library</TabsTrigger>
-        </TabsList>
+      <Tabs value={tab} onValueChange={(v: unknown) => setTab(v === 'library' && showLibrary ? 'library' : 'mine')}>
+        {showLibrary ? (
+          <TabsList>
+            <TabsTrigger value="mine">Your courses</TabsTrigger>
+            <TabsTrigger value="library">School library</TabsTrigger>
+          </TabsList>
+        ) : null}
 
         <TabsContent value="library" className="space-y-3 pt-2">
           <p className="text-sm text-muted-foreground">Units released at your school. Copy one to your own class and change what you like.</p>
@@ -118,7 +130,7 @@ export default function TeacherCoursesPage() {
             onChange={(e) =>
               setFilters({ ...filters, search: e.target.value || undefined })
             }
-            placeholder="Search courses..."
+            placeholder={`Search ${w.Many.toLowerCase()}...`}
             className="pl-9"
           />
         </div>
@@ -151,11 +163,11 @@ export default function TeacherCoursesPage() {
       ) : courses.length === 0 ? (
         <EmptyState
           icon={GraduationCap}
-          title="No units yet"
-          description="Pick a class and the CAPS topics, and the AI drafts a unit your learners can work through, week by week."
+          title={`No ${w.many} yet`}
+          description={`Pick a class and the CAPS topics, and the AI drafts a ${w.one} your learners can work through, week by week.`}
           action={
             <Button onClick={() => router.push('/teacher/courses/new')} className="gap-1.5">
-              <Sparkles className="h-4 w-4" aria-hidden /> New unit with AI
+              <Sparkles className="h-4 w-4" aria-hidden /> New {w.one} with AI
             </Button>
           }
         />
@@ -165,6 +177,8 @@ export default function TeacherCoursesPage() {
             <CourseCard
               key={course.id}
               course={course}
+              words={w}
+              isStandalone={isStandalone}
               onClick={() => openCourse(course)}
               onDelete={
                 course.status === 'draft' || course.status === 'archived'
@@ -196,12 +210,13 @@ export default function TeacherCoursesPage() {
         onOpenChange={setCreateOpen}
         onCreate={createCourse}
         onCreated={handleCreated}
+        noun={isStandalone ? w.one : 'course'}
       />
 
       <ConfirmDialog
         open={pendingDelete !== null}
         onOpenChange={(v) => { if (!v) setPendingDelete(null); }}
-        title="Delete course"
+        title={`Delete ${isStandalone ? w.one : 'course'}`}
         description={
           pendingDelete
             ? `Are you sure you want to delete "${pendingDelete.title}"? This cannot be undone.`
