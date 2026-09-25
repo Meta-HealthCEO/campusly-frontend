@@ -31,6 +31,9 @@ describe('learner wording', () => {
   it('says Lessons and Marks to a standalone teacher\'s learners, and keeps the school words otherwise', () => {
     expect(learnerCopy(true)).toMatchObject({ lessonsTitle: 'Lessons', marksTitle: 'Marks', lessonsEmpty: 'When your teacher releases a lesson, it appears here.' });
     expect(learnerCopy(false)).toMatchObject({ lessonsTitle: 'Courses', marksTitle: 'My Grades' });
+    expect(learnerCopy(true)).toMatchObject({ lessonsSection: 'My lessons', lessonFallback: 'Lesson' });
+    expect(learnerCopy(false)).toMatchObject({ lessonsSection: 'My units', lessonFallback: 'Unit' });
+    expect(readSource('src/app/(dashboard)/student/courses/page.tsx')).not.toMatch(/>My units<|'Unit'/);
   });
 
   it('says the teacher will mark an answer once AI marking is used up', () => {

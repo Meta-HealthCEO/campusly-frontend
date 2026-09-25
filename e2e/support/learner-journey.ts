@@ -8,6 +8,7 @@
 import { expect, type Page } from '@playwright/test';
 import { STANDALONE_STUDENT_NAV } from '../../src/lib/nav/student-nav';
 import { addGroup, homeworkTitle, seedDigitalTest, seedReleasedUnit } from './db';
+import { focusRingMissing, unlabelledControls } from './a11y-audit';
 import { overflowsSideways, watchPage, type Allowed } from './watch';
 
 export interface LearnerJourneyInput {
@@ -17,6 +18,13 @@ export interface LearnerJourneyInput {
 
 async function noSideways(page: Page, where: string): Promise<void> {
   expect(await overflowsSideways(page), `${where} scrolls sideways at 375 px`).toBe(false);
+}
+
+/** The detail pages the gate's own sweep can't reach without content (ledger ruling): widths, names and focus here. */
+async function audit(page: Page, where: string): Promise<void> {
+  await noSideways(page, where);
+  expect(await unlabelledControls(page), `${where}: labels and names`).toEqual([]);
+  expect(await focusRingMissing(page), `${where}: focus ring`).toEqual([]);
 }
 
 /** `page` is the learner's own browser at 375 px, signed in through the invite link. */
@@ -50,19 +58,19 @@ export async function learnerJourney(page: Page, input: LearnerJourneyInput): Pr
   await page.waitForURL(/\/student\/courses\/[a-f0-9]{24}/);
   // The unit opens on its one item: the notes the teacher released before the learner joined.
   await expect(page.getByText('The short hand shows the hour').first()).toBeVisible();
-  await noSideways(page, 'the lesson');
+  await audit(page, 'the lesson');
 
   // The project the teacher published sits in Homework too, and its Back returns there (spec §2).
   await page.goto('/student/homework');
   await page.getByRole('link', { name: /Time diary/ }).first().click();
   await page.waitForURL(/\/student\/assignments\/[a-f0-9]{24}$/);
   await expect(page.getByText('Time diary').first()).toBeVisible();
-  await noSideways(page, 'the project');
+  await audit(page, 'the project');
   await page.getByRole('button', { name: 'Back to homework' }).click();
   await page.waitForURL(/\/student\/homework$/);
 
   await page.getByRole('link', { name: new RegExp(homework) }).first().click();
-  await noSideways(page, 'the homework');
+  await audit(page, 'the homework');
   await page.getByRole('radio', { name: /60$/ }).check();
   await page.getByRole('button', { name: /^Submit/ }).click();
   await expect(page.getByText(/Awarded: 1 \/ 1/).first()).toBeVisible();
@@ -71,7 +79,7 @@ export async function learnerJourney(page: Page, input: LearnerJourneyInput): Pr
   await page.getByText(test).first().click();
   const start = page.getByRole('button', { name: /^Start/ });
   if (await start.count()) await start.click();
-  await noSideways(page, 'the test');
+  await audit(page, 'the test');
   await page.getByRole('textbox').first().fill('60');
   await page.getByRole('button', { name: 'Submit test' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Submit' }).click();

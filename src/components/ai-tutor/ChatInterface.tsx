@@ -80,7 +80,7 @@ export function ChatInterface({
     if (mode === 'homework_help') return 'Paste the question or attach a photo — Aura hints first';
     if (mode === 'practice') return 'What topic do you want to practise?';
     if (mode === 'exam_prep') return 'Which test or topic are you preparing for?';
-    return 'Ask Aura anything about your school work';
+    return 'Ask Aura anything about your work';
   }, [canChat, grade, mode]);
 
   const sendQuickPrompt = (prompt: string) => {

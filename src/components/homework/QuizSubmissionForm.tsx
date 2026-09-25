@@ -102,6 +102,7 @@ export function QuizSubmissionForm({ homework, submission, onSubmit }: Props) {
                   onChange={(e) => setAnswers((p) => ({ ...p, [i]: e.target.value }))}
                   disabled={isLocked}
                   placeholder="Your answer"
+                  aria-label="Your answer"
                 />
               )}
 

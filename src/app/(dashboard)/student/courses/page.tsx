@@ -12,14 +12,14 @@ import { useIsStandaloneLearner } from '@/hooks/useIsStandaloneLearner';
 import { learnerCopy } from '@/lib/learner-copy';
 import type { Enrolment } from '@/types';
 
-function UnitRow({ enrolment }: { enrolment: Enrolment }) {
+function UnitRow({ enrolment, fallback }: { enrolment: Enrolment; fallback: string }) {
   const course = courseOf(enrolment);
   const subject = course && typeof course.subjectId === 'object' && course.subjectId ? course.subjectId.name : '';
   const done = enrolment.status === 'completed';
   return (
     <li>
       <Link href={ROUTES.STUDENT_COURSE_HOME(courseIdOf(enrolment))} className="block rounded-xl border border-border bg-card p-4 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-foreground">
-        <p className="truncate font-medium">{course?.title ?? 'Unit'}</p>
+        <p className="truncate font-medium">{course?.title ?? fallback}</p>
         <p className="text-xs text-muted-foreground">{[subject, done ? 'Finished' : `${enrolment.progressPercent}% done`].filter(Boolean).join(' · ')}</p>
         <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted" aria-hidden>
           <div className={`h-full rounded-full ${done ? 'bg-success' : 'bg-accent-foreground'}`} style={{ width: `${enrolment.progressPercent}%` }} />
@@ -43,12 +43,12 @@ export default function StudentCoursesPage() {
       ) : (
         <>
           {current ? (
-            <ResumeUnitCard enrolmentId={current.id} courseId={courseIdOf(current)} unitTitle={currentCourse?.title ?? 'Unit'} progressPercent={current.progressPercent} />
+            <ResumeUnitCard enrolmentId={current.id} courseId={courseIdOf(current)} unitTitle={currentCourse?.title ?? copy.lessonFallback} progressPercent={current.progressPercent} />
           ) : null}
-          <section className="space-y-2" aria-label="My units">
-            <h2 className="text-sm font-medium text-muted-foreground">My units</h2>
+          <section className="space-y-2" aria-label={copy.lessonsSection}>
+            <h2 className="text-sm font-medium text-muted-foreground">{copy.lessonsSection}</h2>
             <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {enrolments.map((e) => <UnitRow key={e.id} enrolment={e} />)}
+              {enrolments.map((e) => <UnitRow key={e.id} enrolment={e} fallback={copy.lessonFallback} />)}
             </ul>
           </section>
         </>

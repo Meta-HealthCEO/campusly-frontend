@@ -148,12 +148,12 @@ function RegisterStudentForm() {
             <Input
               id="classroomCode"
               placeholder="e.g. AB12CD"
-              maxLength={6}
               className="font-mono tracking-widest uppercase"
               {...register('classroomCode')}
               aria-invalid={!!errors.classroomCode}
               onChange={(e) => {
-                e.target.value = e.target.value.toUpperCase();
+                // A pasted code may carry spaces or lower case: keep letters and digits, upper-cased (Review Focus 2).
+                e.target.value = codeFromSearch(e.target.value);
                 register('classroomCode').onChange(e);
               }}
             />

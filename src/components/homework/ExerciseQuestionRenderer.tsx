@@ -61,6 +61,7 @@ export function ExerciseQuestionRenderer({ question, value, onChange, disabled }
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
           placeholder="Your answer"
+          aria-label="Your answer"
         />
       );
 
@@ -76,6 +77,7 @@ export function ExerciseQuestionRenderer({ question, value, onChange, disabled }
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
           placeholder="Your answer"
+          aria-label="Your answer"
           rows={4}
         />
       );
@@ -87,6 +89,7 @@ export function ExerciseQuestionRenderer({ question, value, onChange, disabled }
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
           placeholder="Your answer"
+          aria-label="Your answer"
         />
       );
   }
