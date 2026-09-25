@@ -219,7 +219,7 @@ function ModeOption({ icon: Icon, title, description, selected, onClick }: ModeO
       className={[
         'text-left rounded-lg border p-3 transition-colors',
         selected
-          ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
+          ? 'border-primary bg-muted'
           : 'hover:border-primary hover:bg-accent',
       ].join(' ')}
     >

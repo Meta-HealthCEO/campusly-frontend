@@ -197,7 +197,7 @@ export default function PaperDetailPage({
       </PageHeader>
 
       {changesAsked && paper.moderation?.comments ? (
-        <div role="note" className="rounded-lg border border-attention/30 bg-attention-soft px-4 py-3 text-sm">
+        <div role="note" className="rounded-lg border border-attention bg-attention-soft px-4 py-3 text-sm">
           <p className="font-medium text-attention">{isAuthor ? 'Your HOD asked for changes' : 'Changes asked of the author'}</p>
           <p className="mt-1 whitespace-pre-line text-foreground">{paper.moderation.comments}</p>
         </div>

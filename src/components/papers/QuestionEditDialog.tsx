@@ -129,7 +129,7 @@ export function QuestionEditDialog({
                       {option.text}
                     </span>
                     {option.isCorrect && (
-                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground before:size-2 before:rounded-full before:bg-success before:content-['']">
                         Correct
                       </span>
                     )}

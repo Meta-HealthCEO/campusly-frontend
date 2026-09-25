@@ -7,7 +7,10 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
+import { Lightbulb } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { AnswerMark } from './AnswerMark';
+import { CHOSEN, answerEdge } from './answer-state';
 import type { ContentBlockItem, BlockInteractionState, AttemptResult } from '@/types';
 
 /* ── Normalised quiz shape ─────────────────────────────────── */
@@ -133,11 +136,13 @@ export function QuizBlock({ block, onSubmit, interaction }: QuizBlockProps) {
             return (
               <label
                 key={opt.label}
-                className={`flex items-center gap-3 rounded-lg border p-3 text-sm cursor-pointer transition-colors ${
-                  showCorrect ? 'border-primary bg-primary/10' :
-                  showWrong ? 'border-destructive bg-destructive/10' :
-                  isSelected ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
-                } ${answered ? 'pointer-events-none' : ''}`}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg border p-3 text-sm cursor-pointer transition-colors',
+                  showCorrect ? answerEdge(true) :
+                  showWrong ? answerEdge(false) :
+                  isSelected ? CHOSEN : 'hover:bg-muted/50',
+                  answered && 'pointer-events-none',
+                )}
               >
                 <input
                   type="radio"
@@ -150,8 +155,8 @@ export function QuizBlock({ block, onSubmit, interaction }: QuizBlockProps) {
                 />
                 <span className="font-medium">{opt.label}.</span>
                 <span><MathText>{opt.text}</MathText></span>
-                {showCorrect && <CheckCircle2 className="ml-auto size-4 text-primary" />}
-                {showWrong && <XCircle className="ml-auto size-4 text-destructive" />}
+                {showCorrect && <AnswerMark correct className="ml-auto" />}
+                {showWrong && <AnswerMark correct={false} className="ml-auto" />}
               </label>
             );
           })}
@@ -219,23 +224,16 @@ export function QuizBlock({ block, onSubmit, interaction }: QuizBlockProps) {
         <div
           className={`rounded-lg p-3 text-sm ${
             interaction.correct === true
-              ? 'bg-primary/10 text-primary'
+              ? `${answerEdge(true)} text-foreground`
               : interaction.correct === false
-                ? 'bg-destructive/10 text-destructive'
+                ? `${answerEdge(false)} text-foreground`
                 : 'bg-muted text-foreground'
           }`}
         >
           <div className="flex items-center gap-2 font-medium">
-            {interaction.correct === true ? (
-              <CheckCircle2 className="size-4" />
-            ) : interaction.correct === false ? (
-              <XCircle className="size-4" />
-            ) : null}
-            {interaction.correct === true
-              ? 'Correct!'
-              : interaction.correct === false
-                ? 'Incorrect'
-                : 'Answer recorded'}
+            {interaction.correct === true || interaction.correct === false
+              ? <AnswerMark correct={interaction.correct} className="text-sm" />
+              : 'Answer recorded'}
             {interaction.correct !== null && (
               <span className="ml-auto text-xs">
                 Score: {interaction.attemptResult.score}/{interaction.attemptResult.maxScore}

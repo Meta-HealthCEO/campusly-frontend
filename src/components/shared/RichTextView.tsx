@@ -57,7 +57,7 @@ export function RichTextView({ html, className }: RichTextViewProps) {
          [&_ul]:mb-3 [&_ul]:ml-5 [&_ul]:list-disc [&_ul]:space-y-1
          [&_ol]:mb-3 [&_ol]:ml-5 [&_ol]:list-decimal [&_ol]:space-y-1
          [&_li]:leading-relaxed
-         [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/30
+         [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-border
          [&_blockquote]:bg-muted [&_blockquote]:py-3 [&_blockquote]:px-4 [&_blockquote]:rounded-r-lg
          [&_blockquote]:text-sm [&_blockquote]:italic
          [&_strong]:font-semibold

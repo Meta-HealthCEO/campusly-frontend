@@ -60,7 +60,7 @@ function RevisionActions({ missed, busyItemId, error, onAdd }: RevisionProps & {
             <Sparkles className="h-4 w-4" aria-hidden />
             {busyItemId === t.itemId ? 'Writing the revision item…' : `Add a revision item after ${t.itemTitle}`}
           </Button>
-          {error?.itemId === t.itemId ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{error.message}</p> : null}
+          {error?.itemId === t.itemId ? <p role="alert" className="rounded-md border border-destructive bg-destructive-soft px-3 py-2 text-sm text-destructive">{error.message}</p> : null}
         </div>
       ))}
       <p className="text-xs text-muted-foreground">The AI re-teaches these questions with fresh examples. It goes in right after the check as optional practice: it never holds anyone back.</p>
@@ -76,7 +76,7 @@ const MISSED_COPY: Record<'none-yet' | 'no-quick-checks', string> = {
 
 export function UnitInsight({ insight, error, revision }: { insight: Insight | null; error: string | null; revision: RevisionProps }) {
   const state = insightViewState(insight, error);
-  if (state === 'error') return <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{error}</p>;
+  if (state === 'error') return <p role="alert" className="rounded-lg border border-destructive bg-destructive-soft px-3 py-2 text-sm text-destructive">{error}</p>;
   if (state === 'loading') return <LoadingSpinner />;
   if (state === 'empty') {
     return <EmptyState icon={Users} title="No learners yet" description="When learners in the class start the unit, you'll see where each one is here." />;

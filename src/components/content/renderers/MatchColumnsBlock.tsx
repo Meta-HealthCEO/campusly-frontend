@@ -3,7 +3,10 @@
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
+import { Lightbulb } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { AnswerMark } from './AnswerMark';
+import { answerEdge } from './answer-state';
 import type { ContentBlockItem, BlockInteractionState, AttemptResult } from '@/types';
 
 interface MatchData {
@@ -65,15 +68,16 @@ export function MatchColumnsBlock({ block, onSubmit, interaction }: MatchColumns
       <div className="space-y-3">
         {data.left.map((item, leftIdx) => (
           <div key={leftIdx} className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-            <span className={`text-sm min-w-0 flex-1 truncate px-3 py-2 rounded border ${
+            <span className={cn(
+              'text-sm min-w-0 flex-1 truncate px-3 py-2 rounded border',
               results
                 ? results[leftIdx]
-                  ? 'border-primary bg-primary/10'
+                  ? answerEdge(true)
                   : results[leftIdx] === false
-                    ? 'border-destructive bg-destructive/10'
+                    ? answerEdge(false)
                     : ''
-                : ''
-            }`}>
+                : '',
+            )}>
               {item}
             </span>
             <span className="text-muted-foreground text-xs hidden sm:block">&rarr;</span>
@@ -97,9 +101,9 @@ export function MatchColumnsBlock({ block, onSubmit, interaction }: MatchColumns
             </div>
             {results && (
               results[leftIdx]
-                ? <CheckCircle2 className="size-4 text-primary shrink-0" />
+                ? <AnswerMark correct />
                 : results[leftIdx] === false
-                  ? <XCircle className="size-4 text-destructive shrink-0" />
+                  ? <AnswerMark correct={false} />
                   : null
             )}
           </div>
@@ -130,10 +134,12 @@ export function MatchColumnsBlock({ block, onSubmit, interaction }: MatchColumns
       )}
 
       {answered && interaction.attemptResult && (
-        <div className={`rounded-lg p-3 text-sm ${interaction.correct ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+        <div className={cn('rounded-lg p-3 text-sm text-foreground', answerEdge(Boolean(interaction.correct)))}>
           <div className="flex items-center gap-2 font-medium">
-            {interaction.correct ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
-            Score: {interaction.attemptResult.score}/{interaction.attemptResult.maxScore}
+            <AnswerMark correct={Boolean(interaction.correct)} className="text-sm" />
+            <span className="ml-auto text-xs">
+              Score: {interaction.attemptResult.score}/{interaction.attemptResult.maxScore}
+            </span>
           </div>
           {block.explanation && <p className="mt-2 text-xs opacity-80">{block.explanation}</p>}
         </div>

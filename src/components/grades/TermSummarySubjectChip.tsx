@@ -25,7 +25,7 @@ export function TermSummarySubjectChip({
   return (
     <div className={cn(
       'group relative rounded-lg border bg-muted/10 transition-colors',
-      missing ? 'border-attention/40' : 'hover:border-primary/50 hover:bg-muted/30',
+      missing ? 'border-attention' : 'hover:border-primary hover:bg-muted/30',
     )}>
       <button
         type="button"

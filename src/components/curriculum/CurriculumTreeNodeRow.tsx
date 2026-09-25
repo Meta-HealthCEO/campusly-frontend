@@ -106,9 +106,7 @@ export function TreeNodeRow({
         className={[
           'flex items-center gap-2 rounded-md py-2 pr-3 cursor-pointer transition-colors group',
           'hover:bg-muted',
-          isSelected
-            ? 'bg-muted border-l-2 border-primary'
-            : 'border-l-2 border-transparent',
+          isSelected ? 'bg-muted text-foreground' : '',
         ].join(' ')}
         style={{ paddingLeft: `${depth * 20 + 12}px` }}
         onClick={handleRowClick}

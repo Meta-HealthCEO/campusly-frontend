@@ -14,7 +14,7 @@ interface StudentAddCredentialsResultsProps {
 export function StudentAddCredentialsResults({ batch, deliveryMode }: StudentAddCredentialsResultsProps) {
   const count = batch.filter((b) => b.credentials).length;
   return (
-    <div className="space-y-4 rounded-xl border-2 border-primary/30 bg-primary/5 p-4">
+    <div className="space-y-4 rounded-card border border-success bg-card p-4">
       <div className="flex items-start gap-3">
         <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" />
         <div className="flex-1">
@@ -29,7 +29,7 @@ export function StudentAddCredentialsResults({ batch, deliveryMode }: StudentAdd
         </div>
       </div>
 
-      <div className="flex items-start gap-2 rounded-md border border-attention/30 bg-attention-soft p-2 text-xs text-attention">
+      <div className="flex items-start gap-2 rounded-md border border-attention bg-attention-soft p-2 text-xs text-attention">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
         <span>
           Once you close this dialog the temporary password cannot be retrieved. Copy or print it now, then share with the student or parent.

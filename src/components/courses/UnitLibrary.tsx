@@ -58,7 +58,7 @@ export function UnitLibrary({
     return (
       <div className="space-y-3">
         {filterBar}
-        <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{error}</p>
+        <p role="alert" className="rounded-lg border border-destructive bg-destructive-soft px-3 py-2 text-sm text-destructive">{error}</p>
       </div>
     );
   }

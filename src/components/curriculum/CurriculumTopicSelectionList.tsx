@@ -80,7 +80,7 @@ export function CurriculumTopicSelectionList({
           {selectedTopics.map((topic) => (
             <span
               key={topic.id}
-              className="inline-flex max-w-full items-center gap-1 rounded-full border bg-primary/5 px-2.5 py-1 text-xs"
+              className="inline-flex max-w-full items-center gap-1 rounded-full border bg-muted px-2.5 py-1 text-xs"
             >
               <span className="truncate">{topic.title}</span>
               <button
@@ -125,7 +125,7 @@ export function CurriculumTopicSelectionList({
                   className={cn(
                     'flex w-full items-start gap-3 rounded-md border px-3 py-2 text-left transition-colors',
                     checked
-                      ? 'border-primary bg-primary/5'
+                      ? 'border-transparent bg-muted text-foreground'
                       : 'border-transparent hover:bg-muted',
                     disabled && 'cursor-not-allowed opacity-60',
                   )}

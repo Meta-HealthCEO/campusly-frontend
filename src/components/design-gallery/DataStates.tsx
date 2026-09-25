@@ -11,6 +11,7 @@ import {
 } from '@/components/shared';
 import { LessonDropOffChart } from '@/components/courses/LessonDropOffChart';
 import { MASTERY_LABEL, masteryLevel } from '@/lib/readiness/mastery';
+import { AnswerStates } from './AnswerStates';
 import { GallerySection, Specimen } from './GallerySection';
 
 const BADGES = ['default', 'secondary', 'outline', 'ghost', 'link', 'success', 'attention', 'destructive', 'info', 'secure', 'building', 'weak'] as const;
@@ -114,6 +115,8 @@ export function DataStates() {
           </div>
         </Specimen>
       </div>
+
+      <AnswerStates />
 
       <Specimen title="Data table (30 rows, sortable, paged)">
         <DataTable columns={COLUMNS} data={ROWS} searchKey="name" searchPlaceholder="Search learners..." />

@@ -146,7 +146,7 @@ export function AttendanceTodayTab(props: AttendanceTodayTabProps) {
       </div>
 
       {loadError ? (
-        <Alert className="border-destructive/40 bg-destructive/10">
+        <Alert className="border-destructive bg-card">
           <AlertTriangle className="h-4 w-4 text-destructive" />
           <AlertDescription className="text-destructive">
             Attendance could not be loaded for this date and period. Refresh before saving to avoid overwriting existing records.
@@ -155,9 +155,9 @@ export function AttendanceTodayTab(props: AttendanceTodayTabProps) {
       ) : null}
 
       {existingLoaded ? (
-        <Alert className="border-info/30 bg-info-soft">
-          <Info className="h-4 w-4 text-info" />
-          <AlertDescription className="text-info">
+        <Alert className="border-border bg-card">
+          <Info className="h-4 w-4 text-primary" />
+          <AlertDescription className="text-foreground">
             {isPastDate
               ? `Viewing attendance for ${selectedDate}. You can update individual records.`
               : `Attendance already recorded for today. You can update individual records.`}

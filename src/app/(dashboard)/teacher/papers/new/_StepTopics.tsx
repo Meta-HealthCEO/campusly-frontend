@@ -112,7 +112,7 @@ export function StepTopics({
             ) : (
               <ul className="space-y-2">
                 {selectedNodes.map((node) => (
-                  <li key={node.id} className="flex items-start justify-between gap-2 rounded-md border bg-primary/5 px-3 py-2">
+                  <li key={node.id} className="flex items-start justify-between gap-2 rounded-md border bg-muted px-3 py-2">
                     <span className="min-w-0 flex-1 text-sm leading-snug">{displayNodeTitle(node)}</span>
                     <button
                       type="button"

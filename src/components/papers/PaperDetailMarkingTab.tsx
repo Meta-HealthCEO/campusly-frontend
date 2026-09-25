@@ -111,7 +111,7 @@ export function PaperDetailMarkingTab({ paper, focusClassId }: Props) {
         <Card
           key={cls.classId}
           id={`marking-class-${cls.classId}`}
-          className={cn('scroll-mt-20', cls.classId === focusClassId && 'ring-2 ring-primary/40')}
+          className={cn('scroll-mt-20', cls.classId === focusClassId && 'ring-2 ring-primary')}
         >
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between gap-2 flex-wrap">

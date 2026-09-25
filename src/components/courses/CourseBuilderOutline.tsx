@@ -302,7 +302,7 @@ function SortableLesson({ lesson, selected, onSelect, onRequestDelete, readOnly 
       style={style}
       className={cn(
         'flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-sm cursor-pointer',
-        selected ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted/50',
+        selected ? 'border-transparent bg-muted font-medium text-foreground' : 'border-transparent hover:bg-muted/50',
       )}
       onClick={onSelect}
     >

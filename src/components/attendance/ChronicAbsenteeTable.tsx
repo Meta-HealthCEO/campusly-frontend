@@ -77,11 +77,7 @@ export function ChronicAbsenteeTable({
                 {absentees.map((student) => (
                   <tr
                     key={student.studentId}
-                    className={`border-b last:border-0 ${
-                      student.percentage < 70
-                        ? 'bg-destructive/5'
-                        : ''
-                    }`}
+                    className="border-b last:border-0"
                   >
                     <td className="p-2">
                       <span className="font-medium truncate block max-w-[200px]">

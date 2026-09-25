@@ -62,7 +62,7 @@ export function MermaidBlock({ block }: MermaidBlockProps) {
 
   if (error) {
     return (
-      <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4 text-sm text-destructive">
+      <div className="rounded-lg border border-destructive bg-card p-4 text-sm text-destructive">
         Diagram error: {error}
       </div>
     );

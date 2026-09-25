@@ -18,7 +18,7 @@ interface StatCardProps {
 /** Only where the figure is the point (spec §4). */
 export function StatCard({ title, value, icon: Icon, description, trend, tone = 'default', className }: StatCardProps) {
   return (
-    <Card className={cn(tone === 'attention' && 'border-attention/40', className)}>
+    <Card className={cn(tone === 'attention' && 'border-attention', className)}>
       <CardContent>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">

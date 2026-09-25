@@ -72,7 +72,7 @@ export function UnitItemEditor({ itemKind, preview, saving, error, onSave, onCan
       </div>
       <div className="space-y-2 border-t border-border px-4 py-3">
         {(showProblem && problem) || (attempted && error) ? (
-          <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{showProblem && problem ? problem : error}</p>
+          <p role="alert" className="rounded-md border border-destructive bg-destructive-soft px-3 py-2 text-sm text-destructive">{showProblem && problem ? problem : error}</p>
         ) : null}
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onCancel} disabled={saving} className="min-h-11 sm:min-h-9">Cancel</Button>

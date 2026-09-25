@@ -7,7 +7,10 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
+import { Lightbulb } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { AnswerMark } from './AnswerMark';
+import { answerEdge } from './answer-state';
 import type { ContentBlockItem, BlockInteractionState, AttemptResult } from '@/types';
 
 interface FillBlankData {
@@ -87,19 +90,11 @@ export function FillBlankBlock({ block, onSubmit, interaction }: FillBlankBlockP
                     }
                     disabled={answered}
                     className={`inline-block w-32 sm:w-40 h-8 text-sm ${
-                      results
-                        ? results[currentBlankIdx]
-                          ? 'border-primary bg-primary/10'
-                          : 'border-destructive bg-destructive/10'
-                        : ''
+                      results ? answerEdge(Boolean(results[currentBlankIdx])) : ''
                     }`}
                     placeholder={`blank ${currentBlankIdx + 1}`}
                   />
-                  {results && (
-                    results[currentBlankIdx]
-                      ? <CheckCircle2 className="size-4 text-primary shrink-0" />
-                      : <XCircle className="size-4 text-destructive shrink-0" />
-                  )}
+                  {results && <AnswerMark correct={Boolean(results[currentBlankIdx])} compact />}
                 </span>
               )}
             </span>
@@ -143,10 +138,12 @@ export function FillBlankBlock({ block, onSubmit, interaction }: FillBlankBlockP
 
       {/* Result */}
       {answered && interaction.attemptResult && (
-        <div className={`rounded-lg p-3 text-sm ${interaction.correct ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+        <div className={cn('rounded-lg p-3 text-sm text-foreground', answerEdge(Boolean(interaction.correct)))}>
           <div className="flex items-center gap-2 font-medium">
-            {interaction.correct ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
-            Score: {interaction.attemptResult.score}/{interaction.attemptResult.maxScore}
+            <AnswerMark correct={Boolean(interaction.correct)} className="text-sm" />
+            <span className="ml-auto text-xs">
+              Score: {interaction.attemptResult.score}/{interaction.attemptResult.maxScore}
+            </span>
           </div>
           {block.explanation && <p className="mt-2 text-xs opacity-80">{block.explanation}</p>}
         </div>

@@ -46,7 +46,7 @@ export function MarkingItemCard({ item }: Props) {
   return (
     <Link
       href={markingItemHref(item)}
-      className="block rounded-xl border border-border bg-card p-4 transition-[border-color,box-shadow] hover:border-primary/30 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="block rounded-xl border border-border bg-card p-4 transition-[border-color,box-shadow] hover:border-primary hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">

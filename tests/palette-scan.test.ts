@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findColourLiterals, findPaletteClasses, findTints } from '../src/lib/design/palette-scan';
+import { findColourLiterals, findPaletteClasses, findSoftEdges, findTints } from '../src/lib/design/palette-scan';
 
 describe('findPaletteClasses (ruling R4)', () => {
   it('finds palette classes with variants and opacity', () => {
@@ -36,10 +36,30 @@ describe('findTints (orchestrator ruling O1 revised: no tinted surfaces)', () =>
 
   it('finds tinted gradient washes and arbitrary alphas too', () => {
     expect(findTints('bg-linear-to-br from-primary/5 to-transparent via-primary/10 to-primary/15 bg-primary/[0.04]'))
-      .toEqual(['from-primary/5', 'via-primary/10', 'to-primary/15', 'bg-primary/[0.04]']);
+      .toEqual(['bg-linear-to-br', 'from-primary/5', 'via-primary/10', 'to-primary/15', 'bg-primary/[0.04]']);
+  });
+
+  it('finds arbitrary colour washes and gradient utilities (Task 17)', () => {
+    expect(findTints('bg-[#1554F0]/10 hover:bg-[rgba(21,84,240,0.08)] bg-[color-mix(in_srgb,var(--primary)_8%,white)] bg-gradient-to-r bg-linear-to-br'))
+      .toEqual(['bg-[#1554F0]/10', 'hover:bg-[rgba(21,84,240,0.08)]', 'bg-[color-mix(in_srgb,var(--primary)_8%,white)]', 'bg-gradient-to-r', 'bg-linear-to-br']);
+  });
+
+  it('leaves image and size arbitrary values alone', () => {
+    expect(findTints("bg-[url('/grid.svg')] bg-[length:20px_20px] bg-muted/50 bg-black/40")).toEqual([]);
   });
 
   it('allows solid marks, hover on a solid, and neutral see-through fills', () => {
     expect(findTints('bg-primary hover:bg-primary/90 bg-muted/50 bg-black/40 bg-foreground/10 bg-input/30 bg-card/95 bg-primary-foreground')).toEqual([]);
+  });
+});
+
+describe('findSoftEdges (Task 17: a semantic edge is solid, never a pale see-through line)', () => {
+  it('finds translucent semantic borders, rings, outlines and dividers, with variants', () => {
+    expect(findSoftEdges('border-success/40 hover:border-primary/50 ring-2 ring-primary/40 focus-within:ring-ring/50 border-l-destructive/30 divide-info/20'))
+      .toEqual(['border-success/40', 'hover:border-primary/50', 'ring-primary/40', 'focus-within:ring-ring/50', 'border-l-destructive/30', 'divide-info/20']);
+  });
+
+  it('allows solid edges and neutral see-through edges', () => {
+    expect(findSoftEdges('border-success border-primary ring-ring border-border/60 border-muted-foreground/25 ring-black/5 border-white/30')).toEqual([]);
   });
 });

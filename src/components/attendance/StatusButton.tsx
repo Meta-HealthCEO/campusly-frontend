@@ -11,10 +11,10 @@ export interface StatusButtonProps {
 }
 
 const config: Record<AttendanceStatus, { icon: LucideIcon; activeClass: string }> = {
-  present: { icon: CheckCircle2, activeClass: 'bg-success-soft text-success border-success/40' },
-  absent: { icon: XCircle, activeClass: 'bg-destructive-soft text-destructive border-destructive/40' },
-  late: { icon: Clock, activeClass: 'bg-attention-soft text-attention border-attention/40' },
-  excused: { icon: ShieldCheck, activeClass: 'bg-info-soft text-info border-info/40' },
+  present: { icon: CheckCircle2, activeClass: 'bg-success-soft text-success border-success' },
+  absent: { icon: XCircle, activeClass: 'bg-destructive-soft text-destructive border-destructive' },
+  late: { icon: Clock, activeClass: 'bg-attention-soft text-attention border-attention' },
+  excused: { icon: ShieldCheck, activeClass: 'bg-info-soft text-info border-info' },
 };
 
 /** A register button: icon and word at every width (stacked on phones), at least 44px tall on touch screens. */

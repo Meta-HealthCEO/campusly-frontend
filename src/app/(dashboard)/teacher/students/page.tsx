@@ -101,9 +101,9 @@ export default function TeacherStudentsPage() {
 
             return (
               <Link key={student.id} href={teacherLearnerProfilePath(student.id)} className="block rounded-xl focus-visible:outline-2">
-              <Card className="transition-colors hover:border-primary/50">
+              <Card className="transition-colors hover:border-primary">
                 <CardContent className="flex items-center gap-3 p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-foreground">
                     {getInitials(first, last)}
                   </div>
                   <div className="flex-1 min-w-0">

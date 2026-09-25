@@ -14,7 +14,7 @@ export function UnitGenerationBanner({ generation, noun = 'unit' }: { generation
     <section
       role="status"
       aria-live="polite"
-      className={`space-y-2 rounded-xl border px-4 py-3 ${trouble ? 'border-attention/30 bg-attention-soft' : 'border-accent-foreground/20 bg-accent'}`}
+      className={`space-y-2 rounded-xl border px-4 py-3 ${trouble ? 'border-attention bg-attention-soft' : 'border-accent-foreground/20 bg-accent'}`}
     >
       <p className={`flex items-center gap-2 text-sm font-medium ${trouble ? 'text-attention' : 'text-accent-foreground'}`}>
         {summary.active ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Sparkles className="h-4 w-4" aria-hidden />}

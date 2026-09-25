@@ -14,7 +14,8 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        // Disabled: neutral grey, never a washed-out cobalt (Task 17).
+        default: 'bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100',
         outline: 'border-input bg-card text-foreground hover:bg-muted aria-expanded:bg-muted',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-muted aria-expanded:bg-muted',
         ghost: 'text-foreground hover:bg-muted aria-expanded:bg-muted',

@@ -28,7 +28,7 @@ const STATUS_LETTER: Record<HistoryStatus, string> = {
 };
 const STATUS_COLOUR: Record<HistoryStatus, string> = {
   present: 'text-success bg-success-soft',
-  absent: 'text-destructive bg-destructive/10',
+  absent: 'text-destructive bg-destructive-soft',
   late: 'text-attention bg-attention-soft',
   excused: 'text-info bg-info-soft',
 };

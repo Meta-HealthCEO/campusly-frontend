@@ -63,7 +63,7 @@ export default function NewUnitPage() {
           {/* No AI actions left: say so instead of a form the server would refuse. */}
           {aiActionsLeft(usage) === 0 && unitId === null ? <AIUsedUpState usage={usage} /> : <UnitScopeForm noun={w.one} initialClassId={searchParams.get('classId')} preferTopicId={searchParams.get('topicId')} busy={busy} locked={unitId !== null} submitLabel={error ? 'Try again' : 'Draft the outline'} onSubmit={(input) => void draft(input)} />}
           {error ? (
-            <div role="alert" className="mt-4 space-y-2 rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">
+            <div role="alert" className="mt-4 space-y-2 rounded-lg border border-destructive bg-destructive-soft px-3 py-2 text-sm text-destructive">
               <p>{error}</p>
               {unitId ? (
                 <p className="text-foreground">

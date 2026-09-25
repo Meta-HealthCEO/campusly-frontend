@@ -158,7 +158,7 @@ export function LogBehaviourDialog({ open, onOpenChange, learners, learner, sour
               For something serious, also <Link href={ROUTES.TEACHER_INCIDENTS} className="underline underline-offset-2">report an incident</Link> so the school can follow it up.
             </p>
           ) : null}
-          {problem || error ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{problem ?? error}</p> : null}
+          {problem || error ? <p role="alert" className="rounded-md border border-destructive bg-destructive-soft px-3 py-2 text-sm text-destructive">{problem ?? error}</p> : null}
         </div>
 
         <DialogFooter>

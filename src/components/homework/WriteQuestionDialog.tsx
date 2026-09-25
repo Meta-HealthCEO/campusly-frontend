@@ -65,7 +65,7 @@ export function WriteQuestionDialog({ open, onOpenChange, scope, topicName, onAd
                 onClick={() => set({ type: t.value })}
                 className={cn(
                   'min-h-11 rounded-lg border px-3 text-sm font-medium',
-                  q.type === t.value ? 'border-primary bg-primary/5 text-primary' : 'border-border hover:bg-muted',
+                  q.type === t.value ? 'border-primary bg-muted text-foreground' : 'border-border hover:bg-muted',
                 )}
               >
                 {t.label}

@@ -24,8 +24,8 @@ export function TextBlock({ block }: TextBlockProps) {
         [&_ul]:mb-3 [&_ul]:ml-5 [&_ul]:list-disc [&_ul]:space-y-1
         [&_ol]:mb-3 [&_ol]:ml-5 [&_ol]:list-decimal [&_ol]:space-y-1
         [&_li]:leading-relaxed
-        [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/30
-        [&_blockquote]:bg-primary/5 [&_blockquote]:py-3 [&_blockquote]:px-4 [&_blockquote]:rounded-r-lg
+        [&_blockquote]:my-4 [&_blockquote]:border-l-4 [&_blockquote]:border-border
+        [&_blockquote]:bg-muted [&_blockquote]:py-3 [&_blockquote]:px-4 [&_blockquote]:rounded-r-lg
         [&_blockquote]:text-sm [&_blockquote]:italic
         [&_table]:w-full [&_table]:my-4 [&_table]:text-sm [&_table]:border-collapse
         [&_th]:border [&_th]:border-border [&_th]:bg-muted/50 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold

@@ -23,7 +23,7 @@ export function AIUsageMeter({ usage, compact = false }: AIUsageMeterProps) {
         role="status"
         className={cn(
           'flex flex-col gap-2 rounded-lg border px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between',
-          left === 0 ? 'border-destructive/30 bg-destructive-soft text-destructive' : 'border-attention/30 bg-attention-soft text-attention',
+          left === 0 ? 'border-destructive bg-destructive-soft text-destructive' : 'border-attention bg-attention-soft text-attention',
         )}
       >
         <p className="flex items-center gap-2">

@@ -118,7 +118,7 @@ export function HomeworkWizardStep1() {
                 type="button"
                 onClick={() => handleTypeChange(opt)}
                 className={`flex flex-col gap-2 rounded-lg border p-4 text-left transition-colors hover:border-primary ${
-                  selected ? 'border-primary bg-primary/5' : ''
+                  selected ? 'border-primary bg-muted' : ''
                 }`}
               >
                 <Icon className="h-5 w-5 text-primary" />
@@ -204,7 +204,7 @@ export function HomeworkWizardStep1() {
               type="button"
               onClick={() => state.set({ latePolicy: p })}
               className={`rounded-md border p-3 text-sm text-left transition-colors hover:border-primary ${
-                state.latePolicy === p ? 'border-primary bg-primary/5' : ''
+                state.latePolicy === p ? 'border-primary bg-muted' : ''
               }`}
             >
               <div className="font-medium capitalize">{p}</div>

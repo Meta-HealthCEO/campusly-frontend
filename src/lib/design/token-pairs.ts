@@ -9,7 +9,7 @@ export interface TokenPair {
   fg: string;
   bg: string;
   use: ContrastUse;
-  /** The fill painted at this opacity over the ground, e.g. `bg-primary/10`. */
+  /** The fill painted at this opacity over the ground, e.g. primary at 10%. */
   bgAlpha?: number;
   ground?: 'background' | 'card';
 }
@@ -26,9 +26,9 @@ export const TOKEN_PAIRS: readonly TokenPair[] = [
   text('card-foreground', 'card'), text('popover-foreground', 'popover'), text('secondary-foreground', 'secondary'),
   text('muted-foreground', 'background'), text('muted-foreground', 'card'), text('muted-foreground', 'muted'),
   text('primary-foreground', 'primary'), text('primary', 'card'), text('primary', 'background'),
-  text('primary', 'primary', { bgAlpha: 0.1, ground: 'card' }), text('accent-foreground', 'accent'),
+  text('accent-foreground', 'accent'),
   text('destructive', 'card'), text('destructive', 'background'), text('destructive', 'destructive-soft'),
-  text('destructive', 'destructive', { bgAlpha: 0.1, ground: 'background' }), text('destructive', 'accent'),
+  text('destructive', 'accent'),
   text('success', 'success-soft'), text('attention', 'attention-soft'), text('info', 'info-soft'),
   text('secure-strong', 'secure'), text('building-strong', 'building'), text('weak-strong', 'weak'),
   text('secure-strong', 'card'), text('building-strong', 'card'), text('weak-strong', 'card'),

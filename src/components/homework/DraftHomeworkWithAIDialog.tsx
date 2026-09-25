@@ -136,10 +136,10 @@ export function DraftHomeworkWithAIDialog({ open, onOpenChange, scope, topicName
             </p>
           ) : null}
           {failure ? (
-            <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{failure.message}</div>
+            <div role="alert" className="rounded-lg border border-destructive bg-destructive-soft px-3 py-2 text-sm text-destructive">{failure.message}</div>
           ) : null}
           {saveNote ? (
-            <div role="alert" className="rounded-lg border border-attention/30 bg-attention-soft px-3 py-2 text-sm text-attention">{saveNote}</div>
+            <div role="alert" className="rounded-lg border border-attention bg-attention-soft px-3 py-2 text-sm text-attention">{saveNote}</div>
           ) : null}
         </div>
         <DialogFooter>

@@ -231,7 +231,7 @@ export default function HomePage() {
                 key={tier.name}
                 className={`relative flex flex-col ${
                   tier.highlighted
-                    ? 'overflow-visible border-2 border-primary ring-1 ring-primary/20'
+                    ? 'overflow-visible border-2 border-primary'
                     : 'border'
                 }`}
               >

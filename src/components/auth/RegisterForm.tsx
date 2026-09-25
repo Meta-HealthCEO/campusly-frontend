@@ -17,7 +17,7 @@ interface RegisterFormProps {
 }
 
 const nativeSelectClassName =
-  'flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30 dark:[&>option]:bg-card dark:[&>option]:text-card-foreground';
+  'flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30 dark:[&>option]:bg-card dark:[&>option]:text-card-foreground';
 
 export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
   const {

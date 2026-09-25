@@ -206,8 +206,8 @@ export function ImageDropzone({
         <Card
           className={`border-2 border-dashed cursor-pointer transition-colors ${
             dragActive
-              ? 'border-primary bg-primary/5'
-              : 'border-muted-foreground/25 hover:border-primary/50'
+              ? 'border-primary bg-muted'
+              : 'border-muted-foreground/25 hover:border-primary'
           }`}
           onClick={() => inputRef.current?.click()}
           onDrop={handleDrop}
@@ -251,8 +251,8 @@ export function ImageDropzone({
         <Card
           className={`border-2 border-dashed cursor-pointer transition-colors ${
             dragActive
-              ? 'border-primary bg-primary/5'
-              : 'border-muted-foreground/25 hover:border-primary/50'
+              ? 'border-primary bg-muted'
+              : 'border-muted-foreground/25 hover:border-primary'
           }`}
           onClick={() => inputRef.current?.click()}
           onDrop={handleDrop}

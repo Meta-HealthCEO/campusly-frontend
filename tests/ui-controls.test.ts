@@ -79,3 +79,15 @@ describe('tab panels (Task 16 gate: a focusable panel shows the ring)', () => {
     expect(panel).toMatch(/rounded-control/);
   });
 });
+
+describe('no tinted buttons (Task 17)', () => {
+  it('a disabled filled button is neutral grey with muted text, not a washed-out cobalt', () => {
+    expect(tokens(buttonVariants({ variant: 'default' }))).toEqual(
+      expect.arrayContaining(['disabled:bg-muted', 'disabled:text-muted-foreground', 'disabled:opacity-100']),
+    );
+  });
+
+  it.each(['default', 'outline', 'secondary', 'ghost', 'destructive', 'link'] as const)('%s has no see-through colour fill', (variant) => {
+    expect(tokens(buttonVariants({ variant })).filter((c: string) => /bg-(?:primary|destructive|success|attention|info)\/[1-7]?\d$/.test(c))).toEqual([]);
+  });
+});

@@ -86,7 +86,7 @@ export function UnitItemPreview({ open, onOpenChange, item, preview, loading, lo
             </div>
           ) : null}
           {blocked && !editing ? <p className="text-xs text-muted-foreground">Another item is being rewritten. You can change this one when it&apos;s done.</p> : null}
-          {error && !editing ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{error}</p> : null}
+          {error && !editing ? <p role="alert" className="rounded-md border border-destructive bg-destructive-soft px-3 py-2 text-sm text-destructive">{error}</p> : null}
         </SheetHeader>
         {editing && ready && preview && item?.itemKind ? (
           <UnitItemEditor
@@ -103,7 +103,7 @@ export function UnitItemPreview({ open, onOpenChange, item, preview, loading, lo
             {sheetState === 'loading' ? <LoadingSpinner /> : null}
             {sheetState === 'error' ? (
               <div className="space-y-3">
-                <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{loadError}</p>
+                <p role="alert" className="rounded-md border border-destructive bg-destructive-soft px-3 py-2 text-sm text-destructive">{loadError}</p>
                 <Button variant="outline" size="sm" onClick={onRetryLoad} className="min-h-11 sm:min-h-8">Try again</Button>
               </div>
             ) : null}

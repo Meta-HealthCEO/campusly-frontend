@@ -75,7 +75,7 @@ export function TextbookSidebar({
               onClick={() => onSelectChapter(idx)}
               className={`w-full text-left text-sm px-2 py-1.5 rounded-md truncate transition-colors ${
                 idx === activeIndex
-                  ? 'bg-primary/10 text-primary font-medium'
+                  ? 'bg-muted text-foreground font-medium'
                   : 'hover:bg-muted text-muted-foreground'
               }`}
             >

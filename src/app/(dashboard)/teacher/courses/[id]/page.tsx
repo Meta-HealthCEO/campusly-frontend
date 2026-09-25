@@ -115,7 +115,7 @@ export default function UnitPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="min-w-0 space-y-4">
           {stage === 'released' ? (
-            <p role="status" className="flex items-center gap-2 rounded-xl border border-success/30 bg-success-soft px-4 py-3 text-sm text-success">
+            <p role="status" className="flex items-center gap-2 rounded-xl border border-success bg-success-soft px-4 py-3 text-sm text-success">
               <CheckCircle2 className="h-4 w-4" aria-hidden />
               Released to {releasedTo.length > 0 ? releasedTo.map((c) => c.name).join(', ') : 'your class'}. Learners can start on any phone.
             </p>
@@ -141,7 +141,7 @@ export default function UnitPage() {
             </p>
           ) : null}
           {view.draftError ? (
-            <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{view.draftError}</div>
+            <div role="alert" className="rounded-lg border border-destructive bg-destructive-soft px-3 py-2 text-sm text-destructive">{view.draftError}</div>
           ) : null}
 
           {showHandBuiltDraftOffer(course.outlineStatus ?? 'none', hasOutline) ? (

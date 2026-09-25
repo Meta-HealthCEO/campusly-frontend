@@ -37,7 +37,7 @@ export function RosterStudentRow({
   return (
     <div className="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:gap-3">
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-foreground">
           {getInitials(first, last)}
         </div>
         <Link href={teacherLearnerProfilePath(student.id)} className="min-w-0 flex-1 rounded-md underline-offset-2 hover:underline focus-visible:outline-2">

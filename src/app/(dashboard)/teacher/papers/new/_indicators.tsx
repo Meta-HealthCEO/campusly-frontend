@@ -21,7 +21,7 @@ export function StepIndicator({ current }: { current: number }) {
           return (
             <li key={step.number} className="flex flex-1 items-center gap-2">
               <div className="flex items-center gap-2">
-                <span className={cn('flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold', complete && 'bg-primary text-primary-foreground', active && 'bg-primary text-primary-foreground ring-4 ring-primary/20', !complete && !active && 'bg-muted text-muted-foreground')}>
+                <span className={cn('flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold', complete && 'bg-primary text-primary-foreground', active && 'bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background', !complete && !active && 'bg-muted text-muted-foreground')}>
                   {complete ? <Check className="h-4 w-4" /> : step.number}
                 </span>
                 <span className={cn('hidden text-xs font-medium sm:inline', active ? 'text-foreground' : 'text-muted-foreground')}>{step.label}</span>
@@ -38,7 +38,7 @@ export function StepIndicator({ current }: { current: number }) {
 }
 
 export function ContextBadge({ status, error }: { status: CurriculumContextStatus; error: string | null }) {
-  if (status === 'ready') return <Badge variant="outline" className="gap-1 border-success/30 text-success"><CheckCircle2 className="h-3.5 w-3.5" />Ready</Badge>;
+  if (status === 'ready') return <Badge variant="outline" className="gap-1 border-success text-success"><CheckCircle2 className="h-3.5 w-3.5" />Ready</Badge>;
   if (status === 'preparing') return <Badge variant="outline" className="gap-1"><Spin className="h-3.5 w-3.5 animate-spin" />Preparing context</Badge>;
   if (status === 'error') return <span className="text-sm text-destructive">{error ?? 'Missing subject, grade, or term context.'}</span>;
   return null;

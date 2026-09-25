@@ -255,7 +255,7 @@ export function AssignmentMarkingDialog({
               </Card>
 
               {submission.lateMarkAdjustment && (
-                <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+                <div className="rounded-md border border-destructive bg-card p-3 text-sm">
                   <p className="font-medium">Late penalty applied</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Raw: {submission.lateMarkAdjustment.rawMark} · Penalty: {submission.lateMarkAdjustment.penaltyPercent}% · Final: {submission.lateMarkAdjustment.finalMark}

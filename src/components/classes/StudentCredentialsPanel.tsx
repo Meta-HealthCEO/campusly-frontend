@@ -58,7 +58,7 @@ export function StudentCredentialsPanel({
         </div>
       </div>
       {deliveryMode === 'email' && !credentials.emailSent && (
-        <div className="flex items-start gap-2 rounded-md bg-destructive/10 p-2 text-xs text-destructive">
+        <div className="flex items-start gap-2 rounded-md border border-destructive bg-card p-2 text-xs text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
           <span>Delivery failed. Copy the credentials and share them manually.</span>
         </div>

@@ -132,7 +132,7 @@ export function TeacherClassesTable({
               aria-label={isTeachingGroup ? 'Delete teaching group' : 'Delete class'}
               title={isTeachingGroup ? 'Delete teaching group' : 'Delete class'}
               onClick={stop(() => onDelete(entry))}
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              className="text-destructive hover:bg-muted hover:text-destructive"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

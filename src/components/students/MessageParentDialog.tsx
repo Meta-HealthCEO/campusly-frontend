@@ -60,7 +60,7 @@ export function MessageParentDialog({ open, onOpenChange, firstName, parents, se
               </div>
             </>
           )}
-          {error ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">{error}</p> : null}
+          {error ? <p role="alert" className="rounded-md border border-destructive bg-destructive-soft px-3 py-2 text-sm text-destructive">{error}</p> : null}
         </div>
 
         <DialogFooter>

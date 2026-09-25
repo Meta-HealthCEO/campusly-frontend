@@ -87,7 +87,7 @@ function NowLine({ label }: { label: string }) {
       <span className="justify-self-start rounded bg-primary px-1.5 py-px font-mono text-[11.5px] font-medium tabular-nums text-primary-foreground">
         {label}
       </span>
-      <span aria-hidden className="h-[1.5px] bg-gradient-to-r from-primary to-primary/15" />
+      <span aria-hidden className="h-px bg-border" />
     </li>
   );
 }

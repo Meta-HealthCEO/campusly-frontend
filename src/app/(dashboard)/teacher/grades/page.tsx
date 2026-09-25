@@ -182,7 +182,7 @@ export default function TeacherGradesPage() {
           {markEntries.length > 0 && (
             <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
               {isDirty && (
-                <div className="mr-auto flex items-center gap-2 rounded-md border border-attention/40 bg-attention-soft px-3 py-1.5 text-xs text-attention">
+                <div className="mr-auto flex items-center gap-2 rounded-md border border-attention bg-attention-soft px-3 py-1.5 text-xs text-attention">
                   <AlertCircle className="h-3.5 w-3.5" />
                   You have unsaved changes
                 </div>

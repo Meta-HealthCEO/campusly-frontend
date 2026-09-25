@@ -102,7 +102,7 @@ export function MarkingResults({
     <div className="space-y-4">
       {/* Stale-marking banner */}
       {isStale && (
-        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3">
+        <div className="rounded-md border border-destructive bg-card p-3">
           <p className="text-sm font-medium">Paper edited since this marking</p>
           <p className="text-xs text-muted-foreground">
             Re-mark recommended. Marking captured paper v{markingVersion}, current is v{paperVersion}.
@@ -112,7 +112,7 @@ export function MarkingResults({
 
       {/* Paper mismatch warning */}
       {marking.paperMismatch && (
-        <div className="flex items-start gap-3 rounded-md border border-destructive/50 bg-destructive/5 p-4">
+        <div className="flex items-start gap-3 rounded-md border border-destructive bg-card p-4">
           <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
           <div className="space-y-1 text-sm">
             <p className="font-medium text-destructive">This doesn&apos;t look like the selected paper.</p>

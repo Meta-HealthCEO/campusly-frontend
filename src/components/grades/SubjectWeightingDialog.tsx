@@ -211,7 +211,7 @@ function TermCard({ term, edit, saving, onChange, onSave, onCopyToAll }: TermCar
                   value={edit?.[type] ?? ''}
                   onChange={(e) => onChange(type, e.target.value)}
                   placeholder="0"
-                  className={cn('pr-7', !sumOk && 'border-destructive/50')}
+                  className={cn('pr-7', !sumOk && 'border-destructive')}
                 />
                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
                   %

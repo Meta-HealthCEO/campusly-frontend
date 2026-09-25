@@ -2,7 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, ArrowDown, CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
+import { ArrowUp, ArrowDown, Lightbulb } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { AnswerMark } from './AnswerMark';
+import { answerEdge } from './answer-state';
 import type { ContentBlockItem, BlockInteractionState, AttemptResult } from '@/types';
 
 interface OrderingData {
@@ -61,13 +64,10 @@ export function OrderingBlock({ block, onSubmit, interaction }: OrderingBlockPro
         {order.map((origIdx, pos) => (
           <div
             key={origIdx}
-            className={`flex items-center gap-2 rounded-lg border p-3 text-sm ${
-              correctPositions
-                ? correctPositions[pos]
-                  ? 'border-primary bg-primary/10'
-                  : 'border-destructive bg-destructive/10'
-                : 'bg-background'
-            }`}
+            className={cn(
+              'flex items-center gap-2 rounded-lg border p-3 text-sm',
+              correctPositions ? answerEdge(Boolean(correctPositions[pos])) : 'bg-background',
+            )}
           >
             <span className="text-xs text-muted-foreground font-mono w-6 shrink-0">
               {pos + 1}.
@@ -95,11 +95,7 @@ export function OrderingBlock({ block, onSubmit, interaction }: OrderingBlockPro
                 </Button>
               </div>
             )}
-            {correctPositions && (
-              correctPositions[pos]
-                ? <CheckCircle2 className="size-4 text-primary shrink-0" />
-                : <XCircle className="size-4 text-destructive shrink-0" />
-            )}
+            {correctPositions && <AnswerMark correct={Boolean(correctPositions[pos])} />}
           </div>
         ))}
       </div>
@@ -128,10 +124,12 @@ export function OrderingBlock({ block, onSubmit, interaction }: OrderingBlockPro
       )}
 
       {answered && interaction.attemptResult && (
-        <div className={`rounded-lg p-3 text-sm ${interaction.correct ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+        <div className={cn('rounded-lg p-3 text-sm text-foreground', answerEdge(Boolean(interaction.correct)))}>
           <div className="flex items-center gap-2 font-medium">
-            {interaction.correct ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
-            Score: {interaction.attemptResult.score}/{interaction.attemptResult.maxScore}
+            <AnswerMark correct={Boolean(interaction.correct)} className="text-sm" />
+            <span className="ml-auto text-xs">
+              Score: {interaction.attemptResult.score}/{interaction.attemptResult.maxScore}
+            </span>
           </div>
           {block.explanation && <p className="mt-2 text-xs opacity-80">{block.explanation}</p>}
         </div>

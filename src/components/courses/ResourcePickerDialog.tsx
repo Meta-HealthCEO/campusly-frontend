@@ -20,6 +20,7 @@ import {
   ClipboardList,
   HelpCircle,
   X,
+  Check,
 } from 'lucide-react';
 import {
   useCourseResourcePicker,
@@ -244,11 +245,11 @@ function ResourceRow({
       disabled={disabled}
       className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors ${
         selected
-          ? 'border-primary bg-primary/5'
+          ? 'border-primary bg-muted text-foreground'
           : 'hover:bg-muted/50 disabled:opacity-50'
       }`}
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
         <Icon className="h-4 w-4 text-primary" />
       </div>
       <div className="flex-1 min-w-0">
@@ -258,6 +259,7 @@ function ResourceRow({
       <Badge variant="outline" className="text-xs shrink-0">
         {label}
       </Badge>
+      {selected && <Check className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />}
     </button>
   );
 }

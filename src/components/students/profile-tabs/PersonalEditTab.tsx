@@ -157,7 +157,7 @@ export function PersonalEditTab({ form, onChange, className }: Props) {
         <Label htmlFor="phone">Parent Cell Number</Label>
         <div
           data-slot="phone-input-shell"
-          className="flex h-10 rounded-lg border border-input bg-transparent transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30"
+          className="flex h-10 rounded-lg border border-input bg-transparent transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring dark:bg-input/30"
         >
           <span
             data-slot="phone-input-prefix"
