@@ -97,8 +97,6 @@ export interface DraftFailure {
   message: string;
   /** Whether trying again straight away could work. */
   retryable: boolean;
-  /** Whether this is a Pro feature the teacher can start a trial for. */
-  upgrade: boolean;
 }
 
 const DRAFT_FALLBACK = 'The AI could not draft questions just now. Try again in a moment.';
@@ -106,17 +104,16 @@ const DRAFT_FALLBACK = 'The AI could not draft questions just now. Try again in 
 /**
  * What to tell the teacher when drafting fails. Server errors and timeouts get
  * a plain sentence instead of "Internal server error"; a missing AI key, the
- * daily limit and the Pro gate aren't offered a retry that can't work.
+ * daily limit and a used-up monthly allowance aren't offered a retry that
+ * can't work. (A used-up allowance also opens the one upgrade prompt.)
  */
 export function draftFailure(status: number | undefined, serverMessage: string | undefined): DraftFailure {
-  if (status === 402) {
-    return { message: 'Drafting with AI is part of Pro. Start a free trial to use it.', retryable: false, upgrade: true };
-  }
-  if (status === 503) return { message: serverMessage || DRAFT_FALLBACK, retryable: false, upgrade: false };
+  if (status === 402) return { message: serverMessage || 'No AI actions left this month.', retryable: false };
+  if (status === 503) return { message: serverMessage || DRAFT_FALLBACK, retryable: false };
   if (status !== undefined && status >= 400 && status < 500 && serverMessage) {
-    return { message: serverMessage, retryable: !/limit/i.test(serverMessage), upgrade: false };
+    return { message: serverMessage, retryable: !/limit/i.test(serverMessage) };
   }
-  return { message: DRAFT_FALLBACK, retryable: true, upgrade: false };
+  return { message: DRAFT_FALLBACK, retryable: true };
 }
 
 /**

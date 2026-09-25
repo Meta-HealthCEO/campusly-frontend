@@ -16,14 +16,14 @@ const PLANS: PlanCard[] = [
     price: 'R0',
     cadence: 'for as long as you like',
     note: 'Start here. No card needed.',
-    features: ['3 AI papers with memos', 'One teaching group', 'Attendance, homework and gradebook'],
+    features: ['20 AI actions a month: lessons, papers, memos, marking', 'One teaching group', 'Attendance, homework and gradebook'],
   },
   {
     name: 'Pro',
     price: 'R149',
     cadence: 'a month, or R1,490 a year',
     note: 'When it becomes a habit. 14 days free first.',
-    features: ['Unlimited AI papers and memos', 'AI question generation and marking', 'Unlimited classes and learners', 'Analytics and reports'],
+    features: ['Up to 500 AI actions a month', 'AI lessons, papers, memos and marking', 'Unlimited classes and learners', 'Analytics and reports'],
     highlight: true,
   },
 ];

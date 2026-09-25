@@ -18,6 +18,8 @@ import { UnitInsight } from '@/components/courses/unit/UnitInsight';
 import { UnitSettings } from '@/components/courses/unit/UnitSettings';
 import { CopyUnitDialog } from '@/components/courses/unit/CopyUnitDialog';
 import { useCopyUnit } from '@/hooks/useCopyUnit';
+import { useAIUsage } from '@/hooks/useAIUsage';
+import { AIUsageNotice } from '@/components/billing/AIUsageNotice';
 import { useUnitInsight } from '@/hooks/useUnitInsight';
 import { useUnitView } from '@/hooks/useUnitView';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
@@ -42,6 +44,7 @@ export default function UnitPage() {
   const canSeeInsight = !!course && canViewUnitInsight(course.createdBy, user);
   const insight = useUnitInsight(courseId, stage === 'released' && canSeeInsight);
   const copier = useCopyUnit();
+  const { usage } = useAIUsage();
 
   // Catalogue courses keep the course builder.
   useEffect(() => {
@@ -127,6 +130,7 @@ export default function UnitPage() {
           {stage === 'released' ? <h2 className="pt-2 text-lg font-semibold">The unit</h2> : null}
           {stage === 'writing' || stage === 'release' ? <UnitGenerationBanner generation={course.generation} /> : null}
           {stage === 'release' && blocker ? <p className="text-sm text-muted-foreground">{blocker}.</p> : null}
+          {stage === 'outline' ? <AIUsageNotice usage={usage} /> : null}
           {stage === 'outline' && course.outlineStatus === 'drafted' ? (
             <p className="rounded-xl border border-accent-foreground/20 bg-accent px-4 py-3 text-sm text-accent-foreground">
               Check the outline: remove anything you don&apos;t want, then approve it. Nothing is written until you do.

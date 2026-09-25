@@ -15,6 +15,8 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useSubscriptionActions } from '@/hooks/useSubscriptionActions';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useCheckout } from '@/hooks/useCheckout';
+import { useAIUsage } from '@/hooks/useAIUsage';
+import { AIUsageMeter } from '@/components/billing/AIUsageMeter';
 import { CancelDialog } from '@/components/subscription/CancelDialog';
 import { InvoicesTable } from '@/components/subscription/InvoicesTable';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -80,6 +82,7 @@ export default function BillingPage() {
     daysLeftInTrial,
   } = useSubscription();
   const { invoices, loading: invLoading } = useInvoices();
+  const { usage } = useAIUsage();
   const { launch, loading: launchLoading } = useCheckout();
   const { resumeSubscription } = useSubscriptionActions();
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -245,6 +248,16 @@ export default function BillingPage() {
           )}
         </div>
       </section>
+
+      {/* ─── AI actions this month (standalone teachers) ─── */}
+      {usage && usage.plan !== 'school' ? (
+        <section className="mt-6 rounded-2xl border border-border bg-card p-6" aria-labelledby="ai-usage-heading">
+          <h2 id="ai-usage-heading" className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden /> AI actions this month
+          </h2>
+          <div className="mt-3"><AIUsageMeter usage={usage} /></div>
+        </section>
+      ) : null}
 
       {/* ─── Payment method + Next event row ─── */}
       <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">

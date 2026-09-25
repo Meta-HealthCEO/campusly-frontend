@@ -69,11 +69,6 @@ export function releaseBlocker(course: CourseTree): string | null {
   return null;
 }
 
-/** The free-units counter only means something to a free-plan standalone teacher; Pro teachers have no limit to show. */
-export function shouldShowFreeUnitsBanner(entitled: boolean, freeUnits: { remaining: number; limit: number } | null): boolean {
-  return !entitled && freeUnits !== null;
-}
-
 export function defaultUnitTitle(subjectName: string, gradeName: string, termNumber: number): string {
   return [subjectName, gradeName, `Term ${termNumber}`].filter(Boolean).join(' · ');
 }

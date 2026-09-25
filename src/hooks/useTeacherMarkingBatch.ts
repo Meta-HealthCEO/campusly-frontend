@@ -5,6 +5,7 @@ import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import { toast } from 'sonner';
 import type { MarkingBatch, ConfirmBatchAssignment } from '@/types/marking';
+import { isAILimitError } from '@/lib/ai-allowance';
 
 export function useTeacherMarkingBatch(): {
   createBatch: (
@@ -42,7 +43,8 @@ export function useTeacherMarkingBatch(): {
         });
         return unwrapResponse<MarkingBatch>(res);
       } catch (err: unknown) {
-        toast.error(err instanceof Error ? err.message : 'Batch upload failed');
+        // A used-up AI allowance already opened the upgrade prompt.
+        if (!isAILimitError(err)) toast.error(err instanceof Error ? err.message : 'Batch upload failed');
         return null;
       } finally {
         setLoading(false);
@@ -69,7 +71,8 @@ export function useTeacherMarkingBatch(): {
         const res = await apiClient.post(`/ai-tools/batches/${id}/confirm`, { assignments });
         return unwrapResponse<{ spawned: number; failed: number }>(res);
       } catch (err: unknown) {
-        toast.error(err instanceof Error ? err.message : 'Confirm failed');
+        // A used-up AI allowance already opened the upgrade prompt.
+        if (!isAILimitError(err)) toast.error(err instanceof Error ? err.message : 'Confirm failed');
         return null;
       }
     },

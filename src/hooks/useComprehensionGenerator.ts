@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import { toast } from 'sonner';
+import { isAILimitError } from '@/lib/ai-allowance';
 
 export function useComprehensionGenerator(): {
   generate: (
@@ -35,7 +36,8 @@ export function useComprehensionGenerator(): {
       const data = unwrapResponse<{ questionIds: string[] }>(res);
       return data.questionIds;
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Generation failed');
+      // A used-up AI allowance already opened the upgrade prompt.
+      if (!isAILimitError(err)) toast.error(err instanceof Error ? err.message : 'Generation failed');
       return null;
     } finally {
       setGenerating(false);

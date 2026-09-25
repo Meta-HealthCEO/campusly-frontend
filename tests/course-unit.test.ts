@@ -11,7 +11,6 @@ import {
   previewSheetState,
   releaseBlocker,
   schoolTermFor,
-  shouldShowFreeUnitsBanner,
   showHandBuiltDraftOffer,
   unitChip,
   unitMinutes,
@@ -137,20 +136,6 @@ describe('withPolledStatus', () => {
     expect(next.modules[0].lessons.map((l) => [l.genStatus, l.genError ?? ''])).toEqual([['ready', ''], ['failed', 'timeout']]);
     expect(tree.modules[0].lessons[0].genStatus).toBe('pending');
     expect(withPolledStatus(tree, null)).toBe(tree);
-  });
-});
-
-describe('shouldShowFreeUnitsBanner', () => {
-  it('hides the free-units counter from Pro teachers', () => {
-    expect(shouldShowFreeUnitsBanner(true, { remaining: 2, limit: 3 })).toBe(false);
-  });
-
-  it('shows it to a free teacher who has an allowance', () => {
-    expect(shouldShowFreeUnitsBanner(false, { remaining: 2, limit: 3 })).toBe(true);
-  });
-
-  it('hides it when there is no allowance data (e.g. school-tier users)', () => {
-    expect(shouldShowFreeUnitsBanner(false, null)).toBe(false);
   });
 });
 

@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse, extractErrorMessage } from '@/lib/api-helpers';
+import { isAILimitError } from '@/lib/ai-allowance';
 import type {
   Assignment,
   AssignmentClassPush,
@@ -96,7 +97,8 @@ export function useTeacherAssignments() {
       const res = await apiClient.post('/assignments/generate', payload);
       return unwrapResponse<AIGeneratedAssignment>(res);
     } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'AI generation failed.'));
+      // A used-up AI allowance already opened the upgrade prompt.
+      if (!isAILimitError(err)) toast.error(extractErrorMessage(err, 'AI generation failed.'));
       return null;
     }
   }, []);

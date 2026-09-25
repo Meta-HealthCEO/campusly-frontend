@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { aiLimitFromError } from '@/lib/ai-allowance';
+import { useAILimitStore } from '@/stores/useAILimitStore';
 
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4500/api',
@@ -71,6 +73,10 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error) => {
+    // An AI allowance or unverified-email refusal opens one prompt; the caller still sees the error.
+    const aiLimit = aiLimitFromError(error.response?.status, error.response?.data);
+    if (aiLimit) useAILimitStore.getState().show(aiLimit);
+
     const originalRequest = error.config;
     if (!originalRequest) {
       return Promise.reject(error);

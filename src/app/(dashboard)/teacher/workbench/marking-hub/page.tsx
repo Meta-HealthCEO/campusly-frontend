@@ -13,6 +13,8 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { MarkingItemCard } from '@/components/workbench/marking-hub/MarkingItemCard';
 import { MarkingFilters } from '@/components/workbench/marking-hub/MarkingFilters';
 import { useMarkingHub } from '@/hooks/useMarkingHub';
+import { useAIUsage } from '@/hooks/useAIUsage';
+import { AIUsageNotice } from '@/components/billing/AIUsageNotice';
 import { submissionsToMark } from '@/lib/marking-due';
 import type { MarkingItemType, MarkingPriority, MarkingItem } from '@/types';
 
@@ -38,6 +40,7 @@ function filterItems(items: MarkingItem[], filters: Filters): MarkingItem[] {
 
 export default function MarkingHubPage() {
   const { items, loading, overdueCount, dueTodayCount } = useMarkingHub();
+  const { usage } = useAIUsage();
 
   const [filters, setFilters] = useState<Filters>({});
   const [sortBy, setSortBy] = useState('dueDate');
@@ -56,6 +59,7 @@ export default function MarkingHubPage() {
           Mark papers with AI
         </Link>
       </PageHeader>
+      <AIUsageNotice usage={usage} />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard

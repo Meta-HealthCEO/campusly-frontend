@@ -12,7 +12,6 @@ const teacher = {
 };
 const plan = { id: 'p1', key: 'free', name: 'Free' };
 const subscription = { id: 'sub1', status: 'active' };
-const freeAllowance = { paperGenerations: { limit: 3, used: 0, remaining: 3 } };
 
 describe('refreshAccount', () => {
   beforeEach(() => {
@@ -20,15 +19,14 @@ describe('refreshAccount', () => {
     useAuthStore.getState().logout();
   });
 
-  it('gives a teacher who just signed up their plan and free AI papers without a page reload', async () => {
+  it('gives a teacher who just signed up their plan without a page reload', async () => {
     useAuthStore.getState().login(teacher, { accessToken: 'a', refreshToken: 'r' });
-    get.mockResolvedValue({ data: { data: { user: teacher, subscription, plan, freeAllowance } } });
+    get.mockResolvedValue({ data: { data: { user: teacher, subscription, plan } } });
 
     await useAuthStore.getState().refreshAccount();
 
     expect(get).toHaveBeenCalledWith('/auth/me');
     const state = useAuthStore.getState();
-    expect(state.freeAllowance).toEqual(freeAllowance);
     expect(state.subscription).toEqual(subscription);
     expect(state.plan).toEqual(plan);
     expect(state.user?.email).toBe('new@teacher.test');
@@ -42,7 +40,7 @@ describe('refreshAccount', () => {
 
     const state = useAuthStore.getState();
     expect(state.isAuthenticated).toBe(true);
-    expect(state.freeAllowance).toBeNull();
+    expect(state.subscription).toBeNull();
   });
 });
 
@@ -54,7 +52,7 @@ describe('refreshAccount and email verification', () => {
 
   it('picks up a newly verified email without a page reload', async () => {
     useAuthStore.getState().login({ ...teacher, emailVerifiedAt: null }, { accessToken: 'a', refreshToken: 'r' });
-    get.mockResolvedValue({ data: { data: { user: { ...teacher, emailVerifiedAt: '2026-09-25T08:00:00.000Z' }, subscription, plan, freeAllowance } } });
+    get.mockResolvedValue({ data: { data: { user: { ...teacher, emailVerifiedAt: '2026-09-25T08:00:00.000Z' }, subscription, plan } } });
 
     await useAuthStore.getState().refreshAccount();
 

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
 import { extractErrorMessage, unwrapList, unwrapResponse } from '@/lib/api-helpers';
+import { isAILimitError } from '@/lib/ai-allowance';
 import { toast } from 'sonner';
 import type { StructuredHomeworkSubmission } from '@/types/homework';
 
@@ -43,7 +44,8 @@ export function useTeacherHomeworkSubmissions(homeworkId: string): {
         toast.success('Regrade triggered');
         return fresh;
       } catch (err: unknown) {
-        toast.error(err instanceof Error ? err.message : 'Regrade failed');
+        // A used-up AI allowance already opened the upgrade prompt.
+        if (!isAILimitError(err)) toast.error(err instanceof Error ? err.message : 'Regrade failed');
         return null;
       }
     },

@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import apiClient from '@/lib/api-client';
 import { extractErrorMessage, unwrapResponse } from '@/lib/api-helpers';
+import { isAILimitError } from '@/lib/ai-allowance';
 import { toast } from 'sonner';
-import { useAuthStore } from '@/stores/useAuthStore';
 import type {
   Paper,
   PaperMemo,
@@ -103,12 +103,11 @@ export function useTeacherPapers(autoFetch = true): UseTeacherPapersResult {
       const res = await apiClient.post(`${API_PREFIX}/generate`, input);
       const data = unwrapResponse<{ paperId?: string; _id?: string }>(res);
       const paperId = data.paperId ?? data._id ?? '';
-      // A free-plan teacher just used one of their free AI papers.
-      useAuthStore.getState().consumeFreePaperGeneration();
       toast.success('Paper generated');
       return { paperId };
     } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'AI generation failed'));
+      // A used-up AI allowance already opened the upgrade prompt.
+      if (!isAILimitError(err)) toast.error(extractErrorMessage(err, 'AI generation failed'));
       return null;
     }
   }, []);
@@ -186,7 +185,8 @@ export function useTeacherPapers(autoFetch = true): UseTeacherPapersResult {
       );
       return unwrapResponse<Paper>(res);
     } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Regenerate failed'));
+      // A used-up AI allowance already opened the upgrade prompt.
+      if (!isAILimitError(err)) toast.error(extractErrorMessage(err, 'Regenerate failed'));
       return null;
     }
   }, []);

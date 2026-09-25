@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { extractErrorMessage, unwrapResponse } from '@/lib/api-helpers';
+import { isAILimitError } from '@/lib/ai-allowance';
 import type { Course, ItemGenStatus } from '@/types/courses';
 import type { PolledState } from '@/lib/course-unit';
 import type { ContentBlockItem } from '@/types';
@@ -46,7 +47,8 @@ export function useClassUnit() {
     try {
       return unwrapResponse<Course>(await apiClient.post('/courses/class-units', input));
     } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Could not start the unit. Please try again.'));
+      // A used-up AI allowance already opened the upgrade prompt.
+      if (!isAILimitError(err)) toast.error(extractErrorMessage(err, 'Could not start the unit. Please try again.'));
       return null;
     }
   }, []);
@@ -68,7 +70,8 @@ export function useClassUnit() {
       toast.success('Outline approved. The items are being written.');
       return true;
     } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Could not approve the outline.'));
+      // A used-up AI allowance already opened the upgrade prompt.
+      if (!isAILimitError(err)) toast.error(extractErrorMessage(err, 'Could not approve the outline.'));
       return false;
     }
   }, []);

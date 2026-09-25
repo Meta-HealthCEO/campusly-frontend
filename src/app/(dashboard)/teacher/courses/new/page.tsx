@@ -9,20 +9,16 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { UnitScopeForm } from '@/components/courses/unit/UnitScopeForm';
 import { UnitSteps } from '@/components/courses/unit/UnitSteps';
 import { useClassUnit, type CreateUnitInput } from '@/hooks/useClassUnit';
-import { useEntitlement } from '@/hooks/useEntitlement';
-import { useAuthStore } from '@/stores/useAuthStore';
-import { shouldShowFreeUnitsBanner } from '@/lib/course-unit';
+import { useAIUsage } from '@/hooks/useAIUsage';
+import { aiActionsLeft } from '@/lib/ai-allowance';
+import { AIUsageNotice, AIUsedUpState } from '@/components/billing/AIUsageNotice';
 
 export default function NewUnitPage() {
   const router = useRouter();
   // Onboarding opens this page on the teacher's class and a CAPS topic.
   const searchParams = useSearchParams();
   const { createUnit, draftOutline } = useClassUnit();
-  const freeUnits = useAuthStore((s) => s.freeAllowance?.courseUnits ?? null);
-  const refreshAccount = useAuthStore((s) => s.refreshAccount);
-  // The Pro AI-generation switch is the same paperGeneration entitlement the
-  // server checks for building a unit (assertCourseGenerationAccess).
-  const entitled = useEntitlement('paperGeneration');
+  const { usage } = useAIUsage();
   const [busy, setBusy] = useState(false);
   // Once the unit exists, a failed draft is retried on it (no second unit).
   const [unitId, setUnitId] = useState<string | null>(null);
@@ -47,8 +43,6 @@ export default function NewUnitPage() {
       setError(failure);
       return;
     }
-    // A free-plan teacher just used one of their free AI units.
-    void refreshAccount();
     router.push(`/teacher/courses/${id}`);
   };
 
@@ -63,7 +57,8 @@ export default function NewUnitPage() {
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <section className="rounded-xl border border-border bg-card p-4 sm:p-6" aria-label="Unit scope">
-          <UnitScopeForm initialClassId={searchParams.get('classId')} preferTopicId={searchParams.get('topicId')} busy={busy} locked={unitId !== null} submitLabel={error ? 'Try again' : 'Draft the outline'} onSubmit={(input) => void draft(input)} />
+          {/* No AI actions left: say so instead of a form the server would refuse. */}
+          {aiActionsLeft(usage) === 0 && unitId === null ? <AIUsedUpState usage={usage} /> : <UnitScopeForm initialClassId={searchParams.get('classId')} preferTopicId={searchParams.get('topicId')} busy={busy} locked={unitId !== null} submitLabel={error ? 'Try again' : 'Draft the outline'} onSubmit={(input) => void draft(input)} />}
           {error ? (
             <div role="alert" className="mt-4 space-y-2 rounded-lg border border-destructive/30 bg-destructive-soft px-3 py-2 text-sm text-destructive">
               <p>{error}</p>
@@ -77,11 +72,7 @@ export default function NewUnitPage() {
         </section>
         <aside className="space-y-4">
           <UnitSteps current="scope" />
-          {shouldShowFreeUnitsBanner(entitled, freeUnits) && freeUnits ? (
-            <p className="rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground">
-              <span className="font-mono tabular-nums text-foreground">{freeUnits.remaining}</span> of {freeUnits.limit} free AI units left on your plan.
-            </p>
-          ) : null}
+          <AIUsageNotice usage={usage} />
         </aside>
       </div>
     </div>

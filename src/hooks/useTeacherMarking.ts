@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { extractErrorMessage, unwrapResponse, unwrapList } from '@/lib/api-helpers';
+import { isAILimitError } from '@/lib/ai-allowance';
 import { issuedMessage } from '@/lib/issue-toast';
 
 interface MarkingQuestion {
@@ -125,7 +126,8 @@ export function useTeacherMarking() {
       return marking;
     } catch (err: unknown) {
       console.error('Failed to mark paper (text)', err);
-      toast.error(err instanceof Error ? err.message : 'Failed to mark paper. Please try again.');
+      // A used-up AI allowance already opened the upgrade prompt.
+      if (!isAILimitError(err)) toast.error(err instanceof Error ? err.message : 'Failed to mark paper. Please try again.');
       return null;
     } finally {
       setLoading(false);
@@ -156,7 +158,8 @@ export function useTeacherMarking() {
       return marking;
     } catch (err: unknown) {
       console.error('Failed to mark paper', err);
-      toast.error(err instanceof Error ? err.message : 'Failed to mark paper. Please try again.');
+      // A used-up AI allowance already opened the upgrade prompt.
+      if (!isAILimitError(err)) toast.error(err instanceof Error ? err.message : 'Failed to mark paper. Please try again.');
       return null;
     } finally {
       setLoading(false);

@@ -100,7 +100,7 @@ export function NightClockHero() {
         <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
           <StartFreeLink className="w-full sm:w-auto" />
           <p className="text-sm text-white/55">
-            <span className="font-(family-name:--font-clock) text-white/80">3</span> AI papers free · no card needed
+            <span className="font-(family-name:--font-clock) text-white/80">20</span> AI actions a month free · no card needed
           </p>
         </div>
       </div>

@@ -22,6 +22,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { TrialBanner } from '@/components/subscription/TrialBanner';
 import { DunningBanner } from '@/components/subscription/DunningBanner';
 import { VerifyEmailBanner } from '@/components/auth/VerifyEmailBanner';
+import { AILimitDialog } from '@/components/billing/AILimitDialog';
 import { composeNav } from './nav-config';
 import { isStandaloneTeacherPathAllowed } from '@/lib/standalone-teacher-paths';
 import { useNotificationPoller } from '@/hooks/useNotificationPoller';
@@ -141,6 +142,8 @@ export default function DashboardLayout({
           </main>
         </div>
         <BottomNav items={navItems} />
+        {/* The one prompt any refused AI action opens (out of AI actions, or email not verified). */}
+        <AILimitDialog />
       </div>
     </AuthGuard>
   );

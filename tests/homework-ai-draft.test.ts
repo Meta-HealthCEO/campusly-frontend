@@ -70,12 +70,15 @@ describe('review fixes', () => {
   });
 
   it('turns server failures into plain words, and only offers a retry that can work', () => {
-    expect(draftFailure(402, 'Payment required')).toEqual({ message: 'Drafting with AI is part of Pro. Start a free trial to use it.', retryable: false, upgrade: true });
-    expect(draftFailure(503, "AI isn't set up on this server yet.")).toEqual({ message: "AI isn't set up on this server yet.", retryable: false, upgrade: false });
+    // Out of AI actions: the one upgrade prompt opens; the dialog just says why, with no retry.
+    expect(draftFailure(402, "You've used this month's 20 free AI actions. Upgrade to Pro for more."))
+      .toEqual({ message: "You've used this month's 20 free AI actions. Upgrade to Pro for more.", retryable: false });
+    expect(draftFailure(402, undefined)).toEqual({ message: 'No AI actions left this month.', retryable: false });
+    expect(draftFailure(503, "AI isn't set up on this server yet.")).toEqual({ message: "AI isn't set up on this server yet.", retryable: false });
     expect(draftFailure(400, 'Daily AI generation limit reached (20/20). Try again tomorrow.').retryable).toBe(false);
-    expect(draftFailure(500, 'Internal server error')).toEqual({ message: 'The AI could not draft questions just now. Try again in a moment.', retryable: true, upgrade: false });
+    expect(draftFailure(500, 'Internal server error')).toEqual({ message: 'The AI could not draft questions just now. Try again in a moment.', retryable: true });
     expect(draftFailure(undefined, undefined).retryable).toBe(true);
-    expect(draftFailure(400, 'Topic not found')).toEqual({ message: 'Topic not found', retryable: true, upgrade: false });
+    expect(draftFailure(400, 'Topic not found')).toEqual({ message: 'Topic not found', retryable: true });
   });
 
   it('keeps the drafts that could not be saved, so the teacher can try adding them again', () => {

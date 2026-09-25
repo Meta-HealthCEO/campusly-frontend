@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useHomeworkAIDraft } from '@/hooks/useHomeworkAIDraft';
 import { DraftQuestionItem } from '@/components/homework/DraftQuestionItem';
-import { UpgradeModal } from '@/components/subscription/UpgradeModal';
+import { AIUsageNotice } from '@/components/billing/AIUsageNotice';
+import { useAIUsage } from '@/hooks/useAIUsage';
 import {
   DRAFT_LEVEL_LABELS,
   DRAFT_TYPE_LABELS,
@@ -36,13 +37,13 @@ const COUNTS = [3, 5, 8, 10];
 /** Choose what to draft, let AI write it, keep the good ones. */
 export function DraftHomeworkWithAIDialog({ open, onOpenChange, scope, topicName, onAdded }: Props) {
   const { drafting, drafts, failure, draft, keep, reset } = useHomeworkAIDraft();
+  const { usage } = useAIUsage();
   const [type, setType] = useState<DraftQuestionType>('short_answer');
   const [count, setCount] = useState(5);
   const [level, setLevel] = useState<DraftLevel>('standard');
   const [unticked, setUnticked] = useState<Set<string>>(new Set());
   const [adding, setAdding] = useState(false);
   const [saveNote, setSaveNote] = useState<string | null>(null);
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const chosen = drafts.filter((d: DraftQuestion) => !unticked.has(d.id));
 
@@ -90,6 +91,7 @@ export function DraftHomeworkWithAIDialog({ open, onOpenChange, scope, topicName
           {topicName ? <DialogDescription>For {topicName}</DialogDescription> : null}
         </DialogHeader>
         <div className="flex-1 space-y-4 overflow-y-auto py-2">
+          {drafts.length === 0 ? <AIUsageNotice usage={usage} /> : null}
           {drafts.length === 0 ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="space-y-1.5">
@@ -142,9 +144,7 @@ export function DraftHomeworkWithAIDialog({ open, onOpenChange, scope, topicName
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => close(false)} className="min-h-11 sm:min-h-9">Cancel</Button>
-          {drafts.length === 0 && failure?.upgrade ? (
-            <Button onClick={() => setUpgradeOpen(true)} className="min-h-11 sm:min-h-9">Start a free trial</Button>
-          ) : drafts.length === 0 && (!failure || failure.retryable) ? (
+          {drafts.length === 0 && (!failure || failure.retryable) ? (
             <Button onClick={run} disabled={drafting} className="min-h-11 gap-1.5 sm:min-h-9">
               <Sparkles className="h-4 w-4" aria-hidden /> {failure ? 'Try again' : 'Draft questions'}
             </Button>
@@ -155,7 +155,6 @@ export function DraftHomeworkWithAIDialog({ open, onOpenChange, scope, topicName
           )}
         </DialogFooter>
       </DialogContent>
-      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} feature="aiGeneration" />
     </Dialog>
   );
 }
