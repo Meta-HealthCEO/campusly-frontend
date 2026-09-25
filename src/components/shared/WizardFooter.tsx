@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUIStore } from '@/stores/useUIStore';
 import { cn } from '@/lib/utils';
+import { wizardFooterPlacement } from '@/lib/wizard-footer';
 
 interface WizardFooterProps {
   step: number;
@@ -53,6 +54,7 @@ export function WizardFooter({
 }: WizardFooterProps) {
   const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed);
   const showBack = Boolean(onBack) && step > 1;
+  const placement = wizardFooterPlacement(sidebarCollapsed);
   const resolvedLabel = nextLabel ?? (isFinal ? 'Submit' : 'Next');
   const resolvedIcon = nextLoading
     ? <Loader2 className="ml-1 h-4 w-4 animate-spin" />
@@ -60,14 +62,10 @@ export function WizardFooter({
 
   return (
     <div
-      className={cn(
-        'fixed bottom-6 right-0 z-40 flex justify-center px-6 pointer-events-none',
-        sidebarCollapsed ? 'left-17.5' : 'left-64',
-        className,
-      )}
+      className={cn(placement.outer, className)}
     >
-      <div className="pointer-events-auto w-1/3 min-w-110 max-w-160 rounded-2xl border bg-background/95 shadow-lg backdrop-blur supports-backdrop-filter:bg-background/80">
-        <div className="flex h-14 items-center justify-between gap-3 px-4">
+      <div className={placement.inner}>
+        <div className="flex h-14 items-center justify-between gap-2 px-3 sm:gap-3 sm:px-4">
           <div className="flex-1">
             {showBack && (
               <Button variant="outline" size="sm" onClick={onBack} disabled={nextLoading}>
@@ -76,7 +74,7 @@ export function WizardFooter({
             )}
           </div>
 
-          <div className="flex shrink-0 items-center gap-3 text-xs text-muted-foreground">
+          <div className="hidden shrink-0 items-center gap-3 text-xs text-muted-foreground sm:flex">
             {centerSlot ?? (
               totalSteps > 1 && <span>Step {step} of {totalSteps}</span>
             )}
