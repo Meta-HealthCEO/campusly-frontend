@@ -2,6 +2,7 @@
  * Standalone teachers get one monthly AI allowance for every AI action
  * (free: 20, Pro: up to 500). School users' AI is covered by their school.
  */
+import { PRO_AI_ACTIONS_PER_MONTH, PRO_MONTHLY_PRICE } from '@/lib/billing-copy';
 
 export interface AIAllowanceUsage {
   used: number;
@@ -65,7 +66,7 @@ export function aiLimitCopy(usage: AIAllowanceUsage, now: Date): { title: string
   if (usage.plan === 'pro') return { title: "You've used this month's AI actions", body: numbers };
   return {
     title: "You've used this month's free AI actions",
-    body: `${numbers} Pro gives you up to 500 a month for R149.`,
+    body: `${numbers} Pro gives you up to ${PRO_AI_ACTIONS_PER_MONTH} a month for ${PRO_MONTHLY_PRICE}.`,
   };
 }
 

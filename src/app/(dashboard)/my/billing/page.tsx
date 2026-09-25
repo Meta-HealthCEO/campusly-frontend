@@ -17,6 +17,8 @@ import { useInvoices } from '@/hooks/useInvoices';
 import { useCheckout } from '@/hooks/useCheckout';
 import { useAIUsage } from '@/hooks/useAIUsage';
 import { AIUsageMeter } from '@/components/billing/AIUsageMeter';
+import { WhatYouGet } from '@/components/billing/WhatYouGet';
+import { proEndsAt } from '@/lib/billing-copy';
 import { CancelDialog } from '@/components/subscription/CancelDialog';
 import { InvoicesTable } from '@/components/subscription/InvoicesTable';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
@@ -100,6 +102,8 @@ export default function BillingPage() {
   const status = subscription.status as ViewStatus;
   const isFreeNoCard = status === 'free' && !subscription.cardLastFour;
   const isActive = status === 'active';
+  // Canceled during the trial: Pro lasts until the trial ends.
+  const canceledUntil = isCanceled ? proEndsAt(subscription) : null;
 
   const resume = async () => {
     setResumeLoading(true);
@@ -122,10 +126,10 @@ export default function BillingPage() {
         note: 'First charge will follow if you stay on Pro',
       };
     }
-    if (isCanceled && subscription.currentPeriodEnd) {
+    if (canceledUntil) {
       return {
         label: 'Pro ends',
-        date: fmtDate(subscription.currentPeriodEnd),
+        date: fmtDate(canceledUntil),
         note: "You'll move to Free after this date",
       };
     }
@@ -232,12 +236,12 @@ export default function BillingPage() {
             </div>
           )}
 
-          {isCanceled && subscription.currentPeriodEnd && (
+          {canceledUntil && (
             <div className="mt-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
               <CalendarClock className="mt-0.5 h-4 w-4 shrink-0" />
               <div>
                 <div className="font-medium">
-                  Pro stays active until {fmtDate(subscription.currentPeriodEnd)}
+                  Pro stays active until {fmtDate(canceledUntil)}
                 </div>
                 <div className="mt-0.5 text-xs">
                   After that you&apos;ll move to the Free tier. Change your mind? You can resume any
@@ -258,6 +262,7 @@ export default function BillingPage() {
           <div className="mt-3"><AIUsageMeter usage={usage} /></div>
         </section>
       ) : null}
+      {usage && usage.plan !== 'school' ? <WhatYouGet current={usage.plan} /> : null}
 
       {/* ─── Payment method + Next event row ─── */}
       <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">

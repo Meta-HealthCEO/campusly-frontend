@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { proEndsAt } from '@/lib/billing-copy';
 import type { Subscription, Plan } from '@/types/subscription';
 
 interface MeResponse {
@@ -37,10 +38,8 @@ export function useSubscription() {
   const isActive = status === 'active';
   const isPastDue = status === 'past_due';
   const isCanceled = status === 'canceled';
-  const canceledButStillEntitled =
-    isCanceled &&
-    !!subscription?.currentPeriodEnd &&
-    new Date(subscription.currentPeriodEnd).getTime() > Date.now();
+  const canceledEndsAt = isCanceled && subscription ? proEndsAt(subscription) : null;
+  const canceledButStillEntitled = !!canceledEndsAt && new Date(canceledEndsAt).getTime() > Date.now();
 
   const isPro = isTrialing || isActive || isPastDue || canceledButStillEntitled;
 
