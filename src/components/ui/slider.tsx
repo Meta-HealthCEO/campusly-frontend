@@ -3,6 +3,7 @@
 import { Slider as SliderPrimitive } from '@base-ui/react/slider'
 
 import { cn } from '@/lib/utils'
+import { FOCUS_RING } from './focus'
 
 interface SliderProps {
   value: number[]
@@ -37,7 +38,7 @@ function Slider({
         <SliderPrimitive.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-muted">
           <SliderPrimitive.Indicator className="absolute h-full bg-primary" />
         </SliderPrimitive.Track>
-        <SliderPrimitive.Thumb className="block size-4 rounded-full border border-primary/50 bg-background shadow-sm transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" />
+        <SliderPrimitive.Thumb className={cn('block size-5 rounded-full border-2 border-primary bg-card transition-colors duration-150 ease-standard disabled:pointer-events-none disabled:opacity-50', FOCUS_RING)} />
       </SliderPrimitive.Control>
     </SliderPrimitive.Root>
   )
