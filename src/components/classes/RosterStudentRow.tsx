@@ -25,7 +25,8 @@ interface RosterStudentRowProps {
   onEditProfile: (studentId: string) => void;
   onInvite: (student: Student) => void;
   onRegenerate: (target: RegenTarget) => void;
-  onRemove: (studentId: string) => void;
+  /** Opens the confirm; the learner leaves this group only. */
+  onRemove: (student: Student) => void;
 }
 
 /** One learner row in the class roster: identity, portal badge, actions. */
@@ -93,8 +94,9 @@ export function RosterStudentRow({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onRemove(student.id)}
-          aria-label={`Remove ${learnerLabel.toLowerCase()}`}
+          onClick={() => onRemove(student)}
+          aria-label="Remove from this group"
+          title="Remove from this group"
           className="shrink-0"
         >
           <Trash2 className="h-4 w-4 text-destructive" />

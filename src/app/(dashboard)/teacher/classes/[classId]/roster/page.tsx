@@ -15,13 +15,14 @@ import { AssignStudentDialog } from '@/components/classes/AssignStudentDialog';
 import { InviteStudentDialog } from '@/components/classes/InviteStudentDialog';
 import { RegenerateCredentialsDialog } from '@/components/classes/RegenerateCredentialsDialog';
 import { RosterStudentRow } from '@/components/classes/RosterStudentRow';
+import { RemoveFromGroupDialog } from '@/components/classes/RemoveFromGroupDialog';
 import { getClassDisplayName } from '@/components/classes/class-display';
 import { StudentProfileDialog } from '@/components/students/StudentProfileDialog';
 import { useTeacherClasses } from '@/hooks/useTeacherClasses';
-import type { TeacherClassEntry } from '@/hooks/useTeacherClasses';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { resolveId, extractErrorMessage } from '@/lib/api-helpers';
 import { getStudentDisplayName, isPortalStudent } from '@/lib/student-helpers';
+import { removedToast } from '@/lib/roster-removal';
 import type { Student } from '@/types';
 
 interface RegenerateTarget {
@@ -59,6 +60,7 @@ export default function TeacherClassRosterPage({
   const [addStudentLoading, setAddStudentLoading] = useState(false);
   const [showAssignStudent, setShowAssignStudent] = useState(false);
   const [inviteTarget, setInviteTarget] = useState<Student | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<Student | null>(null);
   const [invitingId, setInvitingId] = useState<string | null>(null);
 
   const className = entry ? getClassDisplayName(entry) : '';
@@ -132,14 +134,15 @@ export default function TeacherClassRosterPage({
     }
   }, [reassignStudent, isStandaloneTeacher]);
 
-  const handleRemoveStudent = useCallback(async (studentId: string) => {
+  const handleRemoveStudent = useCallback(async (student: Student) => {
     try {
-      await removeStudent(studentId);
-      toast.success(`${learnerLabel} removed`);
+      const outcome = await removeStudent(student.id, classId);
+      toast.success(removedToast(getStudentDisplayName(student).full, className, outcome));
     } catch (err: unknown) {
       toast.error(extractErrorMessage(err, `Failed to remove ${learnerLabel.toLowerCase()}`));
+      throw err;
     }
-  }, [removeStudent, learnerLabel]);
+  }, [removeStudent, classId, className, learnerLabel]);
 
   const handleInviteSubmit = useCallback(async (studentId: string, email: string) => {
     setInvitingId(studentId);
@@ -271,7 +274,7 @@ export default function TeacherClassRosterPage({
                 onEditProfile={setProfileStudentId}
                 onInvite={setInviteTarget}
                 onRegenerate={setRegenStudent}
-                onRemove={handleRemoveStudent}
+                onRemove={setRemoveTarget}
               />
             ))
           )}
@@ -304,6 +307,11 @@ export default function TeacherClassRosterPage({
         onClose={() => setInviteTarget(null)}
         onInvite={handleInviteSubmit}
         isLoading={invitingId === inviteTarget?.id}
+      />
+
+      <RemoveFromGroupDialog
+        student={removeTarget} classId={classId} groupName={className} groups={entries}
+        learnerLabel={learnerLabel} onClose={() => setRemoveTarget(null)} onConfirm={handleRemoveStudent}
       />
 
       <StudentProfileDialog

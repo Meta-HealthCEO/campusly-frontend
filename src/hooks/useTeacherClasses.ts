@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse, resolveId } from '@/lib/api-helpers';
 import { shouldLoadTeacherClasses } from '@/lib/teacher-classes';
+import { removalOutcome, removeFromGroupRequest, type RemovalOutcome } from '@/lib/roster-removal';
 import type { Student, SchoolClass } from '@/types';
 
 export interface SubjectTaught {
@@ -197,9 +198,15 @@ export function useTeacherClasses(enabled = true) {
     return { student: payload };
   }, [refetch]);
 
-  const removeStudent = useCallback(async (studentId: string) => {
-    await apiClient.delete(`/students/${studentId}`);
+  /**
+   * Takes the learner out of this group (backend A9: they stay in their other groups; a backend
+   * without A9 ignores the group and deletes the learner as before). See lib/roster-removal.
+   */
+  const removeStudent = useCallback(async (studentId: string, classId: string): Promise<RemovalOutcome> => {
+    const { url, config } = removeFromGroupRequest(studentId, classId);
+    const res = await apiClient.delete(url, config);
     refetch();
+    return removalOutcome(unwrapResponse<unknown>(res));
   }, [refetch]);
 
   const inviteStudent = useCallback(async (studentId: string, email: string) => {
