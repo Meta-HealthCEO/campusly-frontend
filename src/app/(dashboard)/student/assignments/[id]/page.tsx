@@ -180,8 +180,9 @@ export default function StudentAssignmentDetailPage({
 
           {allowsText && (
             <div className="space-y-1.5">
-              <Label>Typed response</Label>
+              <Label htmlFor="project-response">Typed response</Label>
               <Textarea
+                id="project-response"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 rows={12}

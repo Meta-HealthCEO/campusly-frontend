@@ -36,6 +36,12 @@ describe('learner detail pages: named answer fields (final review, Important 1)'
     const quiz = readSource('src/components/homework/QuizSubmissionForm.tsx').match(/<Input\b[\s\S]*?\/>/g) ?? [];
     for (const field of quiz) expect(field).toContain('aria-label=');
   });
+
+  it("ties the project's typed-response label to its box (found by the journey's audit)", () => {
+    const page = readSource('src/app/(dashboard)/student/assignments/[id]/page.tsx');
+    expect(page).toContain('<Label htmlFor="project-response">');
+    expect(page).toContain('id="project-response"');
+  });
 });
 
 describe('a code typed or pasted at sign-up (Review Focus 2)', () => {
