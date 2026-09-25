@@ -9,7 +9,7 @@ Launch Campusly first as a product a teacher signs up for on their own (no schoo
 
 **Decided with the owner:**
 - *Lessons* = the Coursera-style Units system (Course, `kind: 'class_unit'`), renamed "Lessons" for standalone teachers. The old lesson-plan tool is removed for them; existing standalone drafts there are not carried over (pre-launch).
-- Set work = **Homework** (day-to-day, self-marking) + **Test papers** (formal, with memo). **Assignments** is merged into Homework and removed.
+- Set work = **Homework** (day-to-day, self-marking) + **Test papers** (formal, with memo). **Assignments** stops being a separate page: its essay/project brief with a rubric becomes a Homework type (see §2).
 - **Textbooks** stay. The resource **Library** is hidden.
 - **Parents** are not part of the standalone launch.
 - **One AI allowance** for all AI actions (free ≈ 20/month; trial and Pro unlimited within fair use).
@@ -31,19 +31,22 @@ Out of scope here (later projects): the learner portal, syllabus pacing and mast
 - Pages outside the allow-list redirect a standalone teacher to Today (existing layout guard).
 - Hidden for standalone: Assignments, old lesson plans (`/teacher/lessons*` lesson-plan pages), Library (`/teacher/curriculum/content`, `/preview`, `/import`), anything parent- or school-admin-facing. School teachers' navigation is unchanged.
 - "Lessons" routes for standalone teachers point at the Units pages (`/teacher/courses…`); labels and page copy say "Lesson" / "lessons" for them.
-- `STANDALONE_DEFAULT_MODULES` holds exactly the modules this nav needs (courses on; unused ones off).
+- `STANDALONE_DEFAULT_MODULES` holds exactly the modules this nav needs. Today it is `auth, academic, ai_tools, teacher_workbench, learning, homework, attendance, incident_wellbeing, communication, courses`; `incident_wellbeing` and `communication` (no standalone page) come off. `learning` stays only if Project 2 needs it.
 
-## 2. Assignments → Homework
+## 2. Assignments → a Homework type
 
-- Anything Assignments can do that Homework can't (AI drafting from a topic/brief) moves into Homework's "Draft with AI"; the Assignments pages and nav go for standalone teachers.
-- Existing assignment records stay in the database and remain visible in the Gradebook; no data migration.
+Homework already drafts questions with AI ("Draft with AI", Phase 2D) and marks itself. What only Assignments has is an **essay/project brief with a rubric**: AI drafts the brief and rubric criteria (`Assignment/service-ai-generate.ts`), and the teacher marks per criterion (`rubricMarks`); marks publish to the Gradebook (`service-gradebook-publish.ts`).
+
+- The Homework "New" flow offers three types: **Exercise** (questions), **Reading**, and **Project** (brief + rubric). Project is built on the existing Assignment backend — no data migration and no new model.
+- The Homework list shows homework and projects together; a project opens the existing rubric marking screen.
+- The separate Assignments nav item and list page go for standalone teachers. Existing assignment records stay and still show in the Gradebook.
 
 ## 3. Sign-up and onboarding
 
-- **One sign-up path:** `/signup/teacher` (`POST /auth/signup/standalone-teacher`) is canonical; `/register-teacher` redirects to it; the duplicate `registerTeacher` backend path is removed once nothing calls it.
-- **Email verification:** a verification token emailed at sign-up (and re-sendable); `User.emailVerifiedAt`. Unverified teachers can use the app, see a persistent banner, and are refused AI actions with a clear message ("Verify your email to use AI. Resend link."). Links expire after 24 h.
+- **One sign-up path:** `/signup/teacher` (`POST /auth/signup/standalone-teacher`) is canonical. Today `/register-teacher` is a separate live form (`POST /auth/register-teacher`) linked from the login page and the teachers landing page (`StartFreeLink`); it becomes a redirect, those links move to `/signup/teacher`, and the `registerTeacher` backend path is removed once nothing calls it. The mobile app has no sign-up screen, so nothing else depends on either.
+- **Email verification:** a verification token emailed at sign-up (and re-sendable); `User.emailVerifiedAt`. Unverified teachers can use the app, see a persistent banner, and are refused AI actions with a clear message ("Verify your email to use AI. Resend link."). Links expire after 24 h; resend is rate-limited; tokens are stored hashed. **Teachers who already exist when this ships count as verified** (backfill `emailVerifiedAt` = their `createdAt`), so nobody is locked out.
 - **Onboarding (three steps, resumable, skippable only where noted):**
-  1. **What you teach:** phase → grade(s) → subject(s) picked from the CAPS tree; saved to `User.teachingScope` (already exists) and materialised to school Grade/Subject rows (existing `materialise-from-curriculum`).
+  1. **What you teach:** phase → grade(s) → subject(s) picked from the CAPS tree. This picker is **new** (today's onboarding takes typed grade and subject names and resolves them to CAPS best-effort). It saves through the existing `TeacherSettingsService.updateTeachingScope`, which validates the CAPS nodes, stores `User.teachingScope`, and materialises school Grade/Subject rows (needed by classes and Textbooks).
   2. **Your first class:** name + grade + subject (prefilled from step 1); shows the join code and a copyable "how learners join" message (learners self-register at `/register-student` with the code).
   3. **Your first lesson:** open the Units builder prefilled with that class and a CAPS topic from their scope. Skippable.
 - Today's onboarding checklist reflects the same steps until done.
@@ -52,8 +55,13 @@ Out of scope here (later projects): the learner portal, syllabus pacing and mast
 ## 4. One AI allowance
 
 - **Ledger:** a new `AIUsage` record per AI action: `{ schoolId, userId, action, createdAt, meta }` where `action` ∈ unit_outline, unit_item, unit_rewrite, revision_item, paper, homework_draft, homework_grade, marking, lesson_chat (the full list is the set of AI entry points found in the plan). One helper `recordAIUse` / `assertAIAllowance(user, action)` replaces the per-feature counters (`free-allowance.ts`, `consumeFreePaperGeneration`, `assertCourseGenerationAccess`, the daily unit cap interplay is kept as a separate per-day safety cap).
-- **Limits:** Free = `FREE_AI_ACTIONS_PER_MONTH` (20) per calendar month (SAST); Trial and Pro = fair-use cap `PRO_AI_ACTIONS_PER_MONTH` (500). Counted per teacher's school (standalone school = the teacher).
-- **Enforcement:** every AI endpoint calls `assertAIAllowance` before spending and records after success; failures (AI error) are not counted. 402 with a plain message and `{ used, limit, resetsAt }`.
+- **Limits:** Free = `FREE_AI_ACTIONS_PER_MONTH` (20) per calendar month (SAST); Trial and Pro = fair-use cap `PRO_AI_ACTIONS_PER_MONTH` (500). Counted per teacher's school (standalone school = the teacher). When a 14-day trial ends without a successful charge the subscription already drops to Free automatically (`handleChargeFailure`), so the Free limit applies from then on.
+- **Enforcement:** today only units, paper generation and lesson-material papers are guarded; homework drafting and AI grading, assignment drafting, AI marking, memos, lesson chat and Library generation are not. For standalone schools:
+  - every AI entry point reachable from the standalone nav — unit outline/items/rewrite/revision item, paper generate/regenerate/diagram, homework draft and AI grading, project (assignment) brief draft, AI marking and memo — calls `assertAIAllowance` before spending and records after success; failures (AI error) are not counted;
+  - AI entry points behind pages hidden from standalone teachers (lesson-plan chat, Library generation, school-only modules) refuse standalone schools with 403, so the API can't be used to go around the allowance;
+  - the existing per-day safety caps in `usageLimits.ts` (`maxAiGenerationsPerDay`, `maxPaperMarkingsPerDay`) stay.
+  402 with a plain message and `{ used, limit, resetsAt }`.
+- **Learners' AI tutor** (chat and practice) is unmetered today; it is **out of scope here** and is limited in Project 2 (student portal) with its own per-learner cap, not the teacher's allowance.
 - **UI:** "12 of 20 AI actions left this month" in Billing and next to AI buttons when under 5 remain; the 402 opens one upgrade prompt (to `/my/billing`).
 - School (non-standalone) schools keep their current behaviour.
 
