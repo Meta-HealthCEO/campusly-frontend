@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { BookOpen, ClipboardList, FileText, Sparkles, AlertTriangle, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { ErrorState } from '@/components/shared/ErrorState';
+import { DashboardSkeleton } from '@/components/shared/skeletons';
 import { StatCard } from '@/components/shared/StatCard';
 import { useStudentDashboard } from '@/hooks/useStudentDashboard';
 import { useCurrentStudent } from '@/hooks/useCurrentStudent';
@@ -15,24 +16,49 @@ import { ResumeUnitCard } from '@/components/learner/ResumeUnitCard';
 import { courseIdOf, courseOf, useStudentUnits } from '@/hooks/useStudentUnits';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { learnerGreeting, learnerOverdue } from '@/lib/student-dashboard';
+import { StandaloneToday } from '@/components/student/StandaloneToday';
+import { useIsStandaloneLearner } from '@/hooks/useIsStandaloneLearner';
+import { dueText, todayNextUp } from '@/lib/standalone-today';
 
 export default function StudentDashboard() {
-  const { dashboard, loading, refresh } = useStudentDashboard();
+  const { dashboard, loading, error, refresh } = useStudentDashboard();
   const { student } = useCurrentStudent();
   const user = useAuthStore((s) => s.user);
   const { current: currentUnit } = useStudentUnits();
-  if (loading || !dashboard) return <LoadingSpinner />;
+  const isStandaloneLearner = useIsStandaloneLearner();
+
+  if (error) return <ErrorState title="Today couldn't load" message={error} onRetry={refresh} retrying={loading} />;
+  if (loading || !dashboard) return <DashboardSkeleton />;
+
+  const greeting = learnerGreeting(user?.firstName, student);
+  const dateLabel = new Date().toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'long' });
+  if (isStandaloneLearner) {
+    const now = new Date();
+    const homework = dashboard.nextHomework
+      ? { title: dashboard.nextHomework.title, detail: dueText(dashboard.nextHomework.dueAt, now), href: `/student/homework/${dashboard.nextHomework.id}` }
+      : null;
+    const test = dashboard.nextTest
+      ? { title: dashboard.nextTest.title, detail: dashboard.nextTest.dueAt ? dueText(dashboard.nextTest.dueAt, now) : dashboard.nextTest.subject, href: `/student/tests/${dashboard.nextTest.paperId}` }
+      : null;
+    const unit = currentUnit
+      ? { title: courseOf(currentUnit)?.title ?? 'Your lesson', href: `/student/courses/${courseIdOf(currentUnit)}`, progressPercent: currentUnit.progressPercent }
+      : null;
+    return (
+      <StandaloneToday
+        greeting={greeting}
+        dateLabel={dateLabel}
+        nextUp={todayNextUp({ unit, homework, test })}
+        homework={homework}
+        test={test}
+        // "N tutor messages left this month" needs L-B's GET /ai-tutor/usage (ledger ruling R-L1).
+        tutorLine={null}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={learnerGreeting(user?.firstName, student)}
-        description={new Date().toLocaleDateString('en-ZA', {
-          weekday: 'long',
-          day: 'numeric',
-          month: 'long',
-        })}
-      />
+      <PageHeader title={greeting} description={dateLabel} />
 
       <JoinClassCard onJoined={refresh} />
 

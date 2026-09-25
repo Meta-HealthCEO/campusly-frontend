@@ -6,12 +6,14 @@ import type { StudentDashboardDto } from '@/types';
 interface UseStudentDashboardResult {
   dashboard: StudentDashboardDto | null;
   loading: boolean;
+  error: string | null;
   refresh: () => void;
 }
 
 export function useStudentDashboard(): UseStudentDashboardResult {
   const [dashboard, setDashboard] = useState<StudentDashboardDto | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
@@ -20,11 +22,13 @@ export function useStudentDashboard(): UseStudentDashboardResult {
     let cancelled = false;
     async function load() {
       setLoading(true);
+      setError(null);
       try {
         const response = await apiClient.get('/student/dashboard');
         if (!cancelled) setDashboard(unwrapResponse<StudentDashboardDto>(response));
-      } catch {
-        if (!cancelled) setDashboard(null);
+      } catch (err: unknown) {
+        console.error('Failed to load the learner dashboard', err);
+        if (!cancelled) { setDashboard(null); setError("Today couldn't load. Check your connection and try again."); }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -33,5 +37,5 @@ export function useStudentDashboard(): UseStudentDashboardResult {
     return () => { cancelled = true; };
   }, [refreshKey]);
 
-  return { dashboard, loading, refresh };
+  return { dashboard, loading, error, refresh };
 }
