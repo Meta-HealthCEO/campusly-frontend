@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import apiClient from '@/lib/api-client';
+import { startOrResume } from '@/lib/test-start';
 import { unwrapResponse, extractErrorMessage } from '@/lib/api-helpers';
 import type {
   AssignedPaperSummary,
@@ -67,7 +68,7 @@ export function useStudentTestTake(paperId: string | undefined): UseStudentTestT
       try {
         const [paperRes, startRes] = await Promise.all([
           apiClient.get(`/question-bank/student/papers/${paperId}`),
-          apiClient.post(`/question-bank/student/papers/${paperId}/start`),
+          startOrResume(() => apiClient.post(`/question-bank/student/papers/${paperId}/start`)),
         ]);
         if (cancelled) return;
         setPaper(unwrapResponse<StudentPaperView>(paperRes));
