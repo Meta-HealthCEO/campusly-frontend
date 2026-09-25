@@ -1,9 +1,10 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { STANDALONE_TEACHER_PREFIXES } from '../../src/lib/standalone-teacher-paths';
+import { STANDALONE_STUDENT_PAGES } from '../../src/lib/standalone-student-paths';
 import { ROOT, listSourceFiles } from './source';
 
-export type DesignArea = 'landing+auth' | 'shell' | 'teacher pages';
+export type DesignArea = 'landing+auth' | 'shell' | 'teacher pages' | 'learner pages';
 
 const app = (p: string) => `src/app/${p}`;
 
@@ -14,6 +15,13 @@ function teacherEntries(): string[] {
   return [app('(dashboard)/teacher/page.tsx'), ...dirs.flatMap((d: string) => listSourceFiles(d))];
 }
 
+/** Every page a standalone teacher's learner may open (learner portal spec §2): Today itself, then each allowed page and its sub-pages. */
+function learnerEntries(): string[] {
+  const dirs = STANDALONE_STUDENT_PAGES.filter((p: string) => p !== '/student').map((p: string) => `src/app/(dashboard)${p}`)
+    .filter((d: string) => existsSync(path.join(ROOT, d)));
+  return [app('(dashboard)/student/page.tsx'), ...dirs.flatMap((d: string) => listSourceFiles(d))];
+}
+
 export const DESIGN_SCOPE: Record<DesignArea, string[]> = {
   'landing+auth': [
     'page.tsx', 'teachers/page.tsx', 'login/page.tsx', 'signup/teacher/page.tsx', 'signup/coach/page.tsx',
@@ -22,6 +30,7 @@ export const DESIGN_SCOPE: Record<DesignArea, string[]> = {
   ].map(app),
   shell: [app('layout.tsx'), app('(dashboard)/layout.tsx'), app('(dashboard)/teacher/layout.tsx'), app('(dashboard)/nav-config.ts')],
   'teacher pages': teacherEntries(),
+  'learner pages': learnerEntries(),
 };
 
 /** Files allowed colour literals, with the reason (ruling R4/R5). */

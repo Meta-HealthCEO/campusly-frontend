@@ -157,13 +157,13 @@ export default function StudentAssignmentDetailPage({
         </CardHeader>
         <CardContent className="space-y-4">
           {submitted && (
-            <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm">
-              <p className="font-medium text-emerald-900">
+            <div className="rounded-md border border-success bg-card p-3 text-sm">
+              <p className="font-medium text-foreground">
                 {submittedAt
                   ? `Submitted ${new Date(submittedAt).toLocaleString()}`
                   : 'Submitted successfully.'}
               </p>
-              <p className="text-xs text-emerald-700 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Your teacher will mark this against the rubric. You can re-submit while
                 the assignment is open — your latest version replaces the previous one.
               </p>

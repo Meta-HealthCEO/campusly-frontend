@@ -196,7 +196,7 @@ export function PracticeSetup({
                       key={preset.label}
                       type="button"
                       onClick={() => applyPreset(preset)}
-                      className="rounded-lg border bg-card px-3 py-2 text-left text-sm transition hover:border-primary/50 hover:bg-accent"
+                      className="rounded-lg border bg-card px-3 py-2 text-left text-sm transition hover:border-primary hover:bg-accent"
                     >
                       <span className="font-medium">{preset.label}</span>
                       <span className="mt-1 block text-xs text-muted-foreground">
@@ -219,8 +219,8 @@ export function PracticeSetup({
                         type="button"
                         onClick={() => setDifficulty(item.value)}
                         className={cn(
-                          'rounded-lg border p-3 text-left transition hover:border-primary/50 hover:bg-accent',
-                          active ? 'border-primary bg-primary/5' : 'border-border',
+                          'rounded-lg border p-3 text-left transition hover:border-primary hover:bg-accent',
+                          active ? 'border-primary bg-muted' : 'border-border',
                         )}
                       >
                         <Icon

@@ -40,7 +40,7 @@ export function HomeworkSection({
 
   const headerClass = [
     'flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-semibold',
-    variant === 'destructive' ? 'bg-destructive/10 text-destructive' : 'bg-muted',
+    variant === 'destructive' ? 'bg-muted text-destructive' : 'bg-muted',
   ].join(' ');
 
   function rowKeyDown(e: React.KeyboardEvent<HTMLTableRowElement>, id: string) {

@@ -18,6 +18,8 @@ const BLUEPRINT = [
 ].flatMap((dir: string) => listSourceFiles(dir));
 const CLOSURE = [...new Set([
   ...importClosure(DESIGN_SCOPE['landing+auth']), ...importClosure(DESIGN_SCOPE.shell), ...importClosure(DESIGN_SCOPE['teacher pages']),
+  // Learner portal (ledger ruling R-L3): every page a standalone teacher's learner can open.
+  ...importClosure(DESIGN_SCOPE['learner pages']),
   ...importClosure(['src/app/design/page.tsx']), ...BLUEPRINT,
 ])].sort();
 

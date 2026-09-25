@@ -65,10 +65,8 @@ export function TestCountdown({
       className={cn(
         'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-sm font-semibold tabular-nums',
         urgency === 'normal' && 'text-foreground',
-        urgency === 'warning' &&
-          'border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-400',
-        urgency === 'critical' &&
-          'border-destructive/50 bg-destructive/10 text-destructive motion-safe:animate-pulse',
+        urgency === 'warning' && 'border-attention bg-card text-attention',
+        urgency === 'critical' && 'border-destructive bg-card text-destructive motion-safe:animate-pulse',
       )}
     >
       <Clock className="h-3.5 w-3.5" />

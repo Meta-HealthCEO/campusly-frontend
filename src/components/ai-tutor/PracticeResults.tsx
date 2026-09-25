@@ -50,12 +50,12 @@ export function PracticeResults({ attempt, onTryAgain }: PracticeResultsProps) {
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-center text-sm">
-            <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4">
-              <CheckCircle className="mx-auto h-5 w-5 text-emerald-600" />
+            <div className="rounded-lg border bg-card p-4">
+              <CheckCircle className="mx-auto h-5 w-5 text-success" aria-hidden />
               <p className="mt-1 font-semibold">{correctCount} correct</p>
             </div>
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4">
-              <XCircle className="mx-auto h-5 w-5 text-destructive" />
+            <div className="rounded-lg border bg-card p-4">
+              <XCircle className="mx-auto h-5 w-5 text-destructive" aria-hidden />
               <p className="mt-1 font-semibold">{incorrectCount} to review</p>
             </div>
           </div>

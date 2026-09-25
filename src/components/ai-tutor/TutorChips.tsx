@@ -54,8 +54,8 @@ export function SubjectChip({
         disabled={disabled}
         className={cn(
           'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition',
-          'hover:border-primary/50 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50',
-          selectedName ? 'border-border bg-background' : 'border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-200',
+          'hover:border-primary hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50',
+          selectedName ? 'border-border bg-background' : 'border-dashed border-attention bg-background text-foreground',
         )}
       >
         <span className="truncate max-w-48">{label}</span>
@@ -93,7 +93,7 @@ export function SubjectChip({
                   }}
                   className={cn(
                     'flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm transition hover:bg-accent',
-                    active && 'bg-primary/5 font-medium text-primary',
+                    active && 'bg-muted font-medium text-primary',
                   )}
                 >
                   <span className="truncate">{subject.name}</span>
@@ -138,7 +138,7 @@ export function ModeChip({ options, selectedId, onSelect, disabled }: ModeChipPr
         disabled={disabled}
         className={cn(
           'inline-flex items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-sm font-medium transition',
-          'hover:border-primary/50 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50',
+          'hover:border-primary hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50',
         )}
       >
         {CurrentIcon && <CurrentIcon className="h-3.5 w-3.5 text-primary" />}
@@ -159,7 +159,7 @@ export function ModeChip({ options, selectedId, onSelect, disabled }: ModeChipPr
               }}
               className={cn(
                 'flex w-full items-start gap-3 rounded-md p-2 text-left transition hover:bg-accent',
-                active && 'bg-primary/5',
+                active && 'bg-muted',
               )}
             >
               <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', active ? 'text-primary' : 'text-muted-foreground')} />

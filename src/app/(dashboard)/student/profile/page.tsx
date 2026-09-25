@@ -84,16 +84,12 @@ export default function StudentProfilePage() {
     <div className="space-y-6">
       <PageHeader title="Profile" description="Who you are at school." />
 
-      <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-background">
+      <Card className="overflow-hidden">
         <CardContent className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:gap-6 sm:p-8">
           <div className="relative shrink-0">
-            <div
-              className="absolute -inset-1 rounded-full bg-gradient-to-br from-primary/40 via-primary/20 to-transparent blur-md"
-              aria-hidden
-            />
-            <Avatar className="relative h-24 w-24 ring-2 ring-primary/30 ring-offset-2 ring-offset-background sm:h-28 sm:w-28">
+            <Avatar className="relative h-24 w-24 ring-1 ring-border sm:h-28 sm:w-28">
               {student?.photoUrl && <AvatarImage src={student.photoUrl} alt={fullName} />}
-              <AvatarFallback className="bg-primary/15 text-2xl font-semibold text-primary sm:text-3xl">
+              <AvatarFallback className="bg-muted text-2xl font-semibold text-foreground sm:text-3xl">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -126,7 +122,7 @@ export default function StudentProfilePage() {
           </div>
 
           {student?.admissionNumber && (
-            <div className="hidden self-stretch border-l border-primary/15 pl-6 sm:block">
+            <div className="hidden self-stretch border-l border-border pl-6 sm:block">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 Admission no.
               </p>
@@ -137,22 +133,22 @@ export default function StudentProfilePage() {
       </Card>
 
       {!hasGrade && (
-        <Card className="border-amber-500/40 bg-amber-500/10">
+        <Card className="border-attention">
           <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-300" />
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-attention" />
               <div>
-                <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+                <p className="text-sm font-semibold">
                   Your learning level is not set yet
                 </p>
-                <p className="mt-1 text-sm text-amber-900/80 dark:text-amber-100/80">
+                <p className="mt-1 text-sm text-muted-foreground">
                   Aura uses your teaching group grade to teach at the right level. Join a class
                   with your teacher&apos;s code, or ask your teacher to move you into the correct group.
                 </p>
               </div>
             </div>
             <Link href="/student/classes" className="shrink-0">
-              <Button variant="outline" size="sm" className="border-amber-500/50 bg-background/80">
+              <Button variant="outline" size="sm">
                 Open my classes
                 <ChevronRight className="h-4 w-4" />
               </Button>

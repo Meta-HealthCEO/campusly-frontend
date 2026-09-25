@@ -187,7 +187,7 @@ function EmptyTutorState({ canChat, subjectName, onPrompt }: EmptyTutorStateProp
               onClick={() => onPrompt(starter.prompt)}
               className={cn(
                 'rounded-lg border bg-card p-4 text-left transition',
-                'hover:border-primary/50 hover:bg-accent',
+                'hover:border-primary hover:bg-accent',
                 'disabled:cursor-not-allowed disabled:opacity-50',
               )}
             >

@@ -16,10 +16,10 @@ const KIND_ICON: Record<RecommendationKind, typeof Sparkles> = {
 };
 
 const KIND_ACCENT: Record<RecommendationKind, string> = {
-  homework_due_soon: 'text-amber-600 dark:text-amber-400',
-  test_coming_up: 'text-rose-600 dark:text-rose-400',
-  weak_subject: 'text-blue-600 dark:text-blue-400',
-  weak_topic: 'text-violet-600 dark:text-violet-400',
+  homework_due_soon: 'text-attention',
+  test_coming_up: 'text-destructive',
+  weak_subject: 'text-info',
+  weak_topic: 'text-primary',
 };
 
 /**

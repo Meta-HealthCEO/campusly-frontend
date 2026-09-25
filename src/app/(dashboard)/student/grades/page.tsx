@@ -13,9 +13,9 @@ import { learnerCopy } from '@/lib/learner-copy';
 import type { Subject } from '@/types';
 
 function getGradeColor(percentage: number): string {
-  if (percentage >= 80) return 'text-emerald-600';
-  if (percentage >= 60) return 'text-blue-600';
-  if (percentage >= 50) return 'text-amber-600';
+  if (percentage >= 80) return 'text-success';
+  if (percentage >= 60) return 'text-info';
+  if (percentage >= 50) return 'text-attention';
   return 'text-destructive';
 }
 
@@ -69,7 +69,7 @@ export default function StudentGradesPage() {
 
       <Card>
         <CardContent className="flex items-center gap-4 p-6">
-          <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10">
+          <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-muted">
             <span className={cn('text-2xl font-bold', getGradeColor(overallAverage))}>
               {overallAverage}%
             </span>
@@ -130,7 +130,7 @@ export default function StudentGradesPage() {
                           {grade.marks}/{grade.assessment?.totalMarks ?? ''}
                         </span>
                         {grade.percentage >= 70 ? (
-                          <TrendingUp className="h-3 w-3 text-emerald-500" />
+                          <TrendingUp className="h-3 w-3 text-success" />
                         ) : grade.percentage < 50 ? (
                           <TrendingDown className="h-3 w-3 text-destructive" />
                         ) : null}

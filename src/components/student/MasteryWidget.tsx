@@ -45,7 +45,7 @@ function SubjectRow({ subject }: SubjectRowProps) {
   const Trend = trendIcon;
   const tone =
     score >= 75
-      ? 'text-emerald-600'
+      ? 'text-success'
       : score >= 60
         ? 'text-foreground'
         : 'text-destructive';

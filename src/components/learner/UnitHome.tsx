@@ -64,7 +64,7 @@ export function UnitHome({ unit, progressPercent, onOpen }: Props) {
             <span className="min-w-0">{target.started ? 'Continue' : 'Start'}: {target.title}</span>
           </Button>
         ) : unitDone(unit) ? (
-          <p className="flex items-center gap-2 rounded-lg border border-success/30 bg-success-soft px-3 py-2 text-sm text-success">
+          <p className="flex items-center gap-2 rounded-lg border border-success bg-success-soft px-3 py-2 text-sm text-success">
             <CheckCircle2 className="h-4 w-4" aria-hidden /> You&apos;ve finished this unit. Well done!
           </p>
         ) : null}

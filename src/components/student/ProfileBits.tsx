@@ -38,7 +38,7 @@ export function ThemeOption({ icon, label, active, onClick }: ThemeOptionProps) 
       onClick={onClick}
       className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
         active
-          ? 'border-primary bg-primary/10 font-medium text-primary'
+          ? 'border-primary bg-muted font-medium text-primary'
           : 'border-input text-muted-foreground hover:bg-muted hover:text-foreground'
       }`}
       aria-pressed={active}

@@ -33,8 +33,8 @@ export function PracticeQuestionCard({
     <section
       className={cn(
         'overflow-hidden rounded-lg border bg-card',
-        showResult && question.isCorrect === true && 'border-emerald-500/60',
-        showResult && question.isCorrect === false && 'border-destructive/60',
+        showResult && question.isCorrect === true && 'border-success',
+        showResult && question.isCorrect === false && 'border-destructive',
       )}
     >
       <div className="flex items-start justify-between gap-3 border-b bg-muted/30 px-4 py-3">
@@ -49,7 +49,7 @@ export function PracticeQuestionCard({
         </div>
         {showResult && (
           question.isCorrect ? (
-            <CheckCircle className="h-5 w-5 shrink-0 text-emerald-600" />
+            <CheckCircle className="h-5 w-5 shrink-0 text-success" />
           ) : (
             <XCircle className="h-5 w-5 shrink-0 text-destructive" />
           )
@@ -79,10 +79,10 @@ export function PracticeQuestionCard({
                     htmlFor={`q${index}-opt${i}`}
                     className={cn(
                       'flex cursor-pointer items-start gap-3 rounded-lg border bg-background p-3 text-sm transition',
-                      !showResult && 'hover:border-primary/50 hover:bg-accent',
-                      selected && !showResult && 'border-primary bg-primary/5',
-                      correct && 'border-emerald-500/60 bg-emerald-500/10',
-                      incorrectSelection && 'border-destructive/60 bg-destructive/10',
+                      !showResult && 'hover:border-primary hover:bg-accent',
+                      selected && !showResult && 'border-primary bg-muted',
+                      correct && 'border-success',
+                      incorrectSelection && 'border-destructive',
                     )}
                   >
                     <RadioGroupItem value={opt} id={`q${index}-opt${i}`} className="mt-0.5" />
@@ -95,8 +95,8 @@ export function PracticeQuestionCard({
               })}
             </RadioGroup>
           ) : (
-            <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
-              <HelpCircle className="mr-2 inline h-4 w-4" />
+            <div className="rounded-lg border border-attention bg-card p-3 text-sm">
+              <HelpCircle className="mr-2 inline h-4 w-4 text-attention" aria-hidden />
               This multiple-choice question did not include options. Type the answer below.
               <Input
                 className="mt-3"
@@ -145,8 +145,8 @@ export function PracticeQuestionCard({
             className={cn(
               'rounded-lg border p-4 text-sm',
               question.isCorrect
-                ? 'border-emerald-500/40 bg-emerald-500/10'
-                : 'border-destructive/40 bg-destructive/10',
+                ? 'border-success bg-card'
+                : 'border-destructive bg-card',
             )}
           >
             <p className="font-semibold">
@@ -155,7 +155,7 @@ export function PracticeQuestionCard({
             {!question.isCorrect && (
               <p className="mt-2 font-medium">
                 Correct answer:{' '}
-                <span className="text-emerald-700 dark:text-emerald-300">
+                <span className="text-success">
                   <EquationText text={question.correctAnswer} />
                 </span>
               </p>

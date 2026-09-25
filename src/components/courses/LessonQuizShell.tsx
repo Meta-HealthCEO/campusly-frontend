@@ -91,7 +91,7 @@ export function LessonQuizShell({
           <CardContent className="p-4 space-y-2">
             <div className="flex items-center gap-3">
               {result.passed ? (
-                <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+                <CheckCircle2 className="h-8 w-8 text-success" />
               ) : (
                 <XCircle className="h-8 w-8 text-destructive" />
               )}
@@ -150,7 +150,7 @@ export function LessonQuizShell({
                   <div
                     className={
                       resultForThis.isCorrect
-                        ? 'flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400'
+                        ? 'flex items-center gap-2 text-xs text-success'
                         : 'flex items-center gap-2 text-xs text-destructive'
                     }
                   >

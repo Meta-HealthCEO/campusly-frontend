@@ -194,7 +194,7 @@ export function StudentTestTakeView({ paperId }: { paperId: string }) {
                             key={opt.label}
                             className={[
                               'flex items-start gap-3 rounded-md border p-2.5 cursor-pointer text-sm transition-colors',
-                              isPicked ? 'border-primary bg-primary/5' : 'hover:bg-accent',
+                              isPicked ? 'border-primary bg-muted' : 'hover:bg-accent',
                               isFinal ? 'pointer-events-none opacity-70' : '',
                             ].join(' ')}
                           >

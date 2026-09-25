@@ -100,7 +100,7 @@ export function TopicChip({
         disabled={disabled}
         className={cn(
           'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition',
-          'hover:border-primary/50 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50',
+          'hover:border-primary hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50',
           display
             ? 'border-border bg-background'
             : 'border-dashed border-border bg-background text-muted-foreground',
@@ -146,7 +146,7 @@ export function TopicChip({
                     onClick={() => handlePickStructured(topic.id, topic.title)}
                     className={cn(
                       'flex w-full items-start justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm transition hover:bg-accent',
-                      topicActive && 'bg-primary/5 font-medium text-primary',
+                      topicActive && 'bg-muted font-medium text-primary',
                     )}
                   >
                     <span className="min-w-0 flex-1">
@@ -172,7 +172,7 @@ export function TopicChip({
                             }
                             className={cn(
                               'flex w-full items-start justify-between gap-2 rounded-md px-2 py-1 text-left text-xs transition hover:bg-accent',
-                              subActive && 'bg-primary/5 font-medium text-primary',
+                              subActive && 'bg-muted font-medium text-primary',
                             )}
                           >
                             <span className="min-w-0 flex-1 truncate">{sub.title}</span>
@@ -207,7 +207,7 @@ export function TopicChip({
               onClick={handlePickCustom}
               disabled={!customDraft.trim()}
               className={cn(
-                'rounded-md border bg-background px-2 py-1 text-xs font-medium transition hover:border-primary/50 hover:bg-accent',
+                'rounded-md border bg-background px-2 py-1 text-xs font-medium transition hover:border-primary hover:bg-accent',
                 'disabled:cursor-not-allowed disabled:opacity-50',
               )}
             >

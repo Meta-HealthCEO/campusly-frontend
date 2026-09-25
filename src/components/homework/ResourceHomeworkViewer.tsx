@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Send, Layers } from 'lucide-react';
 import { BlockRenderer } from '@/components/content/renderers/BlockRenderer';
-import { RESOURCE_TYPE_LABELS } from '@/lib/design-system';
+import { RESOURCE_TYPE_LABELS } from '@/lib/resource-type-labels';
 import type {
   HomeworkResource,
   ContentBlockItem,

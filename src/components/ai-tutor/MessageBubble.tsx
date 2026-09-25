@@ -81,7 +81,7 @@ export function MessageBubble({ message, isStreaming, onFollowUp }: MessageBubbl
         )}
       >
         {!isStudent && (
-          <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border bg-primary/10 text-primary">
+          <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border bg-muted text-primary">
             <Sparkles className="h-4 w-4" />
           </div>
         )}

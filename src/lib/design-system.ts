@@ -6,7 +6,7 @@
 // Usage: import { STATUS_STYLES, getStatusBadgeVariant } from '@/lib/design-system'
 // ============================================================
 
-import type { ResourceType, ResourceStatus, ContentBlockType } from '@/types';
+import type { ResourceStatus, ContentBlockType } from '@/types';
 import type { QuestionType, QuestionStatus, CapsLevel } from '@/types/question-bank';
 
 // ─── Status Colors ─────────────────────────────────────────────────────────
@@ -54,14 +54,8 @@ export const QUESTION_STATUS_LABELS: Record<QuestionStatus, string> = {
 
 // ─── Resource Type Icons & Labels ──────────────────────────────────────────
 
-export const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
-  lesson: 'Lesson',
-  study_notes: 'Study Notes',
-  worksheet: 'Worksheet',
-  worked_example: 'Worked Example',
-  activity: 'Activity',
-  reading: 'Reading',
-};
+// Lives in its own module so learner pages can use it without this file's style maps.
+export { RESOURCE_TYPE_LABELS } from './resource-type-labels';
 
 // ─── CAPS Cognitive Levels ─────────────────────────────────────────────────
 

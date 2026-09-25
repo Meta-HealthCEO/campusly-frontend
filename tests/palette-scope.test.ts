@@ -5,9 +5,9 @@ import { COLOUR_LITERAL_EXEMPT, DESIGN_SCOPE, type DesignArea } from './support/
 import { readSource } from './support/source';
 
 /** Areas whose palette classes are gone (spec §6). Plan Tasks 13–15 add to these. */
-const PALETTE_SWEPT: DesignArea[] = ['landing+auth', 'shell', 'teacher pages'];
+const PALETTE_SWEPT: DesignArea[] = ['landing+auth', 'shell', 'teacher pages', 'learner pages'];
 /** Areas whose colour literals are gone (spec §7). */
-const LITERAL_SWEPT: DesignArea[] = ['landing+auth', 'shell', 'teacher pages'];
+const LITERAL_SWEPT: DesignArea[] = ['landing+auth', 'shell', 'teacher pages', 'learner pages'];
 
 describe('scope (generated from the imports, ruling R3)', () => {
   it('follows the teacher pages into their components', () => {

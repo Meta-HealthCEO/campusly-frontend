@@ -74,7 +74,7 @@ export function AuraHeader({
     <header className="flex items-center justify-between gap-2 border-b px-3 py-2">
       <div className="flex min-w-0 items-center gap-2">
         <div className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
+          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-muted text-primary">
             <Sparkles className="h-4 w-4" />
           </span>
           <span className="hidden sm:inline">Aura</span>
