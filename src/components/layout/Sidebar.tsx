@@ -1,133 +1,100 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { ChevronLeft, GraduationCap } from 'lucide-react';
+import Link from 'next/link';
+import { ChevronLeft, GraduationCap, PanelLeft } from 'lucide-react';
 import { cn, getInitials } from '@/lib/utils';
 import { useUIStore } from '@/stores/useUIStore';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useSchoolStore } from '@/stores/useSchoolStore';
 import { useModule } from '@/hooks/useModule';
-import { visibleNavItems } from '@/lib/nav-visibility';
-import { groupNavBySection } from '@/lib/nav-sections';
-import { navBadgeText } from '@/lib/nav-counts';
 import { useTeacherNavCounts } from '@/hooks/useTeacherNavCounts';
-import { SidebarNavItem } from './SidebarNavItem';
+import { visibleNavItems } from '@/lib/nav-visibility';
+import { FOCUS_RING } from '@/components/ui/focus';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { SidebarNav } from './SidebarNav';
 import type { NavItem } from '@/lib/constants';
 
 interface SidebarProps {
   items: NavItem[];
 }
 
+const RAIL_BUTTON = cn('mx-2 mb-3 flex min-h-10 items-center justify-center rounded-control text-sidebar-foreground hover:bg-muted hover:text-foreground', FOCUS_RING);
+
+/** Spec §3: 232px sidebar from 1024px (collapsible to the rail), 56px rail from 768px, hidden on phones. */
 export function Sidebar({ items }: SidebarProps) {
-  const pathname = usePathname() ?? '';
-  const { sidebarCollapsed, toggleSidebarCollapse, sidebarOpen, setSidebarOpen } = useUIStore();
+  const { sidebarCollapsed, toggleSidebarCollapse } = useUIStore();
   const { isModuleEnabled } = useModule();
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const user = useAuthStore((s) => s.user);
   const schoolName = useSchoolStore((s) => s.school?.name ?? '');
   const counts = useTeacherNavCounts(user?.role === 'teacher');
-
-  const filteredItems = visibleNavItems(items, { isModuleEnabled, hasPermission });
-  // Sectioned (teacher) navs are flat, so a page below an item (e.g. a lesson) highlights it too.
-  const sectioned = filteredItems.some((item: NavItem) => item.section);
-  const matches = (href: string) =>
-    pathname === href || (sectioned && href.split('/').filter(Boolean).length > 1 && pathname.startsWith(`${href}/`));
-  const isItemActive = (item: NavItem) =>
-    matches(item.href) ||
-    (item.children?.some((c) => pathname === c.href || pathname.startsWith(c.href + '/')) ?? false);
-
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(() => {
-    const initial = new Set<string>();
-    filteredItems.forEach((item) => {
-      if (item.children && isItemActive(item)) initial.add(item.href);
-    });
-    return initial;
-  });
-
-  const toggleExpanded = (href: string) => {
-    setExpandedItems((prev) => {
-      const next = new Set(prev);
-      if (next.has(href)) next.delete(href);
-      else next.add(href);
-      return next;
-    });
-  };
+  const [allPagesOpen, setAllPagesOpen] = useState(false);
+  const visible = visibleNavItems(items, { isModuleEnabled, hasPermission });
 
   return (
-    <>
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
+    <aside
+      data-collapsed={sidebarCollapsed}
+      className={cn(
+        'sticky top-0 hidden md:flex h-dvh w-14 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground',
+        'transition-[width] duration-250 ease-standard lg:w-[232px] data-[collapsed=true]:lg:w-14',
       )}
-
-      <aside
-        className={cn(
-          'fixed inset-y-0 left-0 z-50 flex flex-col border-r bg-card transition-all duration-300 lg:relative lg:z-auto',
-          'teacher:border-sidebar-border teacher:bg-sidebar teacher:text-sidebar-foreground',
-          sidebarCollapsed ? 'w-17.5' : 'w-64',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        )}
-      >
-        {/* Logo */}
-        <div className="flex h-16 items-center justify-between border-b px-4 teacher:border-sidebar-border">
-          <Link href="/" className={cn('flex items-center gap-2', sidebarCollapsed && 'mx-auto')}>
-            <span className="teacher:grid teacher:h-7 teacher:w-7 teacher:place-items-center teacher:rounded-md teacher:bg-primary">
-              <GraduationCap className="h-7 w-7 text-[#2563eb] teacher:h-4 teacher:w-4 teacher:text-white" />
-            </span>
-            {!sidebarCollapsed && (
-              <span className="text-lg font-bold teacher:font-heading teacher:tracking-tight teacher:text-sidebar-primary">Campusly</span>
-            )}
-          </Link>
+    >
+      {/* In the 56px rail only the mark fits; the collapse control sits here only when the sidebar is open. */}
+      <div className={cn('flex h-16 shrink-0 items-center justify-center gap-2 border-b border-sidebar-border px-2', !sidebarCollapsed && 'lg:justify-between lg:px-4')}>
+        <Link href="/" className={cn('flex items-center gap-2 rounded-control', FOCUS_RING)} aria-label="Campusly home">
+          <span className="grid size-8 place-items-center rounded-control bg-primary text-primary-foreground">
+            <GraduationCap className="size-4" aria-hidden="true" />
+          </span>
+          {!sidebarCollapsed && (
+            <span className="hidden font-heading text-lg font-bold tracking-[-0.01em] text-sidebar-primary lg:inline">Campusly</span>
+          )}
+        </Link>
+        {!sidebarCollapsed && (
           <button
+            type="button"
             onClick={toggleSidebarCollapse}
-            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="hidden lg:flex h-6 w-6 items-center justify-center rounded-md hover:bg-muted teacher:hover:bg-sidebar-accent"
+            aria-label="Collapse sidebar"
+            className={cn('hidden size-8 items-center justify-center rounded-control text-sidebar-foreground hover:bg-muted hover:text-foreground lg:flex', FOCUS_RING)}
           >
-            <ChevronLeft className={cn('h-4 w-4 transition-transform', sidebarCollapsed && 'rotate-180')} />
+            <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
-        </div>
+        )}
+      </div>
 
-        {/* Nav */}
-        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-          {groupNavBySection(filteredItems).map((group) => (
-            <div key={group.section ?? 'all'} className="space-y-1">
-              {group.section && group.section !== 'Today' && !sidebarCollapsed && (
-                <p className="px-3 pb-1 pt-4 font-mono text-[10.5px] font-medium uppercase tracking-[0.1em] text-sidebar-label">
-                  {group.section}
-                </p>
-              )}
-              {group.items.map((item: NavItem) => (
-                <SidebarNavItem
-                  key={item.href}
-                  item={item}
-                  pathname={pathname}
-                  active={isItemActive(item)}
-                  collapsed={sidebarCollapsed}
-                  expanded={expandedItems.has(item.href)}
-                  countText={navBadgeText(item.countKey, counts)}
-                  onToggle={toggleExpanded}
-                  onNavigate={() => setSidebarOpen(false)}
-                />
-              ))}
-            </div>
-          ))}
-        </nav>
+      {/* Tablet: the rail is icons only; the full nav (with group children) opens in a sheet. */}
+      <div className="flex flex-1 flex-col overflow-hidden lg:hidden">
+        <SidebarNav items={visible} collapsed counts={counts} onNavigate={() => undefined} />
+        <button type="button" onClick={() => setAllPagesOpen(true)} aria-label="Open all pages" className={RAIL_BUTTON}>
+          <PanelLeft className="size-[18px]" aria-hidden="true" />
+        </button>
+        <Sheet open={allPagesOpen} onOpenChange={setAllPagesOpen}>
+          <SheetContent side="left" className="w-[280px] p-0">
+            <SheetTitle className="px-4 pt-4">All pages</SheetTitle>
+            <SidebarNav items={visible} collapsed={false} counts={counts} onNavigate={() => setAllPagesOpen(false)} />
+          </SheetContent>
+        </Sheet>
+      </div>
 
-        {/* Me card (teacher portal) */}
-        {!sidebarCollapsed && user && (
-          <div className="hidden items-center gap-2.5 border-t border-sidebar-border px-4 py-3 teacher:flex">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#c4b5fd] text-xs font-semibold text-[#2e1065]">
+      {/* Desktop: the full sidebar, or the rail when collapsed. */}
+      <div className="hidden flex-1 flex-col overflow-hidden lg:flex">
+        <SidebarNav items={visible} collapsed={sidebarCollapsed} counts={counts} onNavigate={() => undefined} />
+        {sidebarCollapsed ? (
+          <button type="button" onClick={toggleSidebarCollapse} aria-label="Expand sidebar" className={RAIL_BUTTON}>
+            <ChevronLeft className="size-4 rotate-180" aria-hidden="true" />
+          </button>
+        ) : user && (
+          <div className="flex items-center gap-2.5 border-t border-sidebar-border px-4 py-3">
+            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">
               {getInitials(user.firstName, user.lastName)}
             </span>
             <span className="min-w-0">
               <span className="block truncate text-[13px] font-semibold text-sidebar-primary">{user.firstName} {user.lastName}</span>
-              {schoolName && <span className="block truncate text-xs text-sidebar-label">{schoolName}</span>}
+              {schoolName && <span className="block truncate text-caption text-sidebar-label">{schoolName}</span>}
             </span>
           </div>
         )}
-      </aside>
-    </>
+      </div>
+    </aside>
   );
 }
