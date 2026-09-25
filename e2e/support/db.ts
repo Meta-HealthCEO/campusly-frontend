@@ -6,13 +6,14 @@
  */
 import { createHash, randomBytes } from 'node:crypto';
 import { MongoClient, type Db, type ObjectId } from 'mongodb';
+import { assertLocalUrl } from './local';
 
 const DEV_URI = 'mongodb://127.0.0.1:27047/campusly-dev?directConnection=true';
 const LINK_TTL_MS = 24 * 60 * 60 * 1000;
 
 function uri(): string {
   const value = process.env.E2E_MONGODB_URI ?? DEV_URI;
-  if (!/(127\.0\.0\.1|localhost)/.test(value)) throw new Error('e2e/support/db.ts only runs against a local database');
+  assertLocalUrl(value, 'E2E_MONGODB_URI');
   return value;
 }
 

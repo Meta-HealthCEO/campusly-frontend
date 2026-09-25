@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { STANDALONE_TEACHER_NAV } from '../src/lib/nav/teacher-nav';
 import { issueVerifyLink, spendAIActions } from './support/db';
+import { assertLocalUrl } from './support/local';
 import { overflowsSideways, watchPage, type Allowed } from './support/watch';
 
 const stamp = Date.now();
@@ -11,7 +12,10 @@ async function expectNoSidewaysScroll(page: Page, where: string): Promise<void> 
   expect(await overflowsSideways(page), `${where} scrolls sideways at 375 px`).toBe(false);
 }
 
-test('a new standalone teacher can launch without a dead end', async ({ page, browser }) => {
+test('a new standalone teacher can launch without a dead end', async ({ page, browser, baseURL }) => {
+  // It signs people up: never against anything but this machine.
+  assertLocalUrl(baseURL ?? '', 'E2E_BASE_URL');
+
   const allowed: Allowed[] = [];
   const problems = watchPage(page, () => allowed);
 
