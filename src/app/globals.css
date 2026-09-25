@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Plans and specs are not UI: Tailwind must not read them for class names. */
+@source not "../../docs";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @plugin "@tailwindcss/typography";
