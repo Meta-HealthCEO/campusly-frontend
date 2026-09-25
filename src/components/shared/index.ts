@@ -2,6 +2,7 @@ export { ConfirmDialog } from './ConfirmDialog';
 export { DataTable } from './DataTable';
 export { type ColumnDef } from '@tanstack/react-table';
 export { EmptyState } from './EmptyState';
+export { ErrorState } from './ErrorState';
 export { LoadingSpinner } from './LoadingSpinner';
 export { PageHeader } from './PageHeader';
 export { SearchInput } from './SearchInput';

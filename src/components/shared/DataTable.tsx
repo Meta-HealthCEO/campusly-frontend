@@ -12,10 +12,12 @@ import {
   type SortingState,
   type ColumnFiltersState,
 } from '@tanstack/react-table';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { FOCUS_RING } from '@/components/ui/focus';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -53,8 +55,9 @@ export function DataTable<TData, TValue>({
     <div className="space-y-4">
       {searchKey && (
         <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <Input
+            aria-label={searchPlaceholder}
             placeholder={searchPlaceholder}
             value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ''}
             onChange={(e) => table.getColumn(searchKey)?.setFilterValue(e.target.value)}
@@ -62,10 +65,11 @@ export function DataTable<TData, TValue>({
           />
         </div>
       )}
-      <div className="overflow-x-auto rounded-lg border">
-        <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
+      {/* One scroll box: sideways on every width, and down from md with the head kept in view (ruling R24).
+          A bare <table> rather than <Table>, whose own overflow box would pin the sticky head to itself. */}
+      <div data-scroll-x className="overflow-x-auto rounded-card border border-border bg-card shadow-card md:max-h-[70vh] md:overflow-y-auto">
+        <table data-slot="table" className="w-full caption-bottom text-sm">
+          <TableHeader className="sticky top-0 z-10">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -73,11 +77,11 @@ export function DataTable<TData, TValue>({
                     {header.isPlaceholder ? null : header.column.getCanSort() ? (
                       <button
                         type="button"
-                        className="flex cursor-pointer select-none items-center gap-1 rounded px-1 focus-visible:ring-2 focus-visible:ring-ring"
+                        className={cn('flex cursor-pointer select-none items-center gap-1 rounded-control px-1', FOCUS_RING)}
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
-                        <ArrowUpDown className="h-3 w-3" />
+                        <ArrowUpDown className="size-3" aria-hidden="true" />
                       </button>
                     ) : (
                       flexRender(header.column.columnDef.header, header.getContext())
@@ -110,23 +114,22 @@ export function DataTable<TData, TValue>({
               </TableRow>
             )}
           </TableBody>
-        </Table>
-        </div>
+        </table>
       </div>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           {table.getFilteredRowModel().rows.length} result(s)
         </p>
         {enablePagination && (
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-              <ChevronLeft className="h-4 w-4" />
+            <Button variant="outline" size="icon" aria-label="Previous page" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+              <ChevronLeft className="size-4" aria-hidden="true" />
             </Button>
-            <span className="text-sm">
+            <span className="text-sm tabular-nums">
               Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
             </span>
-            <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-              <ChevronRight className="h-4 w-4" />
+            <Button variant="outline" size="icon" aria-label="Next page" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+              <ChevronRight className="size-4" aria-hidden="true" />
             </Button>
           </div>
         )}
