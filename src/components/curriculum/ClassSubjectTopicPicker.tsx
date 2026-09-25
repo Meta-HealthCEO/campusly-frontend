@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import Link from 'next/link';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -18,6 +19,7 @@ import {
   type ClassLike,
 } from '@/lib/teacher-labels';
 import { resolveId } from '@/lib/api-helpers';
+import { classSubjectEditHref } from '@/lib/teacher-classes';
 import type { SchoolClass, Subject } from '@/types';
 
 export interface ClassSubjectTopicOption {
@@ -176,6 +178,17 @@ export function ClassSubjectTopicPicker({
               })}
             </SelectContent>
           </Select>
+          {classId && filteredSubjects.length === 0 && (
+            <p className="text-xs text-muted-foreground">
+              This class has no subject yet.{' '}
+              <Link
+                href={classSubjectEditHref(classId)}
+                className="font-medium text-primary underline-offset-4 hover:underline"
+              >
+                Give it a subject
+              </Link>
+            </p>
+          )}
           {errors?.subjectId && (
             <p className="text-xs text-destructive">{errors.subjectId}</p>
           )}

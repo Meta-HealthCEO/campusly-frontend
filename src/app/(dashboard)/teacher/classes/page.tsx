@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,7 +20,7 @@ import { resolveId } from '@/lib/api-helpers';
 import { useClassesPageState } from '@/hooks/useClassesPageState';
 import { useAuthStore } from '@/stores/useAuthStore';
 import type { TeacherClassEntry } from '@/hooks/useTeacherClasses';
-import { classesPageCopy } from '@/lib/teacher-classes';
+import { classesPageCopy, entryToEdit } from '@/lib/teacher-classes';
 
 export default function TeacherClassesPage() {
   const user = useAuthStore((state) => state.user);
@@ -42,6 +43,17 @@ export default function TeacherClassesPage() {
     handleCreateClass, handleDelete, handleAddStudent,
     handleEditClass,
   } = useClassesPageState();
+
+  // `?edit=<classId>` (e.g. "Give it a subject" in the homework wizard) opens
+  // that class's edit dialog once, then drops the param so closing stays closed.
+  const router = useRouter();
+  const editParam = useSearchParams().get('edit');
+  useEffect(() => {
+    if (loading || !editParam) return;
+    const target = entryToEdit(entries, editParam);
+    if (target) setEditEntry(target);
+    router.replace('/teacher/classes');
+  }, [loading, editParam, entries, setEditEntry, router]);
 
   // Tracks which entry the AddStudentDialog should target. Set when the user
   // either clicks the "Add learners" icon on a card OR the "Add Learners"

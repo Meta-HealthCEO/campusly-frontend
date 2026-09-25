@@ -1,3 +1,6 @@
+import { resolveId } from '@/lib/api-helpers';
+import type { PopulatedId } from '@/types';
+
 /**
  * Whether a teaching-load fetch should run. Dialogs that embed a data-fetching
  * hook (e.g. the referral dialog's class list) must gate it on their own open
@@ -19,4 +22,15 @@ export function classesPageCopy(isStandalone: boolean, schoolDescription: string
     title: 'My classes',
     description: 'Your teaching groups by grade and subject. Learners join a group with its code at /register-student; homework, lessons and marks follow the group.',
   };
+}
+
+/** My classes, opened on one class's edit dialog — where a teacher gives it a subject. */
+export function classSubjectEditHref(classId: string): string {
+  return `/teacher/classes?edit=${encodeURIComponent(classId)}`;
+}
+
+/** The teacher's own entry for the class a `?edit=` link names, or null. */
+export function entryToEdit<T extends { class: PopulatedId }>(entries: T[], classId: string | null): T | null {
+  if (!classId) return null;
+  return entries.find((e) => resolveId(e.class) === classId) ?? null;
 }
