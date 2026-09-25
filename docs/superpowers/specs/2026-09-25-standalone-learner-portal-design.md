@@ -1,6 +1,6 @@
 # Learner portal for standalone teachers' learners — design
 
-**Date:** 2026-09-25 · **Status:** design approved in conversation; owner delegated the spec review; fact-checked against the code (2026-09-25, 17 corrections applied)
+**Date:** 2026-09-25 · **Status:** design approved in conversation; owner delegated the spec review; now Phase L of the [readiness programme](2026-09-25-readiness-programme.md), built in the new look (Phase D); fact-checked against the code (2026-09-25, 17 corrections applied)
 **Project 2 of 4** in the standalone programme: (1) standalone teacher portal ✅ → (2) learner portal → (3) syllabus → (4) Coursera-quality lessons.
 
 ## Intent
