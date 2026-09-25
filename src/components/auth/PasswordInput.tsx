@@ -4,6 +4,8 @@ import { useState } from 'react';
 import type { InputHTMLAttributes, Ref } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { FOCUS_RING } from '@/components/ui/focus';
+import { cn } from '@/lib/utils';
 
 interface PasswordInputProps {
   id: string;
@@ -36,7 +38,10 @@ export function PasswordInput({
         <button
           type="button"
           onClick={() => setShowPassword((prev) => !prev)}
-          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-gray-400 hover:text-gray-600"
+          className={cn(
+            'absolute right-0 top-0 h-full rounded-r-control px-3 text-muted-foreground hover:bg-transparent hover:text-foreground',
+            FOCUS_RING,
+          )}
           aria-label={showPassword ? 'Hide password' : 'Show password'}
         >
           {showPassword ? (

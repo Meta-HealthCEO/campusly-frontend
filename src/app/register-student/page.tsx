@@ -164,7 +164,7 @@ export default function RegisterStudentPage() {
           <Button
             type="submit"
             disabled={isLoading}
-            className="h-10 w-full bg-[#2563EB] text-white hover:bg-[#1d4ed8] hover:text-white disabled:text-white/70"
+            className="h-10 w-full"
             size="lg"
           >
             {isLoading ? (
@@ -180,7 +180,7 @@ export default function RegisterStudentPage() {
 
         <div className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{' '}
-          <Link href="/login" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
+          <Link href="/login" className="font-medium text-primary underline-offset-4 hover:underline">
             Sign in
           </Link>
         </div>

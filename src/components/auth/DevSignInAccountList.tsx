@@ -1,4 +1,6 @@
 import { ArrowRight, Loader2 } from 'lucide-react';
+import { FOCUS_RING } from '@/components/ui/focus';
+import { cn } from '@/lib/utils';
 import { devAccountSubtitle } from '@/lib/dev-sign-in';
 import type { DevSignInAccount } from '@/types/dev-sign-in';
 
@@ -33,7 +35,10 @@ export function DevSignInAccountList({ title, accounts, busyId, onPick }: DevSig
                 disabled={busyId !== null}
                 aria-busy={isBusy || undefined}
                 title={account.email}
-                className="group flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-blue-600/5 focus-visible:bg-blue-600/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/40 disabled:cursor-default disabled:opacity-60"
+                className={cn(
+                  'group flex min-h-11 w-full items-center gap-3 rounded-control px-3 py-2 text-left transition-colors hover:bg-muted focus-visible:bg-muted disabled:cursor-default disabled:opacity-60',
+                  FOCUS_RING,
+                )}
               >
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium text-foreground">{account.name}</span>
@@ -42,10 +47,10 @@ export function DevSignInAccountList({ title, accounts, busyId, onPick }: DevSig
                   </span>
                 </span>
                 {isBusy ? (
-                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-blue-600" aria-hidden="true" />
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-accent-foreground" aria-hidden="true" />
                 ) : (
                   <ArrowRight
-                    className="h-4 w-4 shrink-0 text-blue-600 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+                    className="h-4 w-4 shrink-0 text-accent-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
                     aria-hidden="true"
                   />
                 )}

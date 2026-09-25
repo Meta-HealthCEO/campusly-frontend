@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { listSourceFiles, readSource } from './support/source';
-import { findColourLiterals } from './support/colour-literals';
+import { findColourLiterals } from '../src/lib/design/palette-scan';
 
 const files = ['ExamMap.tsx', 'Countdown.tsx', 'NextUp.tsx', 'MarksToGain.tsx', 'ReadinessBand.tsx', 'TrendChart.tsx'];
 const read = (f: string) => readSource(`src/components/readiness/${f}`);

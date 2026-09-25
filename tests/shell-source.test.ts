@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findColourLiterals } from './support/colour-literals';
+import { findColourLiterals } from '../src/lib/design/palette-scan';
 import { readSource } from './support/source';
 
 const layout = (file: string) => readSource(`src/components/layout/${file}`);

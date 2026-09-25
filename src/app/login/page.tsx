@@ -79,7 +79,7 @@ export default function LoginPage() {
         <div className="flex items-center justify-end">
           <Link
             href="/forgot-password"
-            className="text-sm font-medium text-[#2563EB] hover:text-[#1d4ed8]"
+            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
           >
             Forgot password?
           </Link>
@@ -88,7 +88,7 @@ export default function LoginPage() {
         <Button
           type="submit"
           disabled={isLoading}
-          className="h-10 w-full bg-[#2563EB] text-white hover:bg-[#1d4ed8] hover:text-white disabled:text-white/70"
+          className="h-10 w-full"
           size="lg"
         >
           {isLoading ? (
@@ -102,28 +102,28 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <div className="mt-6 space-y-2 text-center text-sm text-gray-600">
+      <div className="mt-6 space-y-2 text-center text-sm text-muted-foreground">
         <p>
           Don&apos;t have an account?{' '}
-          <Link href="/register" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
+          <Link href="/register" className="font-medium text-primary underline-offset-4 hover:underline">
             Register your school
           </Link>
         </p>
         <p>
           Are you a teacher?{' '}
-          <Link href="/signup/teacher" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
+          <Link href="/signup/teacher" className="font-medium text-primary underline-offset-4 hover:underline">
             Sign up for free
           </Link>
         </p>
         <p>
           Are you a student?{' '}
-          <Link href="/register-student" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
+          <Link href="/register-student" className="font-medium text-primary underline-offset-4 hover:underline">
             Join your class
           </Link>
         </p>
         <p>
           Are you a coach?{' '}
-          <Link href="/signup/coach" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
+          <Link href="/signup/coach" className="font-medium text-primary underline-offset-4 hover:underline">
             Sign up for free
           </Link>
         </p>
