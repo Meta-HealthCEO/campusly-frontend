@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import apiClient from '@/lib/api-client';
 import { unwrapList } from '@/lib/api-helpers';
 import { useCurrentStudent } from './useCurrentStudent';
+import { gradeFromApi } from '@/lib/student-grades';
 import type { StudentGrade, Subject } from '@/types';
 
 interface StudentGradesResult {
@@ -32,7 +33,7 @@ export function useStudentGrades(): StudentGradesResult {
         ]);
 
         if (marksRes.status === 'fulfilled' && marksRes.value.data) {
-          const arr = unwrapList<StudentGrade>(marksRes.value);
+          const arr = unwrapList<Record<string, unknown>>(marksRes.value).map(gradeFromApi);
           if (arr.length > 0) setGrades(arr);
         }
         if (subjectsRes.status === 'fulfilled' && subjectsRes.value.data) {
