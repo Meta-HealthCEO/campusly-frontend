@@ -127,9 +127,9 @@ export function PracticeSetup({
         <div className="space-y-5">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>Subject <span className="text-destructive">*</span></Label>
+              <Label htmlFor="practice-subject">Subject <span className="text-destructive">*</span></Label>
               <Select value={subjectId} onValueChange={(v: unknown) => setSubjectId(v as string)}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="practice-subject" className="w-full">
                   <SelectValue placeholder="Select subject" />
                 </SelectTrigger>
                 <SelectContent>
@@ -141,8 +141,9 @@ export function PracticeSetup({
             </div>
 
             <div className="space-y-1.5">
-              <Label>Topic <span className="text-destructive">*</span></Label>
+              <Label htmlFor="practice-topic">Topic <span className="text-destructive">*</span></Label>
               <Input
+                id="practice-topic"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="e.g. Quadratic equations"
@@ -239,8 +240,9 @@ export function PracticeSetup({
 
               <div className="grid gap-4 md:grid-cols-[220px_1fr]">
                 <div className="space-y-1.5">
-                  <Label>Number of questions</Label>
+                  <Label htmlFor="practice-count">Number of questions</Label>
                   <Input
+                    id="practice-count"
                     type="number"
                     min={3}
                     max={20}

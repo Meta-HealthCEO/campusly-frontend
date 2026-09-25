@@ -6,6 +6,7 @@ import { KeyRound, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useJoinClass } from '@/hooks/useJoinClass';
 
 interface JoinClassCardProps {
@@ -42,7 +43,9 @@ export function JoinClassCard({ onJoined }: JoinClassCardProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row">
+          <Label htmlFor="join-class-code" className="sr-only">Class code</Label>
           <Input
+            id="join-class-code"
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
             placeholder="e.g. A1B2C3"

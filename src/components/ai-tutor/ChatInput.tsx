@@ -146,9 +146,11 @@ export function ChatInput({ onSend, disabled, sending, placeholder, initialValue
           disabled={disabled}
           className="min-h-[44px] max-h-40 resize-none rounded-lg"
           rows={1}
+          aria-label="Message"
         />
         <Button
           onClick={handleSend}
+          aria-label="Send message"
           disabled={disabled || (!text.trim() && !image)}
           size="icon"
           className="h-10 w-10 shrink-0"
