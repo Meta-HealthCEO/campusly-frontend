@@ -62,24 +62,10 @@ const MIGRATED = [
 
 const RAW = /\b(?:bg|text|border|ring|from|to|via|fill|stroke|outline|divide|decoration)-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)-\d{2,3}\b/g;
 
-const PRIMARY_TEXT = /(?<![\w:-])text-primary(?![\w/-])(?![^'"`]*teacher:text-)/g;
-
 describe('teacher colour guard', () => {
   it.each(MIGRATED)('%s uses only semantic colour tokens', (file) => {
     const source = readFileSync(path.resolve(__dirname, '..', file), 'utf8');
     expect(source.match(RAW) ?? []).toEqual([]);
-  });
-
-  it.each(MIGRATED)('%s keeps violet text on the readable ink token', (file) => {
-    // --primary (#7c3aed) is a fill; as text it reads 3.3:1 on the dark teacher card. Use text-accent-foreground,
-    // or keep text-primary only with a teacher: override in the same class string (shared components).
-    const source = readFileSync(path.resolve(__dirname, '..', file), 'utf8');
-    expect(source.match(PRIMARY_TEXT) ?? []).toEqual([]);
-  });
-
-  it('lets text-primary through only with a teacher: override', () => {
-    expect('className="text-primary hover:underline"'.match(PRIMARY_TEXT)).toHaveLength(1);
-    expect('className="text-primary teacher:text-accent-foreground"'.match(PRIMARY_TEXT)).toBeNull();
   });
 
   it('catches a raw palette class', () => {

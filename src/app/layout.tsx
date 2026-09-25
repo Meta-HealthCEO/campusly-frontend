@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Hanken_Grotesk, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
-const inter = Inter({
-  variable: "--font-sans",
-  subsets: ["latin"],
-  preload: false,
-});
+// Blueprint type (spec §2.3): Hanken Grotesk for headings and numbers, Source Sans 3 for body and UI.
+// Both are variable fonts, so one self-hosted file each covers every weight the scale uses (ruling R8).
+const display = Hanken_Grotesk({ variable: '--font-display', subsets: ['latin'], display: 'swap' });
+const body = Source_Sans_3({ variable: '--font-body', subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
   title: "Campusly - School Management System",
@@ -22,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="en" className={`${display.variable} ${body.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col font-sans">
         <ThemeProvider>
           <AuthProvider>
