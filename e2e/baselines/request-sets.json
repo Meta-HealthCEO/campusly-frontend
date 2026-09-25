@@ -186,5 +186,53 @@
     "GET /api/reports/student/:id/:n",
     "GET /api/schools/:id",
     "GET /api/teacher-workbench/marking-hub/pending"
+  ],
+  "school-learner:/student": [
+    "GET /api/ai-tutor/mastery",
+    "GET /api/ai-tutor/recommendations",
+    "GET /api/auth/me",
+    "GET /api/enrolments/me",
+    "GET /api/schools/:id",
+    "GET /api/student/dashboard",
+    "GET /api/students/me"
+  ],
+  "school-learner:/student/ai-tutor": [
+    "GET /api/academic/subjects",
+    "GET /api/ai-tutor/conversations",
+    "GET /api/auth/me",
+    "GET /api/curriculum-structure/frameworks",
+    "GET /api/schools/:id",
+    "GET /api/students/me",
+    "GET /api/students/me/classes"
+  ],
+  "school-learner:/student/courses": [
+    "GET /api/auth/me",
+    "GET /api/enrolments/me",
+    "GET /api/schools/:id"
+  ],
+  "school-learner:/student/grades": [
+    "GET /api/academic/marks/student/:id",
+    "GET /api/academic/subjects",
+    "GET /api/auth/me",
+    "GET /api/schools/:id",
+    "GET /api/students/me"
+  ],
+  "school-learner:/student/homework": [
+    "GET /api/auth/me",
+    "GET /api/homework",
+    "GET /api/homework/student/:id/submissions",
+    "GET /api/schools/:id",
+    "GET /api/students/me"
+  ],
+  "school-learner:/student/profile": [
+    "GET /api/auth/me",
+    "GET /api/schools/:id",
+    "GET /api/students/me",
+    "GET /api/students/me/classes"
+  ],
+  "school-learner:/student/tests": [
+    "GET /api/auth/me",
+    "GET /api/question-bank/student/papers",
+    "GET /api/schools/:id"
   ]
 }

@@ -16,6 +16,15 @@ export const TEACHER_ROUTES: readonly string[] = [
   '/teacher/assignments/new', '/teacher/settings', '/teacher/settings/join-school', '/my/billing', '/subscription',
 ];
 
+/**
+ * Signed in as the dev school learner (Lebo, dev sign-in panel): the learner pages the learner-portal work touches.
+ * School learners must see no change (learner portal spec §1), so their request sets are compared with the baseline
+ * recorded on the code before that work.
+ */
+export const SCHOOL_LEARNER_ROUTES: readonly string[] = [
+  '/student', '/student/courses', '/student/homework', '/student/tests', '/student/grades', '/student/ai-tutor', '/student/profile',
+];
+
 export interface DetailRoute { name: string; list: string; link: RegExp }
 
 /** Pages with an id: found from the first matching link on the list page (ruling R15). */

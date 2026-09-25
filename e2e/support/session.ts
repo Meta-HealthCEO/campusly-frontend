@@ -11,3 +11,10 @@ export async function signInAsStandaloneTeacher(page: Page): Promise<void> {
   await page.locator('[aria-label="Development sign-in"]').getByRole('button', { name: /Standalone teacher/ }).click();
   await page.waitForURL(/\/teacher(\/|$)/);
 }
+
+/** The dev sign-in panel's school learner (Lebo Mthembu); no password is typed. */
+export async function signInAsSchoolLearner(page: Page): Promise<void> {
+  await page.goto('/login');
+  await page.locator('[aria-label="Development sign-in"]').getByRole('button', { name: /Lebo Mthembu/ }).click();
+  await page.waitForURL(/\/student(\/|$)/);
+}

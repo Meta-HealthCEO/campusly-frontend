@@ -2,10 +2,10 @@ import { test, expect, type Page, type Request } from '@playwright/test';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { assertLocalUrl } from './support/local';
-import { DETAIL_ROUTES, POLLING, PUBLIC_ROUTES, TEACHER_ROUTES, WIDTHS } from './support/design-routes';
+import { DETAIL_ROUTES, POLLING, PUBLIC_ROUTES, SCHOOL_LEARNER_ROUTES, TEACHER_ROUTES, WIDTHS } from './support/design-routes';
 import { diffRequestSets, landedElsewhere, toRequestSet, withoutPolling } from './support/request-set';
 import { focusRingMissing, sidewaysOverflow, unlabelledControls } from './support/a11y-audit';
-import { settle, signInAsStandaloneTeacher } from './support/session';
+import { settle, signInAsSchoolLearner, signInAsStandaloneTeacher } from './support/session';
 
 /**
  * Phase D machine gate, browser half (spec §7): no sideways scroll at six widths, labelled controls,
@@ -78,9 +78,17 @@ test('standalone teacher pages', async ({ page, baseURL }) => {
   }
 });
 
+test('school learner pages: unchanged by the learner portal', async ({ page, baseURL }) => {
+  assertLocalUrl(baseURL ?? '', 'E2E_BASE_URL');
+  await signInAsSchoolLearner(page);
+  for (const route of SCHOOL_LEARNER_ROUTES) await test.step(route, () => sweep(page, route, `school-learner:${route}`));
+});
+
 test.afterAll(() => {
   if (!RECORD) return;
   mkdirSync(path.dirname(BASELINE_FILE), { recursive: true });
-  const merged = { ...baseline, ...recorded };
+  // Recording one test (-g) must not drop the other tests' baselines: merge into what is on disk.
+  const onDisk = existsSync(BASELINE_FILE) ? (JSON.parse(readFileSync(BASELINE_FILE, 'utf8')) as Record<string, string[]>) : {};
+  const merged = { ...onDisk, ...recorded };
   writeFileSync(BASELINE_FILE, `${JSON.stringify(Object.fromEntries(Object.entries(merged).sort()), null, 2)}\n`);
 });
