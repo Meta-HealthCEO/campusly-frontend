@@ -22,7 +22,7 @@ export function TrendChart({ points, target, label }: TrendChartProps) {
   const tick = { fill: theme.axis, fontSize: 11, fontFamily: theme.fontFamily };
   return (
     <figure role="img" aria-label={label} className="h-44 w-full">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 320, height: 176 }}>
         <LineChart data={[...points]} margin={{ top: 12, right: 12, bottom: 0, left: -12 }}>
           <CartesianGrid vertical={false} stroke={theme.grid} />
           <XAxis dataKey="label" tickLine={false} axisLine={false} tick={tick} />
