@@ -18,6 +18,7 @@ import { AttendanceHistoryTab } from '@/components/attendance/AttendanceHistoryT
 import { AttendanceExportButton } from '@/components/attendance/AttendanceExportButton';
 import { toISODate } from '@/lib/utils';
 import Link from 'next/link';
+import { useIsStandalone } from '@/hooks/useIsStandalone';
 
 type AttendanceView = 'today' | 'history';
 
@@ -37,16 +38,14 @@ function initialHistoryRange(): { from: string; to: string } {
 export default function TeacherAttendancePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialClassId = searchParams.get('classId') ?? undefined;
+  // Standalone teachers know this page as their Register (their nav item).
+  const title = useIsStandalone() ? 'Register' : 'Attendance';
   const initialTab: AttendanceView = isView(searchParams.get('tab')) ? (searchParams.get('tab') as AttendanceView) : 'today';
 
   const [view, setView] = useState<AttendanceView>(initialTab);
   const [historyRange, setHistoryRange] = useState(initialHistoryRange);
 
-  const periodParam = Number(searchParams.get('period'));
-  const initialPeriod = Number.isInteger(periodParam) && periodParam > 0 ? periodParam : undefined;
-
-  const hook = useTeacherAttendance({ classId: initialClassId, initialPeriod });
+  const hook = useTeacherAttendance({ search: searchParams });
 
   // Sync URL when class or tab changes — replace (no history entries).
   useEffect(() => {
@@ -83,7 +82,7 @@ export default function TeacherAttendancePage() {
   if (hook.loading) {
     return (
       <div className="space-y-6">
-        <PageHeader eyebrow={sectionEyebrow('Class')} title="Attendance" description="Mark daily attendance for any of your classes" />
+        <PageHeader eyebrow={sectionEyebrow('Class')} title={title} description="Mark daily attendance for any of your classes" />
         <LoadingSpinner />
       </div>
     );
@@ -92,7 +91,7 @@ export default function TeacherAttendancePage() {
   if (hook.classes.length === 0) {
     return (
       <div className="space-y-6">
-        <PageHeader eyebrow={sectionEyebrow('Class')} title="Attendance" />
+        <PageHeader eyebrow={sectionEyebrow('Class')} title={title} />
         <EmptyState
           icon={BookOpen}
           title="No classes yet"
@@ -109,7 +108,7 @@ export default function TeacherAttendancePage() {
     <div className="space-y-4">
       <PageHeader
         eyebrow={contextEyebrow([classLabel.split(' · ')[0], `Period ${hook.period}`], 'Class')}
-        title="Attendance"
+        title={title}
         description={classLabel}
       >
         <AttendanceClassPicker

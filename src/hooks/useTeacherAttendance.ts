@@ -4,6 +4,7 @@ import { unwrapList, unwrapResponse, extractErrorMessage, resolveId } from '@/li
 import { useAuthStore } from '@/stores/useAuthStore';
 import { toast } from 'sonner';
 import { toISODate } from '@/lib/utils';
+import { defaultRegister } from '@/lib/register';
 import type { Student, SchoolClass } from '@/types';
 import type { AttendanceEditHistoryEntry } from '@/types/attendance';
 
@@ -77,18 +78,19 @@ function defaultPresentMap(students: Student[]): Map<string, AttendanceEntry> {
 }
 
 interface UseTeacherAttendanceOptions {
-  classId?: string;            // explicit class to load (e.g. from URL)
-  initialDate?: string;        // YYYY-MM-DD, defaults to today
-  initialPeriod?: number;      // defaults to 1
+  /** The page's search params: classId, date (YYYY-MM-DD) and period, each optional. */
+  search?: URLSearchParams;
 }
 
 export function useTeacherAttendance(options: UseTeacherAttendanceOptions = {}) {
   const { user } = useAuthStore();
   const [classes, setClasses] = useState<TeacherClassOption[]>([]);
-  const [selectedClassId, setSelectedClassId] = useState<string | null>(options.classId ?? null);
+  // No timetable needed: the register opens on today (local) and period 1 unless the link says otherwise.
+  const [initial] = useState(() => defaultRegister([], options.search ?? new URLSearchParams(), new Date()));
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
-  const [selectedDate, setSelectedDate] = useState(options.initialDate ?? toISODate(new Date()));
-  const [period, setPeriodState] = useState<number>(options.initialPeriod ?? 1);
+  const [selectedDate, setSelectedDate] = useState(initial.date);
+  const [period, setPeriodState] = useState<number>(initial.period);
   const [allRecords, setAllRecords] = useState<RawAttendanceRecord[]>([]);
   const [attendance, setAttendance] = useState<Map<string, AttendanceEntry>>(new Map());
   const [existingLoaded, setExistingLoaded] = useState(false);
@@ -151,9 +153,7 @@ export function useTeacherAttendance(options: UseTeacherAttendanceOptions = {}) 
         const sorted = [...homeroom, ...rest];
         setClasses(sorted);
 
-        const resolvedId = (options.classId && sorted.some((c) => c.id === options.classId))
-          ? options.classId
-          : (sorted[0]?.id ?? null);
+        const resolvedId = defaultRegister(sorted, options.search ?? new URLSearchParams(), new Date()).classId;
         setSelectedClassId(resolvedId);
 
         if (!resolvedId) return;
