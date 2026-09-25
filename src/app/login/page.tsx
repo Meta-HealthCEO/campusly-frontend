@@ -111,7 +111,7 @@ export default function LoginPage() {
         </p>
         <p>
           Are you a teacher?{' '}
-          <Link href="/register-teacher" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
+          <Link href="/signup/teacher" className="font-medium text-[#2563EB] hover:text-[#1d4ed8]">
             Sign up for free
           </Link>
         </p>

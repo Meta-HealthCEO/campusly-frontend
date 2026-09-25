@@ -34,7 +34,7 @@ interface AuthState {
   /** Optimistically count one free AI paper as used after a successful generation. */
   consumeFreePaperGeneration: () => void;
   login: (user: User, tokens: AuthTokens, subscription?: Subscription | null, plan?: Plan | null) => void;
-  /** Re-read plan and free allowance from /auth/me (sign-in and sign-up responses don't carry them). */
+  /** Re-read the user, plan and free allowance from /auth/me (sign-in and sign-up responses don't carry the plan). */
   refreshAccount: () => Promise<void>;
   logout: () => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
@@ -92,7 +92,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   refreshAccount: async () => {
     try {
       const raw = unwrapResponse<Record<string, unknown>>(await apiClient.get('/auth/me'));
+      const userData = raw.user as Record<string, unknown> | undefined;
+      // Also re-read the user, so changes made elsewhere (e.g. a verified email) show at once.
+      const fresh = userData ? { user: userFromApi(userData), permissions: parsePermissions(userData) } : {};
       set({
+        ...fresh,
         subscription: (raw.subscription as Subscription | null) ?? null,
         plan: (raw.plan as Plan | null) ?? null,
         freeAllowance: (raw.freeAllowance as FreeAllowance | null) ?? null,

@@ -23,7 +23,7 @@ const REFRESH_EXCLUDED_AUTH_PATHS = new Set([
   '/auth/login',
   '/auth/logout',
   '/auth/register',
-  '/auth/register-teacher',
+  '/auth/verify-email',
   '/auth/register-student',
   '/auth/forgot-password',
   '/auth/reset-password',

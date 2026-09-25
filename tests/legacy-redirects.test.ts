@@ -3,23 +3,24 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import nextConfig, { LEGACY_TEACHER_REDIRECTS } from '../next.config';
 
-const APP = path.resolve(__dirname, '../src/app/(dashboard)');
-/** '/teacher/papers/:id' → src/app/(dashboard)/teacher/papers/[id]/page.tsx */
-const pageFor = (route: string): string =>
-  path.join(
-    APP,
+const APP_ROOTS = [path.resolve(__dirname, '../src/app/(dashboard)'), path.resolve(__dirname, '../src/app')];
+/** '/teacher/papers/:id' → src/app/(dashboard)/teacher/papers/[id]/page.tsx (or outside the dashboard group) */
+const pagesFor = (route: string): string[] =>
+  APP_ROOTS.map((root: string) => path.join(
+    root,
     ...route.split('?')[0].split('/').filter(Boolean).map((seg: string) => (seg.startsWith(':') ? `[${seg.slice(1)}]` : seg)),
     'page.tsx',
-  );
+  ));
+const pageExists = (route: string): boolean => pagesFor(route).some((p: string) => existsSync(p));
 
 describe('legacy teacher redirects', () => {
   it('removes the old page behind every redirected URL', () => {
-    const leftovers = LEGACY_TEACHER_REDIRECTS.map((r) => r.source).filter((s: string) => existsSync(pageFor(s)));
+    const leftovers = LEGACY_TEACHER_REDIRECTS.map((r) => r.source).filter((s: string) => pageExists(s));
     expect(leftovers).toEqual([]);
   });
 
   it('only sends people to pages that exist', () => {
-    const missing = LEGACY_TEACHER_REDIRECTS.map((r) => r.destination).filter((d: string) => !existsSync(pageFor(d)));
+    const missing = LEGACY_TEACHER_REDIRECTS.map((r) => r.destination).filter((d: string) => !pageExists(d));
     expect(missing).toEqual([]);
   });
 

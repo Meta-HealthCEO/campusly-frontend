@@ -45,3 +45,20 @@ describe('refreshAccount', () => {
     expect(state.freeAllowance).toBeNull();
   });
 });
+
+describe('refreshAccount and email verification', () => {
+  beforeEach(() => {
+    get.mockReset();
+    useAuthStore.getState().logout();
+  });
+
+  it('picks up a newly verified email without a page reload', async () => {
+    useAuthStore.getState().login({ ...teacher, emailVerifiedAt: null }, { accessToken: 'a', refreshToken: 'r' });
+    get.mockResolvedValue({ data: { data: { user: { ...teacher, emailVerifiedAt: '2026-09-25T08:00:00.000Z' }, subscription, plan, freeAllowance } } });
+
+    await useAuthStore.getState().refreshAccount();
+
+    expect(useAuthStore.getState().user?.emailVerifiedAt).toBe('2026-09-25T08:00:00.000Z');
+    expect(useAuthStore.getState().permissions.isStandaloneTeacher).toBe(true);
+  });
+});

@@ -34,6 +34,8 @@ export const LEGACY_TEACHER_REDIRECTS: { source: string; destination: string; pe
   { source: '/teacher/curriculum/assessment-structure/:id', destination: '/teacher/grades?tab=weightings', permanent: false },
   // Phase 2B: moderation status lives on the papers list.
   { source: '/teacher/workbench/papers/moderation', destination: '/teacher/papers?moderation=pending', permanent: false },
+  // One teacher sign-up (standalone portal): the old registration form is gone.
+  { source: '/register-teacher', destination: '/signup/teacher', permanent: true },
 ];
 
 const nextConfig: NextConfig = {

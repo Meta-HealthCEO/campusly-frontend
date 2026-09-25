@@ -17,14 +17,6 @@ export interface RegisterPayload {
   phone?: string;
 }
 
-export interface RegisterTeacherPayload {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  schoolName?: string;
-}
-
 export interface RegisterStudentPayload {
   firstName: string;
   lastName: string;
@@ -73,18 +65,6 @@ export function useAuth() {
     await apiClient.post('/auth/register', payload);
   };
 
-  const registerTeacher = async (payload: RegisterTeacherPayload) => {
-    const response = await apiClient.post('/auth/register-teacher', payload);
-    const responseData = unwrapResponse(response);
-    const userData = responseData.user ?? responseData;
-    const accessToken = responseData.accessToken ?? responseData.access_token;
-    const refreshToken = responseData.refreshToken ?? responseData.refresh_token;
-    const authUser: User = userFromApi(userData);
-    storeLogin(authUser, { accessToken, refreshToken: refreshToken ?? '' });
-    void refreshAccount();
-    router.push('/teacher/onboarding');
-  };
-
   const registerStudent = async (payload: RegisterStudentPayload) => {
     const response = await apiClient.post('/auth/register-student', payload);
     const responseData = unwrapResponse(response);
@@ -104,5 +84,5 @@ export function useAuth() {
     await apiClient.post('/auth/reset-password', payload);
   };
 
-  return { login, startSession, logout, register, registerTeacher, registerStudent, forgotPassword, resetPassword, user, isAuthenticated };
+  return { login, startSession, logout, register, registerStudent, forgotPassword, resetPassword, user, isAuthenticated };
 }

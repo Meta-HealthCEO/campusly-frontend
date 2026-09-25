@@ -21,6 +21,7 @@ import {
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { TrialBanner } from '@/components/subscription/TrialBanner';
 import { DunningBanner } from '@/components/subscription/DunningBanner';
+import { VerifyEmailBanner } from '@/components/auth/VerifyEmailBanner';
 import { composeNav } from './nav-config';
 import { isStandaloneTeacherPathAllowed } from '@/lib/standalone-teacher-paths';
 import { useNotificationPoller } from '@/hooks/useNotificationPoller';
@@ -134,6 +135,7 @@ export default function DashboardLayout({
           <TopBar items={portal ? navItems : undefined} />
           <TrialBanner />
           <DunningBanner />
+          <VerifyEmailBanner />
           <main className="flex-1 overflow-y-auto p-4 pb-20 lg:p-6 lg:pb-6">
             {children}
           </main>

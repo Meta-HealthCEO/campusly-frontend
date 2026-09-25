@@ -44,6 +44,8 @@ export interface User {
   isStandaloneTeacher?: boolean;
   isStandaloneCoach?: boolean;
   mustChangePassword?: boolean;
+  /** When the teacher opened the emailed verification link; null until then. */
+  emailVerifiedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
