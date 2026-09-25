@@ -1,15 +1,14 @@
 /**
- * Where the wizard's Back/Next bar sits. On a phone it spans the screen just
- * above the bottom nav (which would otherwise cover it); from lg up it floats
- * beside the sidebar as before.
+ * Where the wizard's Back/Next bar sits. On a phone it spans the screen just above the bottom nav;
+ * from md it floats beside the 56px rail, and from lg beside the 232px sidebar (or the rail when collapsed).
  */
 export function wizardFooterPlacement(sidebarCollapsed: boolean): { outer: string; inner: string } {
   return {
     outer: [
       'pointer-events-none fixed left-0 right-0 bottom-20 z-40 flex justify-center px-3',
-      'lg:bottom-6 lg:px-6',
-      sidebarCollapsed ? 'lg:left-17.5' : 'lg:left-64',
+      'md:bottom-6 md:left-14 md:px-6',
+      sidebarCollapsed ? 'lg:left-14' : 'lg:left-[232px]',
     ].join(' '),
-    inner: 'pointer-events-auto w-full max-w-160 rounded-2xl border bg-background/95 shadow-lg backdrop-blur supports-backdrop-filter:bg-background/80 lg:w-1/3 lg:min-w-110',
+    inner: 'pointer-events-auto w-full max-w-160 rounded-card border border-border bg-card/95 shadow-overlay backdrop-blur supports-backdrop-filter:bg-card/80 lg:w-1/3 lg:min-w-110',
   };
 }

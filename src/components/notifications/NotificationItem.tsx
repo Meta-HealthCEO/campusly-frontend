@@ -38,7 +38,7 @@ export function NotificationItem({ notification, onMarkRead }: NotificationItemP
     >
       <div className="mt-1.5 shrink-0">
         {!notification.isRead ? (
-          <span className="block h-2 w-2 rounded-full bg-orange-500" />
+          <span className="block h-2 w-2 rounded-full bg-primary" />
         ) : (
           <span className="block h-2 w-2 rounded-full bg-transparent" />
         )}

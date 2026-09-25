@@ -19,9 +19,7 @@ import {
   type NavItem,
 } from '@/lib/constants';
 import { AuthGuard } from '@/components/auth/AuthGuard';
-import { TrialBanner } from '@/components/subscription/TrialBanner';
-import { DunningBanner } from '@/components/subscription/DunningBanner';
-import { VerifyEmailBanner } from '@/components/auth/VerifyEmailBanner';
+import { BannerStrip } from '@/components/layout/BannerStrip';
 import { AILimitDialog } from '@/components/billing/AILimitDialog';
 import { composeNav } from './nav-config';
 import { isStandaloneTeacherPathAllowed } from '@/lib/standalone-teacher-paths';
@@ -117,15 +115,14 @@ export default function DashboardLayout({
 
   return (
     <AuthGuard>
-      <div className="flex h-screen overflow-hidden bg-background text-foreground">
+      <div className="flex h-dvh overflow-hidden bg-background text-foreground">
         <Sidebar items={navItems} />
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <TopBar items={navItems} />
-          <TrialBanner />
-          <DunningBanner />
-          <VerifyEmailBanner />
-          <main className="flex-1 overflow-y-auto p-4 pb-20 lg:p-6 lg:pb-6">
-            {children}
+          <BannerStrip />
+          {/* <main> stays the scroll container (ruling R23). */}
+          <main className="flex-1 overflow-y-auto px-4 pt-5 pb-[calc(env(safe-area-inset-bottom)+5.5rem)] md:px-6 md:pt-6 md:pb-10 lg:px-8 lg:pt-8">
+            <div className="mx-auto w-full max-w-[1200px]">{children}</div>
           </main>
         </div>
         <BottomNav items={navItems} />

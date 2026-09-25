@@ -25,7 +25,7 @@ export const TOKEN_PAIRS: readonly TokenPair[] = [
   text('primary-foreground', 'primary'), text('primary', 'card'), text('primary', 'background'),
   text('primary', 'primary', { bgAlpha: 0.1, ground: 'card' }), text('accent-foreground', 'accent'),
   text('destructive', 'card'), text('destructive', 'background'), text('destructive', 'destructive-soft'),
-  text('destructive', 'destructive', { bgAlpha: 0.1, ground: 'background' }),
+  text('destructive', 'destructive', { bgAlpha: 0.1, ground: 'background' }), text('destructive', 'accent'),
   text('success', 'success-soft'), text('attention', 'attention-soft'), text('info', 'info-soft'),
   text('secure-strong', 'secure'), text('building-strong', 'building'), text('weak-strong', 'weak'),
   text('secure-strong', 'card'), text('building-strong', 'card'), text('weak-strong', 'card'),
