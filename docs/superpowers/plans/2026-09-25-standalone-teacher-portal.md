@@ -24,10 +24,10 @@
 ## Review Focus
 
 1. An AI action at 23:30 UTC on the last day of a month (01:30 SAST next day) counts in the NEW month — test in B1.
-2. An AI call that fails (AI error / 503) does not use an allowance slot — test in B2.
-3. Learners' homework submissions that are auto-marked by AI never use the teacher's allowance (only teacher-triggered re-grades do) — test in B3.
+2. An AI call that fails (AI error / 503) does not use an allowance slot — test in B1.
+3. Learners' homework submissions that are auto-marked by AI never use the teacher's allowance (only teacher-triggered re-grades do) — test in B2.
 4. A teacher who existed before verification shipped is not locked out of AI — backfill test in A1.
-5. A standalone teacher calling a hidden AI route directly (lesson chat, Library generate, LessonPlan AI) gets 403, while a school teacher still gets through — test in B4.
+5. A standalone teacher calling a hidden AI route directly (lesson chat, Library generate, LessonPlan AI) gets 403, while a school teacher still gets through — test in B3.
 
 ## Rulings made while planning
 
