@@ -43,7 +43,7 @@ export function ReleaseUnitDialog({ open, onOpenChange, classes, defaultClassIds
               <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-border px-3 py-2 hover:bg-muted/50">
                 <Checkbox checked={picked.has(c.id)} onCheckedChange={() => toggle(c.id)} />
                 <span className="flex-1 text-sm font-medium">{c.name}</span>
-                <span className="font-mono text-xs text-muted-foreground tabular-nums">{c.learners} learners</span>
+                <span className="font-heading text-xs text-muted-foreground tabular-nums">{c.learners} learners</span>
               </label>
             </li>
           ))}

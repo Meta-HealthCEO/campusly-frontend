@@ -44,11 +44,11 @@ function Questions({ questions }: { questions: PreviewQuestion[] }) {
     <ol className="space-y-4">
       {questions.map((q: PreviewQuestion, i: number) => (
         <li key={q.id} className="space-y-1.5">
-          <p className="text-sm font-medium"><span className="font-mono text-muted-foreground">{i + 1}.</span> {q.stem}</p>
+          <p className="text-sm font-medium"><span className="font-heading tabular-nums text-muted-foreground">{i + 1}.</span> {q.stem}</p>
           <ul className="space-y-0.5 pl-5 text-sm" aria-label="Options">
             {q.options.map((o) => (
               <li key={o.label} className={o.isCorrect ? 'flex items-center gap-1.5 font-medium text-success' : 'flex items-center gap-1.5'}>
-                <span className="font-mono text-xs">{o.label}.</span> {o.text}
+                <span className="font-heading text-xs">{o.label}.</span> {o.text}
                 {o.isCorrect ? <Check className="h-3.5 w-3.5" aria-label="Correct answer" /> : null}
               </li>
             ))}

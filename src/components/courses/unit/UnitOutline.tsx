@@ -28,12 +28,12 @@ export function UnitOutline({ course, outlineStage, busyItemId, onOpen, onRetry,
         <li key={m.id} className="rounded-xl border border-border bg-card">
           <header className="flex flex-col gap-1 border-b border-border px-4 py-3 sm:flex-row sm:items-baseline sm:justify-between">
             <div className="min-w-0">
-              <p className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
+              <p className="font-heading text-xs uppercase tracking-wide text-muted-foreground">
                 Module {i + 1}{weeksLabel(m.weekNumbers) ? ` · ${weeksLabel(m.weekNumbers)}` : ''}
               </p>
               <h3 className="text-base font-semibold text-balance">{m.title}</h3>
             </div>
-            <p className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">
+            <p className="shrink-0 font-heading text-xs text-muted-foreground tabular-nums">
               {m.lessons.length} item{m.lessons.length === 1 ? '' : 's'} · {formatMinutes(moduleMinutes(m))}
             </p>
           </header>

@@ -32,6 +32,7 @@ export function TopBar({ items }: TopBarProps = {}) {
   const settingsPath = user ? getRoleSettingsPath(user.role) : null;
   const title = context?.label ?? (user ? getRoleLabel(user.role) : 'Dashboard');
   const eyebrow = context?.section && context.section !== context.label ? context.section : null;
+  const fullName = user ? `${user.firstName} ${user.lastName}` : 'User';
 
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-card/95 px-4 backdrop-blur md:h-16 md:px-6 lg:px-8">
@@ -45,11 +46,11 @@ export function TopBar({ items }: TopBarProps = {}) {
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button variant="ghost" className="gap-2 px-1.5 md:px-2" aria-label="Account menu">
+              <Button variant="ghost" className="gap-2 px-1.5 md:px-2" aria-label={`${fullName}, account menu`}>
                 <Avatar className="size-8">
                   <AvatarFallback>{user ? getInitials(user.firstName, user.lastName) : 'U'}</AvatarFallback>
                 </Avatar>
-                <span className="hidden text-sm font-semibold md:inline-block">{user ? `${user.firstName} ${user.lastName}` : 'User'}</span>
+                <span className="hidden text-sm font-semibold md:inline-block">{fullName}</span>
               </Button>
             }
           />

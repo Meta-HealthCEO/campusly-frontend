@@ -30,8 +30,8 @@ describe('spec values (§2, as amended by ruling R6)', () => {
   it('pins the brand, ink and ground', () => {
     expect(THEMES.light).toMatchObject({
       background: '#F3F5FA', card: '#FFFFFF', foreground: '#0B1B33', 'muted-foreground': '#5B6B82',
-      primary: '#1554F0', accent: '#EEF1F7' /* neutral since ruling O1 revised */, ring: '#1554F0', 'secure-strong': '#137A6B', 'building-strong': '#8A5A00',
-      'weak-strong': '#B5392A', destructive: '#B5392A', input: '#7F8DA3', border: '#E2E7F0',
+      primary: '#1554F0', accent: '#EEF1F7' /* neutral since ruling O1 revised */, ring: '#1554F0', 'secure-strong': '#137A6B', 'building-strong': '#4F58D0',
+      'weak-strong': '#C2410C', destructive: '#B5392A', input: '#7F8DA3', border: '#E2E7F0',
     });
     expect(THEMES.dark).toMatchObject({
       background: '#0A1222', card: '#111B2E', foreground: '#E8EEF8', primary: '#6B95FF',
@@ -76,8 +76,15 @@ describe('orchestrator ruling O1 (revised): colour only in solid marks, every su
     for (const level of LEVELS) expect(THEMES.dark[`mark-${level}`], `mark-${level}`).not.toBe(THEMES.dark[`tile-${level}`]);
   });
 
-  it('keeps the AA text colours for mastery words', () => {
-    expect(THEMES.light).toMatchObject({ 'secure-strong': '#137A6B', 'building-strong': '#8A5A00', 'weak-strong': '#B5392A' });
+  it('writes mastery words in text-safe versions of the mastery scale: indigo building, orange weak (final review 7)', () => {
+    expect(THEMES.light).toMatchObject({ 'secure-strong': '#137A6B', 'building-strong': '#4F58D0', 'weak-strong': '#C2410C' });
+    expect(THEMES.dark).toMatchObject({ 'secure-strong': '#3CC3AE', 'building-strong': '#7C84E8', 'weak-strong': '#F07A3A' });
+  });
+
+  it.each(Object.entries(THEMES))('%s: mastery is never red or amber; red stays for errors only', (_theme, tokens) => {
+    expect(tokens['weak-strong']).not.toBe(tokens.destructive);
+    expect(tokens['building-strong']).not.toBe(tokens.attention);
+    for (const t of ['weak-strong', 'mark-weak', 'tile-weak']) expect(tokens[t], t).not.toBe(tokens.destructive);
   });
 });
 
@@ -143,7 +150,8 @@ describe('one look for every portal', () => {
     expect(layout).not.toMatch(/\bInter\b/);
     expect(css).toContain('--font-sans: var(--font-body)');
     expect(css).toContain('--font-heading: var(--font-display)');
-    expect(css).toContain('--font-mono: var(--font-display)');
+    // Code, identifiers and join codes are true monospace (final review finding 2); figures use font-heading + tabular-nums.
+    expect(css).toContain('--font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;');
   });
 
   it('leaves no night-back scope behind', () => {

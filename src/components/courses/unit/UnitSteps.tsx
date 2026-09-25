@@ -20,7 +20,7 @@ export function UnitSteps({ current, noun = 'unit' }: { current: UnitStep; noun?
         return (
           <li key={step.key} className="flex gap-3" aria-current={now ? 'step' : undefined}>
             <span
-              className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-mono text-xs ${
+              className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-heading text-xs tabular-nums ${
                 done ? 'bg-success-soft text-success' : now ? 'bg-accent text-accent-foreground ring-1 ring-accent-foreground/40' : 'bg-muted text-muted-foreground'
               }`}
             >

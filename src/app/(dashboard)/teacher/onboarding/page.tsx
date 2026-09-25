@@ -125,7 +125,7 @@ export default function TeacherOnboardingPage() {
           <li key={label} className="space-y-1.5" aria-current={i + 1 === step ? 'step' : undefined}>
             <div className={cn('h-1 rounded-full', i + 1 <= step ? 'bg-primary' : 'bg-muted')} />
             <p className={cn('text-xs', i + 1 === step ? 'font-medium text-foreground' : 'text-muted-foreground')}>
-              <span className="font-mono">{i + 1}</span> {label}
+              <span className="font-heading tabular-nums">{i + 1}</span> {label}
             </p>
           </li>
         ))}

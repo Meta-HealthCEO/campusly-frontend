@@ -66,10 +66,10 @@ export function MarkingItemCard({ item }: Props) {
       <div className="mt-3 space-y-1">
         <div className="flex justify-between text-xs text-muted-foreground">
           <span>
-            <span className="font-mono tabular-nums text-foreground">{item.pendingCount}</span> to mark
-            <span className="font-mono tabular-nums"> · {marked}/{item.totalCount}</span> done
+            <span className="font-heading tabular-nums text-foreground">{item.pendingCount}</span> to mark
+            <span className="font-heading tabular-nums"> · {marked}/{item.totalCount}</span> done
           </span>
-          <span className="font-mono tabular-nums">{percent}%</span>
+          <span className="font-heading tabular-nums">{percent}%</span>
         </div>
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
           <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${percent}%` }} />

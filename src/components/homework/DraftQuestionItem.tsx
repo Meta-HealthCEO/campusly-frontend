@@ -33,7 +33,7 @@ export function DraftQuestionItem({ question: d, index, checked, onToggle }: Pro
           <ul className="space-y-0.5" aria-label="Options">
             {d.options.map((o: DraftOption) => (
               <li key={o.label} className={o.isCorrect ? 'flex items-center gap-1.5 font-medium text-success' : 'flex items-center gap-1.5'}>
-                <span className="font-mono text-xs">{o.label}.</span> {o.text}
+                <span className="font-heading text-xs">{o.label}.</span> {o.text}
                 {o.isCorrect ? <Check className="h-3.5 w-3.5" aria-label="Correct answer" /> : null}
               </li>
             ))}
@@ -41,7 +41,7 @@ export function DraftQuestionItem({ question: d, index, checked, onToggle }: Pro
         ) : d.answer ? (
           <p className="text-muted-foreground">Answer: <span className="text-foreground">{d.answer}</span></p>
         ) : null}
-        <p className="font-mono text-xs text-muted-foreground tabular-nums">{d.marks} mark{d.marks === 1 ? '' : 's'}</p>
+        <p className="font-heading text-xs text-muted-foreground tabular-nums">{d.marks} mark{d.marks === 1 ? '' : 's'}</p>
       </Label>
     </li>
   );

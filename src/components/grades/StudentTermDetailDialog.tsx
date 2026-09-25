@@ -122,7 +122,7 @@ function SubjectCard({ subject }: { subject: StudentTermDetailSubject }) {
               No weighting set
             </span>
           ) : (
-            <span className={cn('text-2xl font-semibold font-mono tabular-nums', gradeColor(subject.weightedAverage))}>
+            <span className={cn('text-2xl font-semibold font-heading tabular-nums', gradeColor(subject.weightedAverage))}>
               {subject.weightedAverage !== null ? `${subject.weightedAverage}%` : '—'}
             </span>
           )}
@@ -166,7 +166,7 @@ function SubjectCard({ subject }: { subject: StudentTermDetailSubject }) {
                   <Badge variant="outline" className="text-[10px]">Absent</Badge>
                 ) : (
                   <>
-                    <p className={cn('font-medium font-mono tabular-nums', gradeColor(m.percent))}>{m.percent}%</p>
+                    <p className={cn('font-medium font-heading tabular-nums', gradeColor(m.percent))}>{m.percent}%</p>
                     <p className="text-xs text-muted-foreground">{m.mark}/{m.total}</p>
                   </>
                 )}

@@ -69,7 +69,7 @@ export function OrderingBlock({ block, onSubmit, interaction }: OrderingBlockPro
               correctPositions ? answerEdge(Boolean(correctPositions[pos])) : 'bg-background',
             )}
           >
-            <span className="text-xs text-muted-foreground font-mono w-6 shrink-0">
+            <span className="text-xs text-muted-foreground font-heading tabular-nums w-6 shrink-0">
               {pos + 1}.
             </span>
             <span className="flex-1 min-w-0 truncate">{data.items[origIdx]}</span>

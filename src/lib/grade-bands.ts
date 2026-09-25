@@ -4,5 +4,6 @@ export function gradeColor(pct: number | null): string {
   if (pct >= 70) return 'text-success';
   if (pct >= 50) return 'text-foreground';
   if (pct >= 40) return 'text-attention';
-  return 'text-destructive';
+  // Failing is the weak mastery colour (orange), never the error red (final review 7).
+  return 'text-weak-strong';
 }

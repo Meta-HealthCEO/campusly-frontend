@@ -41,7 +41,7 @@ export function TermSummarySubjectChip({
           </div>
         ) : (
           <div className="mt-1 flex items-baseline gap-1">
-            <span className={cn('font-mono text-xl font-semibold tabular-nums', gradeColor(subject.classAverage))}>
+            <span className={cn('font-heading text-xl font-semibold tabular-nums', gradeColor(subject.classAverage))}>
               {subject.classAverage !== null ? `${subject.classAverage}%` : '—'}
             </span>
             <span className="text-xs text-muted-foreground">class avg</span>

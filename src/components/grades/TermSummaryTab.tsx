@@ -110,11 +110,11 @@ export function TermSummaryTab({ classId, term, academicYear, canEditWeightings,
         <CardHeader className="pb-3 space-y-3">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+              <p className="font-heading text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
                 Class average · {scopeLabel}
               </p>
               <p className={cn(
-                'font-mono text-4xl font-semibold leading-none tabular-nums mt-1',
+                'font-heading text-4xl font-semibold leading-none tabular-nums mt-1',
                 gradeColor(summary.classOverallAverage),
               )}>
                 {summary.classOverallAverage !== null

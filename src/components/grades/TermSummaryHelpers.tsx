@@ -38,7 +38,7 @@ export function CellMark({
   if (mark.isAbsent) return <span className="text-xs text-muted-foreground">abs</span>;
   return (
     <div className="inline-flex items-center gap-1">
-      <span className={cn('font-mono font-medium tabular-nums', gradeColor(mark.percent))}>{mark.percent}%</span>
+      <span className={cn('font-heading font-medium tabular-nums', gradeColor(mark.percent))}>{mark.percent}%</span>
       {deltaIcon(mark.percent, base)}
     </div>
   );

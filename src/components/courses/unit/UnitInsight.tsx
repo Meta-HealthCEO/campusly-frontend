@@ -25,7 +25,7 @@ function LearnerRow({ learner }: { learner: InsightLearner }) {
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted" aria-hidden>
           <div className={`h-full rounded-full ${done ? 'bg-success' : learner.stuck ? 'bg-attention' : 'bg-accent-foreground'}`} style={{ width: `${learner.progressPercent}%` }} />
         </div>
-        <span className="w-10 text-right font-mono text-xs tabular-nums text-muted-foreground">{learner.progressPercent}%</span>
+        <span className="w-10 text-right font-heading text-xs tabular-nums text-muted-foreground">{learner.progressPercent}%</span>
       </div>
     </li>
   );
@@ -34,7 +34,7 @@ function LearnerRow({ learner }: { learner: InsightLearner }) {
 function MissedRow({ question }: { question: MissedQuestion }) {
   return (
     <li className="flex items-start gap-3 px-4 py-3">
-      <span className="mt-0.5 w-12 shrink-0 font-mono text-sm font-semibold tabular-nums text-destructive">{question.wrongPercent}%</span>
+      <span className="mt-0.5 w-12 shrink-0 font-heading text-sm font-semibold tabular-nums text-destructive">{question.wrongPercent}%</span>
       <div className="min-w-0 flex-1">
         <p className="text-sm">{question.stem}</p>
         <p className="text-xs text-muted-foreground">{question.itemTitle} · {question.wrong} of {question.answered} answers wrong</p>
@@ -90,7 +90,7 @@ export function UnitInsight({ insight, error, revision }: { insight: Insight | n
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="unit-insight-title" className="text-lg font-semibold">Your class</h2>
         <p className="text-sm text-muted-foreground">
-          <span className="font-mono tabular-nums text-foreground">{totals.completed}</span> of {totals.enrolled} finished
+          <span className="font-heading tabular-nums text-foreground">{totals.completed}</span> of {totals.enrolled} finished
           {totals.stuck > 0 ? <> · <span className="font-medium text-attention">{totals.stuck} stuck</span></> : null}
         </p>
       </div>
@@ -104,7 +104,7 @@ export function UnitInsight({ insight, error, revision }: { insight: Insight | n
           {unitInsight.items.map((it) => (
             <li key={it.id} className="flex items-center justify-between gap-2 px-4 py-2 text-sm">
               <span className="min-w-0 truncate">{it.title}</span>
-              <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">reached by {it.reached}</span>
+              <span className="shrink-0 font-heading text-xs text-muted-foreground tabular-nums">reached by {it.reached}</span>
             </li>
           ))}
         </ul>

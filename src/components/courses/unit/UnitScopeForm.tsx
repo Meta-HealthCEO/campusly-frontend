@@ -159,7 +159,7 @@ export function UnitScopeForm({ busy, submitLabel, onSubmit, locked = false, ini
                     <Checkbox checked={on} onCheckedChange={() => toggle(t.id)} className="mt-0.5" />
                     <span className="min-w-0 space-y-0.5">
                       <span className="block text-sm font-medium">{t.title}</span>
-                      {topicWeeks(t) ? <span className="block font-mono text-xs text-muted-foreground">{topicWeeks(t)}</span> : null}
+                      {topicWeeks(t) ? <span className="block font-heading text-xs text-muted-foreground">{topicWeeks(t)}</span> : null}
                       {t.description ? <span className="line-clamp-2 block text-xs text-muted-foreground">{t.description}</span> : null}
                     </span>
                   </label>

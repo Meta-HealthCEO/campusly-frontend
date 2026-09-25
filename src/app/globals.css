@@ -67,7 +67,7 @@
 
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-display), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-display), ui-monospace, monospace;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --text-caption: 12px;
   --text-caption--line-height: 16px;
@@ -135,9 +135,9 @@
   --secure: #EEF1F7;
   --secure-strong: #137A6B;
   --building: #EEF1F7;
-  --building-strong: #8A5A00;
+  --building-strong: #4F58D0;
   --weak: #EEF1F7;
-  --weak-strong: #B5392A;
+  --weak-strong: #C2410C;
   /* Ruling O1 (revised 3): the mastery scale lives only here, so the final choice is a CSS-only swap.
      Tiles are the solid fills with white ink in both themes; bars, dots and legends use the -mark variants. */
   --mastery-secure: #0B7F63;
@@ -202,9 +202,9 @@
   --secure: #16233A;
   --secure-strong: #3CC3AE;
   --building: #16233A;
-  --building-strong: #F2BE5C;
+  --building-strong: #7C84E8;
   --weak: #16233A;
-  --weak-strong: #F07F6E;
+  --weak-strong: #F07A3A;
   --mastery-secure-mark: #3CC3AE;
   --mastery-building-mark: #7C84E8;
   --mastery-weak-mark: #F07A3A;

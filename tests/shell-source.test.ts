@@ -13,8 +13,18 @@ describe('sidebar (spec §3)', () => {
   });
 
   it('keeps every link reachable on tablets through the full nav in a sheet', () => {
-    expect(layout('Sidebar.tsx')).toMatch(/aria-label="Open all pages"/);
+    expect(layout('Sidebar.tsx')).toMatch(/<RailButton label="Open all pages"/);
     expect(layout('Sidebar.tsx')).toMatch(/<SidebarNav/);
+  });
+
+  it('rail-only buttons show a visible hint and the All pages trigger sits at the top of the rail (final review 3)', () => {
+    const src = layout('Sidebar.tsx');
+    expect(src).toMatch(/<RailButton label="Open all pages"/);
+    expect(src).toMatch(/<RailButton label="Expand sidebar"/);
+    expect(src).toMatch(/<TooltipContent side="right">\{label\}<\/TooltipContent>/);
+    expect(src).toMatch(/aria-label=\{label\}/);
+    const tablet = src.slice(src.indexOf('{/* Tablet'), src.indexOf('{/* Desktop'));
+    expect(tablet.indexOf('<RailButton label="Open all pages"')).toBeLessThan(tablet.indexOf('<SidebarNav'));
   });
 
   it('decides the active item with the shared helper', () => {
@@ -39,7 +49,8 @@ describe('phone and top bars (spec §3)', () => {
   });
 
   it('the top bar names the account button on phones and has no drawer toggle', () => {
-    expect(layout('TopBar.tsx')).toMatch(/aria-label="Account menu"/);
+    // Final review 5: the accessible name contains the visible name (WCAG 2.5.3).
+    expect(layout('TopBar.tsx')).toContain('aria-label={`${fullName}, account menu`}');
     expect(layout('TopBar.tsx')).not.toMatch(/toggleSidebar/);
   });
 
@@ -66,5 +77,13 @@ describe('phone and top bars (spec §3)', () => {
   it.each(['BottomNav.tsx', 'TopBar.tsx', 'BannerStrip.tsx'])('%s has no teacher: variant and no colour literal', (file) => {
     expect(layout(file)).not.toMatch(/(?<![\w-])teacher:/);
     expect(findColourLiterals(layout(file))).toEqual([]);
+  });
+});
+
+describe('More sheet at 320px (final review 4)', () => {
+  it('uses two columns below 360px and never breaks a label mid-word', () => {
+    const src = layout('BottomNav.tsx');
+    expect(src).toMatch(/grid-cols-2 [^"']*min-\[360px\]:grid-cols-3/);
+    expect(src).not.toMatch(/break-words|break-all|hyphens-auto/);
   });
 });

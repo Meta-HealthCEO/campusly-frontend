@@ -59,7 +59,7 @@ export function BottomNav({ items }: BottomNavProps) {
       <Sheet open={open !== undefined} onOpenChange={(o: boolean) => { if (!o) setOpenKey(null); }}>
         <SheetContent side="bottom" showCloseButton={false}>
           <SheetTitle className="px-4 pt-4">{open?.label}</SheetTitle>
-          <div className="grid max-h-[70dvh] grid-cols-3 gap-2 overflow-y-auto p-4 sm:grid-cols-4">
+          <div className="grid max-h-[70dvh] grid-cols-2 gap-2 overflow-y-auto p-4 min-[360px]:grid-cols-3 sm:grid-cols-4">
             {(open?.items ?? []).map((item: NavItem) => {
               const Icon = item.icon;
               const current = under(pathname, item.href);
@@ -72,7 +72,7 @@ export function BottomNav({ items }: BottomNavProps) {
                   className={cn('flex min-h-16 min-w-0 flex-col items-center justify-center gap-1.5 rounded-control p-2 text-center text-caption font-semibold', FOCUS_RING, current ? 'bg-muted text-foreground [&>svg]:text-primary' : 'text-muted-foreground hover:bg-muted')}
                 >
                   <Icon className="size-5" aria-hidden="true" />
-                  <span className="w-full break-words leading-tight">{item.label}</span>
+                  <span className="w-full leading-tight text-balance">{item.label}</span>
                 </Link>
               );
             })}

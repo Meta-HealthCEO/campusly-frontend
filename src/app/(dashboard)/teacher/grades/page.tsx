@@ -165,7 +165,7 @@ export default function TeacherGradesPage() {
                         </td>
                         <td className="py-3">
                           {percentage !== null && !isNaN(percentage) ? (
-                            <span className={`font-mono text-sm font-semibold tabular-nums ${gradeColor(percentage)}`}>
+                            <span className={`font-heading text-sm font-semibold tabular-nums ${gradeColor(percentage)}`}>
                               {percentage}%
                             </span>
                           ) : (

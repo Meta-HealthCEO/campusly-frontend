@@ -32,6 +32,8 @@ export const TOKEN_PAIRS: readonly TokenPair[] = [
   text('success', 'success-soft'), text('attention', 'attention-soft'), text('info', 'info-soft'),
   text('secure-strong', 'secure'), text('building-strong', 'building'), text('weak-strong', 'weak'),
   text('secure-strong', 'card'), text('building-strong', 'card'), text('weak-strong', 'card'),
+  // Final review 7: mastery words on the ground too (indigo building, orange weak; never red).
+  text('secure-strong', 'background'), text('building-strong', 'background'), text('weak-strong', 'background'),
   large('tile-secure-ink', 'tile-secure'), large('tile-building-ink', 'tile-building'), large('tile-weak-ink', 'tile-weak'),
   text('sidebar-foreground', 'sidebar'), text('sidebar-label', 'sidebar'), text('sidebar-primary', 'sidebar'),
   text('sidebar-accent-foreground', 'sidebar-accent'),

@@ -111,13 +111,13 @@ export function HomeworkExercisePicker({
                 />
                 <div className="min-w-0 flex-1">
                   <div className="line-clamp-2 text-sm">{q.stem}</div>
-                  <div className="font-mono text-xs tabular-nums text-muted-foreground">{q.marks} mark{q.marks === 1 ? '' : 's'}</div>
+                  <div className="font-heading text-xs tabular-nums text-muted-foreground">{q.marks} mark{q.marks === 1 ? '' : 's'}</div>
                 </div>
               </label>
             ))}
           </div>
           <p className="text-xs text-muted-foreground">
-            Selected: <span className="font-mono tabular-nums">{selectedIds.length}</span> question(s)
+            Selected: <span className="font-heading tabular-nums">{selectedIds.length}</span> question(s)
           </p>
         </>
       )}

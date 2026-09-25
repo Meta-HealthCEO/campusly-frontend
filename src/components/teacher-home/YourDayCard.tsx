@@ -57,7 +57,7 @@ function PeriodRow({ period, lesson }: { period: AnnotatedPeriod; lesson?: Lesso
   const past = period.phase === 'done';
   return (
     <li className="grid grid-cols-[52px_18px_minmax(0,1fr)] items-center gap-x-2.5 gap-y-2 border-t border-muted py-3 first:border-t-0 sm:grid-cols-[52px_18px_minmax(0,1fr)_auto]">
-      <span className={cn('font-mono text-[13px] tabular-nums text-muted-foreground', past && 'opacity-60')}>{period.startTime}</span>
+      <span className={cn('font-heading text-[13px] tabular-nums text-muted-foreground', past && 'opacity-60')}>{period.startTime}</span>
       <Rail phase={period.phase} />
       <div className={cn('min-w-0', past && 'opacity-60')}>
         <p className="truncate text-sm">
@@ -84,7 +84,7 @@ function PeriodRow({ period, lesson }: { period: AnnotatedPeriod; lesson?: Lesso
 function NowLine({ label }: { label: string }) {
   return (
     <li aria-label={`Now, ${label}`} className="grid grid-cols-[52px_minmax(0,1fr)] items-center gap-2.5 py-1">
-      <span className="justify-self-start rounded bg-primary px-1.5 py-px font-mono text-[11.5px] font-medium tabular-nums text-primary-foreground">
+      <span className="justify-self-start rounded bg-primary px-1.5 py-px font-heading text-[11.5px] font-medium tabular-nums text-primary-foreground">
         {label}
       </span>
       <span aria-hidden className="h-px bg-border" />

@@ -61,7 +61,7 @@ export default function TeacherHomePage() {
     <div className="space-y-8">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300">
         <div className="min-w-0">
-          <p className="font-mono text-[11.5px] font-medium uppercase tracking-[0.08em] text-muted-foreground">{todayEyebrow(now)}</p>
+          <p className="font-heading text-[11.5px] font-medium uppercase tracking-[0.08em] text-muted-foreground">{todayEyebrow(now)}</p>
           <h1 className="mt-1.5 font-heading text-[28px] font-semibold leading-tight tracking-[-0.025em] text-balance sm:text-[32px]">
             {salutation}{firstName}
           </h1>
@@ -109,7 +109,7 @@ export default function TeacherHomePage() {
       )}
 
       <section aria-labelledby="make-with-ai" className={FADE_IN}>
-        <h2 id="make-with-ai" className="mb-3 font-mono text-[11.5px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+        <h2 id="make-with-ai" className="mb-3 font-heading text-[11.5px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
           Make with AI
         </h2>
         <AIQuickMakeHero lessonHref={lessonBuilderHref(isStandaloneTeacher)} />

@@ -58,7 +58,7 @@ export function GradebookWeightingsTab({ gradeId, subjects, term, canEdit, onSav
                   <ul className="grid grid-cols-1 gap-x-6 gap-y-0.5 text-[13px] sm:grid-cols-2">
                     {lines.map((line: WeightingLine) => (
                       <li key={line.term} className={cn('text-muted-foreground', line.term === currentTerm && 'font-medium text-foreground')}>
-                        <span className="font-mono tabular-nums">T{line.term}</span> · {line.text}
+                        <span className="font-heading tabular-nums">T{line.term}</span> · {line.text}
                       </li>
                     ))}
                   </ul>

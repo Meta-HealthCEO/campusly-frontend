@@ -59,7 +59,7 @@ export function UnitItemRow({ item, outlineStage, onOpen, onRetry, onRemove, bus
         <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
           <span>{ITEM_KIND_LABEL[kind]}</span>
           <span aria-hidden>·</span>
-          <span className="font-mono tabular-nums">{item.minutes ?? '–'} min</span>
+          <span className="font-heading tabular-nums">{item.minutes ?? '–'} min</span>
           {item.capsRef ? <><span aria-hidden>·</span><span className="truncate">CAPS: {item.capsRef}</span></> : null}
           {item.genStatus ? <><span aria-hidden>·</span><StatusLine item={item} /></> : null}
           {item.optional ? <><span aria-hidden>·</span><span className="rounded-full bg-info-soft px-1.5 py-0.5 font-medium text-info">Optional practice</span></> : null}

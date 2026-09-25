@@ -42,7 +42,7 @@ function Row({ icon: Icon, label, detail, count, href, urgent }: RowProps) {
         {clear ? (
           <span className="text-[13px] font-medium text-success">All clear</span>
         ) : (
-          <span className="font-mono text-xl font-medium tabular-nums">{count}</span>
+          <span className="font-heading text-xl font-medium tabular-nums">{count}</span>
         )}
       </Link>
     </li>

@@ -125,7 +125,7 @@ export function LogBehaviourDialog({ open, onOpenChange, learners, learner, sour
                     key={n}
                     value={n}
                     nativeButton
-                    render={<button type="button" className={cn(chip(points === n), 'w-11 px-0 font-mono tabular-nums')} />}
+                    render={<button type="button" className={cn(chip(points === n), 'w-11 px-0 font-heading tabular-nums')} />}
                   >
                     {kind === 'merit' ? `+${n}` : `−${n}`}
                   </Radio.Root>

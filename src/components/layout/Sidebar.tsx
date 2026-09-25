@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, GraduationCap, PanelLeft } from 'lucide-react';
 import { cn, getInitials } from '@/lib/utils';
@@ -12,6 +12,7 @@ import { useTeacherNavCounts } from '@/hooks/useTeacherNavCounts';
 import { visibleNavItems } from '@/lib/nav-visibility';
 import { FOCUS_RING } from '@/components/ui/focus';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SidebarNav } from './SidebarNav';
 import type { NavItem } from '@/lib/constants';
 
@@ -19,7 +20,19 @@ interface SidebarProps {
   items: NavItem[];
 }
 
-const RAIL_BUTTON = cn('mx-2 mb-3 flex min-h-10 items-center justify-center rounded-control text-sidebar-foreground hover:bg-muted hover:text-foreground', FOCUS_RING);
+const RAIL_BUTTON = cn('mx-2 flex min-h-10 items-center justify-center rounded-control text-sidebar-foreground hover:bg-muted hover:text-foreground', FOCUS_RING);
+
+/** An icon-only rail control: its name shows in a tooltip on hover and keyboard focus (final review 3). */
+function RailButton({ label, onClick, className, children }: { label: string; onClick: () => void; className?: string; children: ReactNode }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<button type="button" onClick={onClick} aria-label={label} className={cn(RAIL_BUTTON, className)} />}>
+        {children}
+      </TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
 
 /** Spec §3: 232px sidebar from 1024px (collapsible to the rail), 56px rail from 768px, hidden on phones. */
 export function Sidebar({ items }: SidebarProps) {
@@ -62,12 +75,12 @@ export function Sidebar({ items }: SidebarProps) {
         )}
       </div>
 
-      {/* Tablet: the rail is icons only; the full nav (with group children) opens in a sheet. */}
+      {/* Tablet: the rail is icons only; "All pages" (top of the rail) opens the full nav, with group children, in a sheet. */}
       <div className="flex flex-1 flex-col overflow-hidden lg:hidden">
-        <SidebarNav items={visible} collapsed counts={counts} onNavigate={() => undefined} />
-        <button type="button" onClick={() => setAllPagesOpen(true)} aria-label="Open all pages" className={RAIL_BUTTON}>
+        <RailButton label="Open all pages" onClick={() => setAllPagesOpen(true)} className="mt-3 mb-1">
           <PanelLeft className="size-[18px]" aria-hidden="true" />
-        </button>
+        </RailButton>
+        <SidebarNav items={visible} collapsed counts={counts} onNavigate={() => undefined} />
         <Sheet open={allPagesOpen} onOpenChange={setAllPagesOpen}>
           <SheetContent side="left" className="w-[280px] p-0">
             <SheetTitle className="px-4 pt-4">All pages</SheetTitle>
@@ -80,9 +93,9 @@ export function Sidebar({ items }: SidebarProps) {
       <div className="hidden flex-1 flex-col overflow-hidden lg:flex">
         <SidebarNav items={visible} collapsed={sidebarCollapsed} counts={counts} onNavigate={() => undefined} />
         {sidebarCollapsed ? (
-          <button type="button" onClick={toggleSidebarCollapse} aria-label="Expand sidebar" className={RAIL_BUTTON}>
+          <RailButton label="Expand sidebar" onClick={toggleSidebarCollapse} className="mb-3">
             <ChevronLeft className="size-4 rotate-180" aria-hidden="true" />
-          </button>
+          </RailButton>
         ) : user && (
           <div className="flex items-center gap-2.5 border-t border-sidebar-border px-4 py-3">
             <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold text-foreground">

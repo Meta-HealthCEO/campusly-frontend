@@ -86,7 +86,7 @@ export function StudentHistoryDialog({
                         <td className="py-2">{m.total}</td>
                         <td className="py-2">
                           <span
-                            className={`font-mono font-semibold tabular-nums ${gradeColor(m.percentage)}`}
+                            className={`font-heading font-semibold tabular-nums ${gradeColor(m.percentage)}`}
                           >
                             {m.percentage}%
                           </span>

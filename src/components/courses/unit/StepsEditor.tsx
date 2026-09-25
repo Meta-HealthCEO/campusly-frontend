@@ -22,7 +22,7 @@ export function StepsEditor({ steps, onChange }: Props) {
       {steps.map((s, i) => (
         <li key={i} className="space-y-2 rounded-lg border border-border p-3">
           <div className="flex items-center justify-between gap-2">
-            <Label htmlFor={`step-title-${i}`} className="font-mono text-xs text-muted-foreground">Step {i + 1}</Label>
+            <Label htmlFor={`step-title-${i}`} className="font-heading text-xs text-muted-foreground">Step {i + 1}</Label>
             <Button size="icon-sm" variant="ghost" onClick={() => onChange(steps.filter((_, j) => j !== i))} aria-label={`Remove step ${i + 1}`} disabled={steps.length === 1} className="min-h-11 min-w-11 sm:min-h-7 sm:min-w-7">
               <Trash2 className="h-4 w-4" />
             </Button>

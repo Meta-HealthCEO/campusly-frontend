@@ -164,8 +164,9 @@ describe('gradeColor', () => {
     [50, 'text-foreground'],
     [49, 'text-attention'],
     [40, 'text-attention'],
-    [39, 'text-destructive'],
-    [0, 'text-destructive'],
+    // Final review 7: a failing mark is the weak mastery colour (orange), never the error red.
+    [39, 'text-weak-strong'],
+    [0, 'text-weak-strong'],
   ] as const)('%s%% reads as %s', (pct, token) => {
     expect(gradeColor(pct)).toBe(token);
   });
