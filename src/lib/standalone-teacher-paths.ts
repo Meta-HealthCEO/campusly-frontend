@@ -4,29 +4,25 @@
  * so every link in STANDALONE_TEACHER_NAV — and every in-page link those
  * pages render — must resolve to one of these prefixes.
  */
-const STANDALONE_TEACHER_PREFIXES = [
+export const STANDALONE_TEACHER_PREFIXES = [
   '/teacher/onboarding',
   '/teacher/classes',
   '/teacher/students',
   '/teacher/attendance',
-  // Class units: onboarding's first lesson opens the builder here.
+  // "Lessons": the AI class units.
   '/teacher/courses',
   '/teacher/curriculum/textbooks',
-  '/teacher/curriculum/content',
-  '/teacher/curriculum/preview',
   '/teacher/curriculum/mark-papers',
   '/teacher/workbench/marking-hub',
-  '/teacher/lesson-plans',
-  '/teacher/lessons',
-  '/teacher/quick-make',
   '/teacher/papers',
   '/teacher/grades',
   '/teacher/homework',
+  // Project pages (a Homework "Project" opens the assignment flow).
   '/teacher/assignments',
-  '/teacher/curriculum/import',
   '/teacher/settings',
   '/my/billing',
   '/subscription',
+  '/verify-email',
 ] as const;
 
 export function isStandaloneTeacherPathAllowed(pathname: string): boolean {
@@ -34,4 +30,15 @@ export function isStandaloneTeacherPathAllowed(pathname: string): boolean {
   return STANDALONE_TEACHER_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
+}
+
+/** Whether a link on a shared page may be shown: school teachers always; standalone teachers only inside their portal. */
+export function standaloneCanOpen(isStandalone: boolean, href: string): boolean {
+  if (!isStandalone) return true;
+  return isStandaloneTeacherPathAllowed(href.split(/[?#]/)[0] ?? href);
+}
+
+/** "Make a lesson": the AI Units builder for standalone teachers, the lesson-plan tool for school teachers. */
+export function lessonBuilderHref(isStandalone: boolean): string {
+  return isStandalone ? '/teacher/courses/new' : '/teacher/lessons/new';
 }

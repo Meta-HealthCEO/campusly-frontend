@@ -16,6 +16,8 @@ import {
   X,
 } from 'lucide-react';
 import type { ChapterItem, ChapterResourceItem } from '@/types';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { standaloneCanOpen } from '@/lib/standalone-teacher-paths';
 
 interface ChapterListProps {
   chapters: ChapterItem[];
@@ -81,6 +83,7 @@ function ChapterRow({
   readOnly?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const isStandalone = useAuthStore((s) => s.user?.isStandaloneTeacher === true);
   const nodeLabel = resolveNodeLabel(chapter.curriculumNodeId);
 
   return (
@@ -188,12 +191,16 @@ function ChapterRow({
                       key={`${res.order}-${i}`}
                       className="flex items-center gap-2 text-sm"
                     >
-                      <a
-                        href={`/teacher/curriculum/preview/${rid}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="truncate flex-1 hover:text-primary hover:underline cursor-pointer"
-                      >{label}</a>
+                      {standaloneCanOpen(isStandalone, `/teacher/curriculum/preview/${rid}`) ? (
+                        <a
+                          href={`/teacher/curriculum/preview/${rid}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="truncate flex-1 hover:text-primary hover:underline cursor-pointer"
+                        >{label}</a>
+                      ) : (
+                        <span className="truncate flex-1">{label}</span>
+                      )}
                       {rType && <Badge variant="outline" className="text-xs">{rType}</Badge>}
                       {!readOnly && (
                         <Button

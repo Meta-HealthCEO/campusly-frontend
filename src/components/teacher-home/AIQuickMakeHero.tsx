@@ -9,17 +9,17 @@ interface Tile {
   subLabel: string;
 }
 
-const TILES: Tile[] = [
-  { href: '/teacher/lessons/new', icon: Sparkles, label: 'A lesson', subLabel: 'Slides and notes from a CAPS topic' },
+const tiles = (lessonHref: string): Tile[] => [
+  { href: lessonHref, icon: Sparkles, label: 'A lesson', subLabel: 'Slides and notes from a CAPS topic' },
   { href: '/teacher/papers/new', icon: FileText, label: 'A test or exam', subLabel: 'Questions with a memo' },
   { href: '/teacher/homework/new', icon: ClipboardList, label: 'Homework', subLabel: 'Practice that marks itself' },
 ];
 
-/** Three quick ways into the AI builders. */
-export function AIQuickMakeHero() {
+/** Three quick ways into the AI builders. `lessonHref` is the lesson builder this teacher uses. */
+export function AIQuickMakeHero({ lessonHref = '/teacher/lessons/new' }: { lessonHref?: string }) {
   return (
     <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
-      {TILES.map((tile: Tile) => (
+      {tiles(lessonHref).map((tile: Tile) => (
         <Link
           key={tile.href}
           href={tile.href}

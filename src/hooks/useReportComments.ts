@@ -3,6 +3,7 @@ import apiClient from '@/lib/api-client';
 import { unwrapResponse, unwrapList, extractErrorMessage } from '@/lib/api-helpers';
 import { toast } from 'sonner';
 import type { ReportComment, ReportCommentPayload } from '@/types';
+import { isAILimitError } from '@/lib/ai-allowance';
 
 function mapComment(r: Record<string, unknown>): ReportComment {
   return {
@@ -34,7 +35,8 @@ export function useReportComments() {
       toast.success('Report comments generated!');
       return items;
     } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to generate report comments'));
+      // A used-up AI allowance already opened the upgrade prompt.
+      if (!isAILimitError(err)) toast.error(extractErrorMessage(err, 'Failed to generate report comments'));
       return [];
     } finally {
       setGenerating(false);
@@ -89,7 +91,8 @@ export function useReportComments() {
       toast.success('Comment regenerated');
       return regen;
     } catch (err: unknown) {
-      toast.error(extractErrorMessage(err, 'Failed to regenerate comment'));
+      // A used-up AI allowance already opened the upgrade prompt.
+      if (!isAILimitError(err)) toast.error(extractErrorMessage(err, 'Failed to regenerate comment'));
       return null;
     }
   }, []);

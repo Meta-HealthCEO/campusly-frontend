@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { ADMIN_NAV, NAV_SECTIONS, PARENT_NAV, STANDALONE_TEACHER_NAV, STUDENT_NAV, TEACHER_NAV, type NavItem } from '../src/lib/constants';
 import { ROUTES } from '../src/lib/routes';
-import { isStandaloneTeacherPathAllowed } from '../src/lib/standalone-teacher-paths';
+import { existsSync } from 'node:fs';
+import { STANDALONE_TEACHER_PREFIXES, isStandaloneTeacherPathAllowed, lessonBuilderHref, standaloneCanOpen } from '../src/lib/standalone-teacher-paths';
 
 function flatten(items: NavItem[]): NavItem[] {
   return items.flatMap((item) => [item, ...flatten(item.children ?? [])]);
@@ -132,5 +133,39 @@ describe('Talk', () => {
 
   it('gives learners their class notice board', () => {
     expect(flatten(STUDENT_NAV).find((i) => i.label === 'Notice board')?.href).toBe('/student/notice-board');
+  });
+});
+
+describe('standalone teacher navigation', () => {
+  it('shows exactly the launch sections and items', () => {
+    const items = STANDALONE_TEACHER_NAV.map((i: NavItem) => `${i.section}:${i.label}`);
+    expect(items).toEqual(['Today:Today', 'Teach:Lessons', 'Teach:Textbooks', 'Assess:Homework', 'Assess:Test papers', 'Assess:Marking', 'Assess:Gradebook', 'Class:My classes', 'Class:Register', 'Me:Billing', 'Me:Settings']);
+  });
+
+  it('allows every nav link, and every allowed page exists', () => {
+    for (const i of STANDALONE_TEACHER_NAV) expect(isStandaloneTeacherPathAllowed(i.href)).toBe(true);
+    for (const p of STANDALONE_TEACHER_PREFIXES) {
+      const base = `src/app/(dashboard)${p}`;
+      expect(existsSync(`${base}/page.tsx`) || existsSync(`src/app${p}/page.tsx`), p).toBe(true);
+    }
+  });
+
+  it('keeps hidden pages out', () => {
+    for (const p of ['/teacher/lessons', '/teacher/lesson-plans', '/teacher/curriculum/content', '/teacher/behaviour', '/teacher/messages']) expect(isStandaloneTeacherPathAllowed(p)).toBe(false);
+  });
+});
+
+describe('links on pages a standalone teacher can reach', () => {
+  it('opens the Units builder as their "new lesson", and the lesson-plan tool for school teachers', () => {
+    expect(lessonBuilderHref(true)).toBe('/teacher/courses/new');
+    expect(lessonBuilderHref(false)).toBe('/teacher/lessons/new');
+    expect(isStandaloneTeacherPathAllowed(lessonBuilderHref(true))).toBe(true);
+  });
+
+  it('hides links to pages outside the standalone portal, and never for school teachers', () => {
+    expect(standaloneCanOpen(true, '/teacher/curriculum/preview/abc')).toBe(false);
+    expect(standaloneCanOpen(true, '/teacher/curriculum/import')).toBe(false);
+    expect(standaloneCanOpen(true, '/teacher/papers/new?from=home')).toBe(true);
+    expect(standaloneCanOpen(false, '/teacher/curriculum/preview/abc')).toBe(true);
   });
 });

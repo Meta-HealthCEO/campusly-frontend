@@ -51,19 +51,24 @@ export const TEACHER_NAV: NavItem[] = [
   { section: 'Me', label: 'Course Review', href: ROUTES.ADMIN_COURSES_REVIEW, icon: CheckSquare, permission: 'isHOD', module: 'courses' },
 ];
 
+/**
+ * Standalone (self-sign-up) teachers: the launch portal (spec §1). "Lessons"
+ * are the AI class units (/teacher/courses), not the old lesson-plan tool;
+ * Assignments and the Library are not part of it.
+ */
 export const STANDALONE_TEACHER_NAV: NavItem[] = [
   { section: 'Today', label: 'Today', href: ROUTES.TEACHER_DASHBOARD, icon: Sunrise },
-  { section: 'Teach', label: 'Lessons', href: ROUTES.TEACHER_LESSONS, icon: BookOpen, badge: 'AI' },
+  { section: 'Teach', label: 'Lessons', href: ROUTES.TEACHER_COURSES, icon: BookOpen, badge: 'AI' },
   { section: 'Teach', label: 'Textbooks', href: '/teacher/curriculum/textbooks', icon: BookMarked },
-  { section: 'Assess', label: 'Test Papers', href: '/teacher/papers', icon: FileText, badge: 'AI' },
   { section: 'Assess', label: 'Homework', href: ROUTES.TEACHER_HOMEWORK, icon: ClipboardList, module: 'homework' },
-  { section: 'Assess', label: 'Assignments', href: '/teacher/assignments', icon: ScrollText, badge: 'AI', module: 'homework' },
+  { section: 'Assess', label: 'Test papers', href: '/teacher/papers', icon: FileText, badge: 'AI' },
   {
     section: 'Assess', label: 'Marking', href: ROUTES.TEACHER_WORKBENCH_MARKING_HUB, icon: ClipboardCheck,
     badge: 'AI', module: 'teacher_workbench', countKey: 'marking',
   },
   { section: 'Assess', label: 'Gradebook', href: ROUTES.TEACHER_GRADES, icon: BarChart3 },
-  { section: 'Class', label: 'Teaching Groups', href: ROUTES.TEACHER_CLASSES, icon: Users },
+  { section: 'Class', label: 'My classes', href: ROUTES.TEACHER_CLASSES, icon: Users },
+  { section: 'Class', label: 'Register', href: ROUTES.TEACHER_ATTENDANCE, icon: CheckSquare, module: 'attendance' },
   { section: 'Me', label: 'Billing', href: '/my/billing', icon: CreditCard },
   { section: 'Me', label: 'Settings', href: '/teacher/settings', icon: Settings },
 ];

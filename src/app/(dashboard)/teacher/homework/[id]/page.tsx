@@ -25,6 +25,8 @@ import {
 } from '@/components/homework/LinkedResourceSummary';
 import { useTeacherHomeworkDetail } from '@/hooks/useTeacherHomeworkDetail';
 import Link from 'next/link';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { standaloneCanOpen } from '@/lib/standalone-teacher-paths';
 import type { Homework } from '@/types/homework';
 
 const TYPE_BADGE_LABEL: Record<'quiz' | 'reading' | 'exercise', string> = {
@@ -36,6 +38,7 @@ const TYPE_BADGE_LABEL: Record<'quiz' | 'reading' | 'exercise', string> = {
 export default function TeacherHomeworkDetailPage() {
   const params = useParams();
   const homeworkId = params.id as string;
+  const isStandalone = useAuthStore((s) => s.user?.isStandaloneTeacher === true);
 
   const { homework, loading, changeStatus } =
     useTeacherHomeworkDetail(homeworkId);
@@ -141,7 +144,7 @@ export default function TeacherHomeworkDetailPage() {
             <p className="mt-3 text-sm">{homework.description}</p>
           )}
 
-          {homework.resourceId && (
+          {homework.resourceId && standaloneCanOpen(isStandalone, '/teacher/curriculum/content') && (
             <div className="mt-3">
               <Link
                 href="/teacher/curriculum/content"

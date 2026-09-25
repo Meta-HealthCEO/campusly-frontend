@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { ExternalLink, FileText, BookOpen } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { standaloneCanOpen } from '@/lib/standalone-teacher-paths';
 import type {
   PopulatedQuizSummary,
   PopulatedReadingSummary,
@@ -43,6 +45,7 @@ export function LinkedReadingSummary({
 }: {
   resource: PopulatedReadingSummary | null;
 }) {
+  const isStandalone = useAuthStore((s) => s.user?.isStandaloneTeacher === true);
   if (!resource) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -61,12 +64,14 @@ export function LinkedReadingSummary({
           </Badge>
         )}
       </div>
-      <Link
-        href={`/teacher/curriculum/preview/${resource.id}`}
-        className="inline-flex items-center gap-1 text-sm text-primary hover:underline shrink-0"
-      >
-        Open resource <ExternalLink className="h-3.5 w-3.5" />
-      </Link>
+      {standaloneCanOpen(isStandalone, `/teacher/curriculum/preview/${resource.id}`) ? (
+        <Link
+          href={`/teacher/curriculum/preview/${resource.id}`}
+          className="inline-flex items-center gap-1 text-sm text-primary hover:underline shrink-0"
+        >
+          Open resource <ExternalLink className="h-3.5 w-3.5" />
+        </Link>
+      ) : null}
     </div>
   );
 }

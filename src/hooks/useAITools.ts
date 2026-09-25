@@ -3,6 +3,7 @@ import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
 import { toast } from 'sonner';
 import { useRubricTemplates } from './useRubricTemplates';
+import { isAILimitError } from '@/lib/ai-allowance';
 import type {
   GeneratedPaper,
   GradingJob,
@@ -296,7 +297,8 @@ export function useAITools() {
       toast.success('Paper marked successfully!');
       return raw as MarkPaperResult;
     } catch (err: unknown) {
-      toast.error(extractApiError(err, 'Failed to mark paper. Please try again.'));
+      // A used-up AI allowance already opened the upgrade prompt.
+      if (!isAILimitError(err)) toast.error(extractApiError(err, 'Failed to mark paper. Please try again.'));
       return null;
     } finally {
       setLoading(false);

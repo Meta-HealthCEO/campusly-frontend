@@ -12,11 +12,11 @@ import { onboardingChecklist, onboardingStep } from '@/lib/onboarding';
 import { AIQuickMakeHero } from '@/components/teacher-home/AIQuickMakeHero';
 import { GettingStartedCard } from '@/components/teacher-home/GettingStartedCard';
 import { YourDayCard, registerHref } from '@/components/teacher-home/YourDayCard';
+import { lessonBuilderHref } from '@/lib/standalone-teacher-paths';
 import { NeedsYouCard } from '@/components/teacher-home/NeedsYouCard';
 import { DraftsZone } from '@/components/teacher-home/DraftsZone';
 import { todayEyebrow, todayLede } from '@/lib/eyebrow';
 import type { AnnotatedPeriod } from '@/lib/teacher-today';
-import { ROUTES } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
 function salutationForHour(hour: number): string {
@@ -73,7 +73,7 @@ export default function TeacherHomePage() {
               Take register
             </Link>
           ) : null}
-          <Link href={`${ROUTES.TEACHER_LESSONS}/new`} className={cn(buttonVariants(), 'h-11 gap-1.5 sm:h-9')}>
+          <Link href={lessonBuilderHref(isStandaloneTeacher)} className={cn(buttonVariants(), 'h-11 gap-1.5 sm:h-9')}>
             <Sparkles className="size-4" aria-hidden />
             Make with AI
           </Link>
@@ -112,7 +112,7 @@ export default function TeacherHomePage() {
         <h2 id="make-with-ai" className="mb-3 font-mono text-[11.5px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
           Make with AI
         </h2>
-        <AIQuickMakeHero />
+        <AIQuickMakeHero lessonHref={lessonBuilderHref(isStandaloneTeacher)} />
       </section>
     </div>
   );

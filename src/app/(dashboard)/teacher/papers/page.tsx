@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, FileText, Trash2, Eye, Users, ScanLine, Library } from 'lucide-react';
 import { useTeacherPapers } from '@/hooks/useTeacherPapers';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { standaloneCanOpen } from '@/lib/standalone-teacher-paths';
 import type { Paper, PaperStatus } from '@/types/papers';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +46,7 @@ function gradeName(paper: Paper): string {
 
 export default function TeacherPapersPage() {
   const router = useRouter();
+  const isStandalone = useAuthStore((s) => s.user?.isStandaloneTeacher === true);
   const {
     papers,
     loading,
@@ -168,18 +171,22 @@ export default function TeacherPapersPage() {
         description="Generate, convert, edit, assign, mark, and print CAPS-aligned papers."
       >
         <div className="flex flex-wrap gap-2">
-          <Link href="/teacher/curriculum/questions" className="inline-block">
-            <Button variant="outline">
-              <Library className="mr-2 h-4 w-4" />
-              Question bank
-            </Button>
-          </Link>
-          <Link href="/teacher/curriculum/import" className="inline-block">
-            <Button variant="outline">
-              <ScanLine className="mr-2 h-4 w-4" />
-              Convert Existing Paper
-            </Button>
-          </Link>
+          {standaloneCanOpen(isStandalone, '/teacher/curriculum/questions') ? (
+            <Link href="/teacher/curriculum/questions" className="inline-block">
+              <Button variant="outline">
+                <Library className="mr-2 h-4 w-4" />
+                Question bank
+              </Button>
+            </Link>
+          ) : null}
+          {standaloneCanOpen(isStandalone, '/teacher/curriculum/import') ? (
+            <Link href="/teacher/curriculum/import" className="inline-block">
+              <Button variant="outline">
+                <ScanLine className="mr-2 h-4 w-4" />
+                Convert Existing Paper
+              </Button>
+            </Link>
+          ) : null}
           <Link href="/teacher/papers/new" className="inline-block">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
