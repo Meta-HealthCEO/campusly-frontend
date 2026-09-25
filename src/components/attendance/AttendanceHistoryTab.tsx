@@ -9,6 +9,7 @@ import { useAttendanceHistory, type HistoryStatus } from '@/hooks/useAttendanceH
 import { toISODate } from '@/lib/utils';
 import { getStudentDisplayName } from '@/lib/student-helpers';
 import type { Student } from '@/types';
+import { registerPeriodOptions } from '@/lib/register';
 import { LearnerLink } from '@/components/students/LearnerLink';
 
 type GridView = 'week' | 'month';
@@ -165,7 +166,7 @@ export function AttendanceHistoryTab({ classId, period, students, onSetPeriod, o
           <Select value={String(period)} onValueChange={(v: unknown) => onSetPeriod(Number(v as string))}>
             <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((p) => (
+              {registerPeriodOptions(period).map((p: number) => (
                 <SelectItem key={p} value={String(p)}>Period {p}</SelectItem>
               ))}
             </SelectContent>

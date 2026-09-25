@@ -12,7 +12,7 @@ import { getStudentDisplayName } from '@/lib/student-helpers';
 import { toISODate } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, Save, Users, Info, Search, AlertTriangle } from 'lucide-react';
 import type { Student } from '@/types';
-import { REGISTER_PERIODS } from '@/lib/register';
+import { registerPeriodOptions } from '@/lib/register';
 import type { AttendanceEntry, AttendanceStatus } from '@/hooks/useTeacherAttendance';
 
 interface AttendanceTodayTabProps {
@@ -109,7 +109,7 @@ export function AttendanceTodayTab(props: AttendanceTodayTabProps) {
             <Select value={String(period)} onValueChange={(v: unknown) => onSetPeriod(Number(v as string))}>
               <SelectTrigger className="w-full sm:w-32"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {REGISTER_PERIODS.map((p) => (
+                {registerPeriodOptions(period).map((p: number) => (
                   <SelectItem key={p} value={String(p)}>Period {p}</SelectItem>
                 ))}
               </SelectContent>

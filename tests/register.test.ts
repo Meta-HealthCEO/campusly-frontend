@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { defaultRegister } from '../src/lib/register';
+import { defaultRegister, registerPeriodOptions } from '../src/lib/register';
 
 const classes = [{ id: 'c1' }, { id: 'c2' }];
 
@@ -24,5 +24,20 @@ describe('defaultRegister', () => {
 
   it('has no class when the teacher has none', () => {
     expect(defaultRegister([], new URLSearchParams(), new Date(2026, 8, 25, 10)).classId).toBeNull();
+  });
+});
+
+describe('periods beyond 8 (school timetables run to 12)', () => {
+  it('keeps period 9 and 12 from the link', () => {
+    const today = new Date(2026, 8, 25, 10);
+    expect(defaultRegister(classes, new URLSearchParams({ period: '9' }), today).period).toBe(9);
+    expect(defaultRegister(classes, new URLSearchParams({ period: '12' }), today).period).toBe(12);
+    expect(defaultRegister(classes, new URLSearchParams({ period: '13' }), today).period).toBe(1);
+  });
+
+  it('offers lessons 1–8, plus the linked period when it is later', () => {
+    expect(registerPeriodOptions(3)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(registerPeriodOptions(9)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    expect(registerPeriodOptions(12)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 12]);
   });
 });
