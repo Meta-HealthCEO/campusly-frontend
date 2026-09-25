@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -14,9 +15,11 @@ import { AuthCard } from '@/components/auth/AuthCard';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { useAuth } from '@/hooks/useAuth';
 import { studentRegisterSchema, type StudentRegisterFormData } from '@/lib/validations';
+import { codeFromSearch } from '@/lib/join-code';
 
-export default function RegisterStudentPage() {
+function RegisterStudentForm() {
   const { registerStudent } = useAuth();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -31,7 +34,7 @@ export default function RegisterStudentPage() {
       email: '',
       password: '',
       confirmPassword: '',
-      classroomCode: '',
+      classroomCode: codeFromSearch(searchParams.get('code')),
     },
   });
 
@@ -186,5 +189,23 @@ export default function RegisterStudentPage() {
         </div>
       </AuthCard>
     </AuthLayout>
+  );
+}
+
+function RegisterStudentFallback() {
+  return (
+    <AuthLayout>
+      <AuthCard title="Join your classroom" description="Getting the sign-up form ready…">
+        <p className="text-sm text-muted-foreground">Please wait.</p>
+      </AuthCard>
+    </AuthLayout>
+  );
+}
+
+export default function RegisterStudentPage() {
+  return (
+    <Suspense fallback={<RegisterStudentFallback />}>
+      <RegisterStudentForm />
+    </Suspense>
   );
 }

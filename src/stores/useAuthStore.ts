@@ -17,6 +17,15 @@ const DEFAULT_PERMISSIONS: UserPermissions = {
   isStandaloneCoach: false,
 };
 
+/** Learner sign-up (POST /auth/register-student). */
+export interface StudentSignUp {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  classroomCode: string;
+}
+
 interface AuthState {
   user: User | null;
   tokens: AuthTokens | null;
@@ -31,6 +40,8 @@ interface AuthState {
   login: (user: User, tokens: AuthTokens, subscription?: Subscription | null, plan?: Plan | null) => void;
   /** Re-read the user and plan from /auth/me (sign-in and sign-up responses don't carry the plan). */
   refreshAccount: () => Promise<void>;
+  /** Learner sign-up: sign in, then re-read the account so the portal flags are there on the first page. */
+  signUpStudent: (payload: StudentSignUp) => Promise<User>;
   logout: () => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   setLoading: (loading: boolean) => void;
@@ -90,6 +101,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Not fatal: the user stays signed in and AuthProvider re-reads these on the next load.
       console.warn('Failed to load account plan details');
     }
+  },
+  signUpStudent: async (payload) => {
+    const raw = unwrapResponse<Record<string, unknown>>(await apiClient.post('/auth/register-student', payload));
+    const userData = (raw.user ?? raw) as Record<string, unknown>;
+    const accessToken = String(raw.accessToken ?? raw.access_token ?? '');
+    const user: User = { ...userFromApi(userData), role: 'student' };
+    get().login(user, { accessToken, refreshToken: '' });
+    await get().refreshAccount();
+    return get().user ?? user;
   },
   logout: () => {
     cancelTokenRefresh();

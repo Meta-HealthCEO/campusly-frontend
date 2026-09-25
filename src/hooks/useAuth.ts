@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/useAuthStore';
+import { useAuthStore, type StudentSignUp } from '@/stores/useAuthStore';
 import { getRoleDashboardPath } from '@/lib/auth';
 import apiClient from '@/lib/api-client';
 import { unwrapResponse } from '@/lib/api-helpers';
@@ -17,13 +17,7 @@ export interface RegisterPayload {
   phone?: string;
 }
 
-export interface RegisterStudentPayload {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  classroomCode: string;
-}
+export type RegisterStudentPayload = StudentSignUp;
 
 export interface ResetPasswordPayload {
   token: string;
@@ -32,7 +26,7 @@ export interface ResetPasswordPayload {
 
 export function useAuth() {
   const router = useRouter();
-  const { login: storeLogin, logout: storeLogout, refreshAccount, user, isAuthenticated } = useAuthStore();
+  const { login: storeLogin, logout: storeLogout, refreshAccount, signUpStudent, user, isAuthenticated } = useAuthStore();
 
   /** Store the session from a login response and open the role's home. The password
    *  login and the development sign-in (useDevSignIn) both end here. */
@@ -66,13 +60,7 @@ export function useAuth() {
   };
 
   const registerStudent = async (payload: RegisterStudentPayload) => {
-    const response = await apiClient.post('/auth/register-student', payload);
-    const responseData = unwrapResponse(response);
-    const userData = responseData.user ?? responseData;
-    const accessToken = responseData.accessToken ?? responseData.access_token;
-    const refreshToken = responseData.refreshToken ?? responseData.refresh_token;
-    const authUser: User = { ...userFromApi(userData), role: 'student' };
-    storeLogin(authUser, { accessToken, refreshToken: refreshToken ?? '' });
+    await signUpStudent(payload);
     router.push(getRoleDashboardPath('student'));
   };
 
