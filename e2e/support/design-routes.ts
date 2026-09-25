@@ -38,6 +38,19 @@ export const DETAIL_ROUTES: readonly DetailRoute[] = [
   { name: 'assignment', list: '/teacher/assignments', link: /^\/teacher\/assignments\/(?!new$)[^/?#]+$/ },
 ];
 
+/** Signed in as a standalone teacher's learner (signed up through the invite link). */
+export const LEARNER_ROUTES: readonly string[] = [
+  '/student', '/student/courses', '/student/homework', '/student/tests', '/student/grades',
+  '/student/ai-tutor', '/student/ai-tutor/practice', '/student/ai-tutor/practice/history', '/student/profile',
+];
+
+export const LEARNER_DETAIL_ROUTES: readonly DetailRoute[] = [
+  { name: 'learner lesson', list: '/student/courses', link: /^\/student\/courses\/[^/?#]+$/ },
+  { name: 'learner homework', list: '/student/homework', link: /^\/student\/homework\/[^/?#]+$/ },
+  { name: 'learner project', list: '/student/homework', link: /^\/student\/assignments\/[^/?#]+$/ },
+  { name: 'learner test', list: '/student/tests', link: /^\/student\/tests\/[^/?#]+$/ },
+];
+
 /** Calls on a timer, not part of a page's behaviour. */
 export const POLLING: readonly RegExp[] = [
   /^GET \/api\/notifications/,

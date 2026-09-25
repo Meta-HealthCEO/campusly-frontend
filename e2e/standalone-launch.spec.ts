@@ -1,7 +1,8 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type BrowserContext, type Page } from '@playwright/test';
 import { STANDALONE_TEACHER_NAV } from '../src/lib/nav/teacher-nav';
 import { issueVerifyLink, spendAIActions } from './support/db';
 import { assertLocalUrl } from './support/local';
+import { learnerJourney } from './support/learner-journey';
 import { overflowsSideways, watchPage, type Allowed } from './support/watch';
 
 const stamp = Date.now();
@@ -58,27 +59,31 @@ test('a new standalone teacher can launch without a dead end', async ({ page, br
     await expect(page.getByText(/verified/i).first()).toBeVisible();
   });
 
-  await test.step('a learner joins with the code (their own browser)', async () => {
-    const learnerContext = await browser.newContext({ viewport: { width: 375, height: 812 } });
-    const learnerPage = await learnerContext.newPage();
-    const learnerProblems = watchPage(learnerPage, () => []);
-    await learnerPage.goto('/register-student');
-    await learnerPage.getByLabel('First name').fill(learner.first);
-    await learnerPage.getByLabel('Last name').fill(learner.last);
-    await learnerPage.getByLabel('Email').fill(learner.email);
-    await learnerPage.getByLabel('Password', { exact: false }).first().fill(learner.password);
-    await learnerPage.getByLabel('Confirm password').fill(learner.password);
-    await learnerPage.getByLabel(/Classroom code/i).fill(joinCode);
-    await expectNoSidewaysScroll(learnerPage, '/register-student');
-    await learnerPage.getByRole('button', { name: 'Join Classroom' }).click();
-    await expect(learnerPage.getByText('Welcome! You have joined your classroom.')).toBeVisible();
-    await learnerPage.waitForURL('**/student');
-    await expect(learnerPage.getByRole('heading', { level: 1 }).first()).toBeVisible();
+  // The learner keeps their own browser (375 px) from sign-up to the end of their journey.
+  const learnerSession: { context?: BrowserContext; page?: Page } = {};
+  await test.step('a learner joins through the invite link (their own browser)', async () => {
+    learnerSession.context = await browser.newContext({ viewport: { width: 375, height: 812 } });
+    const learnerTab = await learnerSession.context.newPage();
+    learnerSession.page = learnerTab;
+    const learnerProblems = watchPage(learnerTab, () => []);
+    // A pasted link may carry the code in lower case: the form upper-cases it (Review Focus 2).
+    await learnerTab.goto(`/register-student?code=${joinCode.toLowerCase()}`);
+    await expect(learnerTab.getByLabel(/Classroom code/i)).toHaveValue(joinCode);
+    await learnerTab.getByLabel('First name').fill(learner.first);
+    await learnerTab.getByLabel('Last name').fill(learner.last);
+    await learnerTab.getByLabel('Email').fill(learner.email);
+    await learnerTab.getByLabel('Password', { exact: false }).first().fill(learner.password);
+    await learnerTab.getByLabel('Confirm password').fill(learner.password);
+    await expectNoSidewaysScroll(learnerTab, '/register-student');
+    await learnerTab.getByRole('button', { name: 'Join Classroom' }).click();
+    await expect(learnerTab.getByText('Welcome! You have joined your classroom.')).toBeVisible();
+    await learnerTab.waitForURL('**/student');
+    await expect(learnerTab.getByRole('heading', { level: 1 }).first()).toBeVisible();
     expect(learnerProblems).toEqual([]);
-    await learnerContext.close();
 
     await page.goto('/teacher/classes');
     await expect(page.getByRole('heading', { name: 'My classes', level: 1 })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Copy invite link' }).first()).toBeVisible();
     await expectNoSidewaysScroll(page, '/teacher/classes');
     await page.getByRole('cell', { name: 'Grade 4 Mathematics' }).first().click();
     await page.waitForURL('**/roster');
@@ -172,11 +177,27 @@ test('a new standalone teacher can launch without a dead end', async ({ page, br
     await page.getByRole('button', { name: /Save & publish/ }).click();
     await page.waitForURL(/\/teacher\/assignments\/[a-f0-9]{24}$/);
     await expect(page.getByRole('heading', { name: 'Time diary' })).toBeVisible();
+    // Pushed to the group, so the learner finds it in Homework (learner portal spec §2).
+    await page.getByRole('tab', { name: 'Classes' }).click();
+    await page.getByRole('button', { name: 'Push to class' }).click();
+    const push = page.getByRole('dialog');
+    await push.getByRole('combobox').click();
+    await page.getByRole('option', { name: /Grade 4 Mathematics/ }).click();
+    await push.getByRole('button', { name: 'Push to class' }).click();
+    await expect(push).toBeHidden();
+    await expect(page.getByText(/Not yet pushed to any class/)).toHaveCount(0);
 
     await page.goto('/teacher/assignments');
     await page.waitForURL('**/teacher/homework');
     await expect(page.getByText('Time diary').first()).toBeVisible();
     await expect(page.getByText('Project').first()).toBeVisible();
+  });
+
+  await test.step("the learner's journey: a second group, an earlier lesson, homework, a test, marks", async () => {
+    const { context, page: learnerTab } = learnerSession;
+    if (!context || !learnerTab) throw new Error('The learner never signed up');
+    await learnerJourney(learnerTab, { teacherEmail: teacher.email, firstGroup: 'Grade 4 Mathematics' });
+    await context.close();
   });
 
   await test.step('take the register (no timetable)', async () => {

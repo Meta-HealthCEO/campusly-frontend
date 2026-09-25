@@ -2,10 +2,13 @@ import { test, expect, type Page, type Request } from '@playwright/test';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { assertLocalUrl } from './support/local';
-import { DETAIL_ROUTES, POLLING, PUBLIC_ROUTES, SCHOOL_LEARNER_ROUTES, TEACHER_ROUTES, WIDTHS } from './support/design-routes';
+import {
+  DETAIL_ROUTES, LEARNER_DETAIL_ROUTES, LEARNER_ROUTES, POLLING, PUBLIC_ROUTES, SCHOOL_LEARNER_ROUTES, TEACHER_ROUTES, WIDTHS,
+  type DetailRoute,
+} from './support/design-routes';
 import { diffRequestSets, landedElsewhere, toRequestSet, withoutPolling } from './support/request-set';
 import { focusRingMissing, sidewaysOverflow, unlabelledControls } from './support/a11y-audit';
-import { settle, signInAsSchoolLearner, signInAsStandaloneTeacher } from './support/session';
+import { settle, signInAsSchoolLearner, signInAsStandaloneTeacher, signUpAsStandaloneLearner } from './support/session';
 
 /**
  * Phase D machine gate, browser half (spec §7): no sideways scroll at six widths, labelled controls,
@@ -54,16 +57,9 @@ async function sweep(page: Page, route: string, key: string): Promise<void> {
   expect.soft(await focusRingMissing(page), `${key}: focus ring`).toEqual([]);
 }
 
-test('public and auth pages', async ({ page, baseURL }) => {
-  assertLocalUrl(baseURL ?? '', 'E2E_BASE_URL');
-  for (const route of PUBLIC_ROUTES) await test.step(route, () => sweep(page, route, route));
-});
-
-test('standalone teacher pages', async ({ page, baseURL }) => {
-  assertLocalUrl(baseURL ?? '', 'E2E_BASE_URL');
-  await signInAsStandaloneTeacher(page);
-  for (const route of TEACHER_ROUTES) await test.step(route, () => sweep(page, route, route));
-  for (const detail of DETAIL_ROUTES) {
+/** Pages with an id: each found from the first matching link on its list page (ruling R15). */
+async function sweepDetails(page: Page, details: readonly DetailRoute[]): Promise<void> {
+  for (const detail of details) {
     await test.step(`detail: ${detail.name}`, async () => {
       await page.goto(detail.list);
       await settle(page);
@@ -76,6 +72,37 @@ test('standalone teacher pages', async ({ page, baseURL }) => {
       await sweep(page, href, `detail:${detail.name}`);
     });
   }
+}
+
+test('public and auth pages', async ({ page, baseURL }) => {
+  assertLocalUrl(baseURL ?? '', 'E2E_BASE_URL');
+  for (const route of PUBLIC_ROUTES) await test.step(route, () => sweep(page, route, route));
+});
+
+test('standalone teacher pages', async ({ page, baseURL }) => {
+  assertLocalUrl(baseURL ?? '', 'E2E_BASE_URL');
+  await signInAsStandaloneTeacher(page);
+  for (const route of TEACHER_ROUTES) await test.step(route, () => sweep(page, route, route));
+  await sweepDetails(page, DETAIL_ROUTES);
+});
+
+test('standalone learner pages', async ({ page, baseURL }) => {
+  assertLocalUrl(baseURL ?? '', 'E2E_BASE_URL');
+  await signUpAsStandaloneLearner(page);
+  for (const route of LEARNER_ROUTES) await test.step(route, () => sweep(page, route, `learner:${route}`));
+  await sweepDetails(page, LEARNER_DETAIL_ROUTES);
+});
+
+test('password forms wait for JavaScript (learner portal spec §3)', async ({ browser, baseURL }) => {
+  assertLocalUrl(baseURL ?? '', 'E2E_BASE_URL');
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  for (const route of ['/login', '/register-student', '/signup/teacher', '/signup/coach', '/register']) {
+    await page.goto(route);
+    await expect(page.locator('form').first(), route).toHaveAttribute('method', 'post');
+    await expect(page.locator('button[type="submit"]').first(), route).toBeDisabled();
+  }
+  await context.close();
 });
 
 test('school learner pages: unchanged by the learner portal', async ({ page, baseURL }) => {

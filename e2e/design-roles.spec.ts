@@ -1,13 +1,15 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ADMIN_NAV, PARENT_NAV, STUDENT_NAV } from '../src/lib/constants';
+import { STANDALONE_STUDENT_NAV } from '../src/lib/nav/student-nav';
 import { assertLocalUrl } from './support/local';
 import { brokenWords, focusRingMissing, sidewaysOverflow, unlabelledControls } from './support/a11y-audit';
 import { configHrefs, desktopNavLinks, phoneNavLinks, tabletNavLinks } from './support/nav-links';
-import { settle } from './support/session';
+import { settle, signUpAsStandaloneLearner } from './support/session';
 
 /**
- * Final review finding 8: the shell for the other roles. Signed in through the Development sign-in panel only
- * (never a password): every link in the role's nav is reachable on a phone (320px) and a tablet (800px), nothing
+ * Final review finding 8: the shell for the other roles. Signed in through the Development sign-in panel (never a
+ * password), except a standalone teacher's learner, who signs up through the invite link with the test password
+ * fixture (learner portal): every link in the role's nav is reachable on a phone (320px) and a tablet (800px), nothing
  * scrolls sideways, sheet labels never break mid-word, and the shell's controls are named and show focus.
  * Page content is audited too, but only reported (annotations) — this gate owns the shell.
  */
@@ -17,12 +19,18 @@ const ROLES = [
   { role: 'school admin', account: /Lerato Nkosi/, home: '/admin', nav: ADMIN_NAV },
   { role: 'parent', account: /Pieter Botha/, home: '/parent', nav: PARENT_NAV },
   { role: 'learner', account: /Lebo Mthembu/, home: '/student', nav: STUDENT_NAV },
+  { role: 'standalone learner', account: null, home: '/student', nav: STANDALONE_STUDENT_NAV },
 ] as const;
 
-async function signIn(page: Page, account: RegExp, home: string): Promise<void> {
+/** `account` null: a standalone teacher's learner, signed up through the dev standalone teacher's invite link. */
+async function signIn(page: Page, account: RegExp | null, home: string): Promise<void> {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto('/login');
-  await page.locator('[aria-label="Development sign-in"]').getByRole('button', { name: account }).click();
+  if (account) {
+    await page.goto('/login');
+    await page.locator('[aria-label="Development sign-in"]').getByRole('button', { name: account }).click();
+  } else {
+    await signUpAsStandaloneLearner(page);
+  }
   await page.waitForURL((url: URL) => url.pathname === home || url.pathname.startsWith(`${home}/`));
   await settle(page);
 }
