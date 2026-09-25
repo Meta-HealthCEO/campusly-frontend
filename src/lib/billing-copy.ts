@@ -5,19 +5,20 @@ export const PRO_MONTHLY_PRICE = 'R149';
 
 export type TeacherPlan = 'free' | 'pro';
 
-/** "What you get" on a plan: only what the product actually does. */
-export function planLines(plan: TeacherPlan): string[] {
+/** What a plan includes, for Billing and the landing page: only what the product actually does. */
+export function planFeatures(plan: TeacherPlan): string[] {
   if (plan === 'free') {
     return [
       `${FREE_AI_ACTIONS_PER_MONTH} AI actions a month: lessons, test papers, memos, homework drafts and marking`,
       'Classes, homework, register and gradebook',
     ];
   }
-  return [
-    `Up to ${PRO_AI_ACTIONS_PER_MONTH} AI actions a month`,
-    'Everything in Free, plus lesson progress for each class',
-    `${PRO_MONTHLY_PRICE} a month after a 14-day free trial`,
-  ];
+  return [`Up to ${PRO_AI_ACTIONS_PER_MONTH} AI actions a month`, 'Everything in Free, plus lesson progress for each class'];
+}
+
+/** "What you get" on Billing: the features, and for Pro its price. */
+export function planLines(plan: TeacherPlan): string[] {
+  return plan === 'free' ? planFeatures('free') : [...planFeatures('pro'), `${PRO_MONTHLY_PRICE} a month after a 14-day free trial`];
 }
 
 /**

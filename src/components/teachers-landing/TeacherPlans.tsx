@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react';
 import { StartFreeLink } from './StartFreeLink';
+import { planFeatures } from '@/lib/billing-copy';
 
 interface PlanCard {
   name: string;
@@ -16,14 +17,14 @@ const PLANS: PlanCard[] = [
     price: 'R0',
     cadence: 'for as long as you like',
     note: 'Start here. No card needed.',
-    features: ['20 AI actions a month: lessons, papers, memos, marking', 'One teaching group', 'Attendance, homework and gradebook'],
+    features: planFeatures('free'),
   },
   {
     name: 'Pro',
     price: 'R149',
     cadence: 'a month, or R1,490 a year',
     note: 'When it becomes a habit. 14 days free first.',
-    features: ['Up to 500 AI actions a month', 'AI lessons, papers, memos and marking', 'Unlimited classes and learners', 'Analytics and reports'],
+    features: planFeatures('pro'),
     highlight: true,
   },
 ];
