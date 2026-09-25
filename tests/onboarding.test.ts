@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  capsFrameworkId, classOptions, firstLessonHref, firstTeachingTopic, joinMessage, onboardingChecklist, onboardingStep, phaseRank, schoolPairFor, scopeFromPicks,
+  capsFrameworkId, classOptions, firstLessonHref, firstTeachingTopic, lessonClass, stepAfterScopeSaved, joinMessage, onboardingChecklist, onboardingStep, phaseRank, schoolPairFor, scopeFromPicks,
 } from '../src/lib/onboarding';
 
 describe('onboarding', () => {
@@ -76,5 +76,26 @@ describe('standalone teachers can reach the lesson builder', () => {
   it('allows /teacher/courses/new', async () => {
     const { isStandaloneTeacherPathAllowed } = await import('../src/lib/standalone-teacher-paths');
     expect(isStandaloneTeacherPathAllowed('/teacher/courses/new')).toBe(true);
+  });
+});
+
+describe('after saving what you teach', () => {
+  it('goes to the next unfinished step, not always to step 2', () => {
+    expect(stepAfterScopeSaved({ hasScope: false, hasClass: false, hasUnit: false, dismissed: false })).toBe(2);
+    expect(stepAfterScopeSaved({ hasScope: false, hasClass: true, hasUnit: false, dismissed: false })).toBe(3);
+    expect(stepAfterScopeSaved({ hasScope: false, hasClass: true, hasUnit: true, dismissed: false })).toBe('done');
+  });
+});
+
+describe('the class a first lesson is built for', () => {
+  const bare = { classId: 'c1', name: 'Grade 4 Class', gradeId: 'g4', subjectId: null };
+  const maths = { classId: 'c2', name: 'Grade 4 Mathematics', gradeId: 'g4', subjectId: 's1' };
+  const english = { classId: 'c3', name: 'Grade 4 English', gradeId: 'g4', subjectId: 's2' };
+  it('needs a class taught for a subject; a bare class from the old onboarding is not enough', () => {
+    expect(lessonClass([bare], null)).toBeNull();
+  });
+  it('prefers the class just made, else the first class with a subject', () => {
+    expect(lessonClass([bare, maths, english], 'c3')).toEqual(english);
+    expect(lessonClass([bare, maths, english], null)).toEqual(maths);
   });
 });

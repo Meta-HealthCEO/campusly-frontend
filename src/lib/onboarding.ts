@@ -118,3 +118,21 @@ const NOT_A_TEACHING_TOPIC = /\b(assessment|revision|exams?|tests?)\b/i;
 export function firstTeachingTopic<T extends { title: string }>(topics: readonly T[]): T | null {
   return topics.find((t: T) => !NOT_A_TEACHING_TOPIC.test(t.title)) ?? topics[0] ?? null;
 }
+
+/** Where to go once "What you teach" is saved: the next unfinished step (a teacher may already have a class). */
+export function stepAfterScopeSaved(status: OnboardingStatus): OnboardingStep {
+  return onboardingStep({ ...status, hasScope: true });
+}
+
+export interface LessonClassCandidate {
+  classId: string;
+  name: string;
+  gradeId: string;
+  subjectId: string | null;
+}
+
+/** The class to build the first lesson for: the one just made, else the first taught for a subject. */
+export function lessonClass<T extends LessonClassCandidate>(classes: readonly T[], preferredClassId: string | null): T | null {
+  const withSubject = classes.filter((c: T) => c.subjectId);
+  return withSubject.find((c: T) => c.classId === preferredClassId) ?? withSubject[0] ?? null;
+}

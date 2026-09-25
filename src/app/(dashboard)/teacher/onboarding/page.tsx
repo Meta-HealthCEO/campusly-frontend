@@ -14,7 +14,7 @@ import { useTeachingScope } from '@/hooks/useTeachingScope';
 import { useTeacherOnboarding, type CreatedClass, type LinkedSchoolRow } from '@/hooks/useTeacherOnboarding';
 import { extractErrorMessage } from '@/lib/api-helpers';
 import {
-  classOptions, onboardingStep, schoolPairFor, scopeFromPicks, type ClassOption, type GradePick,
+  classOptions, onboardingStep, schoolPairFor, scopeFromPicks, stepAfterScopeSaved, type ClassOption, type GradePick,
 } from '@/lib/onboarding';
 import { cn } from '@/lib/utils';
 
@@ -92,7 +92,9 @@ export default function TeacherOnboardingPage() {
       return;
     }
     setClassChoices(null);
-    setOverride(2);
+    const next = stepAfterScopeSaved(status);
+    if (next === 'done') router.push('/teacher');
+    else setOverride(next);
   };
 
   const makeClass = async (name: string, option: ClassOption): Promise<void> => {
@@ -147,7 +149,7 @@ export default function TeacherOnboardingPage() {
             onCreate={(name: string, option: ClassOption) => void makeClass(name, option)}
           />
         ) : (
-          <FirstLessonStep preferredClassId={created?.id ?? null} />
+          <FirstLessonStep preferredClassId={created?.id ?? null} onMakeClass={() => { setCreated(null); setOverride(2); }} />
         )}
       </section>
 
