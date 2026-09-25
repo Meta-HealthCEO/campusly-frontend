@@ -22,12 +22,15 @@ interface StepDraftProps {
   rubricSum: number;
   totalMarks: number;
   generating: boolean;
-  onRegenerate: () => void;
+  /** Absent when the teacher is writing it themselves (no AI draft to regenerate). */
+  onRegenerate?: () => void;
+  /** What's still missing before it can be saved. */
+  problem?: string | null;
 }
 
 export function StepDraft({
   title, setTitle, brief, setBrief, rubric, setRubric, rubricSum,
-  totalMarks, generating, onRegenerate,
+  totalMarks, generating, onRegenerate, problem = null,
 }: StepDraftProps) {
   return (
     <div className="space-y-4">
@@ -37,11 +40,12 @@ export function StepDraft({
             <div>
               <CardTitle className="text-base">Draft</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Edit anything you do not like, or regenerate for a fresh take.
-                Tweak instructions on step 1 first if needed.
+                {onRegenerate
+                  ? 'Edit anything you do not like, or regenerate for a fresh take. Tweak instructions on step 1 first if needed.'
+                  : 'Write the brief and name the rubric criteria. Their marks add up to the total.'}
               </p>
             </div>
-            <Button
+            {onRegenerate ? <Button
               variant="outline"
               size="sm"
               onClick={onRegenerate}
@@ -58,13 +62,13 @@ export function StepDraft({
                   Regenerate
                 </>
               )}
-            </Button>
+            </Button> : null}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Title</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+            <Label htmlFor="project-title">Title</Label>
+            <Input id="project-title" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <Label>Brief</Label>
@@ -139,11 +143,13 @@ export function StepDraft({
           >
             <Plus className="mr-1 h-3.5 w-3.5" /> Add criterion
           </Button>
-          {rubricSum !== totalMarks && (
+          {problem ? (
+            <p className="text-xs text-destructive">{problem}</p>
+          ) : rubricSum !== totalMarks ? (
             <p className="text-xs text-destructive">
               Adjust criterion marks so they sum to {totalMarks}.
             </p>
-          )}
+          ) : null}
         </CardContent>
       </Card>
     </div>

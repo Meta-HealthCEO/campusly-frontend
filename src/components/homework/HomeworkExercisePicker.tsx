@@ -1,12 +1,13 @@
 'use client';
 import { useState } from 'react';
-import { ListChecks, Sparkles } from 'lucide-react';
+import { ListChecks, PenLine, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { DraftHomeworkWithAIDialog } from '@/components/homework/DraftHomeworkWithAIDialog';
+import { WriteQuestionDialog } from '@/components/homework/WriteQuestionDialog';
 import { useQuestionBankLibrary } from '@/hooks/useQuestionBankLibrary';
 import { draftBlockedReason } from '@/lib/homework-ai-draft';
 
@@ -31,6 +32,7 @@ export function HomeworkExercisePicker({
   const [search, setSearch] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
   const [drafting, setDrafting] = useState(false);
+  const [writing, setWriting] = useState(false);
   const { questions, loading } = useQuestionBankLibrary({
     subjectId,
     gradeId,
@@ -64,6 +66,15 @@ export function HomeworkExercisePicker({
         />
         <Button
           variant="outline"
+          onClick={() => setWriting(true)}
+          disabled={blocked !== null}
+          title={blocked ?? undefined}
+          className="min-h-11 gap-1.5 sm:min-h-9"
+        >
+          <PenLine className="h-4 w-4" aria-hidden /> Write a question
+        </Button>
+        <Button
+          variant="outline"
           onClick={() => setDrafting(true)}
           disabled={blocked !== null}
           title={blocked ?? undefined}
@@ -81,8 +92,8 @@ export function HomeworkExercisePicker({
           title="No questions found"
           description={
             search.trim()
-              ? 'Try a different search term, or draft fresh questions with AI.'
-              : 'No saved questions for this topic yet. Draft some with AI.'
+              ? 'Try a different search term, write your own, or draft fresh questions with AI.'
+              : 'No saved questions for this topic yet. Write your own, or draft some with AI.'
           }
         />
       )}
@@ -111,6 +122,15 @@ export function HomeworkExercisePicker({
         </>
       )}
 
+      {curriculumNodeId && writing ? (
+        <WriteQuestionDialog
+          open
+          onOpenChange={setWriting}
+          scope={{ subjectId, gradeId, curriculumNodeId }}
+          topicName={curriculumNodeName}
+          onAdded={added}
+        />
+      ) : null}
       {curriculumNodeId ? (
         <DraftHomeworkWithAIDialog
           open={drafting}

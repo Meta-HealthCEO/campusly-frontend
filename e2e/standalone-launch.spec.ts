@@ -127,6 +127,21 @@ test('a new standalone teacher can launch without a dead end', async ({ page, br
     await dialog.getByRole('button', { name: 'Draft questions' }).click();
     await expect(dialog.getByRole('alert').filter({ hasText: /AI isn't set up/ })).toBeVisible();
     await dialog.getByRole('button', { name: 'Cancel' }).click();
+
+    // No AI needed: the teacher writes their own question.
+    await page.getByRole('button', { name: 'Write a question' }).click();
+    const write = page.getByRole('dialog');
+    await write.getByRole('textbox', { name: /^Question/ }).fill('How many minutes are in one hour?');
+    await write.getByLabel('Option A', { exact: true }).fill('30');
+    await write.getByLabel('Option B', { exact: true }).fill('60');
+    await write.getByLabel('Option C', { exact: true }).fill('100');
+    await write.getByLabel('Option B is correct').check();
+    await write.getByRole('button', { name: 'Save and add' }).click();
+    await expect(write).toBeHidden();
+    await expect(page.getByText('How many minutes are in one hour?')).toBeVisible();
+    await page.getByRole('button', { name: 'Review' }).click();
+    await page.getByRole('button', { name: /Assign Homework/ }).click();
+    await page.waitForURL(/\/teacher\/homework\/[a-f0-9]{24}$/);
   });
 
   await test.step('a Project opens the brief + rubric flow', async () => {
@@ -143,8 +158,25 @@ test('a new standalone teacher can launch without a dead end', async ({ page, br
     await page.getByPlaceholder(/Examples:/).fill('A one-week project: keep a time diary and work out how long each activity took.');
     await page.getByRole('button', { name: /Generate draft with AI/ }).click();
     await expect(page.getByText(/AI isn't set up/).first()).toBeVisible();
+
+    // No AI needed: write the brief and rubric yourself.
+    await page.getByRole('button', { name: 'Write it myself' }).click();
+    await page.getByLabel('Title').fill('Time diary');
+    await page.locator('[contenteditable="true"]').first().click();
+    await page.keyboard.type('Keep a time diary for a week and work out how long each activity took.');
+    const criteria = page.getByPlaceholder('Criterion name');
+    const count = await criteria.count();
+    for (let i = 0; i < count; i += 1) await criteria.nth(i).fill(`Criterion ${i + 1}`);
+    await expectNoSidewaysScroll(page, 'project written by hand');
+    await page.getByRole('button', { name: 'Publishing options' }).click();
+    await page.getByRole('button', { name: /Save & publish/ }).click();
+    await page.waitForURL(/\/teacher\/assignments\/[a-f0-9]{24}$/);
+    await expect(page.getByRole('heading', { name: 'Time diary' })).toBeVisible();
+
     await page.goto('/teacher/assignments');
     await page.waitForURL('**/teacher/homework');
+    await expect(page.getByText('Time diary').first()).toBeVisible();
+    await expect(page.getByText('Project').first()).toBeVisible();
   });
 
   await test.step('take the register (no timetable)', async () => {

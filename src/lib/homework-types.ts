@@ -22,7 +22,7 @@ export interface WizardHomeworkTypeOption {
 const PROJECT_TYPE: WizardHomeworkTypeOption = {
   value: 'project',
   label: 'Project',
-  description: 'A brief with a rubric; the AI drafts both and you mark per criterion',
+  description: 'A brief with a rubric: write it yourself or let the AI draft it; you mark per criterion',
   href: '/teacher/assignments/new',
 };
 

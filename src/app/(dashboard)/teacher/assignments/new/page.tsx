@@ -20,6 +20,7 @@ import { useIsStandalone } from '@/hooks/useIsStandalone';
 import { StepSetup } from './_StepSetup';
 import { StepDraft } from './_StepDraft';
 import { StepPublish } from './_StepPublish';
+import { blankProjectRubric, projectDraftProblem } from '@/lib/project-draft';
 import type {
   AssignmentLatePolicy,
   AssignmentLengthHint,
@@ -132,7 +133,8 @@ export default function NewAssignmentPage() {
     applyPrep(primary, primaryAncestors);
   }, [selectedNodes, ancestorsByNode, applyPrep]);
 
-  const step1Blocker: string | null = (() => {
+  // What the AI draft and writing it yourself both need: topics, subject/grade and marks.
+  const topicBlocker: string | null = (() => {
     if (selectedNodes.length === 0) return 'Pick at least one CAPS topic from the tree.';
     if (prep.contextStatus === 'preparing') return 'Preparing subject and grade — give it a second…';
     if (prep.contextStatus === 'error') {
@@ -142,17 +144,26 @@ export default function NewAssignmentPage() {
       return 'Subject or grade could not be resolved for this topic.';
     }
     if (totalMarks <= 0) return 'Total marks must be at least 1.';
-    const instructionsLen = instructions.trim().length;
-    if (instructionsLen < 10) {
-      return `Instructions need ${10 - instructionsLen} more character${10 - instructionsLen === 1 ? '' : 's'}.`;
-    }
     return null;
   })();
+  const instructionsLen = instructions.trim().length;
+  const step1Blocker: string | null = topicBlocker ?? (instructionsLen < 10
+    ? `Instructions need ${10 - instructionsLen} more character${10 - instructionsLen === 1 ? '' : 's'}.`
+    : null);
   const step1Ready = step1Blocker === null;
 
   const rubricSum = rubric.reduce((s, c) => s + c.maxMarks, 0);
-  const step2Ready = title.trim().length > 0 && brief.trim().length > 0
-    && rubric.length > 0 && rubricSum === totalMarks;
+  const step2Problem = projectDraftProblem({ title, brief, rubric, totalMarks });
+  const step2Ready = step2Problem === null;
+  // No AI needed: an empty brief and a rubric whose marks already add up.
+  const [writtenByHand, setWrittenByHand] = useState(false);
+  const startBlank = (): void => {
+    setTitle('');
+    setBrief('');
+    setRubric(blankProjectRubric(totalMarks, criterionCount));
+    setWrittenByHand(true);
+    setStep(2);
+  };
 
   const handleGenerate = useCallback(async () => {
     if (!prep.subjectId || !prep.gradeId || selectedNodes.length === 0) return;
@@ -171,6 +182,7 @@ export default function NewAssignmentPage() {
     setTitle(draft.title);
     setBrief(draft.brief);
     setRubric(draft.rubric);
+    setWrittenByHand(false);
     setStep(2);
   }, [
     generateDraft, prep.subjectId, prep.gradeId, selectedNodes,
@@ -221,6 +233,7 @@ export default function NewAssignmentPage() {
         nextIcon: generating
           ? undefined
           : <Sparkles className="ml-2 h-4 w-4" />,
+        secondary: { label: 'Write it myself', onClick: startBlank, disabled: topicBlocker !== null || generating },
       };
     }
     if (step === 2) {
@@ -251,7 +264,7 @@ export default function NewAssignmentPage() {
     <div className="space-y-6 pb-24">
       <PageHeader
         title={isStandalone ? 'New project' : 'New Assignment'}
-        description="Tell the AI what you want, then edit the brief and rubric. You can publish to a class once it is ready."
+        description="Let the AI draft the brief and rubric, or write them yourself. You can publish to a class once it is ready."
       />
 
       <div className="flex items-center gap-2 text-sm">
@@ -294,7 +307,8 @@ export default function NewAssignmentPage() {
           rubricSum={rubricSum}
           totalMarks={totalMarks}
           generating={generating}
-          onRegenerate={() => void handleGenerate()}
+          onRegenerate={writtenByHand ? undefined : () => void handleGenerate()}
+          problem={step2Problem}
         />
       )}
 
