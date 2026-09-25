@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { BookOpen } from 'lucide-react';
 import { ADMIN_NAV, PARENT_NAV, STANDALONE_TEACHER_NAV, STUDENT_NAV, TEACHER_NAV, type NavItem } from '../src/lib/constants';
 import { isTabActive, phoneTabs } from '../src/lib/shell/phone-tabs';
+import { STANDALONE_STUDENT_NAV } from '../src/lib/nav/student-nav';
 
 const item = (href: string): NavItem => ({ label: href, href, icon: BookOpen });
 
@@ -24,7 +25,7 @@ describe('phoneTabs (spec §3, ruling R10)', () => {
     expect(phoneTabs(['a', 'b', 'c'].map((x) => item(`/p/${x}`))).map((t) => t.label)).toEqual(['/p/a', '/p/b', '/p/c']);
   });
 
-  it.each([['admin', ADMIN_NAV], ['parent', PARENT_NAV], ['learner', STUDENT_NAV], ['teacher', TEACHER_NAV], ['standalone teacher', STANDALONE_TEACHER_NAV]] as const)(
+  it.each([['admin', ADMIN_NAV], ['parent', PARENT_NAV], ['learner', STUDENT_NAV], ['teacher', TEACHER_NAV], ['standalone teacher', STANDALONE_TEACHER_NAV], ['standalone learner', STANDALONE_STUDENT_NAV]] as const)(
     '%s: every link stays reachable on a phone', (_role, nav) => {
       const tabs = phoneTabs([...nav]);
       const reachable = new Set(tabs.flatMap((t) => [t.href, ...t.items.map((i) => i.href)]).filter(Boolean));

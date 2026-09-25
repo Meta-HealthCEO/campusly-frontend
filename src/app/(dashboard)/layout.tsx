@@ -22,7 +22,8 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { BannerStrip } from '@/components/layout/BannerStrip';
 import { AILimitDialog } from '@/components/billing/AILimitDialog';
 import { composeNav } from './nav-config';
-import { isStandaloneTeacherPathAllowed } from '@/lib/standalone-teacher-paths';
+import { STANDALONE_STUDENT_NAV } from '@/lib/nav/student-nav';
+import { portalRedirect } from '@/lib/portal-guard';
 import { useNotificationPoller } from '@/hooks/useNotificationPoller';
 import type { UserRole, PermissionFlag } from '@/types';
 
@@ -91,15 +92,15 @@ export default function DashboardLayout({
     }
   }, [user?.schoolId, school, fetchSchool]);
 
+  const redirectTo = portalRedirect(user, pathname);
   useEffect(() => {
-    if (!user?.isStandaloneTeacher) return;
-    if (isStandaloneTeacherPathAllowed(pathname)) return;
-    router.replace('/teacher');
-  }, [pathname, router, user?.isStandaloneTeacher]);
+    if (redirectTo) router.replace(redirectTo);
+  }, [redirectTo, router]);
 
   const navItems = useMemo(() => {
     if (!user) return ADMIN_NAV;
     if (user.isStandaloneTeacher) return STANDALONE_TEACHER_NAV;
+    if (user.isStandaloneLearner) return STANDALONE_STUDENT_NAV;
     const roleBaseline = NAV_BY_ROLE[user.role] ?? ADMIN_NAV;
     const composed = composeNav(user, roleBaseline);
     const enabledModules = school?.modulesEnabled ?? [];
@@ -109,9 +110,7 @@ export default function DashboardLayout({
     return filterByPermission(moduleFiltered, hasPermission);
   }, [user, school, hasPermission]);
 
-  if (user?.isStandaloneTeacher && !isStandaloneTeacherPathAllowed(pathname)) {
-    return null;
-  }
+  if (redirectTo) return null;
 
   return (
     <AuthGuard>

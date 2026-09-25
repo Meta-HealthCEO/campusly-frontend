@@ -43,6 +43,8 @@ export interface User {
   isReceptionist?: boolean;
   isStandaloneTeacher?: boolean;
   isStandaloneCoach?: boolean;
+  /** A learner of a standalone teacher (computed by the server): the seven-item learner portal. */
+  isStandaloneLearner?: boolean;
   mustChangePassword?: boolean;
   /** When the teacher opened the emailed verification link; null until then. */
   emailVerifiedAt?: string | null;

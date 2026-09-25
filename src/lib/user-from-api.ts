@@ -29,6 +29,7 @@ export function userFromApi(raw: ApiUser): User {
     isReceptionist: raw.isReceptionist === true,
     isStandaloneTeacher: raw.isStandaloneTeacher === true,
     isStandaloneCoach: raw.isStandaloneCoach === true,
+    isStandaloneLearner: raw.isStandaloneLearner === true,
     mustChangePassword: raw.mustChangePassword === true,
     emailVerifiedAt: str(raw.emailVerifiedAt) || null,
     avatar: str(raw.profileImage) || str(raw.avatar) || undefined,
