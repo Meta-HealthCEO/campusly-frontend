@@ -12,6 +12,7 @@ import { AuthLayout } from '@/components/auth/AuthLayout';
 import { AuthCard } from '@/components/auth/AuthCard';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { useStandaloneSignup } from '@/hooks/useStandaloneSignup';
+import { useHydrated } from '@/hooks/useHydrated';
 
 interface SignupFormData {
   firstName: string;
@@ -22,6 +23,7 @@ interface SignupFormData {
 }
 
 export default function TeacherSignupPage() {
+  const hydrated = useHydrated();
   const router = useRouter();
   const { signup, loading, error } = useStandaloneSignup();
 
@@ -61,7 +63,7 @@ export default function TeacherSignupPage() {
         title="Start teaching with Campusly"
         description="Create your free teacher account in 30 seconds"
       >
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="firstName">First name <span className="text-destructive">*</span></Label>
@@ -136,7 +138,7 @@ export default function TeacherSignupPage() {
 
           <Button
             type="submit"
-            disabled={loading}
+            disabled={!hydrated || loading}
             className="h-10 w-full"
             size="lg"
           >

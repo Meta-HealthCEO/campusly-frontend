@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { registerSchema, type RegisterFormData } from '@/lib/validations';
 import { SA_PROVINCES } from '@/lib/constants';
+import { useHydrated } from '@/hooks/useHydrated';
 
 interface RegisterFormProps {
   onSubmit: (data: RegisterFormData) => Promise<void>;
@@ -20,6 +21,7 @@ const nativeSelectClassName =
   'flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring dark:bg-input/30 dark:[&>option]:bg-card dark:[&>option]:text-card-foreground';
 
 export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
+  const hydrated = useHydrated();
   const {
     register,
     handleSubmit,
@@ -43,7 +45,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       {/* School Info */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
@@ -233,7 +235,7 @@ export function RegisterForm({ onSubmit, isLoading }: RegisterFormProps) {
 
       <Button
         type="submit"
-        disabled={isLoading}
+        disabled={!hydrated || isLoading}
         className="h-10 w-full bg-blue-600 text-white hover:bg-blue-700 hover:text-white disabled:text-white/70"
         size="lg"
       >

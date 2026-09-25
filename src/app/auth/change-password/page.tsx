@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { useHydrated } from '@/hooks/useHydrated';
 
 export default function ChangePasswordPage() {
+  const hydrated = useHydrated();
   const router = useRouter();
   const { user, changePassword } = useAuthStore();
   const [currentPassword, setCurrentPassword] = useState('');
@@ -61,7 +63,7 @@ export default function ChangePasswordPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form method="post" onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="current">Current (temporary) password</Label>
               <Input
@@ -90,7 +92,7 @@ export default function ChangePasswordPage() {
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" disabled={submitting} className="w-full">
+            <Button type="submit" disabled={!hydrated || submitting} className="w-full">
               {submitting ? 'Changing…' : 'Change password'}
             </Button>
           </form>

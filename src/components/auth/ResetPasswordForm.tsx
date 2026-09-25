@@ -8,6 +8,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { PasswordInput } from './PasswordInput';
+import { useHydrated } from '@/hooks/useHydrated';
 
 const resetPasswordSchema = z
   .object({
@@ -31,6 +32,7 @@ interface ResetPasswordFormProps {
 }
 
 export function ResetPasswordForm({ onSubmit, isLoading }: ResetPasswordFormProps) {
+  const hydrated = useHydrated();
   const {
     register,
     handleSubmit,
@@ -42,7 +44,7 @@ export function ResetPasswordForm({ onSubmit, isLoading }: ResetPasswordFormProp
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="password">New password</Label>
           <PasswordInput
@@ -65,7 +67,7 @@ export function ResetPasswordForm({ onSubmit, isLoading }: ResetPasswordFormProp
 
         <Button
           type="submit"
-          disabled={isLoading}
+          disabled={!hydrated || isLoading}
           className="h-10 w-full"
           size="lg"
         >

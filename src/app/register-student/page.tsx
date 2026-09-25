@@ -16,8 +16,10 @@ import { PasswordInput } from '@/components/auth/PasswordInput';
 import { useAuth } from '@/hooks/useAuth';
 import { studentRegisterSchema, type StudentRegisterFormData } from '@/lib/validations';
 import { codeFromSearch } from '@/lib/join-code';
+import { useHydrated } from '@/hooks/useHydrated';
 
 function RegisterStudentForm() {
+  const hydrated = useHydrated();
   const { registerStudent } = useAuth();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -66,7 +68,7 @@ function RegisterStudentForm() {
         title="Join your classroom"
         description="Enter your details and the code your teacher shared with you"
       >
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="firstName">
@@ -166,7 +168,7 @@ function RegisterStudentForm() {
 
           <Button
             type="submit"
-            disabled={isLoading}
+            disabled={!hydrated || isLoading}
             className="h-10 w-full"
             size="lg"
           >

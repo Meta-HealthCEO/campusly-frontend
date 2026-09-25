@@ -16,8 +16,10 @@ import { AuthCard } from '@/components/auth/AuthCard';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import { DevSignInPanel } from '@/components/auth/DevSignInPanel';
 import { DEV_SIGN_IN_ENABLED } from '@/lib/dev-sign-in';
+import { useHydrated } from '@/hooks/useHydrated';
 
 export default function LoginPage() {
+  const hydrated = useHydrated();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -50,7 +52,7 @@ export default function LoginPage() {
 
   const signInCard = (
     <AuthCard title="Welcome back" description="Sign in to your Campusly account">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form method="post" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
           <Input
@@ -87,7 +89,7 @@ export default function LoginPage() {
 
         <Button
           type="submit"
-          disabled={isLoading}
+          disabled={!hydrated || isLoading}
           className="h-10 w-full"
           size="lg"
         >
