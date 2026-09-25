@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import apiClient from '@/lib/api-client';
-import { postEventStream } from '@/lib/sse-client';
+import { postEventStream, streamFailureMessage } from '@/lib/sse-client';
 import { unwrapResponse, unwrapList, extractErrorMessage } from '@/lib/api-helpers';
 import { toast } from 'sonner';
 import type {
@@ -187,7 +187,7 @@ export function useAITutor() {
       );
     } catch (err: unknown) {
       if ((err as Error)?.name !== 'AbortError') {
-        const message = extractErrorMessage(err, 'Streaming failed');
+        const message = streamFailureMessage(err);
         setLastError(message);
         toast.error(message);
       }

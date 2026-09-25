@@ -13,6 +13,43 @@ export interface SSEHandlers<EventMap> {
   signal?: AbortSignal;
 }
 
+const FALLBACK_MESSAGE = 'The tutor could not answer just now. Try again in a moment.';
+
+/** A refused or failed stream, with the server's plain message and error code when it sent one. */
+export class StreamError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly code?: string,
+    readonly details?: unknown,
+  ) {
+    super(message);
+    this.name = 'StreamError';
+  }
+}
+
+/** Builds the error for a non-OK stream response; never surfaces raw JSON or HTML to the user. */
+export function streamErrorFrom(status: number, text: string): StreamError {
+  try {
+    const body: unknown = JSON.parse(text);
+    if (body && typeof body === 'object') {
+      const b = body as { error?: unknown; message?: unknown; code?: unknown; details?: unknown };
+      const message = typeof b.error === 'string' ? b.error : typeof b.message === 'string' ? b.message : null;
+      if (message) {
+        return new StreamError(message, status, typeof b.code === 'string' ? b.code : undefined, b.details);
+      }
+    }
+  } catch {
+    // Not JSON: fall through to the plain message.
+  }
+  return new StreamError(FALLBACK_MESSAGE, status);
+}
+
+/** What to tell the user when a stream fails before it starts: the server's words when it gave any. */
+export function streamFailureMessage(err: unknown, fallback = 'Streaming failed'): string {
+  return err instanceof StreamError ? err.message : fallback;
+}
+
 export async function postEventStream<EventMap>(
   url: string,
   body: unknown,
@@ -33,7 +70,7 @@ export async function postEventStream<EventMap>(
 
   if (!response.ok) {
     const text = await response.text().catch(() => '');
-    throw new Error(`Stream failed: ${response.status} ${text}`);
+    throw streamErrorFrom(response.status, text);
   }
   if (!response.body) {
     throw new Error('Stream response has no body');
